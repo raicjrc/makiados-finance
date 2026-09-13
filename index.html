@@ -456,6 +456,16 @@
       background: rgba(30, 41, 59, 0.8);
       border-color: rgba(255, 255, 255, 0.12);
     }
+    body.theme-twilight .stat-card-action-btn {
+      border-color: rgba(52, 211, 153, 0.35);
+      background: rgba(16, 185, 129, 0.2);
+      color: #6ee7b7;
+    }
+    body.theme-twilight .stat-card-action-btn.stat-btn-info {
+      border-color: rgba(56, 189, 248, 0.35);
+      background: rgba(14, 165, 233, 0.2);
+      color: #7dd3fc;
+    }
 
     /* ====== BANNERS ====== */
     .compact-banner {
@@ -602,6 +612,37 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+    }
+    .stat-card-action-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      background: rgba(16, 185, 129, 0.1);
+      color: #059669;
+      font-size: 10px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      line-height: 1.2;
+    }
+    .stat-card-action-btn:hover {
+      transform: translateY(-1px) scale(1.04);
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+      box-shadow: 0 3px 8px rgba(16, 185, 129, 0.3);
+    }
+    .stat-card-action-btn.stat-btn-info {
+      border: 1px solid rgba(14, 165, 233, 0.35);
+      background: rgba(14, 165, 233, 0.1);
+      color: #0284c7;
+    }
+    .stat-card-action-btn.stat-btn-info:hover {
+      background: linear-gradient(135deg, #0284c7, #0369a1);
+      color: white;
+      box-shadow: 0 3px 8px rgba(14, 165, 233, 0.3);
     }
     .stat-icon {
       font-size: 14px;
@@ -2037,7 +2078,7 @@
           <div class="stat-card">
             <div class="stat-label">
               <span>BOLSA + EXTRAS</span>
-              <button class="info-tooltip-btn" onclick="openAddExtraIncomeModal()" title="+ Ingreso Extra">+</button>
+              <button class="stat-card-action-btn" onclick="openAddExtraIncomeModal()" title="Registrar Ingreso Extra"><span>➕</span><span>Extra</span></button>
             </div>
             <div class="stat-value" id="metricSalary">S/ 8,800</div>
             <div class="stat-desc text-primary" id="metricSalaryDesc">S/ 8.4k Base + S/ 400 Extra</div>
@@ -2052,7 +2093,7 @@
           <div class="stat-card">
             <div class="stat-label">
               <span>SALDO EN CUENTA</span>
-              <button class="info-tooltip-btn" onclick="openExplainSurplusModal()" title="¿Qué es esto?">?</button>
+              <button class="stat-card-action-btn stat-btn-info" onclick="openExplainSurplusModal()" title="Ver explicación del saldo"><span>ℹ️</span><span>Detalle</span></button>
             </div>
             <div class="stat-value" id="metricSavings">S/ 0</div>
             <div class="stat-desc" id="metricSavingsStatus">Saldo disponible (Acumulado)</div>
@@ -2154,24 +2195,14 @@
               <option value="highest">Monto mayor</option>
               <option value="lowest">Monto menor</option>
               <option value="name">Alfabético</option>
-              <option value="category">Por Categoría</option>
             </select>
             <button class="btn-clear-filters" id="clearFiltersBtn" onclick="clearAllFilters()" title="Limpiar todos los filtros" style="display:none;">
               🗑️ Limpiar
             </button>
           </div>
 
-          <!-- Advanced Filters Row (Cuenta, Categoría, Rango Monto) -->
+          <!-- Advanced Filters Row (Categoría, Rango Monto) -->
           <div class="advanced-filter-panel">
-            <select class="adv-filter-select" id="advFilterAccount" onchange="onAdvFilterChange()">
-              <option value="ALL">💳 Todas las cuentas</option>
-              <option value="BCP">BCP Débito / Crédito</option>
-              <option value="Interbank">Interbank Débito / Crédito</option>
-              <option value="BBVA">BBVA</option>
-              <option value="Yape">Yape</option>
-              <option value="Plin">Plin</option>
-              <option value="Efectivo">Efectivo</option>
-            </select>
             <select class="adv-filter-select" id="advFilterCategory" onchange="onAdvFilterChange()">
               <option value="ALL">🏷️ Todas las categorías</option>
             </select>
@@ -2183,15 +2214,10 @@
             </select>
           </div>
 
-          <!-- Live Results Bar with Quick Export -->
+          <!-- Live Results Bar -->
           <div class="filter-stats-bar">
             <span id="filteredTxCount">Mostrando 0 gastos</span>
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <span id="filteredTxSum" style="font-weight: 800; color: var(--primary);">Total: S/ 0.00</span>
-              <button class="btn-export-quick" onclick="exportFilteredTransactions()" title="Exportar selección filtrada">
-                📥 Exportar
-              </button>
-            </div>
+            <span id="filteredTxSum" style="font-weight: 800; color: var(--primary);">Total: S/ 0.00</span>
           </div>
 
           <!-- Paid / Pending Summary Indicators -->
@@ -3093,7 +3119,7 @@
     // Registrar Service Worker v48 (Network-First, sin caché de datos)
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=54')
+        navigator.serviceWorker.register('./sw.js?v=55')
           .then(reg => {
             console.log('SW v48 registrado:', reg.scope);
             // Forzar actualización inmediata del SW en todos los dispositivos
@@ -3799,8 +3825,6 @@
       if (clearX) clearX.style.display = 'none';
 
       // Limpiar filtros avanzados
-      const advAccount = document.getElementById('advFilterAccount');
-      if (advAccount) advAccount.value = 'ALL';
       const advCat = document.getElementById('advFilterCategory');
       if (advCat) advCat.value = 'ALL';
       const advAmount = document.getElementById('advFilterAmount');
@@ -3836,11 +3860,9 @@
     function updateClearFiltersBtn() {
       const btn = document.getElementById('clearFiltersBtn');
       if (!btn) return;
-      const advAccount = document.getElementById('advFilterAccount');
       const advCat = document.getElementById('advFilterCategory');
       const advAmount = document.getElementById('advFilterAmount');
-      const hasAdv = (advAccount && advAccount.value !== 'ALL') ||
-                     (advCat && advCat.value !== 'ALL') ||
+      const hasAdv = (advCat && advCat.value !== 'ALL') ||
                      (advAmount && advAmount.value !== 'ALL');
       const hasFilter = currentStatusFilter !== 'TODOS' ||
                         currentCategoryFilter !== 'TODAS' ||
@@ -4423,7 +4445,6 @@
         });
       }
 
-      const advAccount = document.getElementById('advFilterAccount')?.value || 'ALL';
       const advCategory = document.getElementById('advFilterCategory')?.value || 'ALL';
       const advAmount = document.getElementById('advFilterAmount')?.value || 'ALL';
 
@@ -4450,9 +4471,6 @@
       }
       if (filterStatus !== 'TODOS') {
         txs = txs.filter(t => (t.status || 'Pagado') === filterStatus);
-      }
-      if (advAccount !== 'ALL') {
-        txs = txs.filter(t => (t.account || '').includes(advAccount) || (t.paymentMethod || '').includes(advAccount));
       }
       if (advAmount === 'MICRO') {
         txs = txs.filter(t => (t.amount || 0) <= 35);
