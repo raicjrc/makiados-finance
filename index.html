@@ -1890,6 +1890,8 @@
       updateClearFiltersBtn();
       loadStateFromServer(3);
       setupRealtimeSync();
+      // Guardar estado inicial en Supabase (crea el row si es un usuario nuevo)
+      setTimeout(() => syncStateToServer(), 3000);
     }
 
     // LOGIN con Supabase Auth
@@ -2229,8 +2231,15 @@
           applyRemoteState(data.data);
           lastSuccessfulSyncTime = Date.now();
           updateSyncIndicator('synced', '🟢 En Vivo');
+        } else if (error && error.code === 'PGRST116') {
+          // No hay datos para este usuario aun (usuario nuevo)
+          // Guardar el estado actual para crear su row en Supabase
+          console.log('Usuario nuevo: creando row inicial en Supabase...');
+          lastSuccessfulSyncTime = Date.now();
+          updateSyncIndicator('synced', '🟢 En Vivo');
+          syncStateToServer(); // Crea el row del usuario
         } else {
-          throw new Error('Supabase fetch failed');
+          throw new Error('Supabase fetch failed: ' + (error ? error.message : 'no data'));
         }
       } catch(e) {
         if (retries > 0) {
@@ -2265,9 +2274,9 @@
 
     async function createManualCloudBackup() {
       showToast('⏳ Creando respaldo en la nube...', 'info');
-      // format: DD_MM_YYYY_HH_MM
+      const userId = currentUser ? currentUser.id.slice(0, 8) : 'guest';
       const dateStr = new Date().toLocaleString('es-PE').replace(/[\/,\s:]/g, '_');
-      const backupId = `backup_manual_${dateStr}`;
+      const backupId = `backup_${userId}_manual_${dateStr}`;
       try {
         const { error } = await supabaseClient
           .from('finanzas_state')
@@ -2276,7 +2285,7 @@
         showToast('📦 Respaldo manual guardado con éxito', 'success');
       } catch(e) {
         console.error('Error al crear respaldo manual:', e);
-        showToast('❌ Error al guardar respaldo', 'error');
+        showToast('❌ Error al guardar respaldo: ' + e.message, 'error');
       }
     }
 
