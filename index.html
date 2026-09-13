@@ -213,6 +213,7 @@
       color: #0f172a;
     }
 
+    .theme-toggle-btn,
     .settings-popover-btn {
       background: rgba(255, 255, 255, 0.85);
       color: #334155;
@@ -227,7 +228,9 @@
       transition: all 0.2s ease;
       backdrop-filter: blur(8px);
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+      user-select: none;
     }
+    .theme-toggle-btn:hover,
     .settings-popover-btn:hover {
       background: #ffffff;
       border-color: var(--primary);
@@ -256,6 +259,7 @@
         min-height: 36px;
         max-width: 140px;
       }
+      .theme-toggle-btn,
       .settings-popover-btn {
         width: 36px;
         height: 36px;
@@ -264,6 +268,131 @@
       .container {
         padding: 8px 10px;
       }
+    }
+
+    /* ====== TEMA TWILIGHT SLATE (DARK SUAVE - CERO NEGRO) ====== */
+    body.theme-twilight {
+      --bg: radial-gradient(circle at 18% 12%, rgba(99, 102, 241, 0.16) 0%, transparent 45%),
+            radial-gradient(circle at 85% 60%, rgba(16, 185, 129, 0.14) 0%, transparent 45%),
+            radial-gradient(circle at 50% 90%, rgba(245, 158, 11, 0.10) 0%, transparent 50%),
+            #1e293b;
+      --card-bg: rgba(30, 41, 59, 0.72);
+      --card-glass-border: rgba(255, 255, 255, 0.14);
+      --card-hover-bg: rgba(51, 65, 85, 0.82);
+      --text-main: #f8fafc;
+      --text-secondary: #cbd5e1;
+      --text-muted: #94a3b8;
+      --text-subtle: #64748b;
+      --border: rgba(255, 255, 255, 0.10);
+      --border-light: rgba(255, 255, 255, 0.06);
+      --shadow-md: 0 12px 36px -8px rgba(0, 0, 0, 0.45);
+    }
+    body.theme-twilight .top-navbar {
+      background: rgba(15, 23, 42, 0.82);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+      color: #f8fafc;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+    }
+    body.theme-twilight .brand-title h1 {
+      color: #f8fafc;
+    }
+    body.theme-twilight .desktop-user-badge {
+      background: rgba(30, 41, 59, 0.85);
+      border-color: rgba(255, 255, 255, 0.15);
+      color: #f8fafc;
+    }
+    body.theme-twilight .month-selector select {
+      background: rgba(30, 41, 59, 0.88);
+      border-color: rgba(255, 255, 255, 0.18);
+      color: #f8fafc;
+    }
+    body.theme-twilight .month-selector select option {
+      background: #1e293b;
+      color: #f8fafc;
+    }
+    body.theme-twilight .theme-toggle-btn,
+    body.theme-twilight .settings-popover-btn {
+      background: rgba(30, 41, 59, 0.85);
+      border-color: rgba(255, 255, 255, 0.18);
+      color: #f8fafc;
+    }
+    body.theme-twilight .bottom-nav {
+      background: rgba(15, 23, 42, 0.88);
+      border-top: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.4);
+    }
+    body.theme-twilight .nav-item {
+      color: #94a3b8;
+    }
+    body.theme-twilight .nav-item:hover {
+      color: #f8fafc;
+    }
+    body.theme-twilight .nav-item.active {
+      color: #818cf8;
+      background: rgba(99, 102, 241, 0.2);
+    }
+    body.theme-twilight .glass-modal {
+      background: rgba(15, 23, 42, 0.94);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      color: #f8fafc;
+      box-shadow: 0 28px 70px rgba(0, 0, 0, 0.6);
+    }
+    body.theme-twilight .glass-modal-header {
+      border-bottom-color: rgba(255, 255, 255, 0.1);
+    }
+    body.theme-twilight .glass-modal-title {
+      color: #f8fafc;
+    }
+    body.theme-twilight .glass-close-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.15);
+      color: #94a3b8;
+    }
+    body.theme-twilight .glass-close-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+    }
+    body.theme-twilight .glass-card-subpanel {
+      background: rgba(30, 41, 59, 0.65);
+      border-color: rgba(255, 255, 255, 0.08);
+    }
+    body.theme-twilight .glass-subpanel-title {
+      color: #94a3b8;
+    }
+    body.theme-twilight .glass-cat-item {
+      background: rgba(15, 23, 42, 0.6);
+      border-color: rgba(255, 255, 255, 0.08);
+      color: #f8fafc;
+    }
+    body.theme-twilight .glass-cat-item:hover {
+      background: rgba(30, 41, 59, 0.8);
+      border-color: rgba(255, 255, 255, 0.18);
+    }
+    body.theme-twilight .glass-cat-name {
+      color: #f8fafc;
+    }
+    body.theme-twilight .glass-cat-sub {
+      color: #94a3b8;
+    }
+    body.theme-twilight .glass-input {
+      background: rgba(15, 23, 42, 0.7);
+      border-color: rgba(255, 255, 255, 0.14);
+      color: #f8fafc;
+    }
+    body.theme-twilight .glass-pill-opt {
+      background: rgba(15, 23, 42, 0.6);
+      border-color: rgba(255, 255, 255, 0.12);
+      color: #94a3b8;
+    }
+    body.theme-twilight .glass-metric-box {
+      background: rgba(15, 23, 42, 0.6);
+      border-color: rgba(255, 255, 255, 0.08);
+    }
+    body.theme-twilight .glass-metric-box .label {
+      color: #94a3b8;
+    }
+    body.theme-twilight .glass-metric-box .val {
+      color: #f8fafc;
     }
 
     /* ====== BANNERS ====== */
@@ -1451,6 +1580,7 @@
           <div class="month-selector">
             <select id="monthSelect" onchange="changeMonth(this.value)"></select>
           </div>
+          <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Cambiar a Modo Noche Suave">🌙</button>
           <button class="settings-popover-btn" onclick="openSettingsModal()" title="Ajustes y Opciones">⚙️</button>
         </div>
       </div>
@@ -1777,6 +1907,7 @@
         <button class="btn btn-secondary" onclick="triggerImportDataJSON()" style="width: 100%;">📥 Importar Estado (JSON)</button>
         <button class="btn btn-primary" onclick="recalculatePlanAndTips(); closeModal('settingsModal');" style="width: 100%; background: #0284c7;">🔄 Recalcular Plan & Superávit</button>
         <button class="btn btn-secondary" onclick="openEditSalaryModal(); closeModal('settingsModal');" style="width: 100%;">✏️ Editar Sueldo Combinado</button>
+        <button class="btn btn-secondary" onclick="toggleTheme(); closeModal('settingsModal');" style="width: 100%;" id="settingsThemeBtn">🌓 Alternar Tema (Claro / Noche Suave)</button>
         
         <!-- Info de cuenta y versión -->
         <div style="border-top: 1px solid #f3f4f6; padding-top: 12px; margin-top: 4px;">
@@ -2471,7 +2602,7 @@
     // Registrar Service Worker v48 (Network-First, sin caché de datos)
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=52')
+        navigator.serviceWorker.register('./sw.js?v=53')
           .then(reg => {
             console.log('SW v48 registrado:', reg.scope);
             // Forzar actualización inmediata del SW en todos los dispositivos
@@ -3012,10 +3143,56 @@
           closeAllModals();
         }
       });
+
+      // Inicializar tema guardado (Claro Cristal vs Noche Suave)
+      initTheme();
     });
 
     function closeAllModals() {
-      document.querySelectorAll('.modal-backdrop').forEach(mb => mb.classList.remove('active'));
+      document.querySelectorAll('.modal-backdrop, .glass-backdrop').forEach(mb => {
+        mb.classList.remove('active');
+        mb.style.visibility = 'hidden';
+        mb.style.opacity = '0';
+      });
+      const fabMenu = document.getElementById('fabMenu');
+      const fabOverlay = document.getElementById('fabOverlay');
+      if (fabMenu && fabMenu.style.display === 'flex') toggleFAB();
+    }
+
+    // ================================================================
+    // CONTROLADOR DE TEMA (CLARO CRISTAL / NOCHE SUAVE TWILIGHT)
+    // ================================================================
+    function toggleTheme() {
+      const isDark = document.body.classList.toggle('theme-twilight');
+      const currentTheme = isDark ? 'twilight' : 'crystal';
+      localStorage.setItem('finanzas_theme', currentTheme);
+      updateThemeButtons(currentTheme);
+      showToast(isDark ? '🌙 Modo Noche Suave activado' : '✨ Modo Claro Cristal activado', 'info');
+      if (typeof updateSimulatedCalculations === 'function' && document.getElementById('installmentsSimulatorModal')?.classList.contains('active')) {
+        updateSimulatedCalculations();
+      }
+    }
+
+    function updateThemeButtons(theme) {
+      const btn = document.getElementById('themeToggleBtn');
+      const settingsBtn = document.getElementById('settingsThemeBtn');
+      if (btn) {
+        btn.textContent = theme === 'twilight' ? '☀️' : '🌙';
+        btn.title = theme === 'twilight' ? 'Cambiar a Modo Claro Cristal' : 'Cambiar a Modo Noche Suave';
+      }
+      if (settingsBtn) {
+        settingsBtn.textContent = theme === 'twilight' ? '☀️ Cambiar a Modo Claro Cristal' : '🌙 Cambiar a Modo Noche Suave';
+      }
+    }
+
+    function initTheme() {
+      const savedTheme = localStorage.getItem('finanzas_theme') || 'crystal';
+      if (savedTheme === 'twilight') {
+        document.body.classList.add('theme-twilight');
+      } else {
+        document.body.classList.remove('theme-twilight');
+      }
+      updateThemeButtons(savedTheme);
     }
 
     function handleBackdropClick(e, modalId) {
@@ -4517,12 +4694,21 @@
 
     function closeGlassModal(id) {
       const el = document.getElementById(id);
-      if (el) el.classList.remove('active');
+      if (el) {
+        el.classList.remove('active');
+        el.style.visibility = 'hidden';
+        el.style.opacity = '0';
+      }
     }
 
     function openCategoryManagerModal() {
       renderCategoryManagerList();
-      document.getElementById('categoryManagerModal').classList.add('active');
+      const el = document.getElementById('categoryManagerModal');
+      if (el) {
+        el.style.visibility = 'visible';
+        el.style.opacity = '1';
+        el.classList.add('active');
+      }
     }
 
     function selectManagerEmoji(emoji, btn) {
@@ -4687,7 +4873,12 @@
         ).join('');
       }
 
-      document.getElementById('installmentsSimulatorModal').classList.add('active');
+      const simModalEl = document.getElementById('installmentsSimulatorModal');
+      if (simModalEl) {
+        simModalEl.style.visibility = 'visible';
+        simModalEl.style.opacity = '1';
+        simModalEl.classList.add('active');
+      }
       setTimeout(updateSimulation, 150);
     }
 
