@@ -394,6 +394,68 @@
     body.theme-twilight .glass-metric-box .val {
       color: #f8fafc;
     }
+    body.theme-twilight .luxury-goal-card {
+      background: rgba(30, 41, 59, 0.75);
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+    body.theme-twilight .goal-emoji-bubble {
+      background: rgba(99, 102, 241, 0.2);
+    }
+    body.theme-twilight .ai-projection-badge {
+      background: rgba(99, 102, 241, 0.15);
+      border-color: rgba(99, 102, 241, 0.3);
+      color: #e2e8f0;
+    }
+    body.theme-twilight .radar-banner {
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(245, 158, 11, 0.15));
+      border-color: rgba(239, 68, 68, 0.4);
+    }
+    body.theme-twilight .leak-item-card {
+      background: rgba(30, 41, 59, 0.75);
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+    body.theme-twilight .leak-item-card:hover {
+      background: rgba(30, 41, 59, 0.95);
+    }
+    body.theme-twilight .adv-filter-select {
+      background: rgba(30, 41, 59, 0.8);
+      border-color: rgba(255, 255, 255, 0.15);
+      color: #f8fafc;
+    }
+    body.theme-twilight .adv-filter-select option {
+      background: #1e293b;
+      color: #f8fafc;
+    }
+    body.theme-twilight .filter-stats-bar {
+      background: rgba(30, 41, 59, 0.75);
+      border-color: rgba(255, 255, 255, 0.1);
+      color: #f8fafc;
+    }
+    body.theme-twilight .view-mode-toggle {
+      background: rgba(15, 23, 42, 0.6);
+    }
+    body.theme-twilight .view-btn {
+      color: #94a3b8;
+    }
+    body.theme-twilight .view-btn.active {
+      background: #334155;
+      color: #38bdf8;
+    }
+    body.theme-twilight .cal-day-box {
+      background: rgba(30, 41, 59, 0.5);
+      border-color: rgba(255, 255, 255, 0.08);
+    }
+    body.theme-twilight .cal-day-box:hover {
+      background: rgba(30, 41, 59, 0.85);
+    }
+    body.theme-twilight .cal-day-box.cal-day-selected {
+      border-color: #38bdf8;
+      background: rgba(56, 189, 248, 0.15);
+    }
+    body.theme-twilight .cal-day-inspector {
+      background: rgba(30, 41, 59, 0.8);
+      border-color: rgba(255, 255, 255, 0.12);
+    }
 
     /* ====== BANNERS ====== */
     .compact-banner {
@@ -1115,6 +1177,376 @@
     }
     .sync-status-dot.live { animation: syncPulse 2.5s ease-in-out infinite; }
 
+    /* ====== 1. LUXURY METAS WITH SMART PROJECTIONS ====== */
+    .luxury-goals-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 16px;
+      margin-top: 10px;
+    }
+    .luxury-goal-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      padding: 18px 20px;
+      box-shadow: 0 8px 32px rgba(31, 38, 135, 0.07);
+      position: relative;
+      overflow: hidden;
+      transition: all 0.25s ease;
+    }
+    .luxury-goal-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 36px rgba(31, 38, 135, 0.12);
+    }
+    .goal-top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .goal-icon-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .goal-emoji-bubble {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      background: rgba(99, 102, 241, 0.1);
+      border: 1px solid rgba(99, 102, 241, 0.2);
+    }
+    .goal-name-text {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+    .goal-target-date {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .goal-amounts-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-top: 10px;
+      margin-bottom: 6px;
+    }
+    .goal-saved-val {
+      font-size: 18px;
+      font-weight: 900;
+      color: var(--primary);
+    }
+    .goal-target-val {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 700;
+    }
+    .goal-progress-track {
+      width: 100%;
+      height: 10px;
+      background: rgba(148, 163, 184, 0.2);
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 8px 0;
+      position: relative;
+    }
+    .goal-progress-fill {
+      height: 100%;
+      border-radius: 10px;
+      background: linear-gradient(90deg, #6366f1, #10b981);
+      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 0 10px rgba(99, 102, 241, 0.4);
+    }
+    .ai-projection-badge {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      background: rgba(99, 102, 241, 0.08);
+      border: 1px solid rgba(99, 102, 241, 0.2);
+      border-radius: 12px;
+      padding: 8px 12px;
+      margin-top: 12px;
+      margin-bottom: 12px;
+      font-size: 11px;
+      line-height: 1.4;
+      color: var(--text-main);
+    }
+    .ai-tag {
+      background: linear-gradient(135deg, #4f46e5, #06b6d4);
+      color: white;
+      font-size: 9px;
+      font-weight: 900;
+      padding: 2px 6px;
+      border-radius: 6px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .goal-actions-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    /* ====== 2. RADAR GASTOS HORMIGA & FUGAS ====== */
+    .radar-banner {
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.08), rgba(245, 158, 11, 0.12));
+      border: 1px solid rgba(239, 68, 68, 0.25);
+      border-radius: 18px;
+      padding: 14px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      backdrop-filter: blur(16px);
+    }
+    .radar-leak-amount {
+      font-size: 20px;
+      font-weight: 900;
+      color: #ef4444;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .radar-leak-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 600;
+      margin-top: 2px;
+    }
+    .leak-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .leak-item-card {
+      background: rgba(255, 255, 255, 0.6);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+    .leak-item-card:hover {
+      background: rgba(255, 255, 255, 0.85);
+      transform: translateY(-2px);
+    }
+    .leak-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .leak-item-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .leak-impact-text {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .leak-impact-bar {
+      height: 6px;
+      background: rgba(226, 232, 240, 0.6);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .leak-impact-fill {
+      height: 100%;
+      border-radius: 6px;
+      background: linear-gradient(90deg, #f97316, #ef4444);
+    }
+    .leak-item-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 4px;
+    }
+
+    /* ====== 3. ADVANCED FILTERS & SEARCH ====== */
+    .advanced-filter-panel {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+      align-items: center;
+    }
+    .adv-filter-select {
+      background: rgba(255, 255, 255, 0.7);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 6px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-main);
+      outline: none;
+      cursor: pointer;
+      backdrop-filter: blur(12px);
+      transition: all 0.2s;
+    }
+    .adv-filter-select:focus, .adv-filter-select:hover {
+      border-color: var(--primary);
+      background: white;
+    }
+    .filter-stats-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(241, 245, 249, 0.7);
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      border-radius: 12px;
+      padding: 8px 14px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 12px;
+    }
+    .btn-export-quick {
+      background: linear-gradient(135deg, #0284c7, #0369a1);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 5px 12px;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      box-shadow: 0 2px 8px rgba(2, 132, 199, 0.3);
+      transition: transform 0.15s;
+    }
+    .btn-export-quick:active {
+      transform: scale(0.96);
+    }
+
+    /* ====== 4. FINANCIAL CALENDAR ====== */
+    .view-mode-toggle {
+      display: inline-flex;
+      background: rgba(226, 232, 240, 0.5);
+      padding: 3px;
+      border-radius: 12px;
+      gap: 3px;
+    }
+    .view-btn {
+      background: none;
+      border: none;
+      padding: 5px 12px;
+      border-radius: 9px;
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+    .view-btn.active {
+      background: white;
+      color: var(--primary);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    }
+    .cal-grid-wrapper {
+      margin-top: 10px;
+    }
+    .cal-header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .cal-header-title {
+      font-size: 14px;
+      font-weight: 900;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .cal-weekdays {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      text-align: center;
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+    .cal-days-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+    }
+    .cal-day-box {
+      min-height: 52px;
+      background: rgba(255, 255, 255, 0.45);
+      border: 1px solid rgba(226, 232, 240, 0.6);
+      border-radius: 12px;
+      padding: 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: all 0.18s;
+      position: relative;
+    }
+    .cal-day-box:hover {
+      background: rgba(255, 255, 255, 0.9);
+      border-color: var(--primary);
+      transform: translateY(-1px);
+    }
+    .cal-day-box.cal-day-selected {
+      border: 2px solid var(--primary);
+      background: rgba(79, 70, 229, 0.08);
+      box-shadow: 0 0 12px rgba(79, 70, 229, 0.25);
+    }
+    .cal-day-box.cal-day-empty {
+      background: transparent;
+      border: none;
+      cursor: default;
+    }
+    .cal-day-num {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+    .cal-day-dots {
+      display: flex;
+      gap: 2px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 2px;
+    }
+    .cal-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+    .cal-dot.income { background: #10b981; }
+    .cal-dot.expense-pending { background: #ef4444; }
+    .cal-dot.service { background: #f59e0b; }
+    .cal-dot.paid { background: #94a3b8; }
+    .cal-day-inspector {
+      background: rgba(255, 255, 255, 0.7);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 14px 16px;
+      margin-top: 14px;
+      backdrop-filter: blur(16px);
+    }
+
     /* ====== MODAL SYSTEM ====== */
     .modal-backdrop {
       position: fixed;
@@ -1642,6 +2074,21 @@
           <button class="banner-close-btn" style="color: white;" onclick="closeBanner('juntaBanner')">✕</button>
         </div>
 
+        <!-- Quick Semáforo 50/30/20 Summary Pill -->
+        <div id="quickSemaforoBanner" class="card" style="padding: 10px 16px; margin-bottom: 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;" onclick="switchTab('plan');">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 18px;">⚖️</span>
+            <div>
+              <div style="font-size: 12px; font-weight: 800; color: var(--text-main);">Semáforo Financiero 50/30/20</div>
+              <div id="quickSemaforoStatus" style="font-size: 10px; color: var(--text-muted); font-weight: 600;">Calculando distribución...</div>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div id="quickSemaforoPills" style="display: flex; gap: 4px; font-size: 11px; font-weight: 800;"></div>
+            <span style="font-size: 11px; font-weight: 800; color: var(--primary);">Ver detalle ↗</span>
+          </div>
+        </div>
+
         <div class="desktop-split">
           <div class="desktop-side">
         <!-- Incomes Tracker Widget -->
@@ -1682,22 +2129,24 @@
           <div class="desktop-main">
         <!-- Dynamic Transaction Web Table Card -->
         <div class="card">
-          <div class="card-header">
+          <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
             <div class="card-title">📋 Transacciones Dinámicas</div>
+            <div class="view-mode-toggle">
+              <button id="btnViewList" class="view-btn active" onclick="setTxViewMode('list')">📋 Lista</button>
+              <button id="btnViewCalendar" class="view-btn" onclick="setTxViewMode('calendar')">📅 Calendario</button>
+            </div>
           </div>
 
           <!-- Filter Chips Bar (Categorías & Estado) -->
-          <!-- categoryChips div removed for cleaner UX -->
-
           <div class="chip-group" style="margin-bottom: 10px;">
             <div class="chip active" id="chipStateAll" onclick="selectStatusFilter('TODOS')">✨ Todos</div>
             <div class="chip" id="chipStatePagado" onclick="selectStatusFilter('Pagado')">🟢 Pagados</div>
             <div class="chip" id="chipStatePendiente" onclick="selectStatusFilter('Pendiente')">⏳ Pendientes</div>
           </div>
 
-          <div class="filter-bar">
+          <div class="filter-bar" style="margin-bottom: 8px;">
             <div class="filter-search-wrap">
-              <input type="text" id="searchTx" placeholder="🔍 Buscar gasto o monto..." oninput="onSearchInput()">
+              <input type="text" id="searchTx" placeholder="🔍 Buscar por nombre, tienda o monto..." oninput="onSearchInput()">
               <button class="filter-clear-x" id="searchClearX" onclick="clearSearchInput()" title="Borrar búsqueda">✕</button>
             </div>
             <select class="filter-select" id="sortTx" onchange="renderTransactions()">
@@ -1710,6 +2159,39 @@
             <button class="btn-clear-filters" id="clearFiltersBtn" onclick="clearAllFilters()" title="Limpiar todos los filtros" style="display:none;">
               🗑️ Limpiar
             </button>
+          </div>
+
+          <!-- Advanced Filters Row (Cuenta, Categoría, Rango Monto) -->
+          <div class="advanced-filter-panel">
+            <select class="adv-filter-select" id="advFilterAccount" onchange="onAdvFilterChange()">
+              <option value="ALL">💳 Todas las cuentas</option>
+              <option value="BCP">BCP Débito / Crédito</option>
+              <option value="Interbank">Interbank Débito / Crédito</option>
+              <option value="BBVA">BBVA</option>
+              <option value="Yape">Yape</option>
+              <option value="Plin">Plin</option>
+              <option value="Efectivo">Efectivo</option>
+            </select>
+            <select class="adv-filter-select" id="advFilterCategory" onchange="onAdvFilterChange()">
+              <option value="ALL">🏷️ Todas las categorías</option>
+            </select>
+            <select class="adv-filter-select" id="advFilterAmount" onchange="onAdvFilterChange()">
+              <option value="ALL">💵 Cualquier monto</option>
+              <option value="MICRO">🐜 Micro-gastos (&le; S/ 35)</option>
+              <option value="MID">🪙 Medianos (S/ 35 - S/ 150)</option>
+              <option value="HIGH">💎 Mayores (&gt; S/ 150)</option>
+            </select>
+          </div>
+
+          <!-- Live Results Bar with Quick Export -->
+          <div class="filter-stats-bar">
+            <span id="filteredTxCount">Mostrando 0 gastos</span>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span id="filteredTxSum" style="font-weight: 800; color: var(--primary);">Total: S/ 0.00</span>
+              <button class="btn-export-quick" onclick="exportFilteredTransactions()" title="Exportar selección filtrada">
+                📥 Exportar
+              </button>
+            </div>
           </div>
 
           <!-- Paid / Pending Summary Indicators -->
@@ -1728,12 +2210,8 @@
             </div>
           </div>
 
-          <div class="flex-between mb-2" style="font-size: 11px; color: var(--text-muted); font-weight: 600;">
-            <span id="filteredTxCount">Mostrando 0 gastos</span>
-            <span id="filteredTxSum" style="font-weight: 700;">Total: S/ 0.00</span>
-          </div>
-
-          <div class="table-responsive">
+          <!-- LIST VIEW TABLE -->
+          <div id="txListViewContainer" class="table-responsive">
             <table class="tx-table">
               <thead>
                 <tr>
@@ -1747,6 +2225,9 @@
               <tbody id="txTableBody"></tbody>
             </table>
           </div>
+
+          <!-- CALENDAR VIEW WRAPPER -->
+          <div id="txCalendarViewContainer" style="display: none;"></div>
         </div>
           </div> <!-- End desktop-main -->
         </div> <!-- End desktop-split -->
@@ -1788,6 +2269,15 @@
           <div id="rule503020Container"></div>
         </div>
 
+        <!-- Radar de Gastos Hormiga & Fugas de Capital (collapsible) -->
+        <div class="card">
+          <div class="card-header" style="cursor: pointer;" onclick="toggleCollapseCard('radarHormigaContainer', 'collapseBtnHormiga')">
+            <div class="card-title">🐜 Radar de Gastos Hormiga & Fugas</div>
+            <button type="button" id="collapseBtnHormiga" style="background:none; border:none; font-size:16px; cursor:pointer; color:var(--text-muted); transition: transform 0.2s;">▼</button>
+          </div>
+          <div id="radarHormigaContainer"></div>
+        </div>
+
         <!-- Category Budget vs Real Progress (collapsible) -->
         <div class="card">
           <div class="card-header" style="cursor: pointer;" onclick="toggleCollapseCard('categoryBudgetsContainer', 'collapseBtnBudgets')">
@@ -1798,17 +2288,18 @@
           <div id="categoryBudgetsContainer"></div>
         </div>
 
-
-
       </div>
 
       <!-- TAB 3: METAS DE AHORRO -->
       <div id="tab-metas" class="tab-content">
-        <div class="flex-between mb-2" style="margin-bottom: 12px;">
-          <h2 style="font-size: 16px; font-weight: 800;">Metas y Fondos de Ahorro</h2>
+        <div class="flex-between mb-2" style="margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
+          <div>
+            <h2 style="font-size: 16px; font-weight: 800; margin: 0;">Metas y Fondos de Ahorro</h2>
+            <div style="font-size: 11px; color: var(--text-muted); font-weight: 600;">Proyección matemática con IA según tu ritmo real de ahorro</div>
+          </div>
           <button class="btn btn-primary btn-sm" onclick="openAddGoalModal()">+ Nueva Meta</button>
         </div>
-        <div id="goalsContainer"></div>
+        <div id="goalsContainer" class="luxury-goals-grid"></div>
       </div>
 
       <!-- TAB 4: CONSEJOS Y DEUDAS -->
@@ -2602,7 +3093,7 @@
     // Registrar Service Worker v48 (Network-First, sin caché de datos)
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=53')
+        navigator.serviceWorker.register('./sw.js?v=54')
           .then(reg => {
             console.log('SW v48 registrado:', reg.scope);
             // Forzar actualización inmediata del SW en todos los dispositivos
@@ -3307,6 +3798,14 @@
       const clearX = document.getElementById('searchClearX');
       if (clearX) clearX.style.display = 'none';
 
+      // Limpiar filtros avanzados
+      const advAccount = document.getElementById('advFilterAccount');
+      if (advAccount) advAccount.value = 'ALL';
+      const advCat = document.getElementById('advFilterCategory');
+      if (advCat) advCat.value = 'ALL';
+      const advAmount = document.getElementById('advFilterAmount');
+      if (advAmount) advAmount.value = 'ALL';
+
       // Limpiar filtro de estado
       currentStatusFilter = 'TODOS';
       appState.activeStatusFilter = 'TODOS';
@@ -3329,13 +3828,83 @@
       showToast('✨ Filtros limpiados', 'info');
     }
 
+    function onAdvFilterChange() {
+      updateClearFiltersBtn();
+      renderTransactions();
+    }
+
     function updateClearFiltersBtn() {
       const btn = document.getElementById('clearFiltersBtn');
       if (!btn) return;
+      const advAccount = document.getElementById('advFilterAccount');
+      const advCat = document.getElementById('advFilterCategory');
+      const advAmount = document.getElementById('advFilterAmount');
+      const hasAdv = (advAccount && advAccount.value !== 'ALL') ||
+                     (advCat && advCat.value !== 'ALL') ||
+                     (advAmount && advAmount.value !== 'ALL');
       const hasFilter = currentStatusFilter !== 'TODOS' ||
                         currentCategoryFilter !== 'TODAS' ||
+                        hasAdv ||
                         (document.getElementById('searchTx') && document.getElementById('searchTx').value.trim() !== '');
       btn.style.display = hasFilter ? 'flex' : 'none';
+    }
+
+    function exportFilteredTransactions() {
+      const search = (document.getElementById('searchTx')?.value || '').toLowerCase().trim();
+      const filterStatus = currentStatusFilter;
+      const filterCat = document.getElementById('advFilterCategory')?.value || currentCategoryFilter;
+      const filterAccount = document.getElementById('advFilterAccount')?.value || 'ALL';
+      const filterAmount = document.getElementById('advFilterAmount')?.value || 'ALL';
+
+      let txs = getMonthTxList();
+
+      if (search) {
+        txs = txs.filter(t => (t.name || '').toLowerCase().includes(search) || (t.amount || 0).toString().includes(search));
+      }
+      if (filterStatus !== 'TODOS') {
+        txs = txs.filter(t => (t.status || 'Pagado') === filterStatus);
+      }
+      if (filterCat !== 'TODAS' && filterCat !== 'ALL') {
+        txs = txs.filter(t => t.category === filterCat);
+      }
+      if (filterAccount !== 'ALL') {
+        txs = txs.filter(t => (t.account || '').includes(filterAccount) || (t.paymentMethod || '').includes(filterAccount));
+      }
+      if (filterAmount === 'MICRO') {
+        txs = txs.filter(t => (t.amount || 0) <= 35);
+      } else if (filterAmount === 'MID') {
+        txs = txs.filter(t => (t.amount || 0) > 35 && (t.amount || 0) <= 150);
+      } else if (filterAmount === 'HIGH') {
+        txs = txs.filter(t => (t.amount || 0) > 150);
+      }
+
+      if (txs.length === 0) {
+        showToast('⚠️ No hay transacciones para exportar con estos filtros', 'warning');
+        return;
+      }
+
+      // Generar CSV
+      let csvContent = 'Concepto,Categoría,Estado,Monto (S/),Vencimiento\n';
+      txs.forEach(t => {
+        const cleanName = `"${(t.name || '').replace(/"/g, '""')}"`;
+        const cleanCat = `"${(t.category || '').replace(/"/g, '""')}"`;
+        const st = t.status || 'Pagado';
+        const amt = (t.amount || 0).toFixed(2);
+        const due = getEffectiveDueDate(t);
+        csvContent += `${cleanName},${cleanCat},${st},${amt},${due}\n`;
+      });
+
+      const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      const cleanMonth = (appState.currentMonth || 'Mes').replace(/\s+/g, '_');
+      link.setAttribute('download', `Finanzas_Gastos_${cleanMonth}_filtrados.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      showToast(`📥 Exportadas ${txs.length} transacciones`, 'success');
     }
 
     function setHistoryPeriodFilter(periodKey) {
@@ -3425,6 +3994,7 @@
 
       renderTransactions();
       render503020Rule();
+      renderGastosHormiga();
       renderCategoryBudgets();
       renderHistoryChart();
       renderHistoryTable();
@@ -3432,6 +4002,9 @@
       renderPersonalizedTips();
       renderAuditTable();
       renderIncomes();
+      if (typeof txViewMode !== 'undefined' && txViewMode === 'calendar') {
+        renderCalendarView();
+      }
     }
 
     function getMonthTxList() {
@@ -3836,10 +4409,26 @@
 
     function renderTransactions() {
       const container = document.getElementById('txTableBody');
-      const search = document.getElementById('searchTx').value.toLowerCase();
-      const filterCat = currentCategoryFilter;
+      const search = (document.getElementById('searchTx')?.value || '').toLowerCase().trim();
+      const sortBy = document.getElementById('sortTx')?.value || 'newest';
+
+      // Poblar selector avanzado de categorías si aún no está poblado
+      const advCatSelect = document.getElementById('advFilterCategory');
+      if (advCatSelect && advCatSelect.options.length <= 1) {
+        Object.keys(CATEGORIES).sort().forEach(cat => {
+          const opt = document.createElement('option');
+          opt.value = cat;
+          opt.textContent = `${CATEGORIES[cat].icon || '🏷️'} ${cat}`;
+          advCatSelect.appendChild(opt);
+        });
+      }
+
+      const advAccount = document.getElementById('advFilterAccount')?.value || 'ALL';
+      const advCategory = document.getElementById('advFilterCategory')?.value || 'ALL';
+      const advAmount = document.getElementById('advFilterAmount')?.value || 'ALL';
+
+      const filterCat = (advCategory !== 'ALL') ? advCategory : currentCategoryFilter;
       const filterStatus = currentStatusFilter;
-      const sortBy = document.getElementById('sortTx').value;
 
       let allTxs = getMonthTxList();
 
@@ -3854,13 +4443,23 @@
       let txs = [...allTxs];
 
       if (search) {
-        txs = txs.filter(t => t.name.toLowerCase().includes(search) || t.amount.toString().includes(search));
+        txs = txs.filter(t => (t.name || '').toLowerCase().includes(search) || (t.amount || 0).toString().includes(search) || (t.category || '').toLowerCase().includes(search));
       }
-      if (filterCat !== 'TODAS') {
+      if (filterCat !== 'TODAS' && filterCat !== 'ALL') {
         txs = txs.filter(t => t.category === filterCat);
       }
       if (filterStatus !== 'TODOS') {
         txs = txs.filter(t => (t.status || 'Pagado') === filterStatus);
+      }
+      if (advAccount !== 'ALL') {
+        txs = txs.filter(t => (t.account || '').includes(advAccount) || (t.paymentMethod || '').includes(advAccount));
+      }
+      if (advAmount === 'MICRO') {
+        txs = txs.filter(t => (t.amount || 0) <= 35);
+      } else if (advAmount === 'MID') {
+        txs = txs.filter(t => (t.amount || 0) > 35 && (t.amount || 0) <= 150);
+      } else if (advAmount === 'HIGH') {
+        txs = txs.filter(t => (t.amount || 0) > 150);
       }
 
       if (sortBy === 'highest') {
@@ -3874,7 +4473,7 @@
       }
 
       const totalSum = txs.reduce((s, t) => s + t.amount, 0);
-      document.getElementById('filteredTxCount').textContent = `Mostrando ${txs.length} gastos`;
+      document.getElementById('filteredTxCount').textContent = `Mostrando ${txs.length} de ${allTxs.length} gastos`;
       document.getElementById('filteredTxSum').textContent = `Total: S/ ${totalSum.toFixed(2)}`;
 
       if (txs.length === 0) {
@@ -4232,6 +4831,26 @@
       `;
 
       document.getElementById('rule503020Container').innerHTML = html;
+
+      // Actualizar widget rápido en Tab Inicio si existe
+      const qStatus = document.getElementById('quickSemaforoStatus');
+      const qPills = document.getElementById('quickSemaforoPills');
+      if (qStatus && qPills) {
+        const pct50 = target50 > 0 ? Math.round((needsReal / target50) * 100) : 0;
+        const pct30 = target30 > 0 ? Math.round((wantsReal / target30) * 100) : 0;
+        const pct20 = target20 > 0 ? Math.round((totalSavingsAndDebt / target20) * 100) : 0;
+
+        const isGood50 = needsReal <= target50;
+        const isGood30 = wantsReal <= target30;
+        const isGood20 = totalSavingsAndDebt >= target20;
+
+        qStatus.innerHTML = `🏠 Necesidades: <strong>${pct50}%</strong> (${isGood50 ? 'Bien' : 'Exceso'}) · 🎉 Deseos: <strong>${pct30}%</strong> · 💰 Ahorro: <strong>${pct20}%</strong>`;
+        qPills.innerHTML = `
+          <span style="background: ${isGood50 ? '#10b98120' : '#ef444420'}; color: ${isGood50 ? '#059669' : '#ef4444'}; padding: 2px 6px; border-radius: 6px;">50% ${isGood50 ? '🟢' : '🔴'}</span>
+          <span style="background: ${isGood30 ? '#06b6d420' : '#f59e0b20'}; color: ${isGood30 ? '#0891b2' : '#d97706'}; padding: 2px 6px; border-radius: 6px;">30% ${isGood30 ? '🟢' : '🟡'}</span>
+          <span style="background: #10b98120; color: #059669; padding: 2px 6px; border-radius: 6px;">20% 🟢</span>
+        `;
+      }
     }
 
     function renderCategoryBudgets() {
@@ -4402,32 +5021,88 @@
     function renderChecklist() { /* disabled */ }
     function toggleChecklist(id) { /* disabled */ }
 
+    /* ====== 1. METAS DE AHORRO CON PROYECCIÓN INTELIGENTE ====== */
     function renderGoals() {
       const container = document.getElementById('goalsContainer');
-      const goals = appState.savingsGoals;
+      if (!container) return;
+      const goals = appState.savingsGoals || [];
 
       if (goals.length === 0) {
-        container.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 20px;">No tienes metas creadas.</div>`;
+        container.innerHTML = `
+          <div style="text-align: center; color: var(--text-muted); padding: 36px 20px; grid-column: 1 / -1; background: var(--card-bg); border-radius: 20px; border: 1px dashed var(--border);">
+            <div style="font-size: 32px; margin-bottom: 8px;">🎯</div>
+            <div style="font-size: 14px; font-weight: 800; color: var(--text-main);">Aún no tienes metas creadas</div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px; margin-bottom: 14px;">Define objetivos como Fondo de Emergencia, Vacaciones o Enganche de Auto.</div>
+            <button class="btn btn-primary btn-sm" onclick="openAddGoalModal()">+ Crear Primera Meta</button>
+          </div>
+        `;
         return;
       }
 
+      const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+      const now = new Date();
+
       container.innerHTML = goals.map(g => {
-        const pct = Math.min(100, (g.current / g.target) * 100);
+        const current = g.current || 0;
+        const target = g.target || 1;
+        const pct = Math.min(100, Math.round((current / target) * 100));
+        const remaining = Math.max(0, target - current);
+        const monthly = g.monthlyContribution || 250;
+        const monthsNeeded = remaining > 0 ? Math.ceil(remaining / monthly) : 0;
+
+        const targetDate = new Date(now.getFullYear(), now.getMonth() + monthsNeeded, 1);
+        const targetDateStr = `${monthNames[targetDate.getMonth()]} ${targetDate.getFullYear()}`;
+
+        let aiText = '';
+        if (remaining <= 0) {
+          aiText = '🎉 <strong>¡Meta Cumplida!</strong> Has alcanzado el 100% de tu objetivo de ahorro.';
+        } else {
+          aiText = `A tu ritmo de <strong>S/ ${monthly.toFixed(0)}/mes</strong>, alcanzarás tu meta en <strong>${monthsNeeded} meses</strong> (${targetDateStr}).`;
+          if (monthsNeeded > 2) {
+            const fasterMonths = Math.ceil(remaining / (monthly + 100));
+            const diff = monthsNeeded - fasterMonths;
+            if (diff > 0) {
+              aiText += `<br><span style="color: var(--primary); font-weight: 700;">💡 Con S/ 100 más al mes llegarías ${diff} mes(es) antes.</span>`;
+            }
+          }
+        }
+
         return `
-          <div class="goal-card" style="background: white; border-radius: var(--radius-md); padding: 12px; margin-bottom: 8px; border: 1px solid var(--border);">
-            <div class="goal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <div class="goal-title" style="font-size: 13px; font-weight: 800; display: flex; align-items: center; gap: 6px;">
-                <span>${g.icon || '🎯'}</span>
-                <span>${g.name}</span>
+          <div class="luxury-goal-card">
+            <div class="goal-top-row">
+              <div class="goal-icon-title">
+                <div class="goal-emoji-bubble">${g.icon || '🎯'}</div>
+                <div>
+                  <div class="goal-name-text">${g.name}</div>
+                  <div class="goal-target-date">🗓️ Estimado: ${targetDateStr}</div>
+                </div>
               </div>
-              <button class="btn-pill danger" onclick="deleteGoal('${g.id}')">🗑️</button>
+              <button class="btn-pill danger" onclick="deleteGoal('${g.id}')" title="Eliminar meta" style="opacity: 0.7;">🗑️</button>
             </div>
-            <div class="progress-bar-wrap" style="height: 8px;">
-              <div class="progress-fill" style="width: ${pct}%; background: linear-gradient(90deg, #4f46e5, #10b981);"></div>
+
+            <div class="goal-amounts-row">
+              <span class="goal-saved-val">S/ ${current.toLocaleString('es-PE', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
+              <span class="goal-target-val">Meta: S/ ${target.toLocaleString('es-PE', { minimumFractionDigits: 0 })}</span>
             </div>
-            <div class="flex-between mt-2">
-              <span style="font-size: 11px;">Ahorrado: <strong>S/ ${g.current.toFixed(0)}</strong> de S/ ${g.target.toFixed(0)} (${pct.toFixed(0)}%)</span>
-              <button class="btn btn-primary btn-sm" onclick="openDepositGoalModal('${g.id}')">+ Aportar</button>
+
+            <div class="goal-progress-track">
+              <div class="goal-progress-fill" style="width: ${pct}%;"></div>
+            </div>
+
+            <div class="flex-between" style="font-size: 11px; color: var(--text-muted); font-weight: 700;">
+              <span>Progreso: ${pct}%</span>
+              <span>Faltan: S/ ${remaining.toLocaleString('es-PE', { minimumFractionDigits: 0 })}</span>
+            </div>
+
+            <div class="ai-projection-badge">
+              <span class="ai-tag">IA</span>
+              <div>${aiText}</div>
+            </div>
+
+            <div class="goal-actions-row">
+              <button class="btn btn-primary btn-sm" onclick="openDepositGoalModal('${g.id}')" style="flex: 1; border-radius: 12px; font-weight: 800;">
+                + Aportar Dinero
+              </button>
             </div>
           </div>
         `;
@@ -4438,16 +5113,16 @@
       document.getElementById('goalName').value = '';
       document.getElementById('goalTarget').value = '';
       document.getElementById('goalCurrent').value = '0';
-      document.getElementById('goalMonthly').value = '';
+      document.getElementById('goalMonthly').value = '250';
       document.getElementById('addGoalModal').classList.add('active');
     }
 
     function handleAddGoal(e) {
       e.preventDefault();
-      const name = document.getElementById('goalName').value;
+      const name = document.getElementById('goalName').value.trim();
       const target = parseFloat(document.getElementById('goalTarget').value);
       const current = parseFloat(document.getElementById('goalCurrent').value) || 0;
-      const monthly = parseFloat(document.getElementById('goalMonthly').value) || 100;
+      const monthly = parseFloat(document.getElementById('goalMonthly').value) || 200;
       const icon = document.getElementById('goalIcon').value;
 
       appState.savingsGoals.push({
@@ -4460,24 +5135,28 @@
       });
 
       addAuditLog('🎯 Nueva Meta', `Creada: ${name}`);
-
       saveState();
       closeModal('addGoalModal');
       renderGoals();
       switchTab('metas');
+      showToast('🎯 Meta de ahorro creada con éxito', 'success');
     }
 
     function deleteGoal(id) {
       const g = appState.savingsGoals.find(item => item.id === id);
-      if (!confirm('¿Eliminar esta meta?')) return;
+      if (!confirm('¿Eliminar esta meta de ahorro?')) return;
       if (g) addAuditLog('🗑️ Eliminar Meta', `Eliminada: ${g.name}`);
-      appState.savingsGoals = appState.savingsGoals.filter(g => g.id !== id);
+      appState.savingsGoals = appState.savingsGoals.filter(item => item.id !== id);
       saveState();
       renderGoals();
+      showToast('🗑️ Meta eliminada', 'info');
     }
 
     function openDepositGoalModal(id) {
+      const g = appState.savingsGoals.find(item => item.id === id);
+      if (!g) return;
       document.getElementById('depositGoalId').value = id;
+      document.getElementById('depositAmount').value = '';
       document.getElementById('depositGoalModal').classList.add('active');
     }
 
@@ -4485,15 +5164,375 @@
       e.preventDefault();
       const id = document.getElementById('depositGoalId').value;
       const amount = parseFloat(document.getElementById('depositAmount').value);
+      if (!amount || amount <= 0) return;
 
       const g = appState.savingsGoals.find(item => item.id === id);
       if (g) {
         g.current += amount;
-        addAuditLog('💰 Aporte Meta', `S/ ${amount} a ${g.name}`);
+        addAuditLog('💰 Aporte Meta', `S/ ${amount.toFixed(2)} a ${g.name}`);
         saveState();
+        showToast(`💰 S/ ${amount.toFixed(2)} sumados a ${g.name}`, 'success');
       }
       closeModal('depositGoalModal');
       renderGoals();
+    }
+
+    /* ====== 2. RADAR DE GASTOS HORMIGA & FUGAS ====== */
+    function renderGastosHormiga() {
+      const container = document.getElementById('radarHormigaContainer');
+      if (!container) return;
+
+      const txs = getMonthTxList();
+      
+      const leakKeywords = {
+        cafes: ['café', 'cafe', 'starbucks', 'snack', 'golosina', 'antojo', 'panaderia', 'dulce', 'helado'],
+        delivery: ['delivery', 'rappi', 'pedidosya', 'uber eats', 'didi food', 'propina'],
+        suscripciones: ['netflix', 'spotify', 'youtube', 'disney', 'prime', 'apple', 'icloud', 'hbo', 'gym', 'duolingo', 'suscripción', 'suscripciones'],
+        taxis: ['taxi', 'uber', 'cabify', 'indrive', 'pasaje', 'peaje']
+      };
+
+      const groups = {
+        cafes: { title: '☕ Cafés, Snacks y Antojos', count: 0, sum: 0, items: [] },
+        delivery: { title: '🛵 Delivery y Apps de Comida', count: 0, sum: 0, items: [] },
+        suscripciones: { title: '📺 Suscripciones y Streaming', count: 0, sum: 0, items: [] },
+        taxis: { title: '🚕 Taxis y Movilidad Menor', count: 0, sum: 0, items: [] },
+        otros: { title: '🐜 Otros Micro-gastos (≤ S/ 35)', count: 0, sum: 0, items: [] }
+      };
+
+      txs.forEach(t => {
+        const nameLower = (t.name || '').toLowerCase();
+        const catLower = (t.category || '').toLowerCase();
+        const amt = t.amount || 0;
+
+        let classified = false;
+        if (leakKeywords.cafes.some(kw => nameLower.includes(kw) || catLower.includes(kw))) {
+          groups.cafes.count++;
+          groups.cafes.sum += amt;
+          groups.cafes.items.push(t);
+          classified = true;
+        } else if (leakKeywords.delivery.some(kw => nameLower.includes(kw) || catLower.includes(kw))) {
+          groups.delivery.count++;
+          groups.delivery.sum += amt;
+          groups.delivery.items.push(t);
+          classified = true;
+        } else if (leakKeywords.suscripciones.some(kw => nameLower.includes(kw) || catLower.includes(kw)) || catLower === 'suscripciones') {
+          groups.suscripciones.count++;
+          groups.suscripciones.sum += amt;
+          groups.suscripciones.items.push(t);
+          classified = true;
+        } else if (leakKeywords.taxis.some(kw => nameLower.includes(kw) || catLower.includes(kw))) {
+          groups.taxis.count++;
+          groups.taxis.sum += amt;
+          groups.taxis.items.push(t);
+          classified = true;
+        } else if (amt <= 35) {
+          groups.otros.count++;
+          groups.otros.sum += amt;
+          groups.otros.items.push(t);
+          classified = true;
+        }
+      });
+
+      const totalFugaMes = Object.values(groups).reduce((acc, g) => acc + g.sum, 0);
+      const totalFugaAnual = totalFugaMes * 12;
+
+      let html = `
+        <div class="radar-banner">
+          <div>
+            <div class="radar-leak-amount">
+              <span>⚠️</span> S/ ${totalFugaAnual.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} al año
+            </div>
+            <div class="radar-leak-sub">Fuga proyectada basada en S/ ${totalFugaMes.toFixed(2)} detectados en ${appState.currentMonth}</div>
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="showHormigaAdvice(${totalFugaAnual})" style="background: rgba(255,255,255,0.7); border-color: rgba(239, 68, 68, 0.4); font-weight: 800; color: #dc2626; border-radius: 10px;">
+            💡 Optimizar
+          </button>
+        </div>
+
+        <div class="leak-cards-grid">
+      `;
+
+      const activeGroups = Object.entries(groups).filter(([k, g]) => g.count > 0);
+      if (activeGroups.length === 0) {
+        html += `
+          <div style="text-align: center; color: var(--text-muted); padding: 18px; grid-column: 1 / -1; font-size: 12px;">
+            🎉 ¡Excelente! No se han detectado gastos hormiga ni fugas menores este mes.
+          </div>
+        `;
+      } else {
+        activeGroups.forEach(([key, g]) => {
+          const annual = g.sum * 12;
+          const maxGroupSum = Math.max(...activeGroups.map(([_, grp]) => grp.sum)) || 1;
+          const barPct = Math.min(100, Math.round((g.sum / maxGroupSum) * 100));
+
+          html += `
+            <div class="leak-item-card">
+              <div class="leak-item-header">
+                <span class="leak-item-title">${g.title}</span>
+                <span class="badge badge-warning" style="font-size: 10px;">${g.count} gastos</span>
+              </div>
+              <div class="flex-between" style="font-size: 12px; margin-top: 4px;">
+                <span style="font-weight: 800; color: var(--text-main);">S/ ${g.sum.toFixed(2)}/mes</span>
+                <span style="font-weight: 900; color: #ef4444;">S/ ${annual.toLocaleString('es-PE', { minimumFractionDigits: 0 })}/año</span>
+              </div>
+              <div class="leak-impact-bar">
+                <div class="leak-impact-fill" style="width: ${barPct}%;"></div>
+              </div>
+              <div class="leak-item-footer">
+                <button class="btn btn-outline btn-sm" onclick="filterHormigaGroup('${key}')" style="font-size: 10px; padding: 3px 8px; border-radius: 8px;">
+                  🔍 Ver gastos
+                </button>
+                <button class="btn btn-secondary btn-sm" onclick="showGroupOptimizationTip('${key}', ${annual})" style="font-size: 10px; padding: 3px 8px; border-radius: 8px;">
+                  💡 Sugerencia
+                </button>
+              </div>
+            </div>
+          `;
+        });
+      }
+
+      html += `</div>`;
+      container.innerHTML = html;
+    }
+
+    function filterHormigaGroup(key) {
+      switchTab('inicio');
+      const searchInput = document.getElementById('searchTx');
+      const advAmount = document.getElementById('advFilterAmount');
+      if (key === 'otros') {
+        if (advAmount) advAmount.value = 'MICRO';
+        if (searchInput) searchInput.value = '';
+      } else {
+        const keywords = {
+          cafes: 'café',
+          delivery: 'delivery',
+          suscripciones: 'suscripciones',
+          taxis: 'taxi'
+        };
+        if (searchInput) searchInput.value = keywords[key] || '';
+      }
+      onAdvFilterChange();
+      const el = document.getElementById('txListViewContainer');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      showToast(`🔍 Filtrando gastos vinculados`, 'info');
+    }
+
+    function showHormigaAdvice(totalAnnual) {
+      const halfSaved = (totalAnnual / 2).toLocaleString('es-PE', { minimumFractionDigits: 0 });
+      alert(`💡 Oportunidad Financiera de Ahorro:\n\nSi optimizas y reduces a la mitad estos micro-gastos, acumularías S/ ${halfSaved} libres al año.\n\nEsto equivale a financiar tu fondo de emergencia o un viaje sin sacrificar tu calidad de vida.`);
+    }
+
+    function showGroupOptimizationTip(key, annual) {
+      const tips = {
+        cafes: `☕ Consejo de Café & Snacks:\nGastas S/ ${annual.toLocaleString()} al año. Preparar tu café en casa 3 días a la semana te ahorrará más de S/ ${(annual * 0.4).toFixed(0)} anuales.`,
+        delivery: `🛵 Consejo de Delivery:\nGastas S/ ${annual.toLocaleString()} al año. Cocinar una vez más por semana o recoger los pedidos sin tarifa express ahorra hasta S/ ${(annual * 0.45).toFixed(0)}.`,
+        suscripciones: `📺 Consejo de Suscripciones:\nGastas S/ ${annual.toLocaleString()} al año. Audita los servicios que usas menos de 2 veces por semana y paúsalos por temporadas.`,
+        taxis: `🚕 Consejo de Taxis:\nGastas S/ ${annual.toLocaleString()} al año. Planificar tus salidas con 15 minutos de anticipación amortigua S/ ${(annual * 0.35).toFixed(0)}.`,
+        otros: `🐜 Micro-gastos diversos:\nSumaron S/ ${annual.toLocaleString()} al año. Asignar un presupuesto semanal en efectivo para compras sueltas frena las fugas invisibles.`
+      };
+      alert(tips[key] || `Optimizando este rubro puedes recuperar parte de los S/ ${annual.toLocaleString()} al año.`);
+    }
+
+    /* ====== 4. CALENDARIO FINANCIERO DE VENCIMIENTOS ====== */
+    let txViewMode = 'list';
+    let selectedCalendarDay = 15;
+
+    function setTxViewMode(mode) {
+      txViewMode = mode;
+      const btnList = document.getElementById('btnViewList');
+      const btnCal = document.getElementById('btnViewCalendar');
+      const listWrap = document.getElementById('txListViewContainer');
+      const calWrap = document.getElementById('txCalendarViewContainer');
+
+      if (mode === 'calendar') {
+        if (btnList) btnList.classList.remove('active');
+        if (btnCal) btnCal.classList.add('active');
+        if (listWrap) listWrap.style.display = 'none';
+        if (calWrap) calWrap.style.display = 'block';
+        renderCalendarView();
+      } else {
+        if (btnList) btnList.classList.add('active');
+        if (btnCal) btnCal.classList.remove('active');
+        if (listWrap) listWrap.style.display = 'block';
+        if (calWrap) calWrap.style.display = 'none';
+        renderTransactions();
+      }
+    }
+
+    function renderCalendarView() {
+      const container = document.getElementById('txCalendarViewContainer');
+      if (!container) return;
+
+      const curMonthStr = appState.currentMonth || 'Septiembre 2026';
+      const monthParts = curMonthStr.split(' ');
+      const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+      let mIndex = monthNames.findIndex(m => m.toLowerCase() === (monthParts[0] || '').toLowerCase());
+      if (mIndex === -1) mIndex = 8;
+      const yearNum = parseInt(monthParts[1]) || 2026;
+
+      const totalDays = new Date(yearNum, mIndex + 1, 0).getDate();
+      const firstDayOfWeek = (new Date(yearNum, mIndex, 1).getDay() + 6) % 7;
+
+      const allIncomes = appState.incomes && appState.incomes[curMonthStr] ? appState.incomes[curMonthStr] : [];
+      const allExpenses = getMonthTxList();
+
+      const dayEvents = {};
+      for (let d = 1; d <= totalDays; d++) {
+        dayEvents[d] = { incomes: [], expenses: [] };
+      }
+
+      allIncomes.forEach(inc => {
+        const d = parseInt(inc.date) || 15;
+        if (dayEvents[d]) dayEvents[d].incomes.push(inc);
+      });
+
+      allExpenses.forEach(exp => {
+        const due = parseInt(getEffectiveDueDate(exp)) || parseInt(exp.dueDate) || 15;
+        if (dayEvents[due]) dayEvents[due].expenses.push(exp);
+      });
+
+      if (selectedCalendarDay > totalDays) selectedCalendarDay = 1;
+
+      let gridHtml = `
+        <div class="cal-grid-wrapper">
+          <div class="cal-header-bar">
+            <div class="cal-header-title">
+              <span>📅</span> ${monthNames[mIndex]} ${yearNum}
+            </div>
+            <div style="font-size: 11px; color: var(--text-muted); font-weight: 700;">
+              Toca cualquier día para ver vencimientos
+            </div>
+          </div>
+
+          <div class="cal-weekdays">
+            <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
+          </div>
+
+          <div class="cal-days-grid">
+      `;
+
+      for (let i = 0; i < firstDayOfWeek; i++) {
+        gridHtml += `<div class="cal-day-box cal-day-empty"></div>`;
+      }
+
+      for (let day = 1; day <= totalDays; day++) {
+        const ev = dayEvents[day];
+        const isSelected = day === selectedCalendarDay;
+        const hasInc = ev.incomes.length > 0;
+        const hasExpPending = ev.expenses.some(e => (e.status || 'Pagado') === 'Pendiente');
+        const hasExpPaid = ev.expenses.some(e => (e.status || 'Pagado') === 'Pagado');
+        const hasCard = ev.expenses.some(e => (e.category || '').toLowerCase().includes('tarjeta') || e.isInstallment);
+
+        let dotsHtml = '';
+        if (hasInc) dotsHtml += `<div class="cal-dot income" title="Ingresos"></div>`;
+        if (hasExpPending) {
+          dotsHtml += `<div class="cal-dot ${hasCard ? 'expense-pending' : 'service'}" title="Gastos pendientes"></div>`;
+        } else if (hasExpPaid) {
+          dotsHtml += `<div class="cal-dot paid" title="Pagado"></div>`;
+        }
+
+        gridHtml += `
+          <div class="cal-day-box ${isSelected ? 'cal-day-selected' : ''}" onclick="selectCalendarDay(${day})">
+            <div class="cal-day-num">${day}</div>
+            <div class="cal-day-dots">${dotsHtml}</div>
+          </div>
+        `;
+      }
+
+      gridHtml += `</div>`;
+
+      const selEvents = dayEvents[selectedCalendarDay] || { incomes: [], expenses: [] };
+      const selDayDate = new Date(yearNum, mIndex, selectedCalendarDay);
+      const dayName = selDayDate.toLocaleDateString('es-PE', { weekday: 'long' });
+      const dayCap = dayName.charAt(0).toUpperCase() + dayName.slice(1);
+
+      const totalDayExp = selEvents.expenses.reduce((acc, e) => acc + (e.amount || 0), 0);
+      const totalDayPending = selEvents.expenses.filter(e => (e.status || 'Pagado') === 'Pendiente').reduce((acc, e) => acc + (e.amount || 0), 0);
+      const totalDayInc = selEvents.incomes.reduce((acc, i) => acc + (i.amount || 0), 0);
+      const netDayFlow = totalDayInc - totalDayExp;
+
+      let itemsListHtml = '';
+      if (selEvents.incomes.length === 0 && selEvents.expenses.length === 0) {
+        itemsListHtml = `
+          <div style="text-align: center; color: var(--text-muted); padding: 14px; font-size: 12px;">
+            Sin vencimientos ni cobros registrados para este día.
+          </div>
+        `;
+      } else {
+        selEvents.incomes.forEach(inc => {
+          itemsListHtml += `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px; margin-bottom: 6px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 16px;">💵</span>
+                <div>
+                  <div style="font-size: 12px; font-weight: 800; color: var(--text-main);">${inc.name}</div>
+                  <div style="font-size: 10px; color: #059669; font-weight: 700;">Ingreso programado</div>
+                </div>
+              </div>
+              <div style="font-size: 13px; font-weight: 900; color: #059669;">+ S/ ${inc.amount.toFixed(2)}</div>
+            </div>
+          `;
+        });
+
+        selEvents.expenses.forEach(exp => {
+          const isPending = (exp.status || 'Pagado') === 'Pendiente';
+          itemsListHtml += `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 12px; margin-bottom: 6px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 16px;">${(CATEGORIES[exp.category] || {}).icon || '🏷️'}</span>
+                <div>
+                  <div style="font-size: 12px; font-weight: 800; color: var(--text-main);">${exp.name}</div>
+                  <div style="font-size: 10px; color: var(--text-muted); font-weight: 600;">${exp.category} · ${isPending ? '⏳ Pendiente' : '🟢 Pagado'}</div>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 13px; font-weight: 900; color: ${isPending ? '#ef4444' : 'var(--text-main)'};">
+                  S/ ${exp.amount.toFixed(2)}
+                </span>
+                <button class="btn btn-outline btn-sm" onclick="toggleTxStatus('${exp.id}')" style="font-size: 10px; padding: 2px 6px; border-radius: 6px;">
+                  ${isPending ? 'Pagar' : 'Deshacer'}
+                </button>
+              </div>
+            </div>
+          `;
+        });
+      }
+
+      gridHtml += `
+        <div class="cal-day-inspector">
+          <div class="flex-between mb-2">
+            <div>
+              <div style="font-size: 14px; font-weight: 900; color: var(--text-main);">${dayCap} ${selectedCalendarDay} de ${monthNames[mIndex]}</div>
+              <div style="font-size: 11px; color: var(--text-muted); font-weight: 600;">
+                ${selEvents.expenses.length} pagos · ${selEvents.incomes.length} ingresos
+              </div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 10px; color: var(--text-muted); font-weight: 700;">Flujo Neto del Día</div>
+              <div style="font-size: 14px; font-weight: 900; color: ${netDayFlow >= 0 ? '#10b981' : '#ef4444'};">
+                ${netDayFlow >= 0 ? '+' : ''} S/ ${netDayFlow.toFixed(2)}
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top: 10px;">
+            ${itemsListHtml}
+          </div>
+
+          <div class="flex-between" style="font-size: 11px; margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border); color: var(--text-muted);">
+            <span>Pendiente por pagar hoy: <strong style="color: #ef4444;">S/ ${totalDayPending.toFixed(2)}</strong></span>
+            <span>Total compromisos: <strong>S/ ${totalDayExp.toFixed(2)}</strong></span>
+          </div>
+        </div>
+      </div>
+      `;
+
+      container.innerHTML = gridHtml;
+    }
+
+    function selectCalendarDay(day) {
+      selectedCalendarDay = day;
+      renderCalendarView();
     }
 
     function renderAuditTable() {
