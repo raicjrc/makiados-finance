@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Simulación Glassmorphism v2 — Makiados Finance</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      /* Palette 1: Frosted Twilight Slate (Dark Suave, NO negro) */
+      --twilight-bg: radial-gradient(circle at 20% 15%, rgba(99, 102, 241, 0.18) 0%, transparent 45%),
+                     radial-gradient(circle at 85% 60%, rgba(16, 185, 129, 0.15) 0%, transparent 45%),
+                     radial-gradient(circle at 50% 90%, rgba(245, 158, 11, 0.12) 0%, transparent 50%),
+                     #1e293b;
+      --twilight-card: rgba(30, 41, 59, 0.65);
+      --twilight-card-hover: rgba(51, 65, 85, 0.75);
+      --twilight-border: rgba(255, 255, 255, 0.14);
+      --twilight-text-main: #f8fafc;
+      --twilight-text-muted: #94a3b8;
+      --twilight-text-subtle: #cbd5e1;
+
+      /* Palette 2: Frosted Crystal Light (Estilo Apple macOS / iOS) */
+      --crystal-bg: radial-gradient(circle at 15% 10%, rgba(99, 102, 241, 0.12) 0%, transparent 40%),
+                    radial-gradient(circle at 85% 30%, rgba(56, 189, 248, 0.12) 0%, transparent 40%),
+                    radial-gradient(circle at 50% 85%, rgba(16, 185, 129, 0.10) 0%, transparent 45%),
+                    #f1f5f9;
+      --crystal-card: rgba(255, 255, 255, 0.72);
+      --crystal-card-hover: rgba(255, 255, 255, 0.88);
+      --crystal-border: rgba(255, 255, 255, 0.85);
+      --crystal-text-main: #0f172a;
+      --crystal-text-muted: #64748b;
+      --crystal-text-subtle: #475569;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+    }
+
+    /* THEME: TWILIGHT SLATE (Default: Dark Suave / No Negro) */
+    body.theme-twilight {
+      background: var(--twilight-bg);
+      background-attachment: fixed;
+      color: var(--twilight-text-main);
+      min-height: 100vh;
+      padding-bottom: 70px;
+    }
+    body.theme-twilight .glass-card {
+      background: var(--twilight-card);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--twilight-border);
+      box-shadow: 0 12px 36px -8px rgba(0, 0, 0, 0.35), 0 1px 3px rgba(255, 255, 255, 0.05);
+      color: var(--twilight-text-main);
+    }
+    body.theme-twilight .glass-card:hover {
+      background: var(--twilight-card-hover);
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+    body.theme-twilight .text-muted { color: var(--twilight-text-muted); }
+    body.theme-twilight .text-main { color: var(--twilight-text-main); }
+    body.theme-twilight .glass-header {
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(24px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+    }
+    body.theme-twilight .pill-badge {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #e2e8f0;
+    }
+    body.theme-twilight .tx-row {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    body.theme-twilight .tx-row:hover {
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    /* THEME: CRYSTAL LIGHT (Light Glassmorphism estilo macOS / iOS) */
+    body.theme-crystal {
+      background: var(--crystal-bg);
+      background-attachment: fixed;
+      color: var(--crystal-text-main);
+      min-height: 100vh;
+      padding-bottom: 70px;
+    }
+    body.theme-crystal .glass-card {
+      background: var(--crystal-card);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid var(--crystal-border);
+      box-shadow: 0 14px 34px -10px rgba(99, 102, 241, 0.08), 0 4px 16px rgba(0, 0, 0, 0.03);
+      color: var(--crystal-text-main);
+    }
+    body.theme-crystal .glass-card:hover {
+      background: var(--crystal-card-hover);
+      border-color: #ffffff;
+      box-shadow: 0 18px 40px -10px rgba(99, 102, 241, 0.14), 0 6px 20px rgba(0, 0, 0, 0.05);
+    }
+    body.theme-crystal .text-muted { color: var(--crystal-text-muted); }
+    body.theme-crystal .text-main { color: var(--crystal-text-main); }
+    body.theme-crystal .glass-header {
+      background: rgba(255, 255, 255, 0.80);
+      backdrop-filter: blur(24px);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    }
+    body.theme-crystal .pill-badge {
+      background: rgba(255, 255, 255, 0.85);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      color: #334155;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+    }
+    body.theme-crystal .tx-row {
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    body.theme-crystal .tx-row:hover {
+      background: rgba(99, 102, 241, 0.04);
+    }
+
+    /* COMMON LAYOUT */
+    .container {
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    /* THEME SWITCHER BAR */
+    .theme-controller-bar {
+      position: sticky;
+      top: 10px;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 18px;
+      border-radius: 20px;
+      margin-bottom: 18px;
+    }
+    .theme-controller-bar.glass-card {
+      border-radius: 20px;
+    }
+    .theme-pills {
+      display: flex;
+      gap: 8px;
+      background: rgba(0, 0, 0, 0.12);
+      padding: 4px;
+      border-radius: 14px;
+    }
+    .theme-pill-btn {
+      padding: 6px 14px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .theme-pill-btn.active {
+      background: #4f46e5;
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.35);
+    }
+    .theme-pill-btn:not(.active) {
+      background: transparent;
+      color: inherit;
+      opacity: 0.7;
+    }
+
+    /* HEADER */
+    .sim-header {
+      padding: 16px 20px;
+      border-radius: 22px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .brand-title {
+      font-size: 19px;
+      font-weight: 800;
+      letter-spacing: -0.4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .brand-badge {
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: #fff;
+      font-weight: 700;
+    }
+
+    /* PHASE LABELS */
+    .phase-tag {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      padding: 3px 9px;
+      border-radius: 6px;
+      background: rgba(79, 70, 229, 0.15);
+      color: #6366f1;
+      display: inline-block;
+      margin-bottom: 8px;
+    }
+
+    /* FASE 1: STATS KPI CARDS */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+    @media (max-width: 768px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    .stat-card {
+      border-radius: 20px;
+      padding: 16px;
+      position: relative;
+      overflow: hidden;
+      cursor: default;
+    }
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+    }
+    .stat-card.income::before { background: linear-gradient(90deg, #10b981, #34d399); }
+    .stat-card.expense::before { background: linear-gradient(90deg, #ef4444, #f87171); }
+    .stat-card.balance::before { background: linear-gradient(90deg, #6366f1, #818cf8); }
+    .stat-card.savings::before { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+
+    .stat-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .stat-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+    }
+    .stat-icon {
+      font-size: 15px;
+      padding: 5px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.1);
+    }
+    .stat-val {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.6px;
+      margin-bottom: 6px;
+    }
+    .stat-sub {
+      font-size: 11px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* FASE 2: CHARTS & CONTAINERS */
+    .grid-2col {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+    @media (max-width: 850px) {
+      .grid-2col { grid-template-columns: 1fr; }
+    }
+    .chart-box {
+      border-radius: 22px;
+      padding: 20px;
+    }
+    .box-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .box-title {
+      font-size: 14px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* BUDGET PROGRESS LIST */
+    .budget-item {
+      margin-bottom: 12px;
+    }
+    .budget-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+    .progress-bar-bg {
+      height: 8px;
+      border-radius: 6px;
+      background: rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+    }
+    body.theme-twilight .progress-bar-bg { background: rgba(255, 255, 255, 0.08); }
+    .progress-fill {
+      height: 100%;
+      border-radius: 6px;
+    }
+
+    /* FASE 3: TRANSACTIONS LIST */
+    .tx-container {
+      border-radius: 22px;
+      padding: 20px;
+      margin-bottom: 22px;
+    }
+    .tx-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 6px;
+    }
+    .tx-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .tx-icon-circle {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+      background: rgba(79, 70, 229, 0.12);
+      border: 1px solid rgba(79, 70, 229, 0.20);
+    }
+    .tx-desc {
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .tx-sub {
+      font-size: 11px;
+    }
+    .tx-amount {
+      font-size: 14px;
+      font-weight: 800;
+      text-align: right;
+    }
+    .tx-badge {
+      font-size: 10px;
+      padding: 2px 7px;
+      border-radius: 6px;
+      font-weight: 700;
+    }
+
+    /* FASE 4: FLOATING ACTION DOCK */
+    .dock-bar {
+      position: fixed;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 8px 16px;
+      border-radius: 30px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      z-index: 99;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
+    }
+    .dock-btn {
+      padding: 8px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.12);
+      color: inherit;
+    }
+    .dock-btn.primary {
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4);
+    }
+  </style>
+</head>
+<body class="theme-twilight" id="simBody">
+
+  <div class="container">
+
+    <!-- THEME CONTROLLER & COMPARISON SWITCHER -->
+    <div class="theme-controller-bar glass-card">
+      <div>
+        <div style="font-size: 13px; font-weight: 800; display: flex; align-items: center; gap: 6px;">
+          <span>🎨 Simulación de Glassmorphism Más Claro</span>
+        </div>
+        <div class="text-muted" style="font-size: 11px; margin-top: 2px;">
+          Alterna en vivo entre las 2 opciones visuales para comparar y elegir.
+        </div>
+      </div>
+      <div class="theme-pills">
+        <button class="theme-pill-btn active" id="btnTwilight" onclick="setTheme('twilight')">
+          <span>🌙</span> Twilight Slate (Dark Suave)
+        </button>
+        <button class="theme-pill-btn" id="btnCrystal" onclick="setTheme('crystal')">
+          <span>✨</span> Crystal (Light Frosted)
+        </button>
+      </div>
+    </div>
+
+    <!-- SIMULATED HEADER -->
+    <div class="sim-header glass-card">
+      <div class="brand-title">
+        <span>💎 Makiados Finance</span>
+        <span class="brand-badge">v52 Glassmorphism</span>
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <span class="pill-badge" style="padding: 6px 12px; font-size: 12px; font-weight: 700; border-radius: 12px; cursor: pointer;">
+          📅 Setiembre 2026 ▾
+        </span>
+        <span class="pill-badge" style="padding: 6px 12px; font-size: 12px; font-weight: 700; border-radius: 12px; cursor: pointer;">
+          🏷️ Categorías
+        </span>
+        <span class="pill-badge" style="padding: 6px 12px; font-size: 12px; font-weight: 700; border-radius: 12px; cursor: pointer;">
+          💳 Simulador
+        </span>
+      </div>
+    </div>
+
+    <!-- FASE 1: TARJETAS DE MÉTRICAS Y KPIS -->
+    <div>
+      <span class="phase-tag">Fase 1: Tarjetas de Métricas & KPIs</span>
+      <div class="stats-grid">
+        <div class="glass-card stat-card balance">
+          <div class="stat-header">
+            <span class="stat-label text-muted">Balance Disponible</span>
+            <span class="stat-icon">💰</span>
+          </div>
+          <div class="stat-val text-main">S/ 14,850.00</div>
+          <div class="stat-sub" style="color: #10b981;">
+            <span>↑ +12.4% vs mes anterior</span>
+          </div>
+        </div>
+
+        <div class="glass-card stat-card income">
+          <div class="stat-header">
+            <span class="stat-label text-muted">Ingresos del Mes</span>
+            <span class="stat-icon">📈</span>
+          </div>
+          <div class="stat-val text-main">S/ 8,800.00</div>
+          <div class="stat-sub text-muted">
+            <span>César (65%) + Gaby (35%)</span>
+          </div>
+        </div>
+
+        <div class="glass-card stat-card expense">
+          <div class="stat-header">
+            <span class="stat-label text-muted">Gastos Totales</span>
+            <span class="stat-icon">📉</span>
+          </div>
+          <div class="stat-val text-main">S/ 3,420.50</div>
+          <div class="stat-sub" style="color: #f59e0b;">
+            <span>38.8% del ingreso</span>
+          </div>
+        </div>
+
+        <div class="glass-card stat-card savings">
+          <div class="stat-header">
+            <span class="stat-label text-muted">Ahorro Mensual</span>
+            <span class="stat-icon">🛡️</span>
+          </div>
+          <div class="stat-val text-main">S/ 5,379.50</div>
+          <div class="stat-sub" style="color: #6366f1;">
+            <span>Meta cumplida (61.1%)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FASE 2: GRÁFICOS Y CONTENEDORES DE PRESUPUESTO -->
+    <div>
+      <span class="phase-tag">Fase 2: Gráficos & Paneles de Presupuesto</span>
+      <div class="grid-2col">
+        <!-- Chart box -->
+        <div class="glass-card chart-box">
+          <div class="box-header">
+            <div class="box-title">
+              <span>📊 Evolución de Saldo & Flujo Mensual</span>
+            </div>
+            <span class="pill-badge" style="font-size: 11px; padding: 3px 8px; border-radius: 8px;">2026</span>
+          </div>
+          <div style="height: 200px;">
+            <canvas id="simChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Budget progress box -->
+        <div class="glass-card chart-box">
+          <div class="box-header">
+            <div class="box-title">
+              <span>🎯 Presupuestos por Categoría</span>
+            </div>
+            <span class="pill-badge" style="font-size: 11px; padding: 3px 8px; border-radius: 8px; cursor: pointer;">
+              ⚙️ Gestionar
+            </span>
+          </div>
+
+          <div class="budget-item">
+            <div class="budget-meta">
+              <span>🛒 Alimentación & Super</span>
+              <span class="text-muted">S/ 1,200 / S/ 1,800 (66%)</span>
+            </div>
+            <div class="progress-bar-bg">
+              <div class="progress-fill" style="width: 66%; background: linear-gradient(90deg, #10b981, #34d399);"></div>
+            </div>
+          </div>
+
+          <div class="budget-item">
+            <div class="budget-meta">
+              <span>🏠 Hogar & Servicios</span>
+              <span class="text-muted">S/ 850 / S/ 1,000 (85%)</span>
+            </div>
+            <div class="progress-bar-bg">
+              <div class="progress-fill" style="width: 85%; background: linear-gradient(90deg, #f59e0b, #fbbf24);"></div>
+            </div>
+          </div>
+
+          <div class="budget-item">
+            <div class="budget-meta">
+              <span>🚗 Transporte & Gasolina</span>
+              <span class="text-muted">S/ 480 / S/ 600 (80%)</span>
+            </div>
+            <div class="progress-bar-bg">
+              <div class="progress-fill" style="width: 80%; background: linear-gradient(90deg, #6366f1, #818cf8);"></div>
+            </div>
+          </div>
+
+          <div class="budget-item">
+            <div class="budget-meta">
+              <span>🎉 Salidas & Ocio</span>
+              <span style="color: #ef4444; font-weight: 800;">S/ 890 / S/ 800 (111%)</span>
+            </div>
+            <div class="progress-bar-bg">
+              <div class="progress-fill" style="width: 100%; background: linear-gradient(90deg, #ef4444, #f87171);"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FASE 3: LISTA DE TRANSACCIONES CON EFECTO GLASS -->
+    <div>
+      <span class="phase-tag">Fase 3: Listas & Filas de Transacciones</span>
+      <div class="glass-card tx-container">
+        <div class="box-header">
+          <div class="box-title">
+            <span>📋 Últimos Movimientos</span>
+          </div>
+          <div style="display: flex; gap: 6px;">
+            <span class="pill-badge" style="font-size: 11px; padding: 4px 10px; border-radius: 12px; cursor: pointer;">🔍 Buscar</span>
+            <span class="pill-badge" style="font-size: 11px; padding: 4px 10px; border-radius: 12px; cursor: pointer;">🏷️ Filtrar</span>
+          </div>
+        </div>
+
+        <div class="tx-row">
+          <div class="tx-left">
+            <div class="tx-icon-circle">🛒</div>
+            <div>
+              <div class="tx-desc">Supermercado Wong</div>
+              <div class="tx-sub text-muted">Alimentación • Tarjeta BCP • 12 Set, 18:30</div>
+            </div>
+          </div>
+          <div>
+            <div class="tx-amount" style="color: #ef4444;">- S/ 385.20</div>
+            <div class="tx-badge" style="background: rgba(239, 68, 68, 0.12); color: #ef4444; text-align: right;">Gasto César</div>
+          </div>
+        </div>
+
+        <div class="tx-row">
+          <div class="tx-left">
+            <div class="tx-icon-circle" style="background: rgba(16, 185, 129, 0.12); border-color: rgba(16, 185, 129, 0.25);">💼</div>
+            <div>
+              <div class="tx-desc">Abono de Sueldo Quincena</div>
+              <div class="tx-sub text-muted">Ingreso • Cuenta BBVA • 10 Set, 09:00</div>
+            </div>
+          </div>
+          <div>
+            <div class="tx-amount" style="color: #10b981;">+ S/ 4,400.00</div>
+            <div class="tx-badge" style="background: rgba(16, 185, 129, 0.12); color: #10b981; text-align: right;">Ingreso Fijo</div>
+          </div>
+        </div>
+
+        <div class="tx-row">
+          <div class="tx-left">
+            <div class="tx-icon-circle" style="background: rgba(99, 102, 241, 0.12); border-color: rgba(99, 102, 241, 0.25);">💳</div>
+            <div>
+              <div class="tx-desc">Cuota 2/6 MacBook Air M3</div>
+              <div class="tx-sub text-muted">Tecnología • Cuota Sin Intereses • 08 Set</div>
+            </div>
+          </div>
+          <div>
+            <div class="tx-amount" style="color: #6366f1;">- S/ 600.00</div>
+            <div class="tx-badge" style="background: rgba(99, 102, 241, 0.12); color: #6366f1; text-align: right;">Cuota Simulador</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FASE 4: FLOATING ACTION DOCK -->
+  <div class="dock-bar glass-card">
+    <button class="dock-btn primary">
+      <span>➕</span> Nuevo Registro
+    </button>
+    <button class="dock-btn">
+      <span>💳</span> Simulador
+    </button>
+    <button class="dock-btn">
+      <span>🏷️</span> Categorías
+    </button>
+    <button class="dock-btn">
+      <span>📊</span> Reportes
+    </button>
+  </div>
+
+  <script>
+    let chartInstance = null;
+
+    function setTheme(theme) {
+      const body = document.getElementById('simBody');
+      const btnTwilight = document.getElementById('btnTwilight');
+      const btnCrystal = document.getElementById('btnCrystal');
+
+      if (theme === 'twilight') {
+        body.className = 'theme-twilight';
+        btnTwilight.classList.add('active');
+        btnCrystal.classList.remove('active');
+        renderChart('#94a3b8', 'rgba(255,255,255,0.06)');
+      } else {
+        body.className = 'theme-crystal';
+        btnCrystal.classList.add('active');
+        btnTwilight.classList.remove('active');
+        renderChart('#64748b', 'rgba(0,0,0,0.05)');
+      }
+    }
+
+    function renderChart(textColor, gridColor) {
+      const ctx = document.getElementById('simChart');
+      if (!ctx) return;
+      if (chartInstance) chartInstance.destroy();
+
+      chartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['May', 'Jun', 'Jul', 'Ago', 'Set (Actual)', 'Oct (Proj)'],
+          datasets: [
+            {
+              label: 'Ingresos',
+              data: [8200, 8500, 8800, 8800, 8800, 8800],
+              backgroundColor: 'rgba(99, 102, 241, 0.75)',
+              borderRadius: 6
+            },
+            {
+              label: 'Gastos',
+              data: [3800, 3900, 3500, 3700, 3420, 3600],
+              backgroundColor: 'rgba(239, 68, 68, 0.65)',
+              borderRadius: 6
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              labels: { color: textColor, font: { family: 'Plus Jakarta Sans', weight: '700', size: 11 } }
+            }
+          },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: { color: textColor, font: { family: 'Plus Jakarta Sans', size: 10 } }
+            },
+            y: {
+              grid: { color: gridColor },
+              ticks: { color: textColor, font: { family: 'Plus Jakarta Sans', size: 10 } }
+            }
+          }
+        }
+      });
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      renderChart('#94a3b8', 'rgba(255,255,255,0.06)');
+    });
+  </script>
+</body>
+</html>

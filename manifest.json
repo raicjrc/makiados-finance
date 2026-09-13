@@ -1,6 +1,6 @@
 {
-  "short_name": "Finanzas Pro",
-  "name": "Finanzas Personales Pro - César & Gaby",
+  "short_name": "Finanzas",
+  "name": "Finanzas — Control Financiero Personal",
   "icons": [
     {
       "src": "https://cdn-icons-png.flaticon.com/512/2845/2845722.png",
@@ -14,8 +14,8 @@
     }
   ],
   "start_url": "./index.html",
-  "background_color": "#1e1b4b",
-  "theme_color": "#4f46e5",
+  "background_color": "#f1f5f9",
+  "theme_color": "#ffffff",
   "display": "standalone",
   "orientation": "portrait"
 }
