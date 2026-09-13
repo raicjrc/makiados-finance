@@ -1074,6 +1074,265 @@
       border: 1px solid var(--warning-border);
       white-space: nowrap;
     }
+
+    /* ====== GLASSMORPHISM DESIGN SYSTEM ====== */
+    .header-action-pill {
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
+      color: white;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 5px 12px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      user-select: none;
+    }
+    .header-action-pill:hover {
+      background: rgba(255, 255, 255, 0.22);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    }
+    .header-action-pill:active { transform: translateY(0); }
+
+    .glass-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 15, 29, 0.78);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      z-index: 2500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .glass-backdrop.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    .glass-modal {
+      background: rgba(15, 23, 42, 0.94);
+      backdrop-filter: blur(28px);
+      -webkit-backdrop-filter: blur(28px);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      box-shadow: 0 32px 80px rgba(0, 0, 0, 0.65), 0 1px 0 rgba(255, 255, 255, 0.1) inset;
+      border-radius: 24px;
+      color: #f8fafc;
+      width: 100%;
+      max-width: 860px;
+      max-height: 88vh;
+      overflow-y: auto;
+      padding: 26px 28px;
+      transform: scale(0.96) translateY(16px);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+    }
+    .glass-backdrop.active .glass-modal {
+      transform: scale(1) translateY(0);
+    }
+    .glass-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .glass-modal-title {
+      font-size: 19px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #ffffff;
+    }
+    .glass-close-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #94a3b8;
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .glass-close-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+      transform: scale(1.05);
+    }
+    .glass-grid-2col {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 24px;
+    }
+    @media (max-width: 768px) {
+      .glass-grid-2col { grid-template-columns: 1fr; gap: 20px; }
+      .glass-modal { padding: 20px 16px; max-height: 92vh; }
+    }
+    .glass-card-subpanel {
+      background: rgba(30, 41, 59, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 18px;
+      padding: 18px;
+    }
+    .glass-subpanel-title {
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #94a3b8;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .glass-cat-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 10px 14px;
+      margin-bottom: 8px;
+      transition: all 0.15s ease;
+    }
+    .glass-cat-item:hover {
+      background: rgba(30, 41, 59, 0.8);
+      border-color: rgba(255, 255, 255, 0.18);
+    }
+    .glass-cat-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 19px;
+      flex-shrink: 0;
+    }
+    .glass-input {
+      width: 100%;
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      padding: 10px 14px;
+      color: #f8fafc;
+      font-size: 13px;
+      font-weight: 600;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+    .glass-input:focus {
+      border-color: #38bdf8;
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+    }
+    .glass-input::placeholder { color: #64748b; }
+    .glass-label {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+    }
+    .glass-pill-select {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+    .glass-pill-opt {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #94a3b8;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .glass-pill-opt:hover {
+      color: white;
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+    .glass-pill-opt.active {
+      background: linear-gradient(135deg, #0284c7, #38bdf8);
+      border-color: #38bdf8;
+      color: white;
+      box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
+    }
+    .glass-btn-primary {
+      width: 100%;
+      background: linear-gradient(135deg, #06b6d4, #3b82f6);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      padding: 12px;
+      color: white;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(6, 182, 212, 0.35);
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .glass-btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 25px rgba(6, 182, 212, 0.45);
+    }
+    .glass-color-dot {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: transform 0.15s ease, border-color 0.15s ease;
+    }
+    .glass-color-dot:hover { transform: scale(1.15); }
+    .glass-color-dot.active {
+      border-color: white;
+      transform: scale(1.18);
+      box-shadow: 0 0 10px currentColor;
+    }
+    .glass-emoji-btn {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      font-size: 17px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .glass-emoji-btn:hover { background: rgba(255, 255, 255, 0.15); transform: scale(1.1); }
+    .glass-emoji-btn.active {
+      border-color: #38bdf8;
+      background: rgba(56, 189, 248, 0.2);
+      box-shadow: 0 0 8px rgba(56, 189, 248, 0.4);
+    }
   </style>
 </head>
 <body>
@@ -1166,6 +1425,8 @@
             <span style="font-size:14px;">👤</span>
             <span id="userBadgeText" style="font-size:10px; font-weight:700; color:rgba(255,255,255,0.9); max-width:80px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Usuario</span>
           </div>
+          <button class="header-action-pill" onclick="openCategoryManagerModal()" title="Gestión de Categorías y Presupuestos">🏷️ Categorías</button>
+          <button class="header-action-pill" onclick="openInstallmentsSimulatorModal()" title="Simulador de Cuotas y Crédito">💳 Simulador</button>
           <div class="month-selector">
             <select id="monthSelect" onchange="changeMonth(this.value)"></select>
           </div>
@@ -1380,6 +1641,7 @@
         <div class="card">
           <div class="card-header" style="cursor: pointer;" onclick="toggleCollapseCard('categoryBudgetsContainer', 'collapseBtnBudgets')">
             <div class="card-title">🎯 Presupuesto por Categoría</div>
+            <button type="button" class="btn btn-outline btn-sm" onclick="event.stopPropagation(); openCategoryManagerModal();" style="font-size:11px; padding:3px 10px; border-radius:12px; margin-left:auto; margin-right:8px; border-color:#cbd5e1; font-weight:700;">⚙️ Gestionar</button>
             <button type="button" id="collapseBtnBudgets" style="background:none; border:none; font-size:16px; cursor:pointer; color:var(--text-muted); transition: transform 0.2s;">▼</button>
           </div>
           <div id="categoryBudgetsContainer"></div>
@@ -1470,8 +1732,11 @@
       <button onclick="openAddExtraIncomeModal(); toggleFAB();" style="display:flex; align-items:center; gap:8px; padding:10px 18px; border-radius:24px; border:none; background:linear-gradient(135deg,#059669,#10b981); color:white; font-size:13px; font-weight:800; cursor:pointer; box-shadow:0 4px 16px rgba(5,150,105,0.35); transition:all 0.2s;">
         💵 Ingreso Extra
       </button>
-      <button onclick="openAddCategoryModal(); toggleFAB();" style="display:flex; align-items:center; gap:8px; padding:10px 18px; border-radius:24px; border:none; background:linear-gradient(135deg,#eab308,#f59e0b); color:white; font-size:13px; font-weight:800; cursor:pointer; box-shadow:0 4px 16px rgba(245,158,11,0.35); transition:all 0.2s;">
-        🏷️ Nueva Categoría
+      <button onclick="openInstallmentsSimulatorModal(); toggleFAB();" style="display:flex; align-items:center; gap:8px; padding:10px 18px; border-radius:24px; border:none; background:linear-gradient(135deg,#0284c7,#38bdf8); color:white; font-size:13px; font-weight:800; cursor:pointer; box-shadow:0 4px 16px rgba(56,189,248,0.35); transition:all 0.2s;">
+        💳 Simulador de Cuotas
+      </button>
+      <button onclick="openCategoryManagerModal(); toggleFAB();" style="display:flex; align-items:center; gap:8px; padding:10px 18px; border-radius:24px; border:none; background:linear-gradient(135deg,#eab308,#f59e0b); color:white; font-size:13px; font-weight:800; cursor:pointer; box-shadow:0 4px 16px rgba(245,158,11,0.35); transition:all 0.2s;">
+        🏷️ Gestionar Categorías
       </button>
     </div>
     <button id="fabBtn" onclick="toggleFAB()" style="position:fixed; bottom:80px; right:20px; z-index:1100; width:52px; height:52px; border-radius:50%; border:none; background:linear-gradient(135deg,#4f46e5,#7c3aed); color:white; font-size:24px; font-weight:800; cursor:pointer; box-shadow:0 6px 20px rgba(79,70,229,0.4); transition:all 0.25s ease; display:flex; align-items:center; justify-content:center;">
@@ -1561,6 +1826,208 @@
       </div>
       <div class="modal-actions">
         <button type="button" class="btn btn-primary" onclick="closeModal('explainSurplusModal')">¡Entendido! [ESC]</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: GESTIÓN DE CATEGORÍAS (GLASSMORPHISM) -->
+  <div class="glass-backdrop" id="categoryManagerModal" onclick="if(event.target === this) closeGlassModal('categoryManagerModal')">
+    <div class="glass-modal">
+      <div class="glass-modal-header">
+        <div class="glass-modal-title">
+          <span style="font-size: 24px;">🏷️</span>
+          <div>
+            <div>Gestión de Categorías</div>
+            <div style="font-size: 11px; font-weight: 600; color: #38bdf8;">Personaliza límites, iconos y colores</div>
+          </div>
+        </div>
+        <button class="glass-close-btn" onclick="closeGlassModal('categoryManagerModal')">✕</button>
+      </div>
+
+      <div class="glass-grid-2col">
+        <!-- Columna Izquierda: Categorías Activas -->
+        <div class="glass-card-subpanel">
+          <div class="glass-subpanel-title">
+            <span>Categorías Activas</span>
+            <span style="font-size: 11px; color: #38bdf8;" id="managerTotalCatsCount">0 categorías</span>
+          </div>
+          <div id="categoryManagerList" style="max-height: 440px; overflow-y: auto; padding-right: 4px;"></div>
+        </div>
+
+        <!-- Columna Derecha: Crear Nueva Categoría -->
+        <div class="glass-card-subpanel">
+          <div class="glass-subpanel-title">Crear Nueva Categoría</div>
+          
+          <div style="margin-bottom: 14px;">
+            <label class="glass-label">Icono & Emoji</label>
+            <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
+              <input type="text" id="managerCatIcon" class="glass-input" style="width: 54px; text-align: center; font-size: 20px; padding: 6px;" value="⭐" maxlength="3">
+              <span style="font-size: 11px; color: #94a3b8;">Elige uno rápido o escribe el tuyo</span>
+            </div>
+            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+              <button type="button" class="glass-emoji-btn active" onclick="selectManagerEmoji('⭐', this)">⭐</button>
+              <button type="button" class="glass-emoji-btn" onclick="selectManagerEmoji('🚗', this)">🚗</button>
+              <button type="button" class="glass-emoji-btn" onclick="selectManagerEmoji('🏠', this)">🏠</button>
+              <button type="button" class="glass-emoji-btn" onclick="selectManagerEmoji('🐱', this)">🐱</button>
+              <button type="button" class="glass-emoji-btn" onclick="selectManagerEmoji('💳', this)">💳</button>
+              <button type="button" class="glass-emoji-btn" onclick="selectManagerEmoji('🛒', this)">🛒</button>
+              <button type="button" class="glass-emoji-btn" onclick="selectManagerEmoji('✈️', this)">✈️</button>
+              <button type="button" class="glass-emoji-btn" onclick="selectManagerEmoji('🎓', this)">🎓</button>
+              <button type="button" class="glass-emoji-btn" onclick="selectManagerEmoji('🎬', this)">🎬</button>
+              <button type="button" class="glass-emoji-btn" onclick="selectManagerEmoji('🏋️', this)">🏋️</button>
+              <button type="button" class="glass-emoji-btn" onclick="selectManagerEmoji('💡', this)">💡</button>
+              <button type="button" class="glass-emoji-btn" onclick="selectManagerEmoji('💅', this)">💅</button>
+            </div>
+          </div>
+
+          <div style="margin-bottom: 14px;">
+            <label class="glass-label">Color Temático</label>
+            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 6px;">
+              <div class="glass-color-dot active" style="background:#38bdf8;" onclick="selectManagerColor('#38bdf8', this)"></div>
+              <div class="glass-color-dot" style="background:#10b981;" onclick="selectManagerColor('#10b981', this)"></div>
+              <div class="glass-color-dot" style="background:#8b5cf6;" onclick="selectManagerColor('#8b5cf6', this)"></div>
+              <div class="glass-color-dot" style="background:#f59e0b;" onclick="selectManagerColor('#f59e0b', this)"></div>
+              <div class="glass-color-dot" style="background:#ef4444;" onclick="selectManagerColor('#ef4444', this)"></div>
+              <div class="glass-color-dot" style="background:#ec4899;" onclick="selectManagerColor('#ec4899', this)"></div>
+              <div class="glass-color-dot" style="background:#06b6d4;" onclick="selectManagerColor('#06b6d4', this)"></div>
+              <div class="glass-color-dot" style="background:#eab308;" onclick="selectManagerColor('#eab308', this)"></div>
+            </div>
+            <input type="hidden" id="managerCatColor" value="#38bdf8">
+          </div>
+
+          <div style="margin-bottom: 14px;">
+            <label class="glass-label">Nombre de Categoría</label>
+            <input type="text" id="managerCatName" class="glass-input" placeholder="Ej: Viajes, Suscripciones...">
+          </div>
+
+          <div style="margin-bottom: 18px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <label class="glass-label" style="margin-bottom: 0;">Límite Mensual (S/)</label>
+              <span id="managerBudgetPreview" style="font-size: 12px; font-weight: 800; color: #38bdf8;">S/ 1,000.00</span>
+            </div>
+            <input type="number" id="managerCatBudget" class="glass-input" placeholder="1000" value="1000" oninput="document.getElementById('managerBudgetPreview').textContent = 'S/ ' + (parseFloat(this.value)||0).toLocaleString('es-PE', {minimumFractionDigits:2})">
+          </div>
+
+          <button type="button" class="glass-btn-primary" onclick="saveCategoryFromManager()">
+            ✨ Añadir Categoría
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: SIMULADOR DE CUOTAS Y CRÉDITO (GLASSMORPHISM) -->
+  <div class="glass-backdrop" id="installmentsSimulatorModal" onclick="if(event.target === this) closeGlassModal('installmentsSimulatorModal')">
+    <div class="glass-modal" style="max-width: 900px;">
+      <div class="glass-modal-header">
+        <div class="glass-modal-title">
+          <span style="font-size: 24px;">💳</span>
+          <div>
+            <div>Simulador de Cuotas & Crédito</div>
+            <div style="font-size: 11px; font-weight: 600; color: #38bdf8;">Proyecta el impacto en tu flujo de caja futuro</div>
+          </div>
+        </div>
+        <button class="glass-close-btn" onclick="closeGlassModal('installmentsSimulatorModal')">✕</button>
+      </div>
+
+      <div class="glass-grid-2col">
+        <!-- Columna Izquierda: Calculadora -->
+        <div class="glass-card-subpanel">
+          <div class="glass-subpanel-title">Parámetros de la Compra</div>
+
+          <div style="margin-bottom: 12px;">
+            <label class="glass-label">Concepto de la Compra</label>
+            <input type="text" id="simConcept" class="glass-input" placeholder="Ej: Laptop trabajo, Pasajes Cusco, TV...">
+          </div>
+
+          <div style="margin-bottom: 12px;">
+            <label class="glass-label">Monto Total de la Compra (S/)</label>
+            <input type="number" id="simAmount" class="glass-input" placeholder="3600" value="3600" oninput="updateSimulation()">
+          </div>
+
+          <div style="margin-bottom: 12px;">
+            <label class="glass-label">Categoría</label>
+            <select id="simCategory" class="glass-input" style="background: #1e293b; color: white;">
+              <!-- Llenado dinámico -->
+            </select>
+          </div>
+
+          <div style="margin-bottom: 12px;">
+            <label class="glass-label">Número de Cuotas</label>
+            <div class="glass-pill-select" id="simCuotasPills">
+              <div class="glass-pill-opt" onclick="setSimCuotas(3, this)">3 cuotas</div>
+              <div class="glass-pill-opt" onclick="setSimCuotas(6, this)">6 cuotas</div>
+              <div class="glass-pill-opt active" onclick="setSimCuotas(12, this)">12 cuotas</div>
+              <div class="glass-pill-opt" onclick="setSimCuotas(18, this)">18 cuotas</div>
+              <div class="glass-pill-opt" onclick="setSimCuotas(24, this)">24 cuotas</div>
+            </div>
+          </div>
+
+          <div style="margin-bottom: 12px; background: rgba(15, 23, 42, 0.6); padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-size: 12px; font-weight: 700; color: #f8fafc;">Cuotas Sin Intereses (0% TEA)</span>
+              <input type="checkbox" id="simZeroInterest" checked onchange="toggleSimZeroInterest()" style="width: 18px; height: 18px; accent-color: #38bdf8; cursor: pointer;">
+            </div>
+            <div id="simTeaGroup" style="display: none; margin-top: 8px;">
+              <label class="glass-label">Tasa de Interés Anual (TEA %)</label>
+              <input type="number" id="simTea" class="glass-input" placeholder="18.5" value="0" step="0.1" oninput="updateSimulation()">
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
+            <div>
+              <label class="glass-label">Mes de Inicio</label>
+              <select id="simStartMonth" class="glass-input" style="background: #1e293b; color: white;" onchange="updateSimulation()">
+                <!-- Llenado dinámico -->
+              </select>
+            </div>
+            <div>
+              <label class="glass-label">Día de Pago</label>
+              <select id="simDueDay" class="glass-input" style="background: #1e293b; color: white;">
+                <option value="15">Día 15</option>
+                <option value="24" selected>Día 24</option>
+                <option value="30">Día 30</option>
+                <option value="5">Día 5</option>
+                <option value="10">Día 10</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Columna Derecha: Proyección y Flujo de Caja -->
+        <div class="glass-card-subpanel" style="display: flex; flex-direction: column;">
+          <div class="glass-subpanel-title">
+            <span>Impacto en Flujo de Caja Mensual</span>
+            <span style="font-size: 10px; color: #94a3b8;">Próximos 6 meses</span>
+          </div>
+
+          <!-- KPI Summary Badges -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
+            <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px 12px;">
+              <div style="font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase;">Cuota Mensual</div>
+              <div id="simMonthlyQuotaDisplay" style="font-size: 19px; font-weight: 800; color: #38bdf8; margin-top: 2px;">S/ 300.00</div>
+            </div>
+            <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px 12px;">
+              <div style="font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase;">Total a Pagar</div>
+              <div id="simTotalToPayDisplay" style="font-size: 19px; font-weight: 800; color: #ffffff; margin-top: 2px;">S/ 3,600.00</div>
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 10px; padding: 8px 12px; margin-bottom: 14px; font-size: 11px;">
+            <span style="color: #cbd5e1; font-weight: 600;">Impacto en tu Bolsa Mensual:</span>
+            <span id="simImpactDisplay" style="color: #38bdf8; font-weight: 800;">-3.4% de tu ingreso</span>
+          </div>
+
+          <!-- Chart Area -->
+          <div style="flex: 1; min-height: 180px; position: relative; margin-bottom: 16px;">
+            <canvas id="simChartCanvas"></canvas>
+          </div>
+
+          <!-- Action Button -->
+          <button type="button" class="glass-btn-primary" onclick="applySimulatedPurchase()">
+            🚀 Simular y Añadir al Presupuesto
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -4035,6 +4502,366 @@
         closeModal('editSalaryModal');
         renderAll();
       }
+    }
+
+    // ================================================================
+    // GESTIÓN DE CATEGORÍAS (GLASSMORPHISM)
+    // ================================================================
+    let selectedManagerEmoji = '⭐';
+    let selectedManagerColor = '#38bdf8';
+
+    function closeGlassModal(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('active');
+    }
+
+    function openCategoryManagerModal() {
+      renderCategoryManagerList();
+      document.getElementById('categoryManagerModal').classList.add('active');
+    }
+
+    function selectManagerEmoji(emoji, btn) {
+      selectedManagerEmoji = emoji;
+      document.getElementById('managerCatIcon').value = emoji;
+      document.querySelectorAll('.glass-emoji-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+    }
+
+    function selectManagerColor(color, dot) {
+      selectedManagerColor = color;
+      document.getElementById('managerCatColor').value = color;
+      document.querySelectorAll('.glass-color-dot').forEach(d => d.classList.remove('active'));
+      if (dot) dot.classList.add('active');
+    }
+
+    function renderCategoryManagerList() {
+      const container = document.getElementById('categoryManagerList');
+      if (!container) return;
+      
+      const txs = getMonthTxList();
+      const realTotals = {};
+      Object.keys(CATEGORIES).forEach(c => realTotals[c] = 0);
+      txs.forEach(t => realTotals[t.category] = (realTotals[t.category] || 0) + t.amount);
+      
+      const countEl = document.getElementById('managerTotalCatsCount');
+      if (countEl) countEl.textContent = `${Object.keys(CATEGORIES).length} categorías`;
+
+      container.innerHTML = Object.keys(CATEGORIES).map(cat => {
+        const info = CATEGORIES[cat] || { icon: '📌', color: '#94a3b8' };
+        const spent = realTotals[cat] || 0;
+        const limit = (appState.categoryBudgets && appState.categoryBudgets[cat]) || 1000;
+        const pct = Math.min(100, (spent / limit) * 100);
+        const left = Math.max(0, limit - spent);
+        
+        let barColor = '#10b981';
+        if (pct > 80) barColor = '#f59e0b';
+        if (pct >= 100) barColor = '#ef4444';
+        
+        const deleteBtn = (cat !== 'Otros') 
+          ? `<button onclick="deleteCategoryFromManager('${cat}')" title="Eliminar categoría" style="background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); color:#f87171; border-radius:8px; width:28px; height:28px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:12px;">🗑️</button>` 
+          : '';
+          
+        return `
+          <div class="glass-cat-item">
+            <div class="glass-cat-icon" style="background:${info.color}20; border:1px solid ${info.color}50; color:${info.color};">
+              ${info.icon}
+            </div>
+            <div style="flex:1; min-width:0;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                <div style="font-weight:800; font-size:13px; color:#f8fafc; display:flex; align-items:center; gap:6px;">
+                  <span style="width:7px; height:7px; border-radius:50%; background:${info.color}; display:inline-block;"></span>
+                  ${cat}
+                </div>
+                <div style="font-size:11px; font-weight:700; color:#cbd5e1;">
+                  S/ ${spent.toFixed(0)} <span style="color:#64748b;">/ S/ ${limit.toFixed(0)}</span>
+                </div>
+              </div>
+              <div style="height:6px; background:rgba(255,255,255,0.08); border-radius:999px; overflow:hidden; margin-bottom:4px;">
+                <div style="height:100%; width:${pct}%; background:${barColor}; border-radius:999px; transition:width 0.3s ease;"></div>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center; font-size:10px; color:#94a3b8;">
+                <span>S/ ${left.toFixed(0)} restante</span>
+                ${pct >= 100 ? '<span style="color:#ef4444; font-weight:800;">⚠️ Excedido</span>' : ''}
+              </div>
+            </div>
+            <div style="display:flex; gap:6px; align-items:center; margin-left:6px;">
+              <button onclick="editCategoryBudgetFromManager('${cat}')" title="Editar límite de presupuesto" style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); color:#cbd5e1; border-radius:8px; width:28px; height:28px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:12px;">✏️</button>
+              ${deleteBtn}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function saveCategoryFromManager() {
+      const name = document.getElementById('managerCatName').value.trim();
+      const icon = document.getElementById('managerCatIcon').value.trim() || '🏷️';
+      const color = document.getElementById('managerCatColor').value || '#38bdf8';
+      const budget = parseFloat(document.getElementById('managerCatBudget').value) || 1000;
+
+      if (!name) return alert('Por favor ingresa un nombre para la categoría.');
+
+      if (!appState.customCategories) appState.customCategories = {};
+      if (!appState.categoryBudgets) appState.categoryBudgets = {};
+
+      appState.customCategories[name] = {
+        icon: icon,
+        badgeClass: 'badge-custom',
+        color: color
+      };
+      appState.categoryBudgets[name] = budget;
+
+      addAuditLog('🏷️ Categoría', `Nueva categoría: ${icon} ${name} (Límite: S/ ${budget})`);
+      saveState();
+      updateDynamicCategories();
+      renderAll();
+      renderCategoryManagerList();
+
+      document.getElementById('managerCatName').value = '';
+      showToast(`✅ Categoría "${name}" creada con éxito`, 'success');
+    }
+
+    function editCategoryBudgetFromManager(cat) {
+      const current = (appState.categoryBudgets && appState.categoryBudgets[cat]) || 1000;
+      const val = prompt(`Ingresa nuevo límite mensual para ${cat} (S/):`, current);
+      if (val !== null && !isNaN(val) && val > 0) {
+        if (!appState.categoryBudgets) appState.categoryBudgets = {};
+        appState.categoryBudgets[cat] = parseFloat(val);
+        addAuditLog('🎯 Presupuesto', `Nuevo límite ${cat}: S/ ${val}`);
+        saveState();
+        renderAll();
+        renderCategoryManagerList();
+        showToast(`✅ Límite de ${cat} actualizado a S/ ${val}`, 'success');
+      }
+    }
+
+    function deleteCategoryFromManager(cat) {
+      if (cat === 'Otros') return alert('No puedes eliminar la categoría por defecto.');
+      const confirmDelete = confirm(`¿Estás seguro de eliminar la categoría "${cat}"?\n\nSi tiene gastos asociados históricos, se mostrarán bajo "Otros".`);
+      if (confirmDelete) {
+        if (!appState.deletedCategories) appState.deletedCategories = [];
+        if (!appState.deletedCategories.includes(cat)) {
+          appState.deletedCategories.push(cat);
+        }
+        if (appState.customCategories && appState.customCategories[cat]) {
+          delete appState.customCategories[cat];
+        }
+        addAuditLog('🗑️ Categoría', `Categoría eliminada: ${cat}`);
+        saveState();
+        updateDynamicCategories();
+        renderAll();
+        renderCategoryManagerList();
+        showToast(`🗑️ Categoría "${cat}" eliminada`, 'info');
+      }
+    }
+
+    // ================================================================
+    // SIMULADOR DE CUOTAS Y CRÉDITO (GLASSMORPHISM)
+    // ================================================================
+    let simChartObj = null;
+    let currentSimCuotas = 12;
+
+    function openInstallmentsSimulatorModal() {
+      // Poblar selector de categorías
+      const catSelect = document.getElementById('simCategory');
+      if (catSelect) {
+        catSelect.innerHTML = Object.keys(CATEGORIES).map(c => 
+          `<option value="${c}">${CATEGORIES[c].icon} ${c}</option>`
+        ).join('');
+      }
+
+      // Poblar selector de meses de inicio
+      const monthSelect = document.getElementById('simStartMonth');
+      if (monthSelect) {
+        const allMonths = getSortedMonths();
+        let curIdx = allMonths.indexOf(appState.currentMonth);
+        if (curIdx === -1) curIdx = 0;
+        const futureMonths = allMonths.slice(curIdx);
+        monthSelect.innerHTML = futureMonths.map(m => 
+          `<option value="${m}" ${m === appState.currentMonth ? 'selected' : ''}>${m}</option>`
+        ).join('');
+      }
+
+      document.getElementById('installmentsSimulatorModal').classList.add('active');
+      setTimeout(updateSimulation, 150);
+    }
+
+    function setSimCuotas(n, el) {
+      currentSimCuotas = n;
+      document.querySelectorAll('#simCuotasPills .glass-pill-opt').forEach(p => p.classList.remove('active'));
+      if (el) el.classList.add('active');
+      updateSimulation();
+    }
+
+    function toggleSimZeroInterest() {
+      const isZero = document.getElementById('simZeroInterest').checked;
+      const teaGroup = document.getElementById('simTeaGroup');
+      if (teaGroup) {
+        teaGroup.style.display = isZero ? 'none' : 'block';
+      }
+      updateSimulation();
+    }
+
+    function updateSimulation() {
+      const amount = parseFloat(document.getElementById('simAmount').value) || 0;
+      const cuotas = currentSimCuotas || 12;
+      const startMonth = document.getElementById('simStartMonth').value || appState.currentMonth;
+      const isZero = document.getElementById('simZeroInterest').checked;
+      const teaInput = parseFloat(document.getElementById('simTea').value) || 0;
+      
+      let monthlyQuota = 0;
+      let totalToPay = 0;
+
+      if (isZero || teaInput === 0) {
+        monthlyQuota = cuotas > 0 ? (amount / cuotas) : 0;
+        totalToPay = amount;
+      } else {
+        // Tasa mensual efectiva = (1 + TEA)^(1/12) - 1
+        const i = Math.pow(1 + (teaInput / 100), 1/12) - 1;
+        monthlyQuota = (amount * (i * Math.pow(1 + i, cuotas))) / (Math.pow(1 + i, cuotas) - 1);
+        totalToPay = monthlyQuota * cuotas;
+      }
+
+      document.getElementById('simMonthlyQuotaDisplay').textContent = `S/ ${monthlyQuota.toFixed(2)}`;
+      document.getElementById('simTotalToPayDisplay').textContent = `S/ ${totalToPay.toFixed(2)}`;
+
+      const totalIncome = getMonthTotalIncome() || 8800;
+      const pctImpact = totalIncome > 0 ? ((monthlyQuota / totalIncome) * 100).toFixed(1) : 0;
+      document.getElementById('simImpactDisplay').textContent = `-${pctImpact}% de tu ingreso mensual`;
+
+      renderSimulationChart(startMonth, cuotas, monthlyQuota);
+    }
+
+    function renderSimulationChart(startMonth, cuotas, monthlyQuota) {
+      const canvas = document.getElementById('simChartCanvas');
+      if (!canvas) return;
+
+      const allMonths = getSortedMonths();
+      let startIdx = allMonths.indexOf(startMonth);
+      if (startIdx === -1) startIdx = allMonths.indexOf(appState.currentMonth);
+      if (startIdx === -1) startIdx = 0;
+
+      const monthsToShow = allMonths.slice(startIdx, startIdx + 6);
+      if (monthsToShow.length === 0) monthsToShow.push(startMonth);
+
+      const labels = monthsToShow.map(m => m.replace(' 2026', ''));
+      const currentBalances = [];
+      const simulatedBalances = [];
+
+      monthsToShow.forEach((m, idx) => {
+        const monthIncome = (appState.incomes && appState.incomes[m]) 
+          ? appState.incomes[m].reduce((sum, i) => sum + (i.amount || 0), 0)
+          : (appState.salary || 8800);
+        const monthTxs = appState.transactions[m] || [];
+        const monthSpent = monthTxs.reduce((sum, t) => sum + (t.amount || 0), 0);
+        const curBalance = Math.max(0, monthIncome - monthSpent);
+
+        currentBalances.push(curBalance);
+        const simDeduction = (idx < cuotas) ? monthlyQuota : 0;
+        simulatedBalances.push(Math.max(0, curBalance - simDeduction));
+      });
+
+      if (simChartObj) {
+        simChartObj.destroy();
+      }
+
+      const ctx = canvas.getContext('2d');
+      simChartObj = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Saldo Actual',
+              data: currentBalances,
+              backgroundColor: '#3b82f6',
+              borderRadius: 6
+            },
+            {
+              label: 'Saldo Con Cuota',
+              data: simulatedBalances,
+              backgroundColor: '#06b6d4',
+              borderRadius: 6
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              labels: { color: '#94a3b8', font: { size: 10, weight: '700' } }
+            },
+            tooltip: {
+              callbacks: {
+                label: (c) => ` S/ ${c.parsed.y.toFixed(2)}`
+              }
+            }
+          },
+          scales: {
+            x: {
+              ticks: { color: '#94a3b8', font: { size: 10, weight: '700' } },
+              grid: { display: false }
+            },
+            y: {
+              ticks: { color: '#64748b', font: { size: 9 }, callback: (v) => 'S/' + v },
+              grid: { color: 'rgba(255,255,255,0.06)' }
+            }
+          }
+        }
+      });
+    }
+
+    function applySimulatedPurchase() {
+      const concept = document.getElementById('simConcept').value.trim();
+      const amount = parseFloat(document.getElementById('simAmount').value) || 0;
+      const category = document.getElementById('simCategory').value;
+      const cuotas = currentSimCuotas || 12;
+      const startMonth = document.getElementById('simStartMonth').value || appState.currentMonth;
+      const dueDay = document.getElementById('simDueDay').value || '24';
+      const isZero = document.getElementById('simZeroInterest').checked;
+      const teaInput = parseFloat(document.getElementById('simTea').value) || 0;
+
+      if (!concept) return alert('Por favor ingresa un concepto para la compra.');
+      if (amount <= 0) return alert('Por favor ingresa un monto válido.');
+
+      let monthlyQuota = 0;
+      if (isZero || teaInput === 0) {
+        monthlyQuota = amount / cuotas;
+      } else {
+        const i = Math.pow(1 + (teaInput / 100), 1/12) - 1;
+        monthlyQuota = (amount * (i * Math.pow(1 + i, cuotas))) / (Math.pow(1 + i, cuotas) - 1);
+      }
+
+      const allMonths = getSortedMonths();
+      let startIdx = allMonths.indexOf(startMonth);
+      if (startIdx === -1) startIdx = allMonths.indexOf(appState.currentMonth);
+      if (startIdx === -1) startIdx = 0;
+
+      const targetMonths = allMonths.slice(startIdx, startIdx + cuotas);
+
+      targetMonths.forEach((m, idx) => {
+        if (!appState.transactions[m]) appState.transactions[m] = [];
+        const cuotaActual = cuotas - idx;
+
+        appState.transactions[m].push({
+          id: m + '_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+          name: `${concept}`,
+          amount: parseFloat(monthlyQuota.toFixed(2)),
+          category: category,
+          status: 'Pendiente',
+          dueDate: dueDay,
+          isInstallment: true,
+          installmentsTotal: cuotas,
+          installmentsCurrent: cuotaActual
+        });
+      });
+
+      addAuditLog('💳 Simulador Cuotas', `Compra '${concept}' añadida: ${cuotas} cuotas de S/ ${monthlyQuota.toFixed(2)} iniciando en ${startMonth}`);
+      saveState();
+      renderAll();
+      closeGlassModal('installmentsSimulatorModal');
+      showToast(`✅ Compra en ${cuotas} cuotas añadida al presupuesto con éxito`, 'success');
     }
 
     // ================================================================
