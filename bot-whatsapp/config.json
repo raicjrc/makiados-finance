@@ -1,0 +1,26 @@
+{
+  "supabaseUrl": "https://swwvbfemxookbqoqotre.supabase.co",
+  "supabaseKey": "sb_publishable_CZUC5ueCxjSDFeA3idgVZg_DaEoIJxf",
+  "userStateId": "state_df652486-c0ce-4f93-9e3a-b6678d68b8d7",
+  "groupName": "Pruebas - Pagos",
+  "groupNamePattern": "Pruebas - Pagos",
+  "anticipationDays": 10,
+  "schedules": [
+    { "label": "Mañana", "cron": "30 8 * * *" },
+    { "label": "Mediodía", "cron": "0 13 * * *" },
+    { "label": "Tarde", "cron": "30 17 * * *" },
+    { "label": "Noche", "cron": "0 21 * * *" }
+  ],
+  "ackKeywords": [
+    "ok",
+    "leido",
+    "leído",
+    "visto",
+    "enterado",
+    "pagado",
+    "listo",
+    "pagados",
+    "anotado",
+    "👍"
+  ]
+}

@@ -1,0 +1,6 @@
+node_modules/
+user-data/
+*.png
+*.log
+temp-report.html
+ack-store.json

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.makiados.whatsappbot</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/local/bin/node</string>
+        <string>/Users/cesarrisso/Desktop/Finanzas/bot-whatsapp/bot.js</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>/Users/cesarrisso/Desktop/Finanzas/bot-whatsapp</string>
+    <key>StandardOutPath</key>
+    <string>/Users/cesarrisso/Desktop/Finanzas/bot-whatsapp/bot.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/cesarrisso/Desktop/Finanzas/bot-whatsapp/bot-error.log</string>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+</dict>
+</plist>
