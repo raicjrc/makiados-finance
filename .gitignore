@@ -1,0 +1,25 @@
+# Entorno y secretos
+.env
+.env.local
+.env.*.local
+
+# Vercel
+.vercel/
+
+# Backups locales (no van al repo)
+database.json
+database_user_immutable_backup.json
+parsed_data.json
+index_backup_*.html
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Archivos temporales
+*.log
+*.tmp
+
+# Node (por si se usa en el futuro)
+node_modules/
