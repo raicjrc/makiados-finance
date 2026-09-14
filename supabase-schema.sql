@@ -33,6 +33,62 @@ CREATE POLICY "Usuario solo ve sus propios datos" ON finanzas_state
 -- Activar Realtime (sincronización WebSocket)
 ALTER PUBLICATION supabase_realtime ADD TABLE finanzas_state;
 
+
+-- ================================================================
+-- TABLA FEEDBACK Y BUGS (Buzón de sugerencias)
+-- ================================================================
+CREATE TABLE IF NOT EXISTS app_feedback (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id text,
+  user_email text,
+  type text,
+  message text,
+  app_version text,
+  created_at timestamp with time zone DEFAULT now()
+);
+
+-- Activar Seguridad RLS
+ALTER TABLE app_feedback ENABLE ROW LEVEL SECURITY;
+
+-- Cualquiera puede enviar feedback (insertar)
+CREATE POLICY "Cualquiera puede insertar feedback" ON app_feedback
+  FOR INSERT
+  WITH CHECK (true);
+
+-- SOLO César puede leer la bandeja de feedback
+CREATE POLICY "Solo admin puede leer feedback" ON app_feedback
+  FOR SELECT
+  USING (auth.email() = 'cesar.risso.f@gmail.com');
+
+
+-- ================================================================
+-- TABLA SUSCRIPCIONES (Paywall / Trial)
+-- ================================================================
+CREATE TABLE IF NOT EXISTS user_subscriptions (
+  user_id text PRIMARY KEY,
+  email text,
+  status text DEFAULT 'trial',
+  trial_ends_at timestamp with time zone,
+  created_at timestamp with time zone DEFAULT now()
+);
+
+-- Activar RLS
+ALTER TABLE user_subscriptions ENABLE ROW LEVEL SECURITY;
+
+-- Todos pueden leer su propia suscripción, pero solo admin puede editar
+CREATE POLICY "Usuario puede ver su suscripción" ON user_subscriptions
+  FOR SELECT
+  USING (user_id = auth.uid()::text);
+
+CREATE POLICY "Cualquiera puede insertar su registro inicial" ON user_subscriptions
+  FOR INSERT
+  WITH CHECK (user_id = auth.uid()::text);
+
+CREATE POLICY "Solo admin puede editar todas las suscripciones" ON user_subscriptions
+  FOR ALL
+  USING (auth.email() = 'cesar.risso.f@gmail.com')
+  WITH CHECK (auth.email() = 'cesar.risso.f@gmail.com');
+
 -- ================================================================
 -- SUPABASE AUTH CONFIG (hacer desde el Dashboard, no SQL):
 -- Authentication > Settings:

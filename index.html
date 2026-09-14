@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Finanzas — Control Financiero Personal</title>
+  <title>FinZen — Paz mental para tu billetera</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#f1f5f9">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -264,46 +264,22 @@
       box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
     }
     @media (max-width: 600px) {
-      .feedback-header-btn {
-        padding: 0;
-        width: 40px;
-        justify-content: center;
-      }
-      .feedback-header-btn span.btn-label {
-        display: none;
-      }
-    }
-
-    @media (max-width: 600px) {
       .top-navbar {
-        padding: 10px 12px;
-        border-radius: 0 0 20px 20px;
+        padding: 8px 10px;
+        border-radius: 0 0 16px 16px;
         margin-bottom: 12px;
       }
-      .brand-title h1 {
-        font-size: 15px;
-      }
-      .brand-avatar {
-        width: 36px;
-        height: 36px;
-        font-size: 18px;
-        border-radius: 10px;
-      }
-      .month-selector select {
-        padding: 6px 10px;
-        font-size: 12px;
-        min-height: 36px;
-        max-width: 140px;
-      }
-      .theme-toggle-btn,
-      .settings-popover-btn {
-        width: 36px;
-        height: 36px;
-        font-size: 15px;
-      }
-      .container {
-        padding: 8px 10px;
-      }
+      .top-navbar-inner { gap: 6px; }
+      .brand-group { gap: 8px; }
+      .brand-title h1 { font-size: 14px; }
+      .brand-title p { font-size: 9px; }
+      .brand-avatar { width: 34px !important; height: 34px !important; border-radius: 10px !important; }
+      .header-right-group { gap: 4px; }
+      .month-selector select { padding: 4px 8px; font-size: 11px; min-height: 32px; max-width: 120px; }
+      .theme-toggle-btn, .settings-popover-btn { width: 34px; height: 34px; font-size: 15px; }
+      .feedback-header-btn { padding: 0; width: 34px; height: 34px; justify-content: center; }
+      .feedback-header-btn span.btn-label { display: none; }
+      .container { padding: 8px 10px; }
     }
 
     /* ====== TEMA TWILIGHT SLATE (DARK SUAVE - CERO NEGRO) ====== */
@@ -2198,8 +2174,8 @@
       
       <!-- Logo y Marca -->
       <div style="text-align: center; margin-bottom: 24px;">
-        <div style="font-size: 42px; margin-bottom: 10px; filter: drop-shadow(0 4px 8px rgba(16,185,129,0.3));">🪙</div>
-        <h2 style="font-size: 24px; font-weight: 800; color: #0f172a; margin-bottom: 4px; letter-spacing: -0.5px;">Finanzas</h2>
+        <img src="logo.jpg" alt="FinZen Logo" style="width: 72px; height: 72px; border-radius: 20px; margin-bottom: 12px; box-shadow: 0 8px 16px rgba(139, 92, 246, 0.4);">
+        <h2 style="font-size: 24px; font-weight: 800; color: #0f172a; margin-bottom: 4px; letter-spacing: -0.5px;">FinZen</h2>
         <p style="font-size: 12px; color: #64748b; margin-bottom: 0;">Control y salud financiera familiar</p>
       </div>
 
@@ -2253,7 +2229,7 @@
       </form>
 
       <!-- Footer versión -->
-      <p style="text-align: center; font-size: 10px; color: #94a3b8; margin-top: 20px; margin-bottom: 0;">Finanzas v52.0 · Powered by Supabase</p>
+      <p style="text-align: center; font-size: 10px; color: #94a3b8; margin-top: 20px; margin-bottom: 0;">FinZen v52.0 · Powered by Supabase</p>
     </div>
   </div>
 
@@ -2264,9 +2240,9 @@
     <div class="top-navbar">
       <div class="top-navbar-inner">
         <div class="brand-group">
-          <div class="brand-avatar">🪙</div>
+          <img src="logo.jpg" alt="FinZen Logo" class="brand-avatar" style="width: 44px; height: 44px; border-radius: 12px; box-shadow: 0 4px 10px rgba(139, 92, 246, 0.3); background: transparent; display: block; border: none; padding: 0;">
           <div class="brand-title">
-            <h1>Finanzas</h1>
+            <h1 style="display:flex; align-items:center; gap:6px;">FinZen <span id="trialBadge" style="display:none; background:linear-gradient(135deg, #f59e0b, #d97706); color:white; font-size:9px; padding:2px 6px; border-radius:10px; font-weight:800; box-shadow:0 2px 4px rgba(245,158,11,0.3); letter-spacing: 0.5px;">PRUEBA: 14D</span></h1>
             <p><span class="sync-status-dot" id="syncDot"></span> <span id="syncText">🟢 Sincronizado</span></p>
           </div>
         </div>
@@ -2292,14 +2268,7 @@
       <!-- TAB 1: INICIO (RESUMEN DEL MES) -->
       <div id="tab-inicio" class="tab-content active">
         
-        <!-- Compact Collapsible Vercel Link Banner -->
-        <div id="vercelBanner" class="compact-banner" style="background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%); color: white;">
-          <div>
-            <strong>🌐 App en Vivo Vercel:</strong>
-            <code style="background: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 6px; font-size: 11px; color: #a5f3fc;">https://finanzas-snowy-kappa.vercel.app</code>
-          </div>
-          <button class="banner-close-btn" style="color: white;" onclick="closeBanner('vercelBanner')">✕</button>
-        </div>
+
 
         <!-- 4 Stat Cards Grid -->
         <div class="stats-grid">
@@ -3133,7 +3102,7 @@
         </div>
         <button type="button" onclick="dismissOnboardingWizard(true)" style="background:none; border:none; font-size:20px; cursor:pointer; color:var(--text-muted); line-height: 1;">✕</button>
       </div>
-      <p style="font-size: 12px; color: var(--text-muted); margin: 0 0 12px 0;">Configura tus ingresos, gastos fijos y metas para que Finanzas empiece a trabajar a tu favor.</p>
+      <p style="font-size: 12px; color: var(--text-muted); margin: 0 0 12px 0;">Configura tus ingresos, gastos fijos y metas para que FinZen empiece a trabajar a tu favor.</p>
 
       <!-- Step tracker bar -->
       <div class="wizard-step-tracker">
@@ -3189,7 +3158,7 @@
         </div>
         <div class="wizard-tip-box">
           <span>💡</span>
-          <div>Finanzas utiliza tu día de cobro para proyectar tu saldo diario y mantenerte en zona segura sin quedarte a cero a mitad de mes.</div>
+          <div>FinZen utiliza tu día de cobro para proyectar tu saldo diario y mantenerte en zona segura sin quedarte a cero a mitad de mes.</div>
         </div>
         <div class="modal-actions" style="justify-content: space-between; margin-top: 14px;">
           <button type="button" class="btn btn-secondary" onclick="dismissOnboardingWizard(true)">Saltar Tutorial</button>
@@ -3302,7 +3271,7 @@
       <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
         <div>
           <div class="modal-title" style="margin: 0; display: flex; align-items: center; gap: 8px;">
-            <span>🚀</span> <span>¡Novedades en Finanzas!</span>
+            <span>🚀</span> <span>¡Novedades en FinZen!</span>
           </div>
           <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
             <span class="whats-new-card-badge">Versión v55.0</span>
@@ -3511,6 +3480,47 @@
         <button type="button" class="btn btn-secondary" onclick="closeModal('feedbackModal')" style="font-size: 12px;">Cancelar</button>
         <button type="button" class="btn btn-primary" id="feedbackSubmitBtn" onclick="submitAppFeedback()" style="flex: 1; font-weight: 800;">🚀 Enviar Reporte</button>
       </div>
+    </div>
+  <div class="modal-backdrop" id="paywallModal" style="z-index: 99999; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); background: rgba(15, 23, 42, 0.85);">
+    <div class="modal-content" style="background: linear-gradient(145deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95)); border: 1px solid rgba(139, 92, 246, 0.3); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(139, 92, 246, 0.2); padding: 32px 24px; color: white;">
+      <div style="text-align: center; margin-bottom: 24px;">
+        <div style="font-size: 48px; margin-bottom: 16px; filter: drop-shadow(0 0 12px rgba(16, 185, 129, 0.6));">💎</div>
+        <h2 style="font-size: 26px; font-weight: 800; color: white; margin: 0 0 8px 0; background: linear-gradient(to right, #a78bfa, #34d399); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Acceso Premium Requerido</h2>
+        <p style="font-size: 14px; color: #cbd5e1; margin: 0; line-height: 1.5;">Tu periodo de prueba de 14 días ha finalizado. Suscríbete a FinZen para seguir teniendo el control total de tu dinero.</p>
+      </div>
+
+      <div style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 16px; margin-bottom: 24px; border: 1px solid rgba(255,255,255,0.1);">
+        <ul style="list-style: none; padding: 0; margin: 0; font-size: 14px; color: #e2e8f0;">
+          <li style="margin-bottom: 12px; display: flex; align-items: center; gap: 10px;">
+            <span style="color: #34d399; font-size: 16px;">✅</span> Sincronización en la nube 24/7
+          </li>
+          <li style="margin-bottom: 12px; display: flex; align-items: center; gap: 10px;">
+            <span style="color: #34d399; font-size: 16px;">✅</span> Consejos financieros dinámicos
+          </li>
+          <li style="margin-bottom: 12px; display: flex; align-items: center; gap: 10px;">
+            <span style="color: #34d399; font-size: 16px;">✅</span> Control de presupuesto inteligente
+          </li>
+          <li style="display: flex; align-items: center; gap: 10px;">
+            <span style="color: #34d399; font-size: 16px;">✅</span> Acceso multidispositivo
+          </li>
+        </ul>
+      </div>
+
+      <div style="text-align: center; margin-bottom: 24px;">
+        <div style="font-size: 28px; font-weight: 800; color: white;">S/ 9.90 <span style="font-size: 14px; font-weight: 500; color: #94a3b8;">/ mes</span></div>
+        <div style="font-size: 13px; color: #94a3b8; margin-top: 4px;">O un único pago vitalicio de <strong style="color: white;">S/ 59.90</strong></div>
+      </div>
+
+      <a href="https://wa.me/51914688135?text=Hola%20César,%20quiero%20activar%20mi%20suscripción%20Premium%20en%20FinZen" target="_blank" style="display: block; width: 100%; text-align: center; padding: 14px; border-radius: 12px; background: linear-gradient(135deg, #8b5cf6, #10b981); color: white; font-weight: 700; font-size: 16px; text-decoration: none; border: none; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4); margin-bottom: 16px;">
+        Pagar vía Yape / Plin (+51 914688135)
+      </a>
+
+      <p style="text-align: center; font-size: 11px; color: #64748b; margin: 0;">Al realizar el pago, envíame la captura y el correo con el que te registraste para activar tu cuenta de inmediato.</p>
+      
+      <!-- Botón para ver settings/exportar data, único escape -->
+      <button onclick="document.getElementById('paywallModal').style.display='none'; openModal('settingsModal');" style="margin-top: 20px; background: none; border: none; color: #94a3b8; font-size: 12px; text-decoration: underline; width: 100%; cursor: pointer;">
+        Solo quiero exportar mis datos / Ver ajustes
+      </button>
     </div>
   </div>
 
@@ -3734,7 +3744,74 @@
       renderAll();
       await loadStateFromServer(3);
       setupRealtimeSync();
-      setTimeout(() => checkOnboardingAndVersionAnnouncements(), 400);
+      
+      // Verificar suscripción de Paywall
+      await verifySubscription(user);
+    }
+
+    async function verifySubscription(user) {
+      // Administrador no pasa por Paywall
+      if (user.email === 'cesar.risso.f@gmail.com') {
+        setTimeout(() => checkOnboardingAndVersionAnnouncements(), 400);
+        return;
+      }
+
+      let status = 'trial';
+      let daysLeft = 14;
+
+      try {
+        const { data, error } = await supabaseClient
+          .from('user_subscriptions')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+
+        if (error || !data) {
+          // Usuario nuevo, crear suscripción trial de 14 días
+          const trialEndsAt = new Date();
+          trialEndsAt.setDate(trialEndsAt.getDate() + 14);
+
+          await supabaseClient.from('user_subscriptions').insert([{
+            user_id: user.id,
+            email: user.email,
+            status: 'trial',
+            trial_ends_at: trialEndsAt.toISOString()
+          }]);
+        } else {
+          status = data.status;
+          if (status === 'trial') {
+            const endDate = new Date(data.trial_ends_at);
+            const now = new Date();
+            const diffTime = endDate - now;
+            daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (daysLeft <= 0) {
+              status = 'expired';
+              // Actualizar en bd como expirado (opcional, pero útil)
+              await supabaseClient.from('user_subscriptions').update({ status: 'expired' }).eq('user_id', user.id);
+            }
+          }
+        }
+
+        if (status === 'expired') {
+          // Mostrar muro de pago
+          document.getElementById('paywallModal').style.display = 'flex';
+          // Ocultar modal de onboarding si estaba por salir
+        } else if (status === 'trial') {
+          const tb = document.getElementById('trialBadge');
+          if (tb) {
+            tb.style.display = 'inline-block';
+            tb.textContent = `PRUEBA: ${daysLeft}D`;
+          }
+          setTimeout(() => checkOnboardingAndVersionAnnouncements(), 400);
+        } else if (status === 'premium') {
+          setTimeout(() => checkOnboardingAndVersionAnnouncements(), 400);
+        }
+
+      } catch (err) {
+        console.error('Error verificando suscripción:', err);
+        setTimeout(() => checkOnboardingAndVersionAnnouncements(), 400);
+      }
     }
 
     // LOGIN con Supabase Auth
@@ -7310,7 +7387,7 @@
 
       // Cerrar wizard
       dismissOnboardingWizard(false);
-      showToast('🎉 ¡Configuración inicial guardada! Bienvenido a Finanzas.', 'success');
+      showToast('🎉 ¡Configuración inicial guardada! Bienvenido a FinZen.', 'success');
 
       // Si aún no vio las novedades de la versión, mostrarlas tras 1.2 segundos
       const seenVer = localStorage.getItem('finanzas_last_seen_version');

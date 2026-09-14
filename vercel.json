@@ -5,12 +5,14 @@
     { "src": "api/*.js", "use": "@vercel/node" },
     { "src": "index.html", "use": "@vercel/static" },
     { "src": "sw.js", "use": "@vercel/static" },
-    { "src": "manifest.json", "use": "@vercel/static" }
+    { "src": "manifest.json", "use": "@vercel/static" },
+    { "src": "logo.jpg", "use": "@vercel/static" }
   ],
   "routes": [
     { "src": "/api/data", "dest": "/api/data.js" },
     { "src": "/sw.js", "dest": "/sw.js" },
     { "src": "/manifest.json", "dest": "/manifest.json" },
+    { "src": "/logo.jpg", "dest": "/logo.jpg" },
     { "src": "/(.*)", "dest": "/index.html" }
   ],
   "headers": [
