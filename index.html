@@ -3492,7 +3492,13 @@
     const APP_VERSION = 'v55.1';
     // Plantilla inicial 100% limpia para cualquier usuario nuevo
     function getCleanUserState() {
-      const curM = getCurrentCalendarMonthName();
+      const now = new Date();
+      const monthsEs = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+      const curM = monthsEs[now.getMonth()] + ' ' + now.getFullYear();
+      const initialBudgets = {};
+      Object.keys(DEFAULT_CATEGORIES).forEach(k => {
+        initialBudgets[k] = DEFAULT_CATEGORIES[k].budget || 1000;
+      });
       return {
         salary: 0,
         incomes: {
@@ -3504,6 +3510,7 @@
         transactions: {
           [curM]: []
         },
+        categoryBudgets: initialBudgets,
         savingsGoals: [],
         recurringDueDates: {},
         checklists: {},
@@ -3626,9 +3633,9 @@
       populateMonthDropdown();
       renderCategoryChips();
       renderAll();
-      loadStateFromServer(3);
+      await loadStateFromServer(3);
       setupRealtimeSync();
-      setTimeout(() => checkOnboardingAndVersionAnnouncements(), 800);
+      setTimeout(() => checkOnboardingAndVersionAnnouncements(), 400);
     }
 
     // LOGIN con Supabase Auth
@@ -3767,23 +3774,27 @@
       const monthsEs = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
       const realMonthName = monthsEs[now.getMonth()] + ' ' + now.getFullYear();
 
-      // Si el mes actual del calendario existe en los datos, usarlo
-      if (appState.transactions && appState.transactions[realMonthName]) {
+      if (typeof appState !== 'undefined' && appState && appState.transactions && appState.transactions[realMonthName]) {
         return realMonthName;
       }
 
       // Fallback: el mes válido más reciente que tenga datos
-      const validMonths = Object.keys(appState.transactions || {})
-        .filter(m => {
-          const p = m.split(' ');
-          return p.length === 2 && monthsEs.includes(p[0]) && /^\d{4}$/.test(p[1]);
-        })
-        .sort((a, b) => {
-          const [mA, yA] = a.split(' '), [mB, yB] = b.split(' ');
-          return (parseInt(yA) - parseInt(yB)) || (monthsEs.indexOf(mA) - monthsEs.indexOf(mB));
-        });
+      if (typeof appState !== 'undefined' && appState && appState.transactions) {
+        const validMonths = Object.keys(appState.transactions || {})
+          .filter(m => {
+            const p = m.split(' ');
+            return p.length === 2 && monthsEs.includes(p[0]) && /^\d{4}$/.test(p[1]);
+          })
+          .sort((a, b) => {
+            const [mA, yA] = a.split(' '), [mB, yB] = b.split(' ');
+            return (parseInt(yA) - parseInt(yB)) || (monthsEs.indexOf(mA) - monthsEs.indexOf(mB));
+          });
+        if (validMonths.length > 0) {
+          return validMonths[validMonths.length - 1];
+        }
+      }
 
-      return validMonths[validMonths.length - 1] || realMonthName;
+      return realMonthName;
     }
 
     function updateSyncIndicator(status, text) {
@@ -4177,6 +4188,12 @@
       if (!appState.extraIncomes) appState.extraIncomes = {};
       if (!appState.savingsGoals) appState.savingsGoals = [];
       if (!appState.checklists) appState.checklists = {};
+      if (!appState.categoryBudgets) {
+        appState.categoryBudgets = {};
+        Object.keys(CATEGORIES).forEach(k => {
+          appState.categoryBudgets[k] = (CATEGORIES[k] && CATEGORIES[k].budget) ? CATEGORIES[k].budget : 1000;
+        });
+      }
 
       if (isCesar) {
         appState = applyDataMigrations(appState);
@@ -4273,7 +4290,7 @@
       if ('serviceWorker' in navigator && 'caches' in window) {
         caches.keys().then(names => {
           names.forEach(name => {
-            if (name !== 'finanzas-pro-v64') {
+            if (name !== 'finanzas-pro-v72') {
               caches.delete(name);
               console.log('Caché viejo eliminado:', name);
             }
@@ -5519,9 +5536,10 @@
       Object.keys(CATEGORIES).forEach(c => realTotals[c] = 0);
       txs.forEach(t => realTotals[t.category] = (realTotals[t.category] || 0) + t.amount);
 
+      const budgets = appState.categoryBudgets || {};
       container.innerHTML = Object.keys(CATEGORIES).map(cat => {
         const spent = realTotals[cat] || 0;
-        const limit = appState.categoryBudgets[cat] || 1000;
+        const limit = budgets[cat] || (CATEGORIES[cat] && CATEGORIES[cat].budget) || 1000;
         const pct = Math.min(100, (spent / limit) * 100);
         let color = '#10b981';
         if (pct > 80) color = '#f59e0b';
