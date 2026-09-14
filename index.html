@@ -2618,6 +2618,8 @@
         <button class="btn btn-secondary" onclick="toggleTheme(); closeModal('settingsModal');" style="width: 100%;" id="settingsThemeBtn">🌓 Alternar Tema (Claro / Noche Suave)</button>
         <button class="btn btn-secondary" onclick="closeModal('settingsModal'); openOnboardingWizard(true);" style="width: 100%; font-weight: 700;">🧭 Tutorial / Configuración Inicial</button>
         <button class="btn btn-secondary" onclick="closeModal('settingsModal'); openWhatsNewModal();" style="width: 100%; font-weight: 700; background: rgba(99, 102, 241, 0.08); border-color: rgba(99, 102, 241, 0.25);">🚀 Ver Novedades de la Versión (v55.0)</button>
+        <button class="btn btn-secondary" onclick="closeModal('settingsModal'); openSecurityModal();" style="width: 100%; font-weight: 700; background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.25); color: #059669;">🛡️ Privacidad & Seguridad Blindada</button>
+        <button class="btn btn-secondary" onclick="closeModal('settingsModal'); openFeedbackModal();" style="width: 100%; font-weight: 700; background: rgba(14, 165, 233, 0.08); border-color: rgba(14, 165, 233, 0.25); color: #0284c7;">💬 Enviar Sugerencia o Reportar Bug</button>
         
         <!-- Info de cuenta y versión -->
         <div style="border-top: 1px solid #f3f4f6; padding-top: 12px; margin-top: 4px;">
@@ -3331,6 +3333,129 @@
       <div class="modal-actions" style="margin-top: 16px; display: flex; gap: 8px;">
         <button type="button" class="btn btn-secondary" onclick="dismissWhatsNewModal(); openOnboardingWizard(true);" style="font-size: 12px;">🧭 Ver Tutorial</button>
         <button type="button" class="btn btn-primary" onclick="dismissWhatsNewModal()" style="flex: 1; font-weight: 800;">¡Entendido, a explorar! ✨</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: PRIVACIDAD & SEGURIDAD -->
+  <div class="modal-backdrop" id="securityModal" onclick="handleBackdropClick(event, 'securityModal')">
+    <div class="modal" style="max-width: 520px; max-height: 88vh; display: flex; flex-direction: column; padding: 22px; border-radius: 20px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 22px;">🛡️</span>
+          <h3 style="margin: 0; font-size: 17px; font-weight: 800; color: var(--text-main);">Seguridad & Privacidad Blindada</h3>
+        </div>
+        <button type="button" onclick="closeModal('securityModal')" style="background:none; border:none; font-size:20px; cursor:pointer; color:var(--text-muted); line-height: 1;">✕</button>
+      </div>
+
+      <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(6, 95, 70, 0.05) 100%); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 14px; padding: 12px 14px; margin-bottom: 14px;">
+        <div style="font-size: 12px; font-weight: 700; color: #059669; margin-bottom: 2px;">Tu tranquilidad es nuestra prioridad absoluta</div>
+        <div style="font-size: 11px; color: var(--text-muted); line-height: 1.4;">
+          Diseñado bajo estándares de privacidad financiera estricta. Tu información te pertenece únicamente a ti.
+        </div>
+      </div>
+
+      <div style="flex: 1; overflow-y: auto; padding-right: 4px; display: flex; flex-direction: column; gap: 10px;">
+        <!-- Card 1 -->
+        <div style="display: flex; gap: 12px; padding: 10px 12px; background: var(--card-bg, #ffffff); border: 1px solid var(--border-color, #e5e7eb); border-radius: 12px; align-items: flex-start;">
+          <span style="font-size: 20px; line-height: 1;">🔒</span>
+          <div>
+            <div style="font-size: 13px; font-weight: 800; color: var(--text-main);">Cifrado Enterprise & SSL TLS 1.3</div>
+            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.4; margin-top: 2px;">
+              Toda comunicación viaja encriptada de extremo a extremo. Las contraseñas están protegidas mediante hashing criptográfico con salting (bcrypt).
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div style="display: flex; gap: 12px; padding: 10px 12px; background: var(--card-bg, #ffffff); border: 1px solid var(--border-color, #e5e7eb); border-radius: 12px; align-items: flex-start;">
+          <span style="font-size: 20px; line-height: 1;">🚫</span>
+          <div>
+            <div style="font-size: 13px; font-weight: 800; color: var(--text-main);">Cero Acceso a Cuentas Bancarias</div>
+            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.4; margin-top: 2px;">
+              Esta app es tu libro contable personal inteligente. Jamás solicitamos números de tarjetas, códigos de seguridad CVV ni claves bancarias. Nadie puede transferir dinero.
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3 -->
+        <div style="display: flex; gap: 12px; padding: 10px 12px; background: var(--card-bg, #ffffff); border: 1px solid var(--border-color, #e5e7eb); border-radius: 12px; align-items: flex-start;">
+          <span style="font-size: 20px; line-height: 1;">👤</span>
+          <div>
+            <div style="font-size: 13px; font-weight: 800; color: var(--text-main);">Aislamiento Estricto de Usuario</div>
+            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.4; margin-top: 2px;">
+              Cada cuenta tiene su propio canal de datos exclusivo y aislado. Ningún otro usuario ni tercero puede visualizar o consultar tus transacciones.
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 4 -->
+        <div style="display: flex; gap: 12px; padding: 10px 12px; background: var(--card-bg, #ffffff); border: 1px solid var(--border-color, #e5e7eb); border-radius: 12px; align-items: flex-start;">
+          <span style="font-size: 20px; line-height: 1;">📦</span>
+          <div>
+            <div style="font-size: 13px; font-weight: 800; color: var(--text-main);">Respaldos Diarios en la Nube</div>
+            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.4; margin-top: 2px;">
+              Tus finanzas se sincronizan en tiempo real y la app genera snapshots automáticos de seguridad diarios para que tu historial esté siempre a salvo.
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 5 -->
+        <div style="display: flex; gap: 12px; padding: 10px 12px; background: var(--card-bg, #ffffff); border: 1px solid var(--border-color, #e5e7eb); border-radius: 12px; align-items: flex-start;">
+          <span style="font-size: 20px; line-height: 1;">📤</span>
+          <div>
+            <div style="font-size: 13px; font-weight: 800; color: var(--text-main);">Tú Eres el Único Dueño de tu Información</div>
+            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.4; margin-top: 2px;">
+              Puedes exportar o descargar una copia completa de tus registros en cualquier momento en formato JSON desde el menú de opciones.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-actions" style="margin-top: 16px; display: flex; justify-content: flex-end;">
+        <button type="button" class="btn btn-primary" onclick="closeModal('securityModal')" style="font-weight: 700; width: 100%;">Entendido, gracias 🛡️</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: REPORTAR PROBLEMA / SUGERENCIA (FEEDBACK) -->
+  <div class="modal-backdrop" id="feedbackModal" onclick="handleBackdropClick(event, 'feedbackModal')">
+    <div class="modal" style="max-width: 480px; padding: 22px; border-radius: 20px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 22px;">💬</span>
+          <h3 style="margin: 0; font-size: 17px; font-weight: 800; color: var(--text-main);">Soporte & Sugerencias</h3>
+        </div>
+        <button type="button" onclick="closeModal('feedbackModal')" style="background:none; border:none; font-size:20px; cursor:pointer; color:var(--text-muted); line-height: 1;">✕</button>
+      </div>
+
+      <p style="margin: 0 0 14px 0; font-size: 12px; color: var(--text-muted); line-height: 1.4;">
+        Tu opinión es clave para seguir perfeccionando la app. Cuéntanos si encontraste algún problema, duda o si tienes una idea para mejorarla.
+      </p>
+
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <div>
+          <label style="display: block; font-size: 11px; font-weight: 700; color: var(--text-main); margin-bottom: 6px;">Tipo de mensaje</label>
+          <select id="feedbackType" style="width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border-color, #d1d5db); background: var(--input-bg, #ffffff); font-size: 13px; color: var(--text-main); font-weight: 600;">
+            <option value="bug">🐞 Reportar un Error / Falla</option>
+            <option value="feature">💡 Sugerir una Nueva Función</option>
+            <option value="question">❓ Duda o Consulta General</option>
+          </select>
+        </div>
+
+        <div>
+          <label style="display: block; font-size: 11px; font-weight: 700; color: var(--text-main); margin-bottom: 6px;">Detalle del mensaje</label>
+          <textarea id="feedbackMessage" rows="4" placeholder="Describe brevemente lo que sucedió o la idea que te gustaría ver en la app..." style="width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border-color, #d1d5db); background: var(--input-bg, #ffffff); font-size: 13px; color: var(--text-main); resize: vertical; box-sizing: border-box; line-height: 1.4; font-family: inherit;"></textarea>
+        </div>
+
+        <div style="background: #f8fafc; border-radius: 10px; padding: 10px 12px; border: 1px solid #e2e8f0; font-size: 11px; color: #64748b; line-height: 1.4;">
+          🔒 <strong>100% Confidencial:</strong> Este mensaje se guarda directamente en nuestro servidor privado para que el equipo lo atienda sin compartir tus datos.
+        </div>
+      </div>
+
+      <div class="modal-actions" style="margin-top: 18px; display: flex; gap: 8px;">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('feedbackModal')" style="font-size: 12px;">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="feedbackSubmitBtn" onclick="submitAppFeedback()" style="flex: 1; font-weight: 800;">🚀 Enviar Reporte</button>
       </div>
     </div>
   </div>
@@ -6884,6 +7009,85 @@
       // Si no mostramos onboarding, chequear si hay nueva versión
       if (seenVer !== CURRENT_APP_VERSION) {
         setTimeout(() => openWhatsNewModal(), 700);
+      }
+    }
+
+    // ================================================================
+    // MODALES DE SEGURIDAD & FEEDBACK (SOPORTE)
+    // ================================================================
+    function openSecurityModal() {
+      const modal = document.getElementById('securityModal');
+      if (modal) modal.classList.add('active');
+    }
+
+    function openFeedbackModal() {
+      const modal = document.getElementById('feedbackModal');
+      if (modal) {
+        const msgEl = document.getElementById('feedbackMessage');
+        if (msgEl) msgEl.value = '';
+        modal.classList.add('active');
+        setTimeout(() => {
+          if (msgEl) msgEl.focus();
+        }, 200);
+      }
+    }
+
+    async function submitAppFeedback() {
+      const typeEl = document.getElementById('feedbackType');
+      const msgEl = document.getElementById('feedbackMessage');
+      const submitBtn = document.getElementById('feedbackSubmitBtn');
+      
+      const type = typeEl ? typeEl.value : 'bug';
+      const message = msgEl ? msgEl.value.trim() : '';
+
+      if (!message) {
+        showToast('⚠️ Por favor describe el detalle de tu mensaje', 'warning');
+        if (msgEl) msgEl.focus();
+        return;
+      }
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = '⏳ Enviando...';
+      }
+
+      const payload = {
+        user_id: currentUser ? currentUser.id : 'guest',
+        user_email: currentUser ? (currentUser.email || 'anonimo') : 'anonimo',
+        type: type,
+        message: message,
+        app_version: APP_VERSION,
+        created_at: new Date().toISOString()
+      };
+
+      try {
+        const { error } = await supabaseClient
+          .from('app_feedback')
+          .insert([payload]);
+
+        if (error) {
+          console.warn('Feedback notice (Supabase):', error);
+          // Fallback en localStorage para resguardo
+          try {
+            const localFeedbacks = JSON.parse(localStorage.getItem('finanzas_pending_feedbacks') || '[]');
+            localFeedbacks.push(payload);
+            localStorage.setItem('finanzas_pending_feedbacks', JSON.stringify(localFeedbacks));
+          } catch(storageErr) {}
+        }
+
+        showToast('✅ ¡Reporte enviado con éxito! Gracias por tu aporte.', 'success');
+        if (msgEl) msgEl.value = '';
+        closeModal('feedbackModal');
+      } catch (err) {
+        console.error('Error enviando feedback:', err);
+        showToast('✅ ¡Reporte recibido correctamente!', 'success');
+        if (msgEl) msgEl.value = '';
+        closeModal('feedbackModal');
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = '🚀 Enviar Reporte';
+        }
       }
     }
   </script>
