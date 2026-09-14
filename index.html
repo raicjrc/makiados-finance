@@ -3490,9 +3490,42 @@
     // VERSIÓN DE LA APP
     // ================================================================
     const APP_VERSION = 'v55.1';
-    const CURRENT_APP_VERSION = 'v55.1';
+    // Plantilla inicial 100% limpia para cualquier usuario nuevo
+    function getCleanUserState() {
+      const curM = getCurrentCalendarMonthName();
+      return {
+        salary: 0,
+        incomes: {
+          [curM]: []
+        },
+        extraIncomes: {
+          [curM]: []
+        },
+        transactions: {
+          [curM]: []
+        },
+        savingsGoals: [],
+        recurringDueDates: {},
+        checklists: {},
+        auditLog: [],
+        currentMonth: curM,
+        activeCategoryChip: 'TODAS',
+        activeStatusFilter: 'TODOS',
+        historyPeriodFilter: 'ALL',
+        _lastSaved: 0
+      };
+    }
 
-    let appState = JSON.parse(JSON.stringify(INITIAL_DB_FALLBACK));
+    // Detector de datos heredados por error de la plantilla personal
+    function isLegacyClonedState(state) {
+      if (!state) return false;
+      if (state.salary === 8800 && state.recurringDueDates && state.recurringDueDates['alquiler']) return true;
+      if (state.transactions && state.transactions['Octubre'] && Array.isArray(state.transactions['Octubre']) && state.transactions['Octubre'].some(t => t.name === 'Casa' && t.amount === 750)) return true;
+      if (state.transactions && state.transactions['Septiembre 2026'] && Array.isArray(state.transactions['Septiembre 2026']) && state.transactions['Septiembre 2026'].some(t => t.name === 'Sheldon')) return true;
+      return false;
+    }
+
+    let appState = getCleanUserState();
 
     let currentCategoryFilter = 'TODAS';
     let currentStatusFilter = 'TODOS';
@@ -3593,11 +3626,8 @@
       populateMonthDropdown();
       renderCategoryChips();
       renderAll();
-      updateClearFiltersBtn();
       loadStateFromServer(3);
       setupRealtimeSync();
-      // Guardar estado inicial en Supabase (crea el row si es un usuario nuevo)
-      setTimeout(() => syncStateToServer(), 3000);
       setTimeout(() => checkOnboardingAndVersionAnnouncements(), 800);
     }
 
@@ -3673,7 +3703,7 @@
       if (!confirm('¿Deseas cerrar tu sesión?')) return;
       await supabaseClient.auth.signOut();
       currentUser = null;
-      appState = JSON.parse(JSON.stringify(INITIAL_DB_FALLBACK));
+      appState = getCleanUserState();
       document.getElementById('loginModalScreen').style.display = 'flex';
       document.getElementById('appMainWrapper').style.display = 'none';
       // Limpiar datos locales de este usuario
@@ -3831,7 +3861,8 @@
       lastKnownServerDataHash = newHash;
       const userSelectedMonth = appState.currentMonth;
 
-      appState = applyDataMigrations(remoteData);
+      const isCesar = currentUser && currentUser.email === 'cesar.risso.f@gmail.com';
+      appState = isCesar ? applyDataMigrations(remoteData) : remoteData;
 
       if (userSelectedMonth && appState.transactions[userSelectedMonth]) {
         appState.currentMonth = userSelectedMonth;
@@ -3935,16 +3966,29 @@
           .single();
 
         if (!error && data && data.data) {
+          const isCesar = currentUser && currentUser.email === 'cesar.risso.f@gmail.com';
+          if (!isCesar && isLegacyClonedState(data.data)) {
+            console.warn('Usuario no-admin con datos clonados por defecto. Reseteando a espacio limpio...');
+            appState = getCleanUserState();
+            saveLocalState();
+            syncStateToServer();
+            renderAll();
+            setTimeout(() => openOnboardingWizard(false), 500);
+            return;
+          }
           applyRemoteState(data.data);
           lastSuccessfulSyncTime = Date.now();
           updateSyncIndicator('synced', '🟢 En Vivo');
         } else if (error && error.code === 'PGRST116') {
           // No hay datos para este usuario aun (usuario nuevo)
-          // Guardar el estado actual para crear su row en Supabase
-          console.log('Usuario nuevo: creando row inicial en Supabase...');
+          console.log('Usuario nuevo: inicializando con espacio 100% limpio...');
+          appState = getCleanUserState();
+          saveLocalState();
           lastSuccessfulSyncTime = Date.now();
           updateSyncIndicator('synced', '🟢 En Vivo');
-          syncStateToServer(); // Crea el row del usuario
+          renderAll();
+          syncStateToServer(); // Crea el row limpio del usuario
+          setTimeout(() => openOnboardingWizard(false), 500);
         } else {
           throw new Error('Supabase fetch failed: ' + (error ? error.message : 'no data'));
         }
@@ -4109,25 +4153,34 @@
     }
 
     function loadLocalState() {
+      const isCesar = currentUser && currentUser.email === 'cesar.risso.f@gmail.com';
+      const defaultState = isCesar ? JSON.parse(JSON.stringify(INITIAL_DB_FALLBACK)) : getCleanUserState();
+
       const stored = localStorage.getItem(getStorageKey());
       if (stored) {
         try {
           appState = JSON.parse(stored);
+          if (!isCesar && isLegacyClonedState(appState)) {
+            console.warn('Detectado estado clonado en local. Limpiando a espacio limpio...');
+            appState = getCleanUserState();
+            saveLocalState();
+          }
         } catch(e) {
-          appState = { ...INITIAL_DB_FALLBACK };
+          appState = defaultState;
         }
       } else {
-        appState = { ...INITIAL_DB_FALLBACK };
+        appState = defaultState;
       }
       if (!appState.recurringDueDates) appState.recurringDueDates = {};
       if (!appState.auditLog) appState.auditLog = [];
-      appState.currentMonth = getCurrentCalendarMonthName();
+      if (!appState.currentMonth) appState.currentMonth = getCurrentCalendarMonthName();
       if (!appState.extraIncomes) appState.extraIncomes = {};
       if (!appState.savingsGoals) appState.savingsGoals = [];
       if (!appState.checklists) appState.checklists = {};
 
-      // Aplicar migraciones de datos automáticas
-      appState = applyDataMigrations(appState);
+      if (isCesar) {
+        appState = applyDataMigrations(appState);
+      }
 
       currentCategoryFilter = appState.activeCategoryChip || 'TODAS';
       currentStatusFilter = appState.activeStatusFilter || 'TODOS';
@@ -6991,18 +7044,16 @@
     // Comprobación automática de bienvenida y versión
     function checkOnboardingAndVersionAnnouncements() {
       const userKey = currentUser ? currentUser.id : 'guest';
+      const isCesar = currentUser && currentUser.email === 'cesar.risso.f@gmail.com';
       const setupDone = localStorage.getItem('finanzas_setup_completed_' + userKey);
       const seenVer = localStorage.getItem('finanzas_last_seen_version');
 
-      if (!setupDone) {
+      if (!isCesar) {
         const curM = appState.currentMonth || getCurrentCalendarMonthName();
         const txCount = (appState.transactions && appState.transactions[curM]) ? appState.transactions[curM].length : 0;
-        // Si no tiene transacciones o sueldo definido, abrir wizard
-        if (!appState.salary || txCount === 0) {
-          setTimeout(() => openOnboardingWizard(), 600);
+        if (!setupDone || !appState.salary || appState.salary === 0 || txCount === 0) {
+          setTimeout(() => openOnboardingWizard(false), 500);
           return;
-        } else {
-          localStorage.setItem('finanzas_setup_completed_' + userKey, 'true');
         }
       }
 
