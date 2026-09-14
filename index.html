@@ -4290,7 +4290,7 @@
       if ('serviceWorker' in navigator && 'caches' in window) {
         caches.keys().then(names => {
           names.forEach(name => {
-            if (name !== 'finanzas-pro-v72') {
+            if (name !== 'finanzas-pro-v73') {
               caches.delete(name);
               console.log('Caché viejo eliminado:', name);
             }
@@ -4401,6 +4401,8 @@
 
     function changeMonth(month) {
       appState.currentMonth = month;
+      ensureMonthTransactions(month);
+      ensureMonthIncomes(month);
       saveState();
       renderAll();
     }
@@ -4603,7 +4605,21 @@
 
     function getSortedMonths() {
       const monthsEs = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-      return Object.keys(appState.transactions || {})
+      const now = new Date();
+      const currentYear = now.getFullYear();
+
+      // Recopilar todos los meses con datos existentes
+      const allMonthsSet = new Set([
+        ...Object.keys(appState.transactions || {}),
+        ...Object.keys(appState.incomes || {})
+      ]);
+
+      // Asegurar SIEMPRE todos los meses del año actual (Enero a Diciembre)
+      monthsEs.forEach(m => {
+        allMonthsSet.add(`${m} ${currentYear}`);
+      });
+
+      return Array.from(allMonthsSet)
         .filter(m => {
           const p = m.split(' ');
           return p.length === 2 && monthsEs.includes(p[0]) && /^\d{4}$/.test(p[1]);
@@ -4612,6 +4628,67 @@
           const [mA, yA] = a.split(' '), [mB, yB] = b.split(' ');
           return (parseInt(yA) - parseInt(yB)) || (monthsEs.indexOf(mA) - monthsEs.indexOf(mB));
         });
+    }
+
+    function ensureMonthTransactions(targetMonth) {
+      if (!appState.transactions) appState.transactions = {};
+      if (!appState.transactions[targetMonth]) {
+        appState.transactions[targetMonth] = [];
+      }
+
+      // Si el mes ya tiene transacciones, no tocarlo
+      if (appState.transactions[targetMonth].length > 0) return;
+
+      const isCesar = currentUser && currentUser.email === 'cesar.risso.f@gmail.com';
+      if (isCesar) return; // César ya tiene sus meses históricos y cuotas definidas
+
+      // Si es un usuario regular y el mes está vacío, propagar gastos fijos desde el último mes con datos
+      const allMonths = getSortedMonths();
+      const targetIdx = allMonths.indexOf(targetMonth);
+      if (targetIdx <= 0) return;
+
+      let sourceMonth = null;
+      for (let i = targetIdx - 1; i >= 0; i--) {
+        const m = allMonths[i];
+        if (appState.transactions[m] && appState.transactions[m].length > 0) {
+          sourceMonth = m;
+          break;
+        }
+      }
+      if (!sourceMonth) return;
+
+      const sourceTxs = appState.transactions[sourceMonth];
+      sourceTxs.forEach(t => {
+        if (t.isInstallment) {
+          const sourceIdx = allMonths.indexOf(sourceMonth);
+          const currentInst = (t.installmentsCurrent || 1) + (targetIdx - sourceIdx);
+          if (currentInst <= (t.installmentsTotal || 1)) {
+            appState.transactions[targetMonth].push({
+              id: `${targetMonth}_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+              name: t.name,
+              amount: t.amount,
+              category: t.category,
+              status: 'Pendiente',
+              dueDate: t.dueDate || '15',
+              isInstallment: true,
+              installmentsTotal: t.installmentsTotal,
+              installmentsCurrent: currentInst
+            });
+          }
+        } else {
+          appState.transactions[targetMonth].push({
+            id: `${targetMonth}_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+            name: t.name,
+            amount: t.amount,
+            category: t.category,
+            status: 'Pendiente',
+            dueDate: t.dueDate || '15',
+            isInstallment: false,
+            installmentsTotal: 1,
+            installmentsCurrent: 1
+          });
+        }
+      });
     }
 
     function getNormalizedNameKey(name) {
@@ -4650,6 +4727,7 @@
     function renderAll() {
       updateDynamicCategories();
       populateMonthDropdown();
+      ensureMonthTransactions(appState.currentMonth);
       ensureMonthIncomes(appState.currentMonth);
 
       const banner = document.getElementById('juntaBanner');
@@ -4692,50 +4770,63 @@
 
     function ensureMonthIncomes(m) {
       if (!appState.incomes) appState.incomes = {};
-      if (!appState.incomes[m]) {
-        // IMPORTANTE: Solo inicializar si Supabase no proveyó datos para este mes.
-        // No llamar saveState() aquí para no sobreescribir datos remotos con datos por defecto.
-        appState.incomes[m] = [
-          { id: 'inc_base_gaby_' + m, name: 'Sueldo Gaby', amount: 4200, status: 'Pendiente', date: 15 },
-          { id: 'inc_base_cesar_' + m, name: 'Sueldo César', amount: 4200, status: 'Pendiente', date: 30 },
-          { id: 'inc_abono_gaby_' + m, name: 'Abono Gaby', amount: 200, status: 'Pendiente', date: 5 },
-          { id: 'inc_abono_cesar_' + m, name: 'Abono César', amount: 200, status: 'Pendiente', date: 5 }
-        ];
+      const isCesar = currentUser && currentUser.email === 'cesar.risso.f@gmail.com';
 
-        // Migración de extraIncomes (legacy) a incomes
-        if (appState.extraIncomes && appState.extraIncomes[m] && appState.extraIncomes[m].length > 0) {
-          appState.extraIncomes[m].forEach((extra, idx) => {
-            appState.incomes[m].push({
-              id: 'inc_extra_' + Date.now() + '_' + idx,
-              name: extra.name,
-              amount: extra.amount,
-              status: 'Recibido',
-              date: 1
+      if (!appState.incomes[m] || appState.incomes[m].length === 0) {
+        if (isCesar) {
+          appState.incomes[m] = [
+            { id: 'inc_base_gaby_' + m, name: 'Sueldo Gaby', amount: 4200, status: 'Pendiente', date: 15 },
+            { id: 'inc_base_cesar_' + m, name: 'Sueldo César', amount: 4200, status: 'Pendiente', date: 30 },
+            { id: 'inc_abono_gaby_' + m, name: 'Abono Gaby', amount: 200, status: 'Pendiente', date: 5 },
+            { id: 'inc_abono_cesar_' + m, name: 'Abono César', amount: 200, status: 'Pendiente', date: 5 }
+          ];
+
+          // Migración de extraIncomes (legacy) a incomes
+          if (appState.extraIncomes && appState.extraIncomes[m] && appState.extraIncomes[m].length > 0) {
+            appState.extraIncomes[m].forEach((extra, idx) => {
+              appState.incomes[m].push({
+                id: 'inc_extra_' + Date.now() + '_' + idx,
+                name: extra.name,
+                amount: extra.amount,
+                status: 'Recibido',
+                date: 1
+              });
             });
-          });
-          appState.extraIncomes[m] = [];
-        }
+            appState.extraIncomes[m] = [];
+          }
 
-        // Caso especial Agosto 2026: valores predeterminados (solo si Supabase no los provee)
-        if (m === 'Agosto 2026') {
-           const incs = appState.incomes[m];
-           const gaby = incs.find(i => i.name === 'Sueldo Gaby');
-           if (gaby) gaby.status = 'Recibido';
-           const hasJunta = incs.find(i => i.name.toLowerCase().includes('junta'));
-           if (!hasJunta) {
-             incs.push({ id: 'inc_junta_agosto2026', name: 'Junta de Agosto', amount: 4500, status: 'Pendiente', date: 15 });
-           }
+          // Caso especial Agosto 2026: valores predeterminados (solo si Supabase no los provee)
+          if (m === 'Agosto 2026') {
+             const incs = appState.incomes[m];
+             const gaby = incs.find(i => i.name === 'Sueldo Gaby');
+             if (gaby) gaby.status = 'Recibido';
+             const hasJunta = incs.find(i => i.name.toLowerCase().includes('junta'));
+             if (!hasJunta) {
+               incs.push({ id: 'inc_junta_agosto2026', name: 'Junta de Agosto', amount: 4500, status: 'Pendiente', date: 15 });
+             }
+          }
+        } else {
+          // Usuario regular: generar automáticamente su sueldo configurado
+          const salaryAmt = (appState.salary && appState.salary > 0) ? appState.salary : 0;
+          if (salaryAmt > 0) {
+            const payDay = parseInt(appState.recurringDueDates?.['sueldo'] || 28);
+            appState.incomes[m] = [
+              { id: 'inc_sueldo_' + m, name: 'Sueldo Mensual', amount: salaryAmt, status: 'Pendiente', date: payDay }
+            ];
+          } else {
+            appState.incomes[m] = [];
+          }
         }
-
-        // Solo guardar si son datos locales nuevos (no sobreescribir Supabase activo)
-        // saveState() se omite intencionalmente aquí — se guardará la próxima vez que el
-        // usuario haga una acción real (marcar pago, agregar ingreso, etc.)
       }
     }
 
     function getMonthTotalIncome() {
       const incs = appState.incomes ? (appState.incomes[appState.currentMonth] || []) : [];
-      return incs.reduce((s, i) => s + i.amount, 0);
+      const sum = incs.reduce((s, i) => s + i.amount, 0);
+      if (sum === 0 && appState.salary && appState.salary > 0) {
+        return appState.salary;
+      }
+      return sum;
     }
 
     function getAccumulatedBalance(targetMonth) {
@@ -6394,6 +6485,26 @@
       const val = parseFloat(document.getElementById('newSalaryInput').value);
       if (val > 0) {
         appState.salary = val;
+        const isCesar = currentUser && currentUser.email === 'cesar.risso.f@gmail.com';
+        if (!isCesar) {
+          const curM = appState.currentMonth || getCurrentCalendarMonthName();
+          if (!appState.incomes) appState.incomes = {};
+          if (!appState.incomes[curM]) appState.incomes[curM] = [];
+          const existingSalary = appState.incomes[curM].find(i => i.id.startsWith('inc_sueldo_') || i.name.toLowerCase().includes('sueldo'));
+          const payDay = parseInt(appState.recurringDueDates?.['sueldo'] || 28);
+          if (existingSalary) {
+            existingSalary.amount = val;
+            existingSalary.date = payDay;
+          } else {
+            appState.incomes[curM].unshift({
+              id: 'inc_sueldo_' + curM,
+              name: 'Sueldo Mensual',
+              amount: val,
+              status: 'Pendiente',
+              date: payDay
+            });
+          }
+        }
         addAuditLog('✏️ Ajuste Sueldo', `Nuevo sueldo: S/ ${val}`);
         saveState();
         closeModal('editSalaryModal');
@@ -6928,13 +7039,31 @@
     function completeOnboardingWizard() {
       // 1. Guardar Ingresos
       const salaryVal = parseFloat(document.getElementById('wSalaryInput')?.value);
+      const payDay = document.getElementById('wPayDaySelect')?.value || '28';
+      const payDayNum = parseInt(payDay) || 28;
+
       if (!isNaN(salaryVal) && salaryVal > 0) {
         appState.salary = salaryVal;
+        if (!appState.incomes) appState.incomes = {};
+        const curM = appState.currentMonth || getCurrentCalendarMonthName();
+        if (!appState.incomes[curM]) appState.incomes[curM] = [];
+        const existingSalary = appState.incomes[curM].find(i => i.id.startsWith('inc_sueldo_') || i.name.toLowerCase().includes('sueldo'));
+        if (existingSalary) {
+          existingSalary.amount = salaryVal;
+          existingSalary.date = payDayNum;
+        } else {
+          appState.incomes[curM].unshift({
+            id: 'inc_sueldo_' + curM,
+            name: 'Sueldo Mensual',
+            amount: salaryVal,
+            status: 'Pendiente',
+            date: payDayNum
+          });
+        }
       }
       const savingsPct = parseInt(document.getElementById('wSavingsPercentRange')?.value) || 10;
       appState.targetSavingsPercent = savingsPct;
 
-      const payDay = document.getElementById('wPayDaySelect')?.value || '28';
       if (!appState.recurringDueDates) appState.recurringDueDates = {};
       appState.recurringDueDates['sueldo'] = payDay;
 
