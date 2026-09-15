@@ -1,6 +1,6 @@
-// Service Worker v56.1 - NETWORK FIRST para sincronización en tiempo real
+// Service Worker v56.2 - NETWORK FIRST para sincronización en tiempo real
 // Este SW NUNCA sirve datos de caché - siempre va a la red primero
-const CACHE_NAME = 'finanzas-pro-v80';
+const CACHE_NAME = 'finanzas-pro-v81';
 
 // Solo cachear assets estáticos (fonts, chart.js CDN)
 const STATIC_ASSETS = [

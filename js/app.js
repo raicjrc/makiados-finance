@@ -400,7 +400,7 @@
     // Registrar Service Worker v48 (Network-First, sin caché de datos)
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=56.1')
+        navigator.serviceWorker.register('./sw.js?v=56.2')
           .then(reg => {
             console.log('SW v48 registrado:', reg.scope);
             // Forzar actualización inmediata del SW en todos los dispositivos
@@ -4088,18 +4088,34 @@
         prevBtnText: '← Atrás',
         progressText: '{{current}} de {{total}}',
         showButtons: ['next', 'previous', 'close'],
+        onCloseClick: () => {
+          const chk = document.getElementById('tourDontShowAgain');
+          if (chk && chk.checked) {
+            localStorage.setItem('finanzas_tour_dismissed_' + userKey, 'true');
+          }
+          if (typeof switchTab === 'function') {
+            switchTab('inicio');
+          }
+          driverObj.destroy();
+        },
         onHighlightStarted: (element, step, { config, state }) => {
           if (step && step.tabToSwitch && typeof switchTab === 'function') {
             switchTab(step.tabToSwitch);
           }
         },
         onDestroyStarted: () => {
-          if (typeof switchTab === 'function') {
-            switchTab('inicio');
-          }
           const chk = document.getElementById('tourDontShowAgain');
           if (chk && chk.checked) {
             localStorage.setItem('finanzas_tour_dismissed_' + userKey, 'true');
+          }
+          if (typeof switchTab === 'function') {
+            switchTab('inicio');
+          }
+          driverObj.destroy();
+        },
+        onDestroyed: () => {
+          if (typeof switchTab === 'function') {
+            switchTab('inicio');
           }
         },
         steps: [
@@ -4262,15 +4278,41 @@
                 </div>
               `,
               side: 'top',
-              align: 'center'
+              align: 'center',
+              onNextClick: () => {
+                const chk = document.getElementById('tourDontShowAgain');
+                if (chk && chk.checked) {
+                  localStorage.setItem('finanzas_tour_dismissed_' + userKey, 'true');
+                }
+                if (typeof switchTab === 'function') {
+                  switchTab('inicio');
+                }
+                driverObj.destroy();
+              }
             }
           }
         ]
       });
 
+      window.currentFinZenTour = driverObj;
       driverObj.drive();
     }
-  
+
+// Función para cerrar el tour de forma garantizada desde cualquier evento
+window.closeTour = function() {
+  const userKey = currentUser ? currentUser.id : 'guest';
+  const chk = document.getElementById('tourDontShowAgain');
+  if (chk && chk.checked) {
+    localStorage.setItem('finanzas_tour_dismissed_' + userKey, 'true');
+  }
+  if (typeof switchTab === 'function') {
+    switchTab('inicio');
+  }
+  if (window.currentFinZenTour) {
+    try { window.currentFinZenTour.destroy(); } catch(e) {}
+  }
+};
+
 // Exponer funciones críticas al scope global explícitamente para evitar problemas de binding
 window.startInteractiveTour = startInteractiveTour;
 window.toggleFAB = toggleFAB;
