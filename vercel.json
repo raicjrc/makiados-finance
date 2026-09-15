@@ -6,13 +6,17 @@
     { "src": "index.html", "use": "@vercel/static" },
     { "src": "sw.js", "use": "@vercel/static" },
     { "src": "manifest.json", "use": "@vercel/static" },
-    { "src": "logo.jpg", "use": "@vercel/static" }
+    { "src": "logo.jpg", "use": "@vercel/static" },
+    { "src": "css/**", "use": "@vercel/static" },
+    { "src": "js/**", "use": "@vercel/static" }
   ],
   "routes": [
     { "src": "/api/data", "dest": "/api/data.js" },
     { "src": "/sw.js", "dest": "/sw.js" },
     { "src": "/manifest.json", "dest": "/manifest.json" },
     { "src": "/logo.jpg", "dest": "/logo.jpg" },
+    { "src": "/css/(.*)", "dest": "/css/$1" },
+    { "src": "/js/(.*)", "dest": "/js/$1" },
     { "src": "/(.*)", "dest": "/index.html" }
   ],
   "headers": [
