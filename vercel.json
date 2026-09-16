@@ -1,6 +1,5 @@
 {
   "version": 2,
-  "name": "finanzas-cesar-gaby",
   "builds": [
     { "src": "api/*.js", "use": "@vercel/node" },
     { "src": "index.html", "use": "@vercel/static" },
