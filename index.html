@@ -94,7 +94,7 @@
         <div class="brand-group">
           <img src="logo.jpg" alt="FinZen Logo" class="brand-avatar" style="width: 44px; height: 44px; border-radius: 12px; box-shadow: 0 4px 10px rgba(139, 92, 246, 0.3); background: transparent; display: block; border: none; padding: 0;">
           <div class="brand-title">
-            <h1 style="display:flex; align-items:center; gap:6px;">FinZen <span id="trialBadge" style="display:none; background:linear-gradient(135deg, #f59e0b, #d97706); color:white; font-size:9px; padding:2px 6px; border-radius:10px; font-weight:800; box-shadow:0 2px 4px rgba(245,158,11,0.3); letter-spacing: 0.5px;">PRUEBA: 14D</span></h1>
+            <h1 style="display:flex; align-items:center; gap:6px;">FinZen <span id="proBadge" style="display:none;" class="badge-pro-gold">✨ PRO</span></h1>
             <p><span class="sync-status-dot" id="syncDot"></span> <span id="syncText">🟢 Sincronizado</span></p>
           </div>
         </div>
@@ -110,6 +110,7 @@
           </div>
           <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Cambiar a Modo Noche Suave">🌙</button>
           <button id="btnExportPDF" class="settings-popover-btn" onclick="generatePDFReport()" title="Exportar Reporte Mensual a PDF" style="background: linear-gradient(135deg, #10b981, #059669); color: white; margin-right: 4px; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);">📥</button>
+          <button id="btnHelpHeader" class="settings-popover-btn" onclick="openFeedbackModal()" title="¿Dudas o Sugerencias? Soporte Directo">💬</button>
           <button id="btnSettings" class="settings-popover-btn" onclick="openSettingsModal()" title="Ajustes y Opciones">⚙️</button>
         </div>
       </div>
@@ -144,7 +145,7 @@
         </div>
 
         <!-- Big Action Buttons -->
-        <div style="display: flex; gap: 12px; margin-bottom: 24px;">
+        <div style="display: flex; gap: 12px; margin-bottom: 12px;">
           <button id="btnRegistrarGasto" onclick="openAddExpenseModal()" style="flex: 1; padding: 18px; border-radius: 20px; background: linear-gradient(135deg, #fb7185, #e11d48); border: none; color: white; font-weight: 800; font-size: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 8px 20px rgba(225, 29, 72, 0.3); cursor: pointer; transition: transform 0.2s;">
             <span style="font-size: 28px; margin-bottom: 4px;">📉</span>
             Registrar Gasto
@@ -152,6 +153,30 @@
           <button id="btnRegistrarIngreso" onclick="openAddExtraIncomeModal()" style="flex: 1; padding: 18px; border-radius: 20px; background: linear-gradient(135deg, #34d399, #059669); border: none; color: white; font-weight: 800; font-size: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 8px 20px rgba(5, 150, 105, 0.3); cursor: pointer; transition: transform 0.2s;">
             <span style="font-size: 28px; margin-bottom: 4px;">📈</span>
             Registrar Ingreso
+          </button>
+        </div>
+
+        <!-- Quick Tools Hub (Minimalista y Compacto) -->
+        <div class="quick-tools-grid">
+          <button id="btnQuickSimulador" class="quick-tool-card" onclick="openInstallmentsSimulatorModal()" title="Simulador de Cuotas y Crédito">
+            <div class="quick-tool-icon">💳</div>
+            <div class="quick-tool-info">
+              <div class="quick-tool-title">
+                <span>Simulador de Cuotas</span>
+                <span class="quick-tool-arrow">↗</span>
+              </div>
+              <div class="quick-tool-desc">Calcula y proyecta compras a plazos</div>
+            </div>
+          </button>
+          <button id="btnQuickHelp" class="quick-tool-card" onclick="openFeedbackModal()" title="¿Dudas o Sugerencias?">
+            <div class="quick-tool-icon">💬</div>
+            <div class="quick-tool-info">
+              <div class="quick-tool-title">
+                <span>¿Ayuda o Sugerencias?</span>
+                <span class="quick-tool-arrow">↗</span>
+              </div>
+              <div class="quick-tool-desc">Soporte directo y reporte de ideas</div>
+            </div>
           </button>
         </div>
 
@@ -362,7 +387,7 @@
             <h2 style="font-size: 16px; font-weight: 800; margin: 0;">Metas y Fondos de Ahorro</h2>
             <div style="font-size: 11px; color: var(--text-muted); font-weight: 600;">Proyección matemática con IA según tu ritmo real de ahorro</div>
           </div>
-          <button class="btn btn-primary btn-sm" onclick="openAddGoalModal()">+ Nueva Meta</button>
+          <button class="btn btn-primary btn-sm" onclick="handleOpenAddGoalClick()">+ Nueva Meta</button>
         </div>
         
         <!-- Ahorro Acumulado (Moved from Top Metrics) -->
@@ -461,26 +486,6 @@
         <span>Historial</span>
       </button>
     </div>
-
-    <!-- Floating Action Button (FAB) -->
-    <div id="fabOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.3); z-index:1099;" onclick="toggleFAB()"></div>
-    <div id="fabMenu" style="display:none; position:fixed; bottom:88px; right:20px; z-index:1100; display:none; flex-direction:column; gap:10px; align-items:flex-end;">
-      <button onclick="openAddExpenseModal(); toggleFAB();" style="display:flex; align-items:center; gap:8px; padding:10px 18px; border-radius:24px; border:none; background:linear-gradient(135deg,#4f46e5,#6366f1); color:white; font-size:13px; font-weight:800; cursor:pointer; box-shadow:0 4px 16px rgba(79,70,229,0.35); transition:all 0.2s;">
-        ➕ Registrar Gasto
-      </button>
-      <button onclick="openAddExtraIncomeModal(); toggleFAB();" style="display:flex; align-items:center; gap:8px; padding:10px 18px; border-radius:24px; border:none; background:linear-gradient(135deg,#059669,#10b981); color:white; font-size:13px; font-weight:800; cursor:pointer; box-shadow:0 4px 16px rgba(5,150,105,0.35); transition:all 0.2s;">
-        💵 Ingreso Extra
-      </button>
-      <button onclick="openInstallmentsSimulatorModal(); toggleFAB();" style="display:flex; align-items:center; gap:8px; padding:10px 18px; border-radius:24px; border:none; background:linear-gradient(135deg,#0284c7,#38bdf8); color:white; font-size:13px; font-weight:800; cursor:pointer; box-shadow:0 4px 16px rgba(56,189,248,0.35); transition:all 0.2s;">
-        💳 Simulador de Cuotas
-      </button>
-      <button onclick="openFeedbackModal(); toggleFAB();" style="display:flex; align-items:center; gap:8px; padding:10px 18px; border-radius:24px; border:none; background:linear-gradient(135deg,#e11d48,#f43f5e); color:white; font-size:13px; font-weight:800; cursor:pointer; box-shadow:0 4px 16px rgba(225,29,72,0.35); transition:all 0.2s;">
-        💬 ¿Ayuda? / Idea
-      </button>
-    </div>
-    <button id="fabBtn" onclick="toggleFAB()" style="position:fixed; bottom:80px; right:20px; z-index:1100; width:52px; height:52px; border-radius:50%; border:none; background:linear-gradient(135deg,#4f46e5,#7c3aed); color:white; font-size:24px; font-weight:800; cursor:pointer; box-shadow:0 6px 20px rgba(79,70,229,0.4); transition:all 0.25s ease; display:flex; align-items:center; justify-content:center;">
-      +
-    </button>
 
   </div>
 
@@ -636,8 +641,9 @@
             <input type="number" id="managerCatBudget" class="glass-input" placeholder="1000" value="1000" oninput="document.getElementById('managerBudgetPreview').textContent = 'S/ ' + (parseFloat(this.value)||0).toLocaleString('es-PE', {minimumFractionDigits:2})">
           </div>
 
-          <button type="button" class="glass-btn-primary" onclick="saveCategoryFromManager()">
-            ✨ Añadir Categoría
+          <button type="button" class="glass-btn-primary" onclick="handleSaveCategoryClick()" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <span>✨ Añadir Categoría</span>
+            <span class="badge-pro-gold">PRO</span>
           </button>
         </div>
       </div>
@@ -752,8 +758,9 @@
           </div>
 
           <!-- Action Button -->
-          <button type="button" class="glass-btn-primary" onclick="applySimulatedPurchase()">
-            🚀 Simular y Añadir al Presupuesto
+          <button type="button" class="glass-btn-primary" id="btnSimApplyPurchase" onclick="handleSimulatedPurchaseClick()" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <span>✨ Aplicar Cuotas a Meses Futuros</span>
+            <span class="badge-pro-gold">PRO</span>
           </button>
         </div>
       </div>
@@ -1325,45 +1332,54 @@
         <button type="button" class="btn btn-primary" id="feedbackSubmitBtn" onclick="submitAppFeedback()" style="flex: 1; font-weight: 800;">🚀 Enviar Reporte</button>
       </div>
     </div>
-  <div class="modal-backdrop" id="paywallModal" style="z-index: 99999; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); background: rgba(15, 23, 42, 0.85);">
-    <div class="modal-content" style="background: linear-gradient(145deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95)); border: 1px solid rgba(139, 92, 246, 0.3); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(139, 92, 246, 0.2); padding: 32px 24px; color: white;">
-      <div style="text-align: center; margin-bottom: 24px;">
-        <div style="font-size: 48px; margin-bottom: 16px; filter: drop-shadow(0 0 12px rgba(16, 185, 129, 0.6));">💎</div>
-        <h2 style="font-size: 26px; font-weight: 800; color: white; margin: 0 0 8px 0; background: linear-gradient(to right, #a78bfa, #34d399); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Acceso Premium Requerido</h2>
-        <p style="font-size: 14px; color: #cbd5e1; margin: 0; line-height: 1.5;">Tu periodo de prueba de 14 días ha finalizado. Suscríbete a FinZen para seguir teniendo el control total de tu dinero.</p>
+  </div>
+
+  <!-- MODAL: FINZEN PRO (MINIMALISTA Y LIMPIO) -->
+  <div class="glass-backdrop" id="finzenProModal" style="z-index: 99999;" onclick="if(event.target === this) closeGlassModal('finzenProModal')">
+    <div class="glass-modal" style="max-width: 440px; text-align: center; border-radius: 24px; padding: 24px 20px;">
+      <div class="glass-modal-header" style="justify-content: flex-end; padding-bottom: 0; border: none; margin-bottom: 4px;">
+        <button class="glass-close-btn" onclick="closeGlassModal('finzenProModal')">✕</button>
       </div>
 
-      <div style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 16px; margin-bottom: 24px; border: 1px solid rgba(255,255,255,0.1);">
-        <ul style="list-style: none; padding: 0; margin: 0; font-size: 14px; color: #e2e8f0;">
-          <li style="margin-bottom: 12px; display: flex; align-items: center; gap: 10px;">
-            <span style="color: #34d399; font-size: 16px;">✅</span> Sincronización en la nube 24/7
-          </li>
-          <li style="margin-bottom: 12px; display: flex; align-items: center; gap: 10px;">
-            <span style="color: #34d399; font-size: 16px;">✅</span> Consejos financieros dinámicos
-          </li>
-          <li style="margin-bottom: 12px; display: flex; align-items: center; gap: 10px;">
-            <span style="color: #34d399; font-size: 16px;">✅</span> Control de presupuesto inteligente
-          </li>
-          <li style="display: flex; align-items: center; gap: 10px;">
-            <span style="color: #34d399; font-size: 16px;">✅</span> Acceso multidispositivo
-          </li>
-        </ul>
+      <div style="font-size: 40px; margin-bottom: 6px; line-height: 1;">👑</div>
+      <div style="font-size: 22px; font-weight: 800; color: #ffffff; letter-spacing: -0.5px;">
+        FinZen <span style="background: linear-gradient(135deg, #fbbf24, #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">PRO</span>
+      </div>
+      <div style="font-size: 12px; color: #94a3b8; margin-top: 4px; font-weight: 500;">
+        El acelerador para tu tranquilidad financiera
       </div>
 
-      <div style="text-align: center; margin-bottom: 24px;">
-        <div style="font-size: 28px; font-weight: 800; color: white;">S/ 9.90 <span style="font-size: 14px; font-weight: 500; color: #94a3b8;">/ mes</span></div>
-        <div style="font-size: 13px; color: #94a3b8; margin-top: 4px;">O un único pago vitalicio de <strong style="color: white;">S/ 59.90</strong></div>
+      <div style="margin: 18px 0; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 14px 16px; text-align: left; display: flex; flex-direction: column; gap: 10px;">
+        <div style="display: flex; align-items: center; gap: 10px; font-size: 12px; color: #f1f5f9; font-weight: 600;">
+          <span style="color: #10b981; font-size: 15px;">✓</span> Inyección automática de compras en cuotas
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; font-size: 12px; color: #f1f5f9; font-weight: 600;">
+          <span style="color: #10b981; font-size: 15px;">✓</span> Categorías y presupuestos personalizados ilimitados
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; font-size: 12px; color: #f1f5f9; font-weight: 600;">
+          <span style="color: #10b981; font-size: 15px;">✓</span> Metas de ahorro múltiples sin restricciones
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; font-size: 12px; color: #f1f5f9; font-weight: 600;">
+          <span style="color: #10b981; font-size: 15px;">✓</span> Asesor de deudas con método bola de nieve
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; font-size: 12px; color: #f1f5f9; font-weight: 600;">
+          <span style="color: #10b981; font-size: 15px;">✓</span> Exportación completa a Excel y CSV
+        </div>
       </div>
 
-      <a href="https://wa.me/51914688135?text=Hola%20César,%20quiero%20activar%20mi%20suscripción%20Premium%20en%20FinZen" target="_blank" style="display: block; width: 100%; text-align: center; padding: 14px; border-radius: 12px; background: linear-gradient(135deg, #8b5cf6, #10b981); color: white; font-weight: 700; font-size: 16px; text-decoration: none; border: none; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4); margin-bottom: 16px;">
-        Pagar vía Yape / Plin (+51 914688135)
+      <div style="background: linear-gradient(135deg, rgba(79, 70, 229, 0.15), rgba(124, 58, 237, 0.15)); border: 1.5px solid rgba(124, 58, 237, 0.3); border-radius: 16px; padding: 14px; margin-bottom: 16px;">
+        <div style="font-size: 22px; font-weight: 800; color: #ffffff;">
+          S/ 9.90 <span style="font-size: 12px; color: #cbd5e1; font-weight: 500;">/ mes</span>
+        </div>
+        <div style="font-size: 11px; color: #a5b4fc; margin-top: 2px;">O pago único vitalicio de S/ 59.90 • Cancela cuando quieras</div>
+      </div>
+
+      <a href="https://wa.me/51914688135?text=Hola%20C%C3%A9sar,%20quiero%20activar%20mi%20suscripci%C3%B3n%20FinZen%20Pro" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; text-align: center; padding: 13px; border-radius: 14px; background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; font-weight: 800; font-size: 14px; text-decoration: none; border: none; box-shadow: 0 4px 16px rgba(124, 58, 237, 0.4); margin-bottom: 10px; box-sizing: border-box;">
+        <span>✨ Comenzar FinZen Pro</span>
       </a>
 
-      <p style="text-align: center; font-size: 11px; color: #64748b; margin: 0;">Al realizar el pago, envíame la captura y el correo con el que te registraste para activar tu cuenta de inmediato.</p>
-      
-      <!-- Botón para ver settings/exportar data, único escape -->
-      <button onclick="document.getElementById('paywallModal').style.display='none'; openModal('settingsModal');" style="margin-top: 20px; background: none; border: none; color: #94a3b8; font-size: 12px; text-decoration: underline; width: 100%; cursor: pointer;">
-        Solo quiero exportar mis datos / Ver ajustes
+      <button type="button" onclick="closeGlassModal('finzenProModal')" style="background: transparent; border: none; color: #94a3b8; font-size: 11px; font-weight: 600; cursor: pointer; padding: 4px;">
+        Continuar con la versión gratuita
       </button>
     </div>
   </div>

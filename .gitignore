@@ -12,6 +12,7 @@ database_user_immutable_backup.json
 parsed_data.json
 index_backup_*.html
 *_backup_*
+*.bak_*
 scratch.js
 
 # macOS

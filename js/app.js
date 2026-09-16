@@ -182,10 +182,12 @@
 
     // Verifica si hay sesión activa de Supabase al cargar la app
     async function checkLoginStatus() {
-      // Soporte para depuración / vista previa local del tour (?debug_tour=1)
-      if (window.location.search.includes('debug_tour=1')) {
+      // Soporte para depuración / vista previa local (?debug_tour=1 o ?demo=1)
+      if (window.location.search.includes('debug_tour=1') || window.location.search.includes('demo=1')) {
         await onLoginSuccess({ id: 'test_user_tour', email: 'test@finzen.app', user_metadata: { full_name: 'Usuario Demo' } });
-        setTimeout(() => startInteractiveTour(), 500);
+        if (window.location.search.includes('debug_tour=1')) {
+          setTimeout(() => startInteractiveTour(), 500);
+        }
         return;
       }
 
@@ -230,69 +232,74 @@
       await verifySubscription(user);
     }
 
+    // ================================================================
+    // SISTEMA DE MONETIZACIÓN FREEMIUM (FREE VS PRO)
+    // ================================================================
+    function isUserPro() {
+      // 1. César (admin) siempre tiene acceso Pro de por vida
+      if (currentUser && currentUser.email === 'cesar.risso.f@gmail.com') return true;
+      // 2. Si tiene flag 'is_pro' en metadata de Supabase
+      if (currentUser && currentUser.user_metadata && currentUser.user_metadata.is_pro === true) return true;
+      // 3. Si en user_subscriptions está como 'premium'
+      if (window._currentUserSubscriptionStatus === 'premium') return true;
+      // 4. Si tiene desbloqueo local
+      if (localStorage.getItem('finzen_pro_unlocked') === 'true') return true;
+      return false;
+    }
+
+    // Helper para desbloquear Pro internamente o por consola sin ensuciar la UI
+    window.finzenUnlockPro = function() {
+      localStorage.setItem('finzen_pro_unlocked', 'true');
+      const pb = document.getElementById('proBadge');
+      if (pb) pb.style.display = 'inline-flex';
+      showToast('✨ FinZen Pro activado con éxito', 'success');
+      renderAll();
+    };
+
+    function openFinZenProModal(featureName) {
+      const modal = document.getElementById('finzenProModal');
+      if (modal) {
+        modal.classList.add('active');
+        modal.style.visibility = 'visible';
+        modal.style.opacity = '1';
+      }
+    }
+
     async function verifySubscription(user) {
-      // Administrador no pasa por Paywall
-      if (user.email === 'cesar.risso.f@gmail.com') {
+      window._currentUserSubscriptionStatus = 'free';
+
+      // Administrador siempre Pro
+      if (user && user.email === 'cesar.risso.f@gmail.com') {
+        window._currentUserSubscriptionStatus = 'premium';
+        const pb = document.getElementById('proBadge');
+        if (pb) pb.style.display = 'inline-flex';
         setTimeout(() => checkOnboardingAndVersionAnnouncements(), 400);
         return;
       }
 
-      let status = 'trial';
-      let daysLeft = 14;
-
       try {
-        const { data, error } = await supabaseClient
+        const { data } = await supabaseClient
           .from('user_subscriptions')
           .select('*')
           .eq('user_id', user.id)
           .single();
 
-        if (error || !data) {
-          // Usuario nuevo, crear suscripción trial de 14 días
-          const trialEndsAt = new Date();
-          trialEndsAt.setDate(trialEndsAt.getDate() + 14);
-
-          await supabaseClient.from('user_subscriptions').insert([{
-            user_id: user.id,
-            email: user.email,
-            status: 'trial',
-            trial_ends_at: trialEndsAt.toISOString()
-          }]);
-        } else {
-          status = data.status;
-          if (status === 'trial') {
-            const endDate = new Date(data.trial_ends_at);
-            const now = new Date();
-            const diffTime = endDate - now;
-            daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            
-            if (daysLeft <= 0) {
-              status = 'expired';
-              // Actualizar en bd como expirado (opcional, pero útil)
-              await supabaseClient.from('user_subscriptions').update({ status: 'expired' }).eq('user_id', user.id);
-            }
-          }
+        if (data && data.status === 'premium') {
+          window._currentUserSubscriptionStatus = 'premium';
         }
-
-        if (status === 'expired') {
-          // Mostrar muro de pago
-          document.getElementById('paywallModal').style.display = 'flex';
-          // Ocultar modal de onboarding si estaba por salir
-        } else if (status === 'trial') {
-          const tb = document.getElementById('trialBadge');
-          if (tb) {
-            tb.style.display = 'inline-block';
-            tb.textContent = `PRUEBA: ${daysLeft}D`;
-          }
-          setTimeout(() => checkOnboardingAndVersionAnnouncements(), 400);
-        } else if (status === 'premium') {
-          setTimeout(() => checkOnboardingAndVersionAnnouncements(), 400);
-        }
-
       } catch (err) {
-        console.error('Error verificando suscripción:', err);
-        setTimeout(() => checkOnboardingAndVersionAnnouncements(), 400);
+        console.warn('Nota de suscripción:', err);
       }
+
+      // Actualizar badge Pro en cabecera
+      const pb = document.getElementById('proBadge');
+      if (pb) {
+        pb.style.display = isUserPro() ? 'inline-flex' : 'none';
+      }
+
+      // IMPORTANTE: Nunca se bloquea al usuario con paywall.
+      // El usuario siempre accede a la app con su plan Free vitalicio.
+      setTimeout(() => checkOnboardingAndVersionAnnouncements(), 400);
     }
 
     // LOGIN con Supabase Auth
@@ -2568,6 +2575,14 @@
       document.getElementById('addGoalModal').classList.add('active');
     }
 
+    function handleOpenAddGoalClick() {
+      if (appState.savingsGoals && appState.savingsGoals.length >= 1 && !isUserPro()) {
+        openFinZenProModal('Metas de Ahorro Múltiples');
+        return;
+      }
+      openAddGoalModal();
+    }
+
     function handleAddGoal(e) {
       e.preventDefault();
       const name = document.getElementById('goalName').value.trim();
@@ -3386,6 +3401,14 @@
       showToast(`✅ Categoría "${name}" creada con éxito`, 'success');
     }
 
+    function handleSaveCategoryClick() {
+      if (!isUserPro()) {
+        openFinZenProModal('Categorías Personalizadas');
+        return;
+      }
+      saveCategoryFromManager();
+    }
+
     function editCategoryBudgetFromManager(cat) {
       const current = (appState.categoryBudgets && appState.categoryBudgets[cat]) || 1000;
       const val = prompt(`Ingresa nuevo límite mensual para ${cat} (S/):`, current);
@@ -3632,6 +3655,14 @@
       renderAll();
       closeGlassModal('installmentsSimulatorModal');
       showToast(`✅ Compra en ${cuotas} cuotas añadida al presupuesto con éxito`, 'success');
+    }
+
+    function handleSimulatedPurchaseClick() {
+      if (!isUserPro()) {
+        openFinZenProModal('Inyección Automática de Cuotas');
+        return;
+      }
+      applySimulatedPurchase();
     }
 
     // ================================================================
@@ -4130,9 +4161,10 @@
                   <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 12px; font-size: 12px; color: #475569; display: flex; flex-direction: column; gap: 6px;">
                     <div>💵 <b>Configurar sueldo y presupuestos</b></div>
                     <div>📉 <b>Registrar gastos e ingresos extra</b></div>
+                    <div>💳 <b>Simulador de compras en cuotas</b></div>
+                    <div>💬 <b>Ayuda y soporte directo en 1 clic</b></div>
                     <div>📥 <b>Descargar reporte mensual en PDF</b></div>
                     <div>🌙 <b>Activar el Modo Oscuro</b></div>
-                    <div>🚨 <b>Reportar fallas o dudas en 1 clic</b></div>
                     <div>📊 <b>Conocer cada sección de la barra inferior</b></div>
                   </div>
                 </div>
@@ -4172,7 +4204,29 @@
               align: 'end'
             }
           },
-          // 5. Configurar Sueldo y Gastos Mensuales
+          // 5. Simulador de Cuotas & Crédito
+          {
+            element: '#btnQuickSimulador',
+            tabToSwitch: 'inicio',
+            popover: {
+              title: '💳 Simulador de Cuotas & Crédito',
+              description: '¿Planeas una compra a plazos? Simúlala aquí antes de pasar la tarjeta para ver tu cuota mensual con o sin intereses y su impacto en tu presupuesto.',
+              side: 'bottom',
+              align: 'start'
+            }
+          },
+          // 6. Centro de Ayuda & Feedback
+          {
+            element: '#btnQuickHelp',
+            tabToSwitch: 'inicio',
+            popover: {
+              title: '💬 ¿Dudas o Sugerencias? Soporte Directo',
+              description: 'Estamos para ayudarte. Toca aquí (o en el botón <b>💬</b> de la cabecera) para reportar cualquier falla técnica o enviarnos sugerencias directamente al equipo.',
+              side: 'bottom',
+              align: 'end'
+            }
+          },
+          // 7. Configurar Sueldo y Gastos Mensuales
           {
             element: '#btnSettings',
             tabToSwitch: 'inicio',
@@ -4183,7 +4237,7 @@
               align: 'end'
             }
           },
-          // 6. Descargar Reporte en PDF
+          // 8. Descargar Reporte en PDF
           {
             element: '#btnExportPDF',
             tabToSwitch: 'inicio',
@@ -4194,7 +4248,7 @@
               align: 'end'
             }
           },
-          // 7. Modo Oscuro
+          // 9. Modo Oscuro
           {
             element: '#themeToggleBtn',
             tabToSwitch: 'inicio',
@@ -4202,17 +4256,6 @@
               title: '🌙 Cambiar a Modo Oscuro / Claro',
               description: 'Alterna con un solo clic entre el Modo Claro y el Modo Noche Suave, diseñado para proteger tu vista de noche y reducir el consumo de batería.',
               side: 'bottom',
-              align: 'end'
-            }
-          },
-          // 8. Botón Flotante (+) y Reportar Falla
-          {
-            element: '#fabBtn',
-            tabToSwitch: 'inicio',
-            popover: {
-              title: '⚡ Menú Rápido y Reportar Falla',
-              description: 'Este botón flotante te acompaña en todas las pantallas. Desde aquí accedes a ingresos, gastos, al <b>Simulador de Cuotas</b> y a <b>💬 ¿Ayuda? / Idea</b> para <b>reportar cualquier falla técnica</b> o enviarnos tus sugerencias al instante.',
-              side: 'top',
               align: 'end'
             }
           },
@@ -4315,12 +4358,17 @@ window.closeTour = function() {
 
 // Exponer funciones críticas al scope global explícitamente para evitar problemas de binding
 window.startInteractiveTour = startInteractiveTour;
-window.toggleFAB = toggleFAB;
+window.toggleFAB = typeof toggleFAB === 'function' ? toggleFAB : function(){};
 window.openAddExpenseModal = openAddExpenseModal;
 window.openAddExtraIncomeModal = openAddExtraIncomeModal;
 window.openCategoryManagerModal = openCategoryManagerModal;
 window.openFeedbackModal = openFeedbackModal;
 window.openInstallmentsSimulatorModal = openInstallmentsSimulatorModal;
+window.handleSimulatedPurchaseClick = handleSimulatedPurchaseClick;
+window.handleSaveCategoryClick = handleSaveCategoryClick;
+window.handleOpenAddGoalClick = handleOpenAddGoalClick;
+window.openFinZenProModal = openFinZenProModal;
+window.isUserPro = isUserPro;
 
 
 // ================================================================
