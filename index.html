@@ -12,7 +12,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/styles.css?v=60.0">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
 </head>
 <body>
@@ -423,6 +423,29 @@
 
         <div id="personalizedTipsContainer"></div>
 
+        <!-- Tarjeta PRO: Asesor de Deudas Bola de Nieve -->
+        <div class="card" style="background: linear-gradient(135deg, rgba(79, 70, 229, 0.08), rgba(124, 58, 237, 0.06)); border: 1.5px solid rgba(124, 58, 237, 0.25); border-radius: 16px; padding: 16px; margin-top: 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 22px;">❄️</span>
+              <div>
+                <div style="font-size: 13.5px; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 6px;">
+                  <span>Plan Anti-Deudas: Método Bola de Nieve</span>
+                  <span class="badge-pro-gold" style="font-size: 10px; padding: 2px 6px;">PRO</span>
+                </div>
+                <div style="font-size: 11px; color: var(--primary); font-weight: 600;">Estrategia matemática de liquidación acelerada</div>
+              </div>
+            </div>
+          </div>
+          <p style="font-size: 11.5px; color: var(--text-muted); line-height: 1.45; margin: 0 0 12px 0;">
+            El método Bola de Nieve ordena tus compromisos de menor a mayor saldo, destinando tu superávit mensual al pago agresivo de la más pequeña mientras cubres los mínimos de las demás. Al liquidar cada deuda, su cuota se suma como efecto avalancha a la siguiente, reduciendo meses de intereses.
+          </p>
+          <button type="button" onclick="handleDebtAdvisorClick()" class="btn btn-primary" style="width: 100%; font-size: 12px; font-weight: 800; background: linear-gradient(135deg, #4f46e5, #7c3aed); border: none; box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35); padding: 10px; display: flex; align-items: center; justify-content: center; gap: 6px;">
+            <span>✨ Ver Plan de Amortización Bola de Nieve</span>
+            <span style="background: rgba(255,255,255,0.2); padding: 1px 6px; border-radius: 6px; font-size: 10px;">PRO 👑</span>
+          </button>
+        </div>
+
         <!-- Banner de Ayuda / Feedback en la Pantalla de Consejos -->
         <div style="margin-top: 24px; margin-bottom: 24px; padding: 14px 18px; border-radius: 16px; background: linear-gradient(135deg, rgba(99, 102, 241, 0.06), rgba(14, 165, 233, 0.06)); border: 1.5px dashed rgba(99, 102, 241, 0.3); display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
           <div style="display: flex; align-items: center; gap: 12px;">
@@ -441,9 +464,15 @@
       <!-- TAB 5: AUDITORÍA Y TRAZABILIDAD -->
       <div id="tab-auditoria" class="tab-content">
         <div class="card">
-          <div class="card-header">
+          <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
             <div class="card-title">📜 Histórico de Cambios & Auditoría</div>
-            <button class="btn btn-secondary btn-sm" onclick="clearAuditLog()">🗑️ Limpiar</button>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <button class="btn btn-primary btn-sm" onclick="handleExportExcelCSVClick()" style="font-size: 11px; padding: 4px 10px; display: flex; align-items: center; gap: 5px; background: linear-gradient(135deg, #059669, #10b981); border: none;">
+                <span>📊 Exportar Excel</span>
+                <span class="badge-pro-gold" style="font-size: 9px; padding: 1px 4px;">PRO</span>
+              </button>
+              <button class="btn btn-secondary btn-sm" onclick="clearAuditLog()">🗑️ Limpiar</button>
+            </div>
           </div>
           <div class="table-responsive">
             <table class="tx-table">
@@ -500,6 +529,16 @@
         <button class="btn btn-secondary" onclick="openCategoryManagerModal(); closeModal('settingsModal');" style="width: 100%; text-align: left; padding: 10px;">⚙️ Gestor de Categorías</button>
         <button class="btn btn-secondary" onclick="closeModal('settingsModal'); startInteractiveTour();" style="width: 100%; text-align: left; padding: 10px;">🧭 Repetir Tour Guiado</button>
         <button class="btn btn-secondary" onclick="closeModal('settingsModal'); openOnboardingWizard(true);" style="width: 100%; text-align: left; padding: 10px;">🔧 Reconfigurar Ingresos y Gastos</button>
+
+        <div style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-top: 6px; margin-bottom: 2px;">Exportación & Reportes</div>
+        <button class="btn btn-secondary" onclick="exportMonthlyReportPDF(); closeModal('settingsModal');" style="width: 100%; text-align: left; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
+          <span>📄 Descargar Reporte Mensual (PDF)</span>
+          <span style="font-size: 10px; font-weight: 700; color: #10b981; background: rgba(16,185,129,0.1); padding: 2px 6px; border-radius: 6px;">Gratis</span>
+        </button>
+        <button class="btn btn-secondary" onclick="closeModal('settingsModal'); handleExportExcelCSVClick();" style="width: 100%; text-align: left; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
+          <span>📊 Exportar Historial a Excel / CSV</span>
+          <span class="badge-pro-gold" style="font-size: 10px; padding: 2px 6px;">PRO 👑</span>
+        </button>
 
         <div style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-top: 6px; margin-bottom: 2px;">Soporte y Novedades</div>
         <button class="btn btn-secondary" onclick="closeModal('settingsModal'); openWhatsNewModal();" style="width: 100%; text-align: left; padding: 10px;">🚀 Novedades (v56.0)</button>
@@ -959,172 +998,168 @@
 
   <!-- MODAL: ASISTENTE DE BIENVENIDA & CONFIGURACIÓN INICIAL (WIZARD) -->
   <div class="modal-backdrop" id="onboardingWizardModal" onclick="handleBackdropClick(event, 'onboardingWizardModal')">
-    <div class="modal" style="max-width: 650px; width: 95%;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-        <div class="modal-title" style="margin: 0; display: flex; align-items: center; gap: 8px;">
-          <span>🧭</span> <span>Asistente de Configuración Inicial</span>
+    <div class="modal wizard-modal-container">
+      <!-- FIXED HEADER -->
+      <div class="wizard-modal-header">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+          <div class="modal-title" style="margin: 0; display: flex; align-items: center; gap: 8px;">
+            <span>🧭</span> <span>Asistente de Configuración Inicial</span>
+          </div>
+          <button type="button" onclick="dismissOnboardingWizard(true)" style="background:none; border:none; font-size:20px; cursor:pointer; color:var(--text-muted); line-height: 1;">✕</button>
         </div>
-        <button type="button" onclick="dismissOnboardingWizard(true)" style="background:none; border:none; font-size:20px; cursor:pointer; color:var(--text-muted); line-height: 1;">✕</button>
-      </div>
-      <p style="font-size: 12px; color: var(--text-muted); margin: 0 0 12px 0;">Configura tus ingresos, gastos fijos y metas para que FinZen empiece a trabajar a tu favor.</p>
+        <p style="font-size: 11px; color: var(--text-muted); margin: 0 0 10px 0;">Configura tus ingresos, gastos fijos y metas para que FinZen empiece a trabajar a tu favor.</p>
 
-      <!-- Step tracker bar -->
-      <div class="wizard-step-tracker">
-        <div class="wizard-step-progress-line" id="wizardProgressLine"></div>
-        <div class="wizard-step-item active" id="wStepDot1" onclick="goToWizardStep(1)">
-          <div class="wizard-step-circle">1</div>
-          <div class="wizard-step-label">Ingresos</div>
-        </div>
-        <div class="wizard-step-item" id="wStepDot2" onclick="goToWizardStep(2)">
-          <div class="wizard-step-circle">2</div>
-          <div class="wizard-step-label">Gastos Fijos</div>
-        </div>
-        <div class="wizard-step-item" id="wStepDot3" onclick="goToWizardStep(3)">
-          <div class="wizard-step-circle">3</div>
-          <div class="wizard-step-label">Tarjetas</div>
-        </div>
-        <div class="wizard-step-item" id="wStepDot4" onclick="goToWizardStep(4)">
-          <div class="wizard-step-circle">4</div>
-          <div class="wizard-step-label">Metas</div>
+        <!-- Step tracker bar -->
+        <div class="wizard-step-tracker" style="margin-bottom: 0;">
+          <div class="wizard-step-progress-line" id="wizardProgressLine"></div>
+          <div class="wizard-step-item active" id="wStepDot1" onclick="goToWizardStep(1)">
+            <div class="wizard-step-circle">1</div>
+            <div class="wizard-step-label">Ingresos</div>
+          </div>
+          <div class="wizard-step-item" id="wStepDot2" onclick="goToWizardStep(2)">
+            <div class="wizard-step-circle">2</div>
+            <div class="wizard-step-label">Gastos Fijos</div>
+          </div>
+          <div class="wizard-step-item" id="wStepDot3" onclick="goToWizardStep(3)">
+            <div class="wizard-step-circle">3</div>
+            <div class="wizard-step-label">Tarjetas</div>
+          </div>
+          <div class="wizard-step-item" id="wStepDot4" onclick="goToWizardStep(4)">
+            <div class="wizard-step-circle">4</div>
+            <div class="wizard-step-label">Metas</div>
+          </div>
         </div>
       </div>
 
-      <!-- PASO 1: INGRESOS Y DÍA DE COBRO -->
-      <div class="wizard-slide active" id="wSlide1">
-        <div style="background: rgba(255,255,255,0.45); border-radius: 12px; padding: 14px; border: 1px solid var(--glass-border); margin-bottom: 12px;">
-          <h4 style="font-size: 13px; font-weight: 800; color: var(--text-main); margin: 0 0 8px 0;">💰 Tus Ingresos Mensuales</h4>
-          <div class="form-group" style="margin-bottom: 10px;">
-            <label style="font-size: 11px; font-weight: 700;">Sueldo / Ingreso Mensual Neto Estimado</label>
-            <div style="display: flex; gap: 8px;">
-              <select id="wCurrencySelect" class="form-control" style="width: 90px; font-weight: 700;">
-                <option value="S/">S/ (PEN)</option>
-                <option value="$">$ (USD)</option>
+      <!-- SCROLLABLE BODY -->
+      <div class="wizard-modal-body">
+        <!-- PASO 1: INGRESOS Y DÍA DE COBRO -->
+        <div class="wizard-slide active" id="wSlide1">
+          <div style="background: rgba(255,255,255,0.45); border-radius: 12px; padding: 14px; border: 1px solid var(--glass-border); margin-bottom: 12px;">
+            <h4 style="font-size: 13px; font-weight: 800; color: var(--text-main); margin: 0 0 8px 0;">💰 Tus Ingresos Mensuales</h4>
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label style="font-size: 11px; font-weight: 700;">Sueldo / Ingreso Mensual Neto Estimado</label>
+              <div style="display: flex; gap: 8px;">
+                <select id="wCurrencySelect" class="form-control" style="width: 90px; font-weight: 700;">
+                  <option value="S/">S/ (PEN)</option>
+                  <option value="$">$ (USD)</option>
+                </select>
+                <input type="number" id="wSalaryInput" class="form-control" placeholder="Ej: 3500" step="any" style="font-weight: 700; font-size: 14px;">
+              </div>
+            </div>
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label style="font-size: 11px; font-weight: 700;">Día recurrente de cobro del mes</label>
+              <select id="wPayDaySelect" class="form-control">
+                <option value="28">Día 28 de cada mes (Típico fin de mes)</option>
+                <option value="30">Día 30 de cada mes</option>
+                <option value="15">Día 15 de cada mes (Quincena)</option>
+                <option value="1">Día 1 de cada mes (Inicio de mes)</option>
               </select>
-              <input type="number" id="wSalaryInput" class="form-control" placeholder="Ej: 3500" step="any" style="font-weight: 700; font-size: 14px;">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label style="font-size: 11px; font-weight: 700;">Meta de Ahorro Recomendada sobre tus Ingresos</label>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <input type="range" id="wSavingsPercentRange" min="5" max="40" step="5" value="10" class="form-control" style="padding: 0; height: 6px;" oninput="document.getElementById('wSavingsPercentVal').textContent = this.value + '%'">
+                <span id="wSavingsPercentVal" style="font-size: 13px; font-weight: 800; color: var(--primary); min-width: 40px;">10%</span>
+              </div>
             </div>
           </div>
-          <div class="form-group" style="margin-bottom: 10px;">
-            <label style="font-size: 11px; font-weight: 700;">Día recurrente de cobro del mes</label>
-            <select id="wPayDaySelect" class="form-control">
-              <option value="28">Día 28 de cada mes (Típico fin de mes)</option>
-              <option value="30">Día 30 de cada mes</option>
-              <option value="15">Día 15 de cada mes (Quincena)</option>
-              <option value="1">Día 1 de cada mes (Inicio de mes)</option>
-            </select>
+          <div class="wizard-tip-box">
+            <span>💡</span>
+            <div>FinZen proyecta tu saldo y flujo de caja diario usando tu fecha de sueldo para garantizar que no te quedes en cero.</div>
           </div>
-          <div class="form-group" style="margin-bottom: 0;">
-            <label style="font-size: 11px; font-weight: 700;">Meta de Ahorro Recomendada sobre tus Ingresos</label>
-            <div style="display: flex; align-items: center; gap: 10px;">
-              <input type="range" id="wSavingsPercentRange" min="5" max="40" step="5" value="10" class="form-control" style="padding: 0; height: 6px;" oninput="document.getElementById('wSavingsPercentVal').textContent = this.value + '%'">
-              <span id="wSavingsPercentVal" style="font-size: 13px; font-weight: 800; color: var(--primary); min-width: 40px;">10%</span>
+        </div>
+
+        <!-- PASO 2: GASTOS FIJOS Y VENCIMIENTOS -->
+        <div class="wizard-slide" id="wSlide2">
+          <div style="background: rgba(255,255,255,0.45); border-radius: 12px; padding: 14px; border: 1px solid var(--glass-border); margin-bottom: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <h4 style="font-size: 13px; font-weight: 800; color: var(--text-main); margin: 0;">📅 Gastos Fijos y Fechas de Vencimiento</h4>
+              <span style="font-size: 10px; color: var(--text-muted);">Alimentan el Calendario</span>
+            </div>
+            <p style="font-size: 11px; color: var(--text-muted); margin: 0 0 10px 0;">Agrega tus servicios, alquiler o compromisos recurrentes del mes (hasta 11 en Free):</p>
+            
+            <div id="wFixedExpensesContainer">
+              <!-- Dynamic rows rendered by JS -->
+            </div>
+            <button type="button" class="btn btn-secondary" onclick="addWizardExpenseRow()" style="width: 100%; font-size: 11px; padding: 8px; margin-top: 4px;">➕ Agregar Otro Gasto Fijo</button>
+
+            <div style="margin-top: 12px;">
+              <span style="font-size: 10px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 6px;">Sugerencias rápidas de 1 clic:</span>
+              <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                <span class="wizard-chip-tag" onclick="quickAddWizardExpense('Alquiler / Casa', 650, 'Vivienda', '30')">🏠 Alquiler (Día 30)</span>
+                <span class="wizard-chip-tag" onclick="quickAddWizardExpense('Luz y Agua', 120, 'Servicios', '15')">⚡ Servicios (Día 15)</span>
+                <span class="wizard-chip-tag" onclick="quickAddWizardExpense('Internet Fibra', 60, 'Servicios', '28')">🌐 Internet (Día 28)</span>
+                <span class="wizard-chip-tag" onclick="quickAddWizardExpense('Plan Celular', 35, 'Celular', '15')">📱 Celular (Día 15)</span>
+                <span class="wizard-chip-tag" onclick="quickAddWizardExpense('Gimnasio', 100, 'Salud', '24')">🏋️ Gym (Día 24)</span>
+              </div>
             </div>
           </div>
-        </div>
-        <div class="wizard-tip-box">
-          <span>💡</span>
-          <div>FinZen utiliza tu día de cobro para proyectar tu saldo diario y mantenerte en zona segura sin quedarte a cero a mitad de mes.</div>
-        </div>
-        <div class="modal-actions wizard-actions-sticky" style="justify-content: space-between; margin-top: 14px;">
-          <button type="button" class="btn btn-secondary" onclick="dismissOnboardingWizard(true)">Saltar Tutorial</button>
-          <button type="button" class="btn btn-primary" onclick="goToWizardStep(2)">Continuar al Paso 2 ➔</button>
-        </div>
-      </div>
-
-      <!-- PASO 2: GASTOS FIJOS Y VENCIMIENTOS -->
-      <div class="wizard-slide" id="wSlide2">
-        <div style="background: rgba(255,255,255,0.45); border-radius: 12px; padding: 14px; border: 1px solid var(--glass-border); margin-bottom: 10px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-            <h4 style="font-size: 13px; font-weight: 800; color: var(--text-main); margin: 0;">📅 Gastos Fijos y Fechas de Vencimiento</h4>
-            <span style="font-size: 10px; color: var(--text-muted);">Alimentan el Calendario</span>
+          <div class="wizard-tip-box">
+            <span>🔔</span>
+            <div>Al asignar el día de vencimiento, estos gastos se integran automáticamente en tu <b>Calendario de Vencimientos</b> mensual.</div>
           </div>
-          <p style="font-size: 11px; color: var(--text-muted); margin: 0 0 10px 0;">Agrega tus servicios, alquiler o compromisos recurrentes del mes:</p>
-          
-          <div id="wFixedExpensesContainer">
-            <!-- Dynamic rows rendered by JS -->
-          </div>
-          <button type="button" class="btn btn-secondary" onclick="addWizardExpenseRow()" style="width: 100%; font-size: 11px; padding: 8px; margin-top: 4px;">➕ Agregar Otro Gasto Fijo</button>
+        </div>
 
-          <div style="margin-top: 12px;">
-            <span style="font-size: 10px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 6px;">Sugerencias rápidas de 1 clic:</span>
-            <div style="display: flex; flex-wrap: wrap; gap: 6px;">
-              <span class="wizard-chip-tag" onclick="quickAddWizardExpense('Alquiler / Casa', 650, 'Casa', '30')">🏠 Alquiler (Día 30)</span>
-              <span class="wizard-chip-tag" onclick="quickAddWizardExpense('Luz y Agua', 120, 'Servicios', '15')">⚡ Servicios (Día 15)</span>
-              <span class="wizard-chip-tag" onclick="quickAddWizardExpense('Internet Fibra', 60, 'Internet', '28')">🌐 Internet (Día 28)</span>
-              <span class="wizard-chip-tag" onclick="quickAddWizardExpense('Plan Celular', 35, 'Celulares', '15')">📱 Celular (Día 15)</span>
-              <span class="wizard-chip-tag" onclick="quickAddWizardExpense('Gimnasio', 100, 'Gimnasio & Salud', '24')">🏋️ Gym (Día 24)</span>
+        <!-- PASO 3: TARJETAS Y CUOTAS -->
+        <div class="wizard-slide" id="wSlide3">
+          <div style="background: rgba(255,255,255,0.45); border-radius: 12px; padding: 14px; border: 1px solid var(--glass-border); margin-bottom: 10px;">
+            <h4 style="font-size: 13px; font-weight: 800; color: var(--text-main); margin: 0 0 6px 0;">💳 Tarjetas de Crédito y Préstamos</h4>
+            <p style="font-size: 11px; color: var(--text-muted); margin: 0 0 10px 0;">Configura tus tarjetas de crédito y fechas límite para no pagar penalidades ni intereses:</p>
+
+            <div id="wCardsContainer">
+              <!-- Dynamic card rows -->
             </div>
+            <button type="button" class="btn btn-secondary" onclick="addWizardCardRow()" style="width: 100%; font-size: 11px; padding: 8px; margin-top: 4px;">➕ Registrar Tarjeta o Línea de Crédito</button>
+          </div>
+          <div class="wizard-tip-box">
+            <span>✨</span>
+            <div>Podrás usar nuestro <b>Simulador de Cuotas</b> para comprobar cómo una compra a plazos afectará tu superávit mensual antes de pasar la tarjeta.</div>
           </div>
         </div>
-        <div class="wizard-tip-box">
-          <span>🔔</span>
-          <div>Al asignar el día de vencimiento, estos gastos se integran automáticamente en tu <b>Calendario de Vencimientos</b> mensual.</div>
-        </div>
-        <div class="modal-actions wizard-actions-sticky" style="justify-content: space-between; margin-top: 14px;">
-          <button type="button" class="btn btn-secondary" onclick="goToWizardStep(1)">⬅️ Paso 1</button>
-          <button type="button" class="btn btn-primary" onclick="goToWizardStep(3)">Continuar al Paso 3 ➔</button>
-        </div>
-      </div>
 
-      <!-- PASO 3: TARJETAS Y CUOTAS -->
-      <div class="wizard-slide" id="wSlide3">
-        <div style="background: rgba(255,255,255,0.45); border-radius: 12px; padding: 14px; border: 1px solid var(--glass-border); margin-bottom: 10px;">
-          <h4 style="font-size: 13px; font-weight: 800; color: var(--text-main); margin: 0 0 6px 0;">💳 Tarjetas de Crédito y Préstamos</h4>
-          <p style="font-size: 11px; color: var(--text-muted); margin: 0 0 10px 0;">Configura tus tarjetas de crédito y fechas límite para no pagar penalidades ni intereses:</p>
+        <!-- PASO 4: PRIMERA META DE AHORRO -->
+        <div class="wizard-slide" id="wSlide4">
+          <div style="background: rgba(255,255,255,0.45); border-radius: 12px; padding: 14px; border: 1px solid var(--glass-border); margin-bottom: 10px;">
+            <h4 style="font-size: 13px; font-weight: 800; color: var(--text-main); margin: 0 0 6px 0;">🎯 Define tu Primera Meta de Ahorro</h4>
+            <p style="font-size: 11px; color: var(--text-muted); margin: 0 0 12px 0;">El ahorro con nombre y apellido se cumple más rápido. Fija tu primer gran objetivo:</p>
 
-          <div id="wCardsContainer">
-            <!-- Dynamic card rows -->
-          </div>
-          <button type="button" class="btn btn-secondary" onclick="addWizardCardRow()" style="width: 100%; font-size: 11px; padding: 8px; margin-top: 4px;">➕ Registrar Tarjeta o Línea de Crédito</button>
-        </div>
-        <div class="wizard-tip-box">
-          <span>✨</span>
-          <div>Podrás usar nuestro <b>Simulador de Cuotas</b> para comprobar cómo una compra a plazos afectará tu superávit mensual antes de pasar la tarjeta.</div>
-        </div>
-        <div class="modal-actions wizard-actions-sticky" style="justify-content: space-between; margin-top: 14px;">
-          <button type="button" class="btn btn-secondary" onclick="goToWizardStep(2)">⬅️ Paso 2</button>
-          <button type="button" class="btn btn-primary" onclick="goToWizardStep(4)">Continuar al Paso 4 ➔</button>
-        </div>
-      </div>
-
-      <!-- PASO 4: PRIMERA META DE AHORRO -->
-      <div class="wizard-slide" id="wSlide4">
-        <div style="background: rgba(255,255,255,0.45); border-radius: 12px; padding: 14px; border: 1px solid var(--glass-border); margin-bottom: 10px;">
-          <h4 style="font-size: 13px; font-weight: 800; color: var(--text-main); margin: 0 0 6px 0;">🎯 Define tu Primera Meta de Ahorro</h4>
-          <p style="font-size: 11px; color: var(--text-muted); margin: 0 0 12px 0;">El ahorro con nombre y apellido se cumple más rápido. Fija tu primer gran objetivo:</p>
-
-          <div class="form-group" style="margin-bottom: 10px;">
-            <label style="font-size: 11px; font-weight: 700;">Nombre de la Meta</label>
-            <input type="text" id="wGoalName" class="form-control" placeholder="Ej: Fondo de Emergencia" value="Fondo de Emergencia" required>
-          </div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
-            <div class="form-group" style="margin: 0;">
-              <label style="font-size: 11px; font-weight: 700;">Monto Objetivo (S/)</label>
-              <input type="number" id="wGoalTarget" class="form-control" placeholder="3000" value="2000" step="any" required>
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label style="font-size: 11px; font-weight: 700;">Nombre de la Meta</label>
+              <input type="text" id="wGoalName" class="form-control" placeholder="Ej: Fondo de Emergencia" value="Fondo de Emergencia" required>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+              <div class="form-group" style="margin: 0;">
+                <label style="font-size: 11px; font-weight: 700;">Monto Objetivo (S/)</label>
+                <input type="number" id="wGoalTarget" class="form-control" placeholder="3000" value="2000" step="any" required>
+              </div>
+              <div class="form-group" style="margin: 0;">
+                <label style="font-size: 11px; font-weight: 700;">Aporte Mensual (S/)</label>
+                <input type="number" id="wGoalMonthly" class="form-control" placeholder="200" value="250" step="any" required>
+              </div>
             </div>
             <div class="form-group" style="margin: 0;">
-              <label style="font-size: 11px; font-weight: 700;">Aporte Mensual (S/)</label>
-              <input type="number" id="wGoalMonthly" class="form-control" placeholder="200" value="250" step="any" required>
+              <label style="font-size: 11px; font-weight: 700;">Ícono Representativo</label>
+              <select id="wGoalIcon" class="form-control">
+                <option value="🛡️">🛡️ Protección / Emergencia</option>
+                <option value="✈️">✈️ Vacaciones / Viajes</option>
+                <option value="🚗">🚗 Vehículo / Moto</option>
+                <option value="🏠">🏠 Vivienda / Depa</option>
+                <option value="💳">💳 Liquidar Deudas</option>
+              </select>
             </div>
           </div>
-          <div class="form-group" style="margin: 0;">
-            <label style="font-size: 11px; font-weight: 700;">Ícono Representativo</label>
-            <select id="wGoalIcon" class="form-control">
-              <option value="🛡️">🛡️ Protección / Emergencia</option>
-              <option value="✈️">✈️ Vacaciones / Viajes</option>
-              <option value="🚗">🚗 Vehículo / Moto</option>
-              <option value="🏠">🏠 Vivienda / Depa</option>
-              <option value="💳">💳 Liquidar Deudas</option>
-            </select>
+          <div class="wizard-tip-box" style="background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.25);">
+            <span>🚀</span>
+            <div>¡Todo configurado! Al hacer clic en finalizar, guardaremos tus datos y tu panel cobrará vida con cálculos automáticos.</div>
           </div>
         </div>
-        <div class="wizard-tip-box" style="background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.25);">
-          <span>🚀</span>
-          <div>¡Todo configurado! Al hacer clic en finalizar, guardaremos tus datos y tu panel cobrará vida con cálculos automáticos.</div>
-        </div>
-        <div class="modal-actions wizard-actions-sticky" style="justify-content: space-between; margin-top: 14px;">
-          <button type="button" class="btn btn-secondary" onclick="goToWizardStep(3)">⬅️ Paso 3</button>
-          <button type="button" class="btn btn-primary" onclick="completeOnboardingWizard()" style="background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 4px 15px rgba(16, 185, 129, 0.35); font-weight: 800;">🎉 ¡Finalizar y Entrar a mi App! 🚀</button>
-        </div>
+      </div>
+
+      <!-- FIXED FOOTER -->
+      <div class="wizard-modal-footer">
+        <button type="button" class="btn btn-secondary" id="wBtnPrev" onclick="dismissOnboardingWizard(true)">Saltar Tutorial</button>
+        <button type="button" class="btn btn-primary" id="wBtnNext" onclick="goToWizardStep(2)">Continuar al Paso 2 ➔</button>
       </div>
     </div>
   </div>
@@ -1336,54 +1371,56 @@
 
   <!-- MODAL: FINZEN PRO (MINIMALISTA Y LIMPIO) -->
   <div class="glass-backdrop" id="finzenProModal" style="z-index: 99999;" onclick="if(event.target === this) closeGlassModal('finzenProModal')">
-    <div class="glass-modal" style="max-width: 440px; text-align: center; border-radius: 24px; padding: 24px 20px;">
-      <div class="glass-modal-header" style="justify-content: flex-end; padding-bottom: 0; border: none; margin-bottom: 4px;">
-        <button class="glass-close-btn" onclick="closeGlassModal('finzenProModal')">✕</button>
+    <div class="glass-modal" style="max-width: 440px; width: 92%; text-align: center; border-radius: 24px; padding: 24px 20px; background: #ffffff; box-shadow: 0 24px 60px rgba(0,0,0,0.22); border: 1px solid rgba(0,0,0,0.06); margin: auto;">
+      <div class="glass-modal-header" style="justify-content: flex-end; padding-bottom: 0; border: none; margin-bottom: 4px; display: flex;">
+        <button class="glass-close-btn" onclick="closeGlassModal('finzenProModal')" style="background: rgba(0,0,0,0.06); border: none; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer; color: #64748b;">✕</button>
       </div>
 
       <div style="font-size: 40px; margin-bottom: 6px; line-height: 1;">👑</div>
-      <div class="pro-modal-title">
+      <div class="pro-modal-title" style="font-size: 24px; font-weight: 800; color: #0f172a; margin-bottom: 4px; letter-spacing: -0.5px;">
         FinZen <span style="background: linear-gradient(135deg, #fbbf24, #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">PRO</span>
       </div>
-      <div class="pro-modal-subtitle">
+      <div class="pro-modal-subtitle" style="font-size: 12.5px; color: #64748b; margin-top: 2px; font-weight: 600; margin-bottom: 16px;">
         El acelerador para tu tranquilidad financiera
       </div>
 
-      <div class="pro-modal-features">
-        <div class="pro-feature-item">
-          <span style="color: #10b981; font-size: 15px; font-weight: 800;">✓</span>
+      <div class="pro-modal-features" style="margin: 16px 0; background: rgba(15, 23, 42, 0.035); border: 1px solid rgba(15, 23, 42, 0.08); border-radius: 16px; padding: 14px 16px; text-align: left; display: flex; flex-direction: column; gap: 10px;">
+        <div class="pro-feature-item" style="display: flex; align-items: flex-start; gap: 10px; font-size: 12.5px; color: #1e293b; font-weight: 700; line-height: 1.4; text-align: left;">
+          <span style="color: #10b981; font-size: 15px; font-weight: 900; line-height: 1; flex-shrink: 0; margin-top: 1px;">✓</span>
           <span>Inyección automática de compras en cuotas</span>
         </div>
-        <div class="pro-feature-item">
-          <span style="color: #10b981; font-size: 15px; font-weight: 800;">✓</span>
+        <div class="pro-feature-item" style="display: flex; align-items: flex-start; gap: 10px; font-size: 12.5px; color: #1e293b; font-weight: 700; line-height: 1.4; text-align: left;">
+          <span style="color: #10b981; font-size: 15px; font-weight: 900; line-height: 1; flex-shrink: 0; margin-top: 1px;">✓</span>
           <span>Categorías y presupuestos personalizados ilimitados</span>
         </div>
-        <div class="pro-feature-item">
-          <span style="color: #10b981; font-size: 15px; font-weight: 800;">✓</span>
+        <div class="pro-feature-item" style="display: flex; align-items: flex-start; gap: 10px; font-size: 12.5px; color: #1e293b; font-weight: 700; line-height: 1.4; text-align: left;">
+          <span style="color: #10b981; font-size: 15px; font-weight: 900; line-height: 1; flex-shrink: 0; margin-top: 1px;">✓</span>
           <span>Metas de ahorro múltiples sin restricciones</span>
         </div>
-        <div class="pro-feature-item">
-          <span style="color: #10b981; font-size: 15px; font-weight: 800;">✓</span>
+        <div class="pro-feature-item" style="display: flex; align-items: flex-start; gap: 10px; font-size: 12.5px; color: #1e293b; font-weight: 700; line-height: 1.4; text-align: left;">
+          <span style="color: #10b981; font-size: 15px; font-weight: 900; line-height: 1; flex-shrink: 0; margin-top: 1px;">✓</span>
           <span>Asesor de deudas con método bola de nieve</span>
         </div>
-        <div class="pro-feature-item">
-          <span style="color: #10b981; font-size: 15px; font-weight: 800;">✓</span>
+        <div class="pro-feature-item" style="display: flex; align-items: flex-start; gap: 10px; font-size: 12.5px; color: #1e293b; font-weight: 700; line-height: 1.4; text-align: left;">
+          <span style="color: #10b981; font-size: 15px; font-weight: 900; line-height: 1; flex-shrink: 0; margin-top: 1px;">✓</span>
           <span>Exportación completa a Excel y CSV</span>
         </div>
       </div>
 
-      <div class="pro-price-card">
-        <div class="pro-price-amount">
-          S/ 9.90 <span class="pro-price-period">/ mes</span>
+      <div class="pro-price-card" style="background: linear-gradient(135deg, rgba(79, 70, 229, 0.08), rgba(124, 58, 237, 0.09)); border: 1.5px solid rgba(124, 58, 237, 0.25); border-radius: 16px; padding: 14px; margin-bottom: 16px; text-align: center;">
+        <div class="pro-price-amount" style="font-size: 24px; font-weight: 800; color: #4338ca;">
+          S/ 9.90 <span class="pro-price-period" style="font-size: 13px; color: #64748b; font-weight: 500;">/ mes</span>
         </div>
-        <div class="pro-price-note">O pago único vitalicio de S/ 59.90 • Cancela cuando quieras</div>
+        <div class="pro-price-note" style="font-size: 11.5px; color: #4f46e5; font-weight: 700; margin-top: 3px;">
+          O pago único vitalicio de S/ 59.90 • Cancela cuando quieras
+        </div>
       </div>
 
       <a href="https://wa.me/51914688135?text=Hola%20C%C3%A9sar,%20quiero%20activar%20mi%20suscripci%C3%B3n%20FinZen%20Pro" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; text-align: center; padding: 13px; border-radius: 14px; background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; font-weight: 800; font-size: 14px; text-decoration: none; border: none; box-shadow: 0 4px 16px rgba(124, 58, 237, 0.4); margin-bottom: 10px; box-sizing: border-box;">
         <span>✨ Comenzar FinZen Pro</span>
       </a>
 
-      <button type="button" onclick="closeGlassModal('finzenProModal')" style="background: transparent; border: none; color: #94a3b8; font-size: 11px; font-weight: 600; cursor: pointer; padding: 4px;">
+      <button type="button" onclick="closeGlassModal('finzenProModal')" style="background: transparent; border: none; color: #94a3b8; font-size: 11.5px; font-weight: 600; cursor: pointer; padding: 6px;">
         Continuar con la versión gratuita
       </button>
     </div>
@@ -1391,6 +1428,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
-  <script src="js/app.js"></script>
+  <script src="js/app.js?v=60.0"></script>
 </body>
 </html>

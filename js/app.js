@@ -407,7 +407,7 @@
     // Registrar Service Worker v48 (Network-First, sin caché de datos)
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=56.2')
+        navigator.serviceWorker.register('./sw.js?v=60.0')
           .then(reg => {
             console.log('SW v48 registrado:', reg.scope);
             // Forzar actualización inmediata del SW en todos los dispositivos
@@ -715,10 +715,15 @@
       }
     }
 
-    // Guardar en Supabase (upsert)
+    // Guardar en Supabase (upsert) con protección anti-pérdida de concurrencia
+    let syncPending = false;
     async function syncStateToServer() {
-      if (isSyncing) return;
+      if (isSyncing) {
+        syncPending = true;
+        return;
+      }
       isSyncing = true;
+      syncPending = false;
 
       appState.activeCategoryChip  = currentCategoryFilter;
       appState.activeStatusFilter  = currentStatusFilter;
@@ -746,9 +751,13 @@
         }
       } catch(e) {
         updateSyncIndicator('syncing', '⚠️ Sin conexión');
+      } finally {
+        isSyncing = false;
+        if (syncPending) {
+          syncPending = false;
+          syncStateToServer();
+        }
       }
-
-      isSyncing = false;
     }
 
     // Suscripción Realtime — push instantáneo cuando cualquier dispositivo guarda
@@ -3177,6 +3186,12 @@
     }
 
     function saveCategory() {
+      const activeCatsCount = Object.keys(CATEGORIES).length;
+      if (!isUserPro() && activeCatsCount >= 11) {
+        openFinZenProModal('Categorías y Presupuestos Ilimitados');
+        return;
+      }
+
       const name = document.getElementById('catName').value.trim();
       const icon = document.getElementById('catIcon').value.trim() || '🏷️';
       const color = document.getElementById('catColor').value;
@@ -3402,8 +3417,9 @@
     }
 
     function handleSaveCategoryClick() {
-      if (!isUserPro()) {
-        openFinZenProModal('Categorías Personalizadas');
+      const activeCatsCount = Object.keys(CATEGORIES).length;
+      if (!isUserPro() && activeCatsCount >= 11) {
+        openFinZenProModal('Categorías y Presupuestos Ilimitados');
         return;
       }
       saveCategoryFromManager();
@@ -3705,9 +3721,9 @@
       // Pre-cargar o inicializar contenedor de gastos fijos si está vacío
       const fixedContainer = document.getElementById('wFixedExpensesContainer');
       if (fixedContainer && fixedContainer.children.length === 0) {
-        addWizardExpenseRow('Alquiler / Hipoteca', 650, 'Casa', '30');
+        addWizardExpenseRow('Alquiler / Hipoteca', 650, 'Vivienda', '30');
         addWizardExpenseRow('Servicios (Luz / Agua)', 120, 'Servicios', '15');
-        addWizardExpenseRow('Internet Fibra', 60, 'Internet', '28');
+        addWizardExpenseRow('Internet Fibra', 60, 'Servicios', '28');
       }
 
       // Pre-cargar o inicializar tarjetas si está vacío
@@ -3753,11 +3769,48 @@
           }
         }
       }
+
+      // Actualizar botones de navegación en el pie fijo (Fixed Footer)
+      const btnPrev = document.getElementById('wBtnPrev');
+      const btnNext = document.getElementById('wBtnNext');
+      if (btnPrev) {
+        if (step === 1) {
+          btnPrev.textContent = 'Saltar Tutorial';
+          btnPrev.onclick = () => dismissOnboardingWizard(true);
+        } else {
+          btnPrev.textContent = `⬅️ Paso ${step - 1}`;
+          btnPrev.onclick = () => goToWizardStep(step - 1);
+        }
+      }
+      if (btnNext) {
+        if (step === 4) {
+          btnNext.textContent = '🎉 ¡Finalizar y Entrar a mi App! 🚀';
+          btnNext.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+          btnNext.style.borderColor = '#10b981';
+          btnNext.onclick = () => completeOnboardingWizard();
+        } else {
+          btnNext.textContent = `Continuar al Paso ${step + 1} ➔`;
+          btnNext.style.background = '';
+          btnNext.style.borderColor = '';
+          btnNext.onclick = () => goToWizardStep(step + 1);
+        }
+      }
+
+      // Desplazar el cuerpo hacia arriba suavemente al cambiar de paso
+      const body = document.querySelector('.wizard-modal-body');
+      if (body) body.scrollTop = 0;
     }
 
     function addWizardExpenseRow(name = '', amount = '', category = 'Otros', dueDate = '15') {
       const container = document.getElementById('wFixedExpensesContainer');
       if (!container) return;
+
+      const currentRows = container.querySelectorAll('.wizard-dynamic-row').length;
+      if (!isUserPro() && currentRows >= 11) {
+        openFinZenProModal('Categorías y Gastos Ilimitados');
+        showToast('⭐ Límite de 11 gastos alcanzado en la versión gratuita', 'warning');
+        return;
+      }
 
       const rowId = 'wExp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
       const row = document.createElement('div');
@@ -3775,7 +3828,7 @@
         <select class="form-control w-exp-cat" style="font-size: 11px; padding: 6px 4px;">
           ${catOptions}
         </select>
-        <input type="number" class="form-control w-exp-amount" placeholder="Monto S/" value="${amount}" step="any" style="font-size: 11px; padding: 6px 8px; font-weight: 700;" required>
+        <input type="number" class="form-control w-exp-amount" placeholder="Monto S/" value="${amount}" step="any" style="font-size: 11px; padding: 6px 8px; font-weight: 700;">
         <div class="w-exp-due-wrap" style="display: flex; align-items: center; gap: 4px;">
           <span style="font-size: 10px; color: var(--text-muted); font-weight: 600;">Día:</span>
           <input type="number" class="form-control w-exp-due" min="1" max="31" placeholder="15" value="${dueDate}" style="width: 48px; font-size: 11px; padding: 6px 4px; text-align: center;" required title="Día de vencimiento del mes">
@@ -3786,6 +3839,13 @@
     }
 
     function quickAddWizardExpense(name, amount, category, dueDate) {
+      const container = document.getElementById('wFixedExpensesContainer');
+      const currentRows = container ? container.querySelectorAll('.wizard-dynamic-row').length : 0;
+      if (!isUserPro() && currentRows >= 11) {
+        openFinZenProModal('Categorías y Gastos Ilimitados');
+        showToast('⭐ Límite de 11 gastos alcanzado en la versión gratuita', 'warning');
+        return;
+      }
       addWizardExpenseRow(name, amount, category, dueDate);
       showToast(`Añadido: ${name}`, 'info');
     }
@@ -3846,43 +3906,64 @@
       if (!appState.recurringDueDates) appState.recurringDueDates = {};
       appState.recurringDueDates['sueldo'] = payDay;
 
-      // 2. Guardar Gastos Fijos
+      // 2. Guardar Gastos Fijos (Lectura resiliente y soporte de hasta 11+ gastos)
       const curMonth = appState.currentMonth || getCurrentCalendarMonthName();
       if (!appState.transactions[curMonth]) appState.transactions[curMonth] = [];
 
       const expRows = document.querySelectorAll('#wFixedExpensesContainer .wizard-dynamic-row');
-      expRows.forEach(row => {
-        const name = row.querySelector('.w-exp-name')?.value.trim();
-        const cat = row.querySelector('.w-exp-cat')?.value || 'Otros';
-        const amt = parseFloat(row.querySelector('.w-exp-amount')?.value);
-        const due = row.querySelector('.w-exp-due')?.value.trim() || '15';
+      const newTxs = [];
+      expRows.forEach((row, idx) => {
+        const nameInput = row.querySelector('.w-exp-name') || row.querySelector('input[type="text"]');
+        const catSelect = row.querySelector('.w-exp-cat') || row.querySelector('select');
+        const amtInput = row.querySelector('.w-exp-amount') || row.querySelectorAll('input[type="number"]')[0];
+        const dueInput = row.querySelector('.w-exp-due') || row.querySelectorAll('input[type="number"]')[1];
 
-        if (name && !isNaN(amt) && amt > 0) {
+        const name = nameInput ? nameInput.value.trim() : '';
+        const cat = catSelect ? catSelect.value : 'Otros';
+        let rawAmt = amtInput ? amtInput.value : '0';
+        if (typeof rawAmt === 'string') rawAmt = rawAmt.replace(',', '.');
+        const amt = parseFloat(rawAmt) || 0;
+        const due = dueInput ? dueInput.value.trim() : '15';
+
+        if (name) {
           const normKey = getNormalizedNameKey(name);
           appState.recurringDueDates[normKey] = due;
 
-          const exists = appState.transactions[curMonth].some(t => t.name.toLowerCase() === name.toLowerCase());
-          if (!exists) {
-            appState.transactions[curMonth].push({
-              id: `${curMonth}_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
-              name: name,
-              amount: amt,
-              category: cat,
-              status: 'Pendiente',
-              dueDate: due,
-              isInstallment: false,
-              installmentsTotal: 1,
-              installmentsCurrent: 1
-            });
+          // Si la categoría no existe en el sistema, registrarla para no perderla
+          if (!CATEGORIES[cat] && cat !== 'Otros') {
+            if (!appState.customCategories) appState.customCategories = {};
+            appState.customCategories[cat] = {
+              icon: '🏷️',
+              badgeClass: 'badge-custom',
+              color: '#38bdf8'
+            };
           }
+
+          newTxs.push({
+            id: `${curMonth}_${Date.now()}_${idx}_${Math.random().toString(36).substr(2, 4)}`,
+            name: name,
+            amount: amt,
+            category: cat,
+            status: 'Pendiente',
+            dueDate: due,
+            isInstallment: false,
+            installmentsTotal: 1,
+            installmentsCurrent: 1
+          });
         }
       });
+
+      if (newTxs.length > 0) {
+        appState.transactions[curMonth] = newTxs;
+      }
 
       // 3. Guardar Tarjetas
       const cardRows = document.querySelectorAll('#wCardsContainer .wizard-dynamic-row');
       cardRows.forEach(row => {
-        const cName = row.querySelector('.w-card-name')?.value.trim();
-        const payDay = row.querySelector('.w-card-pay')?.value.trim() || '30';
+        const cNameInput = row.querySelector('.w-card-name') || row.querySelector('input[type="text"]');
+        const cName = cNameInput?.value.trim();
+        const payDayInput = row.querySelector('.w-card-pay') || row.querySelectorAll('input[type="number"]')[1];
+        const payDay = payDayInput?.value.trim() || '30';
         if (cName) {
           const normKey = getNormalizedNameKey(cName);
           appState.recurringDueDates[normKey] = payDay;
@@ -4356,6 +4437,53 @@ window.closeTour = function() {
   }
 };
 
+    function handleDebtAdvisorClick() {
+      if (!isUserPro()) {
+        openFinZenProModal('Asesor de Deudas Bola de Nieve');
+        return;
+      }
+      openInstallmentsSimulatorModal();
+    }
+
+    function handleExportExcelCSVClick() {
+      if (!isUserPro()) {
+        openFinZenProModal('Exportación a Excel y CSV');
+        return;
+      }
+      exportTransactionsCSV();
+    }
+
+    function exportTransactionsCSV() {
+      const curM = appState.currentMonth || getCurrentCalendarMonthName();
+      const txs = (appState.transactions && appState.transactions[curM]) || [];
+      if (txs.length === 0) {
+        alert('No hay gastos registrados en este mes para exportar.');
+        return;
+      }
+
+      let csv = '\uFEFF'; // UTF-8 BOM para soporte completo en Microsoft Excel
+      csv += 'Concepto;Categoría;Monto (S/);Estado;Día Vencimiento;Tipo\n';
+      txs.forEach(t => {
+        const name = (t.name || '').replace(/;/g, ',');
+        const cat = (t.category || '').replace(/;/g, ',');
+        const amt = (t.amount || 0).toFixed(2);
+        const st = t.status || 'Pagado';
+        const due = t.dueDate || '15';
+        const type = t.isInstallment ? `Cuota ${t.installmentsCurrent}/${t.installmentsTotal}` : 'Gasto Regular';
+        csv += `"${name}";"${cat}";"${amt}";"${st}";"${due}";"${type}"\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `FinZen_${curM.replace(/\s+/g, '_')}_gastos.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast('📊 Archivo CSV descargado con éxito', 'success');
+    }
+
 // Exponer funciones críticas al scope global explícitamente para evitar problemas de binding
 window.startInteractiveTour = startInteractiveTour;
 window.toggleFAB = typeof toggleFAB === 'function' ? toggleFAB : function(){};
@@ -4367,8 +4495,14 @@ window.openInstallmentsSimulatorModal = openInstallmentsSimulatorModal;
 window.handleSimulatedPurchaseClick = handleSimulatedPurchaseClick;
 window.handleSaveCategoryClick = handleSaveCategoryClick;
 window.handleOpenAddGoalClick = handleOpenAddGoalClick;
+window.handleDebtAdvisorClick = handleDebtAdvisorClick;
+window.handleExportExcelCSVClick = handleExportExcelCSVClick;
+window.exportTransactionsCSV = exportTransactionsCSV;
 window.openFinZenProModal = openFinZenProModal;
 window.isUserPro = isUserPro;
+window.goToWizardStep = goToWizardStep;
+window.completeOnboardingWizard = completeOnboardingWizard;
+window.dismissOnboardingWizard = dismissOnboardingWizard;
 
 
 // ================================================================
@@ -4500,4 +4634,5 @@ window.generatePDFReport = function() {
     showToast('¡PDF descargado exitosamente!', 'success');
   });
 };
+window.exportMonthlyReportPDF = window.generatePDFReport;
 
