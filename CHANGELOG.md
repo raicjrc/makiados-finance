@@ -5,6 +5,17 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
 ---
 
+## [v62.0] — 2026-09-17 — Rebranding Oficial a AliviaFin + Dominio aliviafin.vercel.app
+
+### 🌿 Identidad de Marca Renovada
+- **Evolución a AliviaFin**: Transición oficial de marca a **AliviaFin** («Paz mental para tu dinero»), solucionando la saturación de mercado del nombre anterior y dotando a la plataforma de una identidad fintech ejecutiva, memorable y propia.
+- **Nuevo Dominio Oficial**: Despliegue y vinculación en producción a través de [aliviafin.vercel.app](https://aliviafin.vercel.app).
+- **Nuevo Isotipo & Favicons Ejecutivos**: Diseño de nuevo imagotipo premium con emblema en "A", ondas de bienestar y flecha de proyección financiera en degradé neón verde esmeralda y violeta eléctrico. Generación de todos los tamaños (`favicon.ico`, `favicon.png`, `apple-touch-icon.png`, `icon-192.png`, `icon-512.png`).
+- **Actualización Integral de Copys y Modales**: Textos, modales de bienvenida, descargas de reportes PDF (`AliviaFin_Reporte.pdf`), exportaciones CSV (`AliviaFin_gastos.csv`), enlaces de suscripción por WhatsApp y manifiesto PWA migrados coherentemente a AliviaFin.
+- **Compatibilidad Retrospectiva**: Persistencia de configuraciones locales y accesos PRO existentes para garantizar cero fricción en cuentas de usuarios activos.
+
+---
+
 ## [v61.0] — 2026-09-17 — FinZen PRO + Plan Bola de Nieve + Exportación Excel + Mobile iOS UX
 
 ### ✨ Nuevas Funcionalidades

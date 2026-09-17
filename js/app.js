@@ -70,7 +70,7 @@
     // ================================================================
     // VERSIÓN DE LA APP
     // ================================================================
-    const APP_VERSION = 'v61.0';
+    const APP_VERSION = 'v62.0';
     // Plantilla inicial 100% limpia para cualquier usuario nuevo
     function getCleanUserState() {
       const now = new Date();
@@ -184,7 +184,7 @@
     async function checkLoginStatus() {
       // Soporte para depuración / vista previa local (?debug_tour=1 o ?demo=1)
       if (window.location.search.includes('debug_tour=1') || window.location.search.includes('demo=1')) {
-        await onLoginSuccess({ id: 'test_user_tour', email: 'test@finzen.app', user_metadata: { full_name: 'Usuario Demo' } });
+        await onLoginSuccess({ id: 'test_user_tour', email: 'test@aliviafin.app', user_metadata: { full_name: 'Usuario Demo' } });
         if (window.location.search.includes('debug_tour=1')) {
           setTimeout(() => startInteractiveTour(), 500);
         }
@@ -243,16 +243,16 @@
       // 3. Si en user_subscriptions está como 'premium'
       if (window._currentUserSubscriptionStatus === 'premium') return true;
       // 4. Si tiene desbloqueo local
-      if (localStorage.getItem('finzen_pro_unlocked') === 'true') return true;
+      if (localStorage.getItem('aliviafin_pro_unlocked') === 'true' || localStorage.getItem('finzen_pro_unlocked') === 'true') return true;
       return false;
     }
 
     // Helper para desbloquear Pro internamente o por consola sin ensuciar la UI
-    window.finzenUnlockPro = function() {
-      localStorage.setItem('finzen_pro_unlocked', 'true');
+    window.aliviafinUnlockPro = window.finzenUnlockPro = function() {
+      localStorage.setItem('aliviafin_pro_unlocked', 'true');
       const pb = document.getElementById('proBadge');
       if (pb) pb.style.display = 'inline-flex';
-      showToast('✨ FinZen Pro activado con éxito', 'success');
+      showToast('✨ AliviaFin Pro activado con éxito', 'success');
       renderAll();
     };
 
@@ -364,7 +364,7 @@
         setTimeout(async () => { await onLoginSuccess(data.user); }, 800);
       } else if (data.user && !data.session) {
         // Confirmación requerida activada por César en Supabase
-        okEl.textContent = '📧 ¡Casi listo! Revisa tu bandeja de entrada o SPAM. Te hemos enviado un link para activar tu cuenta de FinZen.';
+        okEl.textContent = '📧 ¡Casi listo! Revisa tu bandeja de entrada o SPAM. Te hemos enviado un link para activar tu cuenta de AliviaFin.';
         okEl.style.display = 'block';
       }
     }
@@ -4003,7 +4003,7 @@
 
       // Cerrar wizard
       dismissOnboardingWizard(false);
-      showToast('🎉 ¡Configuración inicial guardada! Bienvenido a FinZen.', 'success');
+      showToast('🎉 ¡Configuración inicial guardada! Bienvenido a AliviaFin.', 'success');
 
       // Marcar versión como vista para no saturar al usuario con el modal de novedades ahora
       localStorage.setItem('finanzas_last_seen_version', APP_VERSION);
@@ -4037,7 +4037,7 @@
     // ================================================================
     function syncVersionUI() {
       const loginVer = document.getElementById('loginFooterVersion');
-      if (loginVer) loginVer.textContent = 'FinZen ' + APP_VERSION + ' · Powered by Supabase';
+      if (loginVer) loginVer.textContent = 'AliviaFin ' + APP_VERSION + ' · Powered by Supabase';
 
       const settVer = document.getElementById('settingsVersion');
       if (settVer) settVer.textContent = APP_VERSION;
@@ -4049,7 +4049,7 @@
       if (wnBadge) wnBadge.textContent = 'Versión ' + APP_VERSION;
 
       const wnSub = document.getElementById('whatsNewVersionSub');
-      if (wnSub) wnSub.textContent = 'Actualización ' + APP_VERSION + ' · FinZen PRO, Bola de Nieve y Excel';
+      if (wnSub) wnSub.textContent = 'Actualización ' + APP_VERSION + ' · Rebranding AliviaFin & Plan Bola de Nieve';
     }
 
     function openWhatsNewModal() {
@@ -4255,7 +4255,7 @@
           {
             tabToSwitch: 'inicio',
             popover: {
-              title: '🎉 ¡Bienvenido a FinZen!',
+              title: '🎉 ¡Bienvenido a AliviaFin!',
               description: `
                 <div style="font-size: 13px; line-height: 1.5; color: #334155;">
                   <p style="margin: 0 0 10px 0;">Recorreremos juntos en 1 minuto las herramientas esenciales para dominar tus finanzas:</p>
@@ -4377,7 +4377,7 @@
             tabToSwitch: 'metas',
             popover: {
               title: '🎯 Pestaña: Metas de Ahorro',
-              description: '<i>¡Ahora estamos en Metas!</i> Establece objetivos como tu Fondo de Emergencia, viajes o compras grandes. FinZen calcula cuánto dinero debes apartar cada mes para lograrlas.',
+              description: '<i>¡Ahora estamos en Metas!</i> Establece objetivos como tu Fondo de Emergencia, viajes o compras grandes. AliviaFin calcula cuánto dinero debes apartar cada mes para lograrlas.',
               side: 'top',
               align: 'center'
             }
@@ -4438,6 +4438,7 @@
         ]
       });
 
+      window.currentAliviaFinTour = driverObj;
       window.currentFinZenTour = driverObj;
       driverObj.drive();
     }
@@ -4452,13 +4453,13 @@ window.closeTour = function() {
   if (typeof switchTab === 'function') {
     switchTab('inicio');
   }
-  if (window.currentFinZenTour) {
-    try { window.currentFinZenTour.destroy(); } catch(e) {}
+  if (window.currentAliviaFinTour || window.currentFinZenTour) {
+    try { (window.currentAliviaFinTour || window.currentFinZenTour).destroy(); } catch(e) {}
   }
 };
 
     // ================================================================
-    // ASESOR DE DEUDAS: MÉTODO BOLA DE NIEVE (FINZEN PRO)
+    // ASESOR DE DEUDAS: MÉTODO BOLA DE NIEVE (ALIVIAFIN PRO)
     // ================================================================
     let currentSnowballDebts = [
       { id: 'd1', name: 'Tarjeta Falabella / Ripley', balance: 1200, minPayment: 110 },
@@ -4483,7 +4484,7 @@ window.closeTour = function() {
           extraInput.value = appState.debtSnowball.extraPayment;
         }
       } else {
-        const saved = localStorage.getItem('finzen_debt_snowball');
+        const saved = localStorage.getItem('aliviafin_debt_snowball') || localStorage.getItem('finzen_debt_snowball');
         if (saved) {
           try {
             const parsed = JSON.parse(saved);
@@ -4692,7 +4693,7 @@ window.closeTour = function() {
       };
 
       try {
-        localStorage.setItem('finzen_debt_snowball', JSON.stringify(appState.debtSnowball));
+        localStorage.setItem('aliviafin_debt_snowball', JSON.stringify(appState.debtSnowball));
       } catch(e) {}
 
       syncStateToServer();
@@ -4732,7 +4733,7 @@ window.closeTour = function() {
       const link = document.createElement('a');
       const url = URL.createObjectURL(blob);
       link.setAttribute('href', url);
-      link.setAttribute('download', `FinZen_${curM.replace(/\s+/g, '_')}_gastos.csv`);
+      link.setAttribute('download', `AliviaFin_${curM.replace(/\s+/g, '_')}_gastos.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -4761,6 +4762,7 @@ window.saveDebtSnowballPlan = saveDebtSnowballPlan;
 window.handleExportExcelCSVClick = handleExportExcelCSVClick;
 window.exportTransactionsCSV = exportTransactionsCSV;
 window.openFinZenProModal = openFinZenProModal;
+window.openAliviaFinProModal = openFinZenProModal;
 window.isUserPro = isUserPro;
 window.goToWizardStep = goToWizardStep;
 window.completeOnboardingWizard = completeOnboardingWizard;
@@ -4786,7 +4788,7 @@ window.generatePDFReport = function() {
   let html = `
     <div style="border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end;">
       <div>
-        <h1 style="margin: 0; color: #4f46e5; font-size: 28px; font-weight: 800;">FinZen</h1>
+        <h1 style="margin: 0; color: #4f46e5; font-size: 28px; font-weight: 800;">AliviaFin</h1>
         <p style="margin: 4px 0 0; color: #64748b; font-size: 14px;">Reporte Financiero Mensual</p>
       </div>
       <div style="text-align: right;">
@@ -4879,8 +4881,8 @@ window.generatePDFReport = function() {
   
   html += `
     <div style="margin-top: 40px; text-align: center; color: #94a3b8; font-size: 11px;">
-      Reporte confidencial generado por la plataforma FinZen.<br>
-      © ${new Date().getFullYear()} FinZen App
+      Reporte confidencial generado por la plataforma AliviaFin.<br>
+      © ${new Date().getFullYear()} AliviaFin App
     </div>
   `;
   
@@ -4888,7 +4890,7 @@ window.generatePDFReport = function() {
   
   const opt = {
     margin:       10,
-    filename:     `FinZen_Reporte_${curM}.pdf`,
+    filename:     `AliviaFin_Reporte_${curM}.pdf`,
     image:        { type: 'jpeg', quality: 0.98 },
     html2canvas:  { scale: 2 },
     jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
