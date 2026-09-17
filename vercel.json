@@ -6,6 +6,11 @@
     { "src": "sw.js", "use": "@vercel/static" },
     { "src": "manifest.json", "use": "@vercel/static" },
     { "src": "logo.jpg", "use": "@vercel/static" },
+    { "src": "favicon.ico", "use": "@vercel/static" },
+    { "src": "favicon.png", "use": "@vercel/static" },
+    { "src": "apple-touch-icon.png", "use": "@vercel/static" },
+    { "src": "icon-192.png", "use": "@vercel/static" },
+    { "src": "icon-512.png", "use": "@vercel/static" },
     { "src": "css/**", "use": "@vercel/static" },
     { "src": "js/**", "use": "@vercel/static" }
   ],
@@ -14,6 +19,11 @@
     { "src": "/sw.js", "dest": "/sw.js" },
     { "src": "/manifest.json", "dest": "/manifest.json" },
     { "src": "/logo.jpg", "dest": "/logo.jpg" },
+    { "src": "/favicon.ico", "dest": "/favicon.ico" },
+    { "src": "/favicon.png", "dest": "/favicon.png" },
+    { "src": "/apple-touch-icon.png", "dest": "/apple-touch-icon.png" },
+    { "src": "/icon-192.png", "dest": "/icon-192.png" },
+    { "src": "/icon-512.png", "dest": "/icon-512.png" },
     { "src": "/css/(.*)", "dest": "/css/$1" },
     { "src": "/js/(.*)", "dest": "/js/$1" },
     { "src": "/(.*)", "dest": "/index.html" }
