@@ -90,6 +90,32 @@ CREATE POLICY "Solo admin puede editar todas las suscripciones" ON user_subscrip
   WITH CHECK (auth.email() = 'cesar.risso.f@gmail.com');
 
 -- ================================================================
+-- TRIGGER AUTOMÁTICO: CREAR FILA EN user_subscriptions AL REGISTRARSE
+-- ================================================================
+CREATE OR REPLACE FUNCTION public.handle_new_user_subscription()
+RETURNS trigger AS $$
+BEGIN
+  INSERT INTO public.user_subscriptions (user_id, email, status)
+  VALUES (new.id::text, new.email, 'free')
+  ON CONFLICT (user_id) DO NOTHING;
+  RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_auth_user_created_subscription ON auth.users;
+CREATE TRIGGER on_auth_user_created_subscription
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user_subscription();
+
+-- ================================================================
+-- SQL PARA PASAR A UN USUARIO A PREMIUM MANUALMENTE:
+-- Ejemplo con Karla Marques:
+-- INSERT INTO public.user_subscriptions (user_id, email, status)
+-- VALUES ('95b726be-8495-45a6-b7af-388e6c5c3b65', 'karlamqq28@gmail.com', 'premium')
+-- ON CONFLICT (user_id) DO UPDATE SET status = 'premium';
+-- ================================================================
+
+-- ================================================================
 -- SUPABASE AUTH CONFIG (hacer desde el Dashboard, no SQL):
 -- Authentication > Settings:
 --   - "Enable email confirmations" → DESACTIVADO

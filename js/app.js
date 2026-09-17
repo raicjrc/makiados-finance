@@ -278,14 +278,23 @@
       }
 
       try {
-        const { data } = await supabaseClient
+        const { data, error } = await supabaseClient
           .from('user_subscriptions')
           .select('*')
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle();
 
         if (data && data.status === 'premium') {
           window._currentUserSubscriptionStatus = 'premium';
+        } else if (!data) {
+          // Si el usuario no tiene fila en user_subscriptions, la inicializamos automáticamente como 'free'
+          await supabaseClient
+            .from('user_subscriptions')
+            .insert([{
+              user_id: user.id,
+              email: user.email,
+              status: 'free'
+            }]);
         }
       } catch (err) {
         console.warn('Nota de suscripción:', err);
