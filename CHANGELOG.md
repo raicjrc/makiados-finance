@@ -5,6 +5,22 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
 ---
 
+## [v61.0] — 2026-09-17 — FinZen PRO + Plan Bola de Nieve + Exportación Excel + Mobile iOS UX
+
+### ✨ Nuevas Funcionalidades
+- **Plan Anti-Deudas: Método Bola de Nieve (PRO)**: Módulo interactivo exclusivo que organiza pasivos de menor a mayor saldo y simula el efecto avalancha para liquidar deudas rápidamente, proyectando el mes exacto de libertad financiera y el flujo mensual liberado.
+- **Modelo Freemium & FinZen PRO**: Sistema estructurado de funciones gratuitas vs. Pro (inyección automática de cuotas futuras, categorías ilimitadas, metas múltiples de ahorro y reportes avanzados).
+- **Exportación Completa a Excel y CSV**: Generación instantánea de archivos `.csv` con soporte nativo UTF-8 BOM para apertura perfecta en Microsoft Excel desde Ajustes e Historial.
+- **Límite Estricto de 11 Categorías**: Regulación en cuentas gratuitas en el onboarding y en el gestor de categorías, disparando el modal PRO al intentar añadir una doceava.
+- **Popup Dinámico de Novedades de Versión**: Al detectar una nueva versión (`APP_VERSION`), la ventana de novedades se abre automáticamente tras el inicio de sesión informando al usuario de cada mejora.
+
+### 📱 Experiencia Móvil (iPhone iOS)
+- **Onboarding Bottom-Sheet Nativo**: Reestructuración del asistente con cabecera fija, scroll interno y botones de navegación (`⬅️ Paso 1` y `Continuar al Paso 3 ➔`) fijados permanentemente al pie (`sticky: bottom`), eliminando congelamientos de scroll en pantallas móviles.
+- **Blindaje Visual Contra Caché**: Estilos en línea directos en el modal FinZen PRO para garantizar un renderizado nítido en modo claro y oscuro, inmune a la caché agresiva de Safari/Chrome iOS.
+- **Resiliencia de Guardado (`syncPending`)**: Cola de red asíncrona que evita pérdidas de datos ante sincronizaciones concurrentes en el servidor.
+
+---
+
 ## [v50.0] — 2026-09-12 — Multi-Usuario + GitHub + Supabase Auth
 
 ### ✨ Nuevas Funcionalidades

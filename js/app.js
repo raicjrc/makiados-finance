@@ -70,7 +70,7 @@
     // ================================================================
     // VERSIÓN DE LA APP
     // ================================================================
-    const APP_VERSION = 'v56.0';
+    const APP_VERSION = 'v61.0';
     // Plantilla inicial 100% limpia para cualquier usuario nuevo
     function getCleanUserState() {
       const now = new Date();
@@ -390,9 +390,8 @@
     function openSettingsModal() {
       // Rellenar info de usuario y versión
       const emailEl = document.getElementById('settingsUserEmail');
-      const versionEl = document.getElementById('settingsVersion');
       if (emailEl && currentUser) emailEl.textContent = currentUser.email;
-      if (versionEl) versionEl.textContent = APP_VERSION;
+      if (typeof syncVersionUI === 'function') syncVersionUI();
       document.getElementById('settingsModal').classList.add('active');
     }
 
@@ -975,6 +974,7 @@
 
       // v50: Toda la inicialización de la app ocurre en onLoginSuccess()
       // Solo verificamos si hay sesión activa de Supabase
+      syncVersionUI();
       checkLoginStatus();
 
       window.addEventListener('offline', () => {
@@ -4033,9 +4033,27 @@
     }
 
     // ================================================================
-    // NOVEDADES DE LA VERSIÓN (WHAT'S NEW v55.0)
+    // NOVEDADES DE LA VERSIÓN (WHAT'S NEW)
     // ================================================================
+    function syncVersionUI() {
+      const loginVer = document.getElementById('loginFooterVersion');
+      if (loginVer) loginVer.textContent = 'FinZen ' + APP_VERSION + ' · Powered by Supabase';
+
+      const settVer = document.getElementById('settingsVersion');
+      if (settVer) settVer.textContent = APP_VERSION;
+
+      const settBtn = document.getElementById('settingsWhatsNewBtn');
+      if (settBtn) settBtn.textContent = '🚀 Novedades (' + APP_VERSION + ')';
+
+      const wnBadge = document.getElementById('whatsNewVersionBadge');
+      if (wnBadge) wnBadge.textContent = 'Versión ' + APP_VERSION;
+
+      const wnSub = document.getElementById('whatsNewVersionSub');
+      if (wnSub) wnSub.textContent = 'Actualización ' + APP_VERSION + ' · FinZen PRO, Bola de Nieve y Excel';
+    }
+
     function openWhatsNewModal() {
+      syncVersionUI();
       const modal = document.getElementById('whatsNewModal');
       if (modal) {
         modal.classList.add('active');
@@ -4051,16 +4069,19 @@
         modal.style.visibility = 'hidden';
         modal.style.opacity = '0';
       }
+      const userKey = currentUser ? currentUser.id : 'guest';
+      localStorage.setItem('finanzas_last_seen_version_' + userKey, APP_VERSION);
       localStorage.setItem('finanzas_last_seen_version', APP_VERSION);
     }
 
     // Comprobación automática de bienvenida, tour interactivo y versión
     function checkOnboardingAndVersionAnnouncements() {
+      syncVersionUI();
       const userKey = currentUser ? currentUser.id : 'guest';
       const isCesar = currentUser && currentUser.email === 'cesar.risso.f@gmail.com';
       const setupDone = localStorage.getItem('finanzas_setup_completed_' + userKey);
       const tourDismissed = localStorage.getItem('finanzas_tour_dismissed_' + userKey) === 'true';
-      const seenVer = localStorage.getItem('finanzas_last_seen_version');
+      const seenVer = localStorage.getItem('finanzas_last_seen_version_' + userKey) || localStorage.getItem('finanzas_last_seen_version');
 
       if (!isCesar) {
         const hasData = (appState.salary && appState.salary > 0) || (appState.transactions && Object.keys(appState.transactions).some(m => appState.transactions[m].length > 0));
@@ -4069,7 +4090,6 @@
           setTimeout(() => openOnboardingWizard(false), 500);
           return;
         } else if (!setupDone && hasData) {
-          // Si ya tiene datos pero no tiene el flag local, se lo ponemos para que no le salte nunca más
           localStorage.setItem('finanzas_setup_completed_' + userKey, 'true');
         }
       }
@@ -4080,7 +4100,7 @@
         return;
       }
 
-      // Si no mostramos onboarding ni tour, chequear si hay nueva versión
+      // Si no mostramos onboarding ni tour, chequear si hay nueva versión para alertar al usuario
       if (seenVer !== APP_VERSION) {
         setTimeout(() => openWhatsNewModal(), 700);
       }
@@ -4745,6 +4765,9 @@ window.isUserPro = isUserPro;
 window.goToWizardStep = goToWizardStep;
 window.completeOnboardingWizard = completeOnboardingWizard;
 window.dismissOnboardingWizard = dismissOnboardingWizard;
+window.openWhatsNewModal = openWhatsNewModal;
+window.dismissWhatsNewModal = dismissWhatsNewModal;
+window.syncVersionUI = syncVersionUI;
 
 
 // ================================================================
