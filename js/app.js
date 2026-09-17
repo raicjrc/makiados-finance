@@ -407,7 +407,7 @@
     // Registrar Service Worker v48 (Network-First, sin caché de datos)
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=60.0')
+        navigator.serviceWorker.register('./sw.js?v=61.0')
           .then(reg => {
             console.log('SW v48 registrado:', reg.scope);
             // Forzar actualización inmediata del SW en todos los dispositivos
@@ -4437,12 +4437,247 @@ window.closeTour = function() {
   }
 };
 
+    // ================================================================
+    // ASESOR DE DEUDAS: MÉTODO BOLA DE NIEVE (FINZEN PRO)
+    // ================================================================
+    let currentSnowballDebts = [
+      { id: 'd1', name: 'Tarjeta Falabella / Ripley', balance: 1200, minPayment: 110 },
+      { id: 'd2', name: 'Tarjeta BCP / BBVA', balance: 2800, minPayment: 210 },
+      { id: 'd3', name: 'Préstamo Personal', balance: 6500, minPayment: 340 }
+    ];
+
     function handleDebtAdvisorClick() {
       if (!isUserPro()) {
         openFinZenProModal('Asesor de Deudas Bola de Nieve');
         return;
       }
-      openInstallmentsSimulatorModal();
+      openDebtSnowballModal();
+    }
+
+    function openDebtSnowballModal() {
+      // Si ya hay un plan guardado en appState o localStorage, cargarlo
+      if (appState && appState.debtSnowball && Array.isArray(appState.debtSnowball.debts) && appState.debtSnowball.debts.length > 0) {
+        currentSnowballDebts = JSON.parse(JSON.stringify(appState.debtSnowball.debts));
+        const extraInput = document.getElementById('snowballExtraPayment');
+        if (extraInput && appState.debtSnowball.extraPayment !== undefined) {
+          extraInput.value = appState.debtSnowball.extraPayment;
+        }
+      } else {
+        const saved = localStorage.getItem('finzen_debt_snowball');
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved);
+            if (parsed.debts && parsed.debts.length > 0) {
+              currentSnowballDebts = parsed.debts;
+              const extraInput = document.getElementById('snowballExtraPayment');
+              if (extraInput && parsed.extraPayment !== undefined) {
+                extraInput.value = parsed.extraPayment;
+              }
+            }
+          } catch(e) {}
+        }
+      }
+
+      renderSnowballDebtsList();
+      calculateDebtSnowball();
+
+      const el = document.getElementById('debtSnowballModal');
+      if (el) {
+        el.style.visibility = 'visible';
+        el.style.opacity = '1';
+        el.classList.add('active');
+      }
+    }
+
+    function renderSnowballDebtsList() {
+      const container = document.getElementById('snowballDebtsList');
+      if (!container) return;
+
+      if (!currentSnowballDebts || currentSnowballDebts.length === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; padding: 20px; color: var(--text-muted); font-size: 12px; background: rgba(255,255,255,0.6); border-radius: 12px; border: 1px dashed rgba(226,232,240,0.9);">
+            No tienes deudas registradas. ¡Haz clic abajo para añadir tu primera deuda!
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = currentSnowballDebts.map((d, idx) => `
+        <div class="snowball-debt-item" style="background: rgba(255,255,255,0.85); border: 1px solid rgba(226, 232, 240, 0.9); border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 6px; flex: 1;">
+              <span style="font-size: 14px;">💳</span>
+              <input type="text" value="${escapeHtml(d.name)}" placeholder="Nombre de la deuda" 
+                onchange="updateSnowballDebt(${idx}, 'name', this.value)"
+                style="border: none; background: transparent; font-weight: 700; font-size: 12px; color: var(--text-main); width: 100%; outline: none;" />
+            </div>
+            <button type="button" onclick="removeSnowballDebtRow(${idx})" 
+              style="border: none; background: rgba(239, 68, 68, 0.1); color: #ef4444; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 11px; cursor: pointer;" title="Eliminar deuda">✕</button>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <div>
+              <label style="font-size: 10px; color: var(--text-muted); display: block; margin-bottom: 2px;">Saldo Pendiente (S/)</label>
+              <input type="number" min="1" step="10" value="${d.balance}" 
+                oninput="updateSnowballDebt(${idx}, 'balance', this.value)"
+                style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 5px 8px; font-size: 12px; font-weight: 700; color: #0f172a; outline: none; background: white;" />
+            </div>
+            <div>
+              <label style="font-size: 10px; color: var(--text-muted); display: block; margin-bottom: 2px;">Cuota Mínima (S/)</label>
+              <input type="number" min="1" step="5" value="${d.minPayment}" 
+                oninput="updateSnowballDebt(${idx}, 'minPayment', this.value)"
+                style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 5px 8px; font-size: 12px; font-weight: 700; color: #0f172a; outline: none; background: white;" />
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function updateSnowballDebt(idx, field, value) {
+      if (!currentSnowballDebts[idx]) return;
+      if (field === 'name') {
+        currentSnowballDebts[idx].name = value || 'Deuda sin nombre';
+      } else if (field === 'balance') {
+        currentSnowballDebts[idx].balance = Math.max(1, parseFloat(value) || 0);
+      } else if (field === 'minPayment') {
+        currentSnowballDebts[idx].minPayment = Math.max(1, parseFloat(value) || 0);
+      }
+      calculateDebtSnowball();
+    }
+
+    function addSnowballDebtRow() {
+      const newId = 'd_' + Date.now();
+      currentSnowballDebts.push({
+        id: newId,
+        name: 'Nueva Deuda #' + (currentSnowballDebts.length + 1),
+        balance: 1000,
+        minPayment: 100
+      });
+      renderSnowballDebtsList();
+      calculateDebtSnowball();
+    }
+
+    function removeSnowballDebtRow(idx) {
+      currentSnowballDebts.splice(idx, 1);
+      renderSnowballDebtsList();
+      calculateDebtSnowball();
+    }
+
+    function calculateDebtSnowball() {
+      const extraInput = document.getElementById('snowballExtraPayment');
+      const extraPayment = Math.max(0, parseFloat(extraInput ? extraInput.value : 0) || 0);
+
+      const totalMonthsEl = document.getElementById('snowballTotalMonths');
+      const monthlyFreedEl = document.getElementById('snowballMonthlyFreed');
+      const timeSavedEl = document.getElementById('snowballTimeSaved');
+      const attackPlanEl = document.getElementById('snowballAttackPlan');
+
+      if (!currentSnowballDebts || currentSnowballDebts.length === 0) {
+        if (totalMonthsEl) totalMonthsEl.textContent = '0 meses';
+        if (monthlyFreedEl) monthlyFreedEl.textContent = 'S/ 0 / mes';
+        if (timeSavedEl) timeSavedEl.textContent = '¡Sin deudas activas!';
+        if (attackPlanEl) attackPlanEl.innerHTML = '<div style="text-align: center; color: var(--text-muted); font-size: 12px; padding: 16px;">Añade tus deudas para calcular tu plan de amortización.</div>';
+        return;
+      }
+
+      // 1. Ordenar de menor a mayor saldo (Regla de Oro Bola de Nieve)
+      const sorted = currentSnowballDebts.map((d, originalIdx) => ({
+        ...d,
+        originalIdx,
+        balance: parseFloat(d.balance) || 0,
+        minPayment: parseFloat(d.minPayment) || 0
+      })).sort((a, b) => a.balance - b.balance);
+
+      // 2. Simulación de la Bola de Nieve
+      let workingDebts = sorted.map(d => ({
+        ...d,
+        currentBalance: d.balance,
+        paidMonth: 0,
+        allocatedPayment: d.minPayment
+      }));
+
+      let snowballPot = extraPayment;
+      let month = 0;
+      const maxMonths = 360;
+
+      while (workingDebts.some(d => d.currentBalance > 0) && month < maxMonths) {
+        month++;
+        let availableExtra = snowballPot;
+
+        for (let i = 0; i < workingDebts.length; i++) {
+          const debt = workingDebts[i];
+          if (debt.currentBalance <= 0) continue;
+
+          let payment = debt.minPayment;
+          const isTargetDebt = (i === workingDebts.findIndex(d => d.currentBalance > 0));
+          if (isTargetDebt) {
+            payment += availableExtra;
+            debt.allocatedPayment = payment;
+            availableExtra = 0;
+          }
+
+          debt.currentBalance -= payment;
+
+          if (debt.currentBalance <= 0) {
+            debt.currentBalance = 0;
+            debt.paidMonth = month;
+            snowballPot += debt.minPayment;
+          }
+        }
+      }
+
+      const totalFreed = sorted.reduce((sum, d) => sum + d.minPayment, 0) + extraPayment;
+
+      if (totalMonthsEl) totalMonthsEl.textContent = `${month} ${month === 1 ? 'mes' : 'meses'}`;
+      if (monthlyFreedEl) monthlyFreedEl.textContent = `S/ ${Math.round(totalFreed)} / mes`;
+      if (timeSavedEl) timeSavedEl.textContent = `¡100% libre de deudas en ${month} meses!`;
+
+      // Renderizar los escalones de ataque
+      if (attackPlanEl) {
+        attackPlanEl.innerHTML = workingDebts.map((d, rank) => {
+          const isTarget = rank === 0;
+          const badgeText = isTarget ? '🎯 OBJETIVO #1: ATAQUE TOTAL' : `🛡️ OBJETIVO #${rank + 1}: MÍNIMO`;
+          const badgeBg = isTarget ? 'linear-gradient(135deg, #4f46e5, #7c3aed)' : '#f1f5f9';
+          const badgeColor = isTarget ? '#ffffff' : '#64748b';
+          const borderColor = isTarget ? '#818cf8' : 'rgba(226, 232, 240, 0.9)';
+          const bgColor = isTarget ? 'rgba(99, 102, 241, 0.05)' : 'rgba(255, 255, 255, 0.8)';
+          
+          return `
+            <div style="background: ${bgColor}; border: 1.5px solid ${borderColor}; border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 9.5px; font-weight: 800; background: ${badgeBg}; color: ${badgeColor}; padding: 2px 7px; border-radius: 6px; letter-spacing: 0.04em;">${badgeText}</span>
+                <span style="font-size: 11px; font-weight: 800; color: #10b981;">Mes ${d.paidMonth || month} ✅</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                <div style="font-size: 12px; font-weight: 800; color: var(--text-main);">${escapeHtml(d.name)}</div>
+                <div style="font-size: 11.5px; font-weight: 800; color: #4f46e5;">S/ ${d.balance.toLocaleString()}</div>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 10.5px; color: var(--text-muted);">
+                <span>${isTarget ? 'Cuota + Abono Extra:' : 'Cuota mínima:'}</span>
+                <strong style="color: ${isTarget ? '#4f46e5' : 'var(--text-main)'}; font-size: 11px;">S/ ${Math.round(d.allocatedPayment)} / mes</strong>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    function saveDebtSnowballPlan() {
+      const extraInput = document.getElementById('snowballExtraPayment');
+      const extraPayment = Math.max(0, parseFloat(extraInput ? extraInput.value : 0) || 0);
+
+      appState.debtSnowball = {
+        debts: currentSnowballDebts,
+        extraPayment: extraPayment,
+        updatedAt: new Date().toISOString()
+      };
+
+      try {
+        localStorage.setItem('finzen_debt_snowball', JSON.stringify(appState.debtSnowball));
+      } catch(e) {}
+
+      syncStateToServer();
+      showToast('❄️ Plan Anti-Deudas guardado con éxito en tu perfil', 'success');
+      closeGlassModal('debtSnowballModal');
     }
 
     function handleExportExcelCSVClick() {
@@ -4496,6 +4731,13 @@ window.handleSimulatedPurchaseClick = handleSimulatedPurchaseClick;
 window.handleSaveCategoryClick = handleSaveCategoryClick;
 window.handleOpenAddGoalClick = handleOpenAddGoalClick;
 window.handleDebtAdvisorClick = handleDebtAdvisorClick;
+window.openDebtSnowballModal = openDebtSnowballModal;
+window.renderSnowballDebtsList = renderSnowballDebtsList;
+window.updateSnowballDebt = updateSnowballDebt;
+window.addSnowballDebtRow = addSnowballDebtRow;
+window.removeSnowballDebtRow = removeSnowballDebtRow;
+window.calculateDebtSnowball = calculateDebtSnowball;
+window.saveDebtSnowballPlan = saveDebtSnowballPlan;
 window.handleExportExcelCSVClick = handleExportExcelCSVClick;
 window.exportTransactionsCSV = exportTransactionsCSV;
 window.openFinZenProModal = openFinZenProModal;

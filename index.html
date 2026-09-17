@@ -12,7 +12,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <link rel="stylesheet" href="css/styles.css?v=60.0">
+  <link rel="stylesheet" href="css/styles.css?v=61.0">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
 </head>
 <body>
@@ -806,6 +806,103 @@
     </div>
   </div>
 
+  <!-- MODAL: ASESOR DE DEUDAS - MÉTODO BOLA DE NIEVE (FINZEN PRO) -->
+  <div class="glass-backdrop" id="debtSnowballModal" onclick="if(event.target === this) closeGlassModal('debtSnowballModal')">
+    <div class="glass-modal" style="max-width: 900px; max-height: 90vh; display: flex; flex-direction: column;">
+      <div class="glass-modal-header" style="flex-shrink: 0;">
+        <div class="glass-modal-title">
+          <span style="font-size: 24px;">❄️</span>
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span>Plan Anti-Deudas: Bola de Nieve</span>
+              <span class="badge-pro-gold" style="font-size: 10px; padding: 2px 6px;">PRO 👑</span>
+            </div>
+            <div style="font-size: 11px; font-weight: 600; color: #818cf8;">Efecto avalancha: liquidación matemática acelerada de pasivos</div>
+          </div>
+        </div>
+        <button class="glass-close-btn" onclick="closeGlassModal('debtSnowballModal')">✕</button>
+      </div>
+
+      <div style="overflow-y: auto; flex: 1; padding-right: 4px;">
+        <!-- Banner Explicativo Ejecutivo -->
+        <div style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(124, 58, 237, 0.06)); border: 1px solid rgba(124, 58, 237, 0.2); border-radius: 14px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: flex-start; gap: 10px;">
+          <span style="font-size: 20px; line-height: 1;">💡</span>
+          <div style="font-size: 11.5px; color: var(--text-main); line-height: 1.45;">
+            <strong>¿Cómo funciona?</strong> Ordena tus deudas de <em>menor a mayor saldo</em>. Destinas tu cuota mínima a todas y concentras tu <strong>abono extra mensual</strong> en liquidar agresivamente la #1. Al pagarla, su cuota se transfiere a la #2 como una <strong>bola de nieve imparable</strong>.
+          </div>
+        </div>
+
+        <div class="glass-grid-2col">
+          <!-- Columna Izquierda: Parámetros & Deudas Activas -->
+          <div class="glass-card-subpanel">
+            <div class="glass-subpanel-title">
+              <span>Tus Deudas & Aporte</span>
+              <span style="font-size: 10px; color: var(--primary); font-weight: 700;">ORDEN AUTOMÁTICO</span>
+            </div>
+
+            <!-- Abono Extra Mensual Input -->
+            <div style="background: rgba(255, 255, 255, 0.7); border: 1px solid rgba(226, 232, 240, 0.9); border-radius: 12px; padding: 10px 14px; margin-bottom: 14px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                <label style="font-size: 11.5px; font-weight: 700; color: var(--text-main);">⚡ Superávit / Abono Extra Mensual</label>
+                <span id="snowballExtraBadge" style="font-size: 10px; font-weight: 700; color: #10b981; background: rgba(16,185,129,0.1); padding: 2px 6px; border-radius: 6px;">Para ataque</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-weight: 700; color: var(--text-muted); font-size: 13px;">S/</span>
+                <input type="number" id="snowballExtraPayment" class="glass-input" value="150" min="0" step="10" placeholder="150" oninput="calculateDebtSnowball()" style="margin: 0; font-weight: 800; font-size: 14px; color: #4f46e5;">
+              </div>
+              <div style="font-size: 10.5px; color: var(--text-muted); margin-top: 4px;">Dinero disponible de tu presupuesto mensual para acelerar pagos.</div>
+            </div>
+
+            <!-- Contenedor dinámico de filas de deuda -->
+            <div id="snowballDebtsList" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px;">
+              <!-- Se renderiza vía JS -->
+            </div>
+
+            <!-- Botón añadir nueva deuda -->
+            <button type="button" onclick="addSnowballDebtRow()" style="width: 100%; border: 1.5px dashed rgba(99, 102, 241, 0.4); background: rgba(99, 102, 241, 0.04); color: #4f46e5; border-radius: 12px; padding: 9px; font-size: 11.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;">
+              <span>+ Añadir otra deuda al plan</span>
+            </button>
+          </div>
+
+          <!-- Columna Derecha: Proyección & Cronograma Bola de Nieve -->
+          <div class="glass-card-subpanel" style="display: flex; flex-direction: column;">
+            <div class="glass-subpanel-title">
+              <span>Proyección de Libertad</span>
+              <span id="snowballStatusBadge" style="font-size: 10px; font-weight: 700; color: #8b5cf6; background: rgba(139,92,246,0.1); padding: 2px 6px; border-radius: 6px;">SIMULACIÓN ACTIVA</span>
+            </div>
+
+            <!-- KPI Cards -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px;">
+              <div style="background: rgba(255,255,255,0.85); border: 1px solid rgba(226, 232, 240, 0.9); border-radius: 12px; padding: 10px; text-align: center;">
+                <div style="font-size: 10.5px; color: var(--text-muted); font-weight: 600;">Tiempo Total</div>
+                <div id="snowballTotalMonths" style="font-size: 18px; font-weight: 900; color: #4f46e5; margin-top: 2px;">-- meses</div>
+                <div style="font-size: 9.5px; color: #10b981; font-weight: 700;" id="snowballTimeSaved">¡Acelerado!</div>
+              </div>
+              <div style="background: rgba(255,255,255,0.85); border: 1px solid rgba(226, 232, 240, 0.9); border-radius: 12px; padding: 10px; text-align: center;">
+                <div style="font-size: 10.5px; color: var(--text-muted); font-weight: 600;">Flujo Liberado al Final</div>
+                <div id="snowballMonthlyFreed" style="font-size: 18px; font-weight: 900; color: #10b981; margin-top: 2px;">S/ -- / mes</div>
+                <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 600;">Para ahorro libre</div>
+              </div>
+            </div>
+
+            <!-- Escalones de Ataque Bola de Nieve -->
+            <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #64748b; margin-bottom: 8px; letter-spacing: 0.05em;">
+              🎯 Orden de Ataque Estratégico
+            </div>
+            <div id="snowballAttackPlan" style="display: flex; flex-direction: column; gap: 8px; flex: 1; overflow-y: auto; max-height: 240px; margin-bottom: 14px; padding-right: 2px;">
+              <!-- Se llena dinámicamente con las tarjetas de cada deuda en orden de saldo -->
+            </div>
+
+            <!-- Botón Guardar Plan -->
+            <button type="button" class="btn btn-primary" onclick="saveDebtSnowballPlan()" style="width: 100%; font-size: 12px; font-weight: 800; background: linear-gradient(135deg, #4f46e5, #7c3aed); border: none; border-radius: 12px; padding: 10px; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer;">
+              <span>💾 Guardar Plan en mi Perfil</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL: NUEVA CATEGORÍA -->
   <div class="modal-backdrop" id="addCategoryModal" onclick="handleBackdropClick(event, 'addCategoryModal')">
     <div class="modal">
@@ -1428,6 +1525,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
-  <script src="js/app.js?v=60.0"></script>
+  <script src="js/app.js?v=61.0"></script>
 </body>
 </html>
