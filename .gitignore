@@ -26,3 +26,5 @@ scratch.js
 
 # Node (por si se usa en el futuro)
 node_modules/
+.vercel
+.env*

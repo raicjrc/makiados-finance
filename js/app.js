@@ -3047,7 +3047,7 @@
           type: 'info',
           icon: '👋',
           title: '¡Bienvenido a tu Asesor Financiero!',
-          text: '<p>Empieza registrando tus ingresos y gastos del mes para recibir consejos personalizados basados en tu situación real.</p><p style="margin-top:6px;">Usa el botón <strong>+</strong> para agregar tu primer gasto o ingreso.</p>'
+          text: '<p>Empieza registrando tus ingresos y gastos del mes para recibir consejos personalizados basados en tu situación real.</p><p style="margin-top:6px;">Usa los botones directos para registrar tu primer gasto o ingreso.</p>'
         });
       } else {
         // Consejo dinámico: Nivel de gasto vs ingresos
@@ -3115,13 +3115,13 @@
         }
       }
 
-      // Si no hay tips, mostrar un mensaje genérico positivo
+      // Si no hay tips, mostrar un mensaje genérico positivo con tipografía pulida
       if (tips.length === 0) {
         tips.push({
           type: 'success',
           icon: '✨',
           title: 'Sin alertas este mes',
-          text: '<p>Tus finanzas se ven bien. Sigue registrando tus gastos para obtener consejos más precisos.</p>'
+          text: '<p>Tus finanzas se mantienen en orden. Sigue registrando tus movimientos para recibir recomendaciones personalizadas.</p>'
         });
       }
 
@@ -3131,15 +3131,15 @@
         const tipKey = 'tip_' + idx;
         const isDone = appState.tipsStatus[tipKey] || false;
         return `
-          <div class="advice-card ${t.type}" style="position:relative;">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
-              <div style="flex: 1;">
-                <div class="advice-title">${t.icon} ${t.title}</div>
+          <div class="advice-card ${t.type}">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
+              <div style="flex: 1; min-width: 0;">
+                <div class="advice-title"><span>${t.icon}</span> <span>${t.title}</span></div>
                 <div class="advice-body">${t.text}</div>
               </div>
-              <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; flex-shrink: 0; padding: 6px 10px; border-radius: 8px; font-size: 11px; font-weight: 800; background: ${isDone ? '#dcfce7' : '#fef3c7'}; color: ${isDone ? '#166534' : '#92400e'}; border: 1px solid ${isDone ? '#86efac' : '#fde68a'}; transition: all 0.2s; user-select: none;">
-                <input type="checkbox" ${isDone ? 'checked' : ''} onchange="toggleTipStatus('${tipKey}')" style="width: 15px; height: 15px; accent-color: #16a34a; cursor: pointer;">
-                ${isDone ? '✅ Hecho' : '⏳ Pendiente'}
+              <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; flex-shrink: 0; padding: 5px 9px; border-radius: 8px; font-size: 10.5px; font-weight: 800; background: ${isDone ? '#dcfce7' : '#fef3c7'}; color: ${isDone ? '#166534' : '#92400e'}; border: 1px solid ${isDone ? '#86efac' : '#fde68a'}; transition: all 0.2s; user-select: none;">
+                <input type="checkbox" ${isDone ? 'checked' : ''} onchange="toggleTipStatus('${tipKey}')" style="width: 14px; height: 14px; accent-color: #16a34a; cursor: pointer;">
+                <span>${isDone ? 'Hecho' : 'Pendiente'}</span>
               </label>
             </div>
           </div>
@@ -3776,11 +3776,11 @@
           ${catOptions}
         </select>
         <input type="number" class="form-control w-exp-amount" placeholder="Monto S/" value="${amount}" step="any" style="font-size: 11px; padding: 6px 8px; font-weight: 700;" required>
-        <div style="display: flex; align-items: center; gap: 4px;">
+        <div class="w-exp-due-wrap" style="display: flex; align-items: center; gap: 4px;">
           <span style="font-size: 10px; color: var(--text-muted); font-weight: 600;">Día:</span>
           <input type="number" class="form-control w-exp-due" min="1" max="31" placeholder="15" value="${dueDate}" style="width: 48px; font-size: 11px; padding: 6px 4px; text-align: center;" required title="Día de vencimiento del mes">
         </div>
-        <button type="button" onclick="document.getElementById('${rowId}').remove()" style="background: none; border: none; color: #ef4444; font-size: 16px; cursor: pointer; padding: 2px 6px;" title="Eliminar fila">✕</button>
+        <button type="button" class="w-exp-del" onclick="document.getElementById('${rowId}').remove()" style="background: none; border: none; color: #ef4444; font-size: 16px; cursor: pointer; padding: 2px 6px;" title="Eliminar fila">✕</button>
       `;
       container.appendChild(row);
     }
@@ -3802,15 +3802,15 @@
 
       row.innerHTML = `
         <input type="text" class="form-control w-card-name" placeholder="Tarjeta / Entidad (ej. Interbank)" value="${escapeHtml(name)}" style="font-size: 11px; padding: 6px 8px;" required>
-        <div style="display: flex; align-items: center; gap: 4px;">
+        <div class="w-card-cut-wrap" style="display: flex; align-items: center; gap: 4px;">
           <span style="font-size: 10px; color: var(--text-muted); font-weight: 600;">Cierre:</span>
           <input type="number" class="form-control w-card-cut" min="1" max="31" placeholder="15" value="${cutDay}" style="font-size: 11px; padding: 6px 4px; text-align: center;" title="Día de corte de tarjeta">
         </div>
-        <div style="display: flex; align-items: center; gap: 4px;">
+        <div class="w-card-pay-wrap" style="display: flex; align-items: center; gap: 4px;">
           <span style="font-size: 10px; color: var(--text-muted); font-weight: 600;">Pago:</span>
           <input type="number" class="form-control w-card-pay" min="1" max="31" placeholder="30" value="${payDay}" style="font-size: 11px; padding: 6px 4px; text-align: center;" title="Día límite de pago">
         </div>
-        <button type="button" onclick="document.getElementById('${rowId}').remove()" style="background: none; border: none; color: #ef4444; font-size: 16px; cursor: pointer; padding: 2px 6px;" title="Eliminar tarjeta">✕</button>
+        <button type="button" class="w-card-del" onclick="document.getElementById('${rowId}').remove()" style="background: none; border: none; color: #ef4444; font-size: 16px; cursor: pointer; padding: 2px 6px;" title="Eliminar tarjeta">✕</button>
       `;
       container.appendChild(row);
     }
@@ -4221,7 +4221,7 @@
             tabToSwitch: 'inicio',
             popover: {
               title: '💬 ¿Dudas o Sugerencias? Soporte Directo',
-              description: 'Estamos para ayudarte. Toca aquí (o en el botón <b>💬</b> de la cabecera) para reportar cualquier falla técnica o enviarnos sugerencias directamente al equipo.',
+              description: 'Estamos para ayudarte. Toca aquí en cualquier momento para enviarnos dudas, sugerencias o reportar cualquier detalle directamente al equipo en 1 clic.',
               side: 'bottom',
               align: 'end'
             }

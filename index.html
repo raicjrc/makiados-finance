@@ -110,7 +110,6 @@
           </div>
           <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Cambiar a Modo Noche Suave">🌙</button>
           <button id="btnExportPDF" class="settings-popover-btn" onclick="generatePDFReport()" title="Exportar Reporte Mensual a PDF" style="background: linear-gradient(135deg, #10b981, #059669); color: white; margin-right: 4px; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);">📥</button>
-          <button id="btnHelpHeader" class="settings-popover-btn" onclick="openFeedbackModal()" title="¿Dudas o Sugerencias? Soporte Directo">💬</button>
           <button id="btnSettings" class="settings-popover-btn" onclick="openSettingsModal()" title="Ajustes y Opciones">⚙️</button>
         </div>
       </div>
@@ -404,19 +403,20 @@
 
       <!-- TAB 4: CONSEJOS Y DEUDAS -->
       <div id="tab-consejos" class="tab-content">
-        <div class="card" style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); color: white;">
+        <div class="card" style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); color: white; padding: 16px 18px;">
           <div class="flex-between">
-            <div style="font-size: 18px; font-weight: 800;">🧑‍💼 Asesor Financiero Personal</div>
-            <button class="btn-pill primary" onclick="recalculatePlanAndTips()">🔄 Recalcular Plan</button>
+            <div style="font-size: 15px; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+              <span>🧑‍💼</span> <span>Asesor Financiero Personal</span>
+            </div>
+            <button class="btn-pill primary" onclick="recalculatePlanAndTips()" style="font-size: 11px; padding: 6px 12px;">🔄 Recalcular</button>
           </div>
-          <h2 style="font-size: 15px; font-weight: 800; color: #a5f3fc; margin-top: 4px;">Plan Maestro para Salir de Deudas</h2>
-          
+          <div style="font-size: 12px; color: #a5f3fc; margin-top: 4px; font-weight: 600;">Diagnóstico Inteligente & Salud Financiera</div>
         </div>
 
-        <!-- Diagnóstico Automático del Mes (movido desde Inicio) -->
-        <div class="card" style="background: #eff6ff; border-color: #bfdbfe; margin-top: 12px;">
-          <div class="card-title" style="color: #1e40af; font-size: 13px;">💡 Diagnóstico Automático del Mes</div>
-          <p id="autoDiagnosisText" style="font-size: 12px; color: #1e3a8a; margin-top: 6px; line-height: 1.5;">
+        <!-- Diagnóstico Automático del Mes -->
+        <div class="card" style="background: #eff6ff; border-color: #bfdbfe; margin-top: 10px; padding: 12px 14px;">
+          <div class="card-title" style="color: #1e40af; font-size: 12.5px; font-weight: 800; margin-bottom: 4px;">💡 Diagnóstico del Mes</div>
+          <p id="autoDiagnosisText" style="font-size: 12px; color: #1e3a8a; margin: 0; line-height: 1.45;">
             Cargando análisis...
           </p>
         </div>
@@ -1024,7 +1024,7 @@
           <span>💡</span>
           <div>FinZen utiliza tu día de cobro para proyectar tu saldo diario y mantenerte en zona segura sin quedarte a cero a mitad de mes.</div>
         </div>
-        <div class="modal-actions" style="justify-content: space-between; margin-top: 14px;">
+        <div class="modal-actions wizard-actions-sticky" style="justify-content: space-between; margin-top: 14px;">
           <button type="button" class="btn btn-secondary" onclick="dismissOnboardingWizard(true)">Saltar Tutorial</button>
           <button type="button" class="btn btn-primary" onclick="goToWizardStep(2)">Continuar al Paso 2 ➔</button>
         </div>
@@ -1059,7 +1059,7 @@
           <span>🔔</span>
           <div>Al asignar el día de vencimiento, estos gastos se integran automáticamente en tu <b>Calendario de Vencimientos</b> mensual.</div>
         </div>
-        <div class="modal-actions" style="justify-content: space-between; margin-top: 14px;">
+        <div class="modal-actions wizard-actions-sticky" style="justify-content: space-between; margin-top: 14px;">
           <button type="button" class="btn btn-secondary" onclick="goToWizardStep(1)">⬅️ Paso 1</button>
           <button type="button" class="btn btn-primary" onclick="goToWizardStep(3)">Continuar al Paso 3 ➔</button>
         </div>
@@ -1080,7 +1080,7 @@
           <span>✨</span>
           <div>Podrás usar nuestro <b>Simulador de Cuotas</b> para comprobar cómo una compra a plazos afectará tu superávit mensual antes de pasar la tarjeta.</div>
         </div>
-        <div class="modal-actions" style="justify-content: space-between; margin-top: 14px;">
+        <div class="modal-actions wizard-actions-sticky" style="justify-content: space-between; margin-top: 14px;">
           <button type="button" class="btn btn-secondary" onclick="goToWizardStep(2)">⬅️ Paso 2</button>
           <button type="button" class="btn btn-primary" onclick="goToWizardStep(4)">Continuar al Paso 4 ➔</button>
         </div>
@@ -1121,7 +1121,7 @@
           <span>🚀</span>
           <div>¡Todo configurado! Al hacer clic en finalizar, guardaremos tus datos y tu panel cobrará vida con cálculos automáticos.</div>
         </div>
-        <div class="modal-actions" style="justify-content: space-between; margin-top: 14px;">
+        <div class="modal-actions wizard-actions-sticky" style="justify-content: space-between; margin-top: 14px;">
           <button type="button" class="btn btn-secondary" onclick="goToWizardStep(3)">⬅️ Paso 3</button>
           <button type="button" class="btn btn-primary" onclick="completeOnboardingWizard()" style="background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 4px 15px rgba(16, 185, 129, 0.35); font-weight: 800;">🎉 ¡Finalizar y Entrar a mi App! 🚀</button>
         </div>
@@ -1342,36 +1342,41 @@
       </div>
 
       <div style="font-size: 40px; margin-bottom: 6px; line-height: 1;">👑</div>
-      <div style="font-size: 22px; font-weight: 800; color: #ffffff; letter-spacing: -0.5px;">
+      <div class="pro-modal-title">
         FinZen <span style="background: linear-gradient(135deg, #fbbf24, #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">PRO</span>
       </div>
-      <div style="font-size: 12px; color: #94a3b8; margin-top: 4px; font-weight: 500;">
+      <div class="pro-modal-subtitle">
         El acelerador para tu tranquilidad financiera
       </div>
 
-      <div style="margin: 18px 0; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 14px 16px; text-align: left; display: flex; flex-direction: column; gap: 10px;">
-        <div style="display: flex; align-items: center; gap: 10px; font-size: 12px; color: #f1f5f9; font-weight: 600;">
-          <span style="color: #10b981; font-size: 15px;">✓</span> Inyección automática de compras en cuotas
+      <div class="pro-modal-features">
+        <div class="pro-feature-item">
+          <span style="color: #10b981; font-size: 15px; font-weight: 800;">✓</span>
+          <span>Inyección automática de compras en cuotas</span>
         </div>
-        <div style="display: flex; align-items: center; gap: 10px; font-size: 12px; color: #f1f5f9; font-weight: 600;">
-          <span style="color: #10b981; font-size: 15px;">✓</span> Categorías y presupuestos personalizados ilimitados
+        <div class="pro-feature-item">
+          <span style="color: #10b981; font-size: 15px; font-weight: 800;">✓</span>
+          <span>Categorías y presupuestos personalizados ilimitados</span>
         </div>
-        <div style="display: flex; align-items: center; gap: 10px; font-size: 12px; color: #f1f5f9; font-weight: 600;">
-          <span style="color: #10b981; font-size: 15px;">✓</span> Metas de ahorro múltiples sin restricciones
+        <div class="pro-feature-item">
+          <span style="color: #10b981; font-size: 15px; font-weight: 800;">✓</span>
+          <span>Metas de ahorro múltiples sin restricciones</span>
         </div>
-        <div style="display: flex; align-items: center; gap: 10px; font-size: 12px; color: #f1f5f9; font-weight: 600;">
-          <span style="color: #10b981; font-size: 15px;">✓</span> Asesor de deudas con método bola de nieve
+        <div class="pro-feature-item">
+          <span style="color: #10b981; font-size: 15px; font-weight: 800;">✓</span>
+          <span>Asesor de deudas con método bola de nieve</span>
         </div>
-        <div style="display: flex; align-items: center; gap: 10px; font-size: 12px; color: #f1f5f9; font-weight: 600;">
-          <span style="color: #10b981; font-size: 15px;">✓</span> Exportación completa a Excel y CSV
+        <div class="pro-feature-item">
+          <span style="color: #10b981; font-size: 15px; font-weight: 800;">✓</span>
+          <span>Exportación completa a Excel y CSV</span>
         </div>
       </div>
 
-      <div style="background: linear-gradient(135deg, rgba(79, 70, 229, 0.15), rgba(124, 58, 237, 0.15)); border: 1.5px solid rgba(124, 58, 237, 0.3); border-radius: 16px; padding: 14px; margin-bottom: 16px;">
-        <div style="font-size: 22px; font-weight: 800; color: #ffffff;">
-          S/ 9.90 <span style="font-size: 12px; color: #cbd5e1; font-weight: 500;">/ mes</span>
+      <div class="pro-price-card">
+        <div class="pro-price-amount">
+          S/ 9.90 <span class="pro-price-period">/ mes</span>
         </div>
-        <div style="font-size: 11px; color: #a5b4fc; margin-top: 2px;">O pago único vitalicio de S/ 59.90 • Cancela cuando quieras</div>
+        <div class="pro-price-note">O pago único vitalicio de S/ 59.90 • Cancela cuando quieras</div>
       </div>
 
       <a href="https://wa.me/51914688135?text=Hola%20C%C3%A9sar,%20quiero%20activar%20mi%20suscripci%C3%B3n%20FinZen%20Pro" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; text-align: center; padding: 13px; border-radius: 14px; background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; font-weight: 800; font-size: 14px; text-decoration: none; border: none; box-shadow: 0 4px 16px rgba(124, 58, 237, 0.4); margin-bottom: 10px; box-sizing: border-box;">
