@@ -309,12 +309,12 @@
 
         <!-- Action Buttons (Express Quick Log & Extra Income) -->
         <div class="zen-actions-grid" style="display: flex; gap: 10px; margin-bottom: 15px;">
-          <button id="btnRegistrarGasto" onclick="openQuickExpenseModal()" style="flex: 1.2; padding: 14px 16px; border-radius: 16px; background: linear-gradient(135deg, #10b981, #059669); border: none; color: white; font-weight: 800; font-size: 14.5px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 16px rgba(16, 185, 129, 0.35); cursor: pointer; transition: transform 0.15s ease;">
+          <button id="btnRegistrarGasto" onclick="openQuickExpenseModal()" style="flex: 1.2; padding: 14px 16px; border-radius: 16px; background: linear-gradient(135deg, #ef4444, #dc2626); border: none; color: white; font-weight: 800; font-size: 14.5px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 16px rgba(239, 68, 68, 0.35); cursor: pointer; transition: transform 0.15s ease;">
             <span style="font-size: 20px;">⚡</span>
             <span>+ Registrar Gasto</span>
           </button>
-          <button id="btnRegistrarIngreso" onclick="openAddExtraIncomeModal()" style="flex: 1; padding: 14px 14px; border-radius: 16px; background: var(--card-bg); border: 1.5px solid var(--border); color: var(--text-main); font-weight: 800; font-size: 13.5px; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: var(--shadow-sm); cursor: pointer; transition: transform 0.15s ease;">
-            <span style="font-size: 18px;">📈</span>
+          <button id="btnRegistrarIngreso" onclick="openAddExtraIncomeModal()" style="flex: 1; padding: 14px 14px; border-radius: 16px; background: linear-gradient(135deg, #10b981, #059669); border: none; color: white; font-weight: 800; font-size: 13.5px; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3); cursor: pointer; transition: transform 0.15s ease;">
+            <span style="font-size: 18px;">💵</span>
             <span>+ Ingreso</span>
           </button>
         </div>
@@ -400,8 +400,8 @@
             <div style="font-size: 11px; color: var(--text-muted); font-weight: 600;">Control detallado, filtros y vista calendario</div>
           </div>
           <div style="display: flex; gap: 8px;">
-            <button class="btn btn-primary btn-sm" onclick="openAddExpenseModal()" style="font-size: 12px; font-weight: 800; padding: 6px 12px;">+ Gasto Detallado</button>
-            <button class="btn btn-secondary btn-sm" onclick="openAddExtraIncomeModal()" style="font-size: 12px; font-weight: 700; padding: 6px 12px;">+ Ingreso</button>
+            <button class="btn btn-primary btn-sm" onclick="openAddExpenseModal()" style="font-size: 12px; font-weight: 800; padding: 6px 12px; background: linear-gradient(135deg, #ef4444, #dc2626); border-color: #dc2626; color: white; box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);">+ Gasto Detallado</button>
+            <button class="btn btn-secondary btn-sm" onclick="openAddExtraIncomeModal()" style="font-size: 12px; font-weight: 800; padding: 6px 12px; background: rgba(16, 185, 129, 0.12); border: 1.5px solid rgba(16, 185, 129, 0.35); color: #059669;">+ Ingreso</button>
           </div>
         </div>
 
@@ -1862,6 +1862,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
-  <script src="js/app.js?v=64.0"></script>
+  <script src="js/app.js?v=64.1"></script>
 </body>
 </html>

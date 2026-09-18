@@ -62,14 +62,27 @@
       -webkit-tap-highlight-color: transparent;
     }
 
+    html {
+      box-sizing: border-box;
+      width: 100%;
+      max-width: 100vw;
+      overflow-x: hidden;
+    }
+    *, *::before, *::after {
+      box-sizing: inherit;
+    }
+
     body {
       background: var(--bg);
       background-attachment: fixed;
       color: var(--text-main);
       min-height: 100vh;
+      width: 100%;
+      max-width: 100vw;
       padding-bottom: 95px;
       line-height: 1.5;
       overflow-x: hidden;
+      position: relative;
     }
 
     .container {
@@ -251,21 +264,68 @@
     }
     @media (max-width: 600px) {
       .top-navbar {
-        padding: 8px 10px;
-        border-radius: 0 0 16px 16px;
-        margin-bottom: 12px;
+        padding: 8px 8px;
+        border-radius: 0 0 14px 14px;
+        margin-bottom: 10px;
+        width: 100%;
+        max-width: 100vw;
+        box-sizing: border-box;
       }
-      .top-navbar-inner { gap: 6px; }
-      .brand-group { gap: 8px; }
-      .brand-title h1 { font-size: 14px; }
-      .brand-title p { font-size: 9px; }
-      .brand-avatar { width: 34px !important; height: 34px !important; border-radius: 10px !important; }
-      .header-right-group { gap: 4px; }
-      .month-selector select { padding: 4px 8px; font-size: 11px; min-height: 32px; max-width: 120px; }
-      .theme-toggle-btn, .settings-popover-btn { width: 34px; height: 34px; font-size: 15px; }
-      .feedback-header-btn { padding: 0; width: 34px; height: 34px; justify-content: center; }
-      .feedback-header-btn span.btn-label { display: none; }
-      .container { padding: 8px 10px; }
+      .top-navbar-inner {
+        gap: 4px;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+      }
+      .brand-group {
+        gap: 6px;
+        min-width: 0;
+        flex-shrink: 1;
+      }
+      .brand-title h1 {
+        font-size: 13.5px;
+        white-space: nowrap;
+      }
+      .brand-title p {
+        display: none;
+      }
+      .brand-avatar {
+        width: 32px !important;
+        height: 32px !important;
+        border-radius: 8px !important;
+        flex-shrink: 0;
+      }
+      .header-right-group {
+        gap: 3px;
+        flex-shrink: 0;
+      }
+      .month-selector select {
+        padding: 3px 5px;
+        font-size: 10.5px;
+        min-height: 30px;
+        max-width: 90px;
+      }
+      .theme-toggle-btn, .settings-popover-btn {
+        width: 30px;
+        height: 30px;
+        font-size: 13px;
+      }
+      .feedback-header-btn {
+        padding: 0;
+        width: 30px;
+        height: 30px;
+        justify-content: center;
+      }
+      .feedback-header-btn span.btn-label {
+        display: none;
+      }
+      .container {
+        padding: 8px 10px;
+        width: 100%;
+        max-width: 100vw;
+        box-sizing: border-box;
+        overflow-x: hidden;
+      }
     }
 
     /* ====== TEMA TWILIGHT SLATE (DARK SUAVE - CERO NEGRO) ====== */
@@ -1152,27 +1212,32 @@
     }
     .import-tx-btn:hover { background: var(--primary-hover); }
 
-    /* ====== BOTTOM NAV BAR - CRYSTAL FROSTED ====== */
+    /* ====== BOTTOM NAV BAR - CRYSTAL FROSTED GRID ====== */
     .bottom-nav {
       position: fixed;
       bottom: 0; left: 0; right: 0;
-      height: 64px;
-      background: rgba(255, 255, 255, 0.85);
+      width: 100%;
+      max-width: 100vw;
+      box-sizing: border-box;
+      height: 62px;
+      background: rgba(255, 255, 255, 0.92);
       backdrop-filter: blur(24px);
       -webkit-backdrop-filter: blur(24px);
-      border-top: 1px solid rgba(255, 255, 255, 0.9);
-      display: flex;
-      justify-content: space-around;
+      border-top: 1px solid rgba(226, 232, 240, 0.85);
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
       align-items: center;
+      justify-items: center;
       z-index: 1000;
-      box-shadow: 0 -4px 20px rgba(99, 102, 241, 0.05);
-      padding: 0 4px;
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
+      padding: 0 2px;
       padding-bottom: env(safe-area-inset-bottom, 0px);
     }
     .nav-item {
       display: flex;
       flex-direction: column;
       align-items: center;
+      justify-content: center;
       gap: 2px;
       background: none;
       border: none;
@@ -1180,11 +1245,13 @@
       font-size: 10px;
       font-weight: 700;
       cursor: pointer;
-      padding: 6px 8px;
-      border-radius: 12px;
+      padding: 5px 2px;
+      border-radius: 10px;
       transition: all 0.18s ease;
-      flex: 1;
-      max-width: 80px;
+      width: 100%;
+      min-width: 0;
+      text-align: center;
+      box-sizing: border-box;
     }
     .nav-item:hover {
       color: var(--text-main);
@@ -1193,7 +1260,16 @@
       color: var(--primary);
       background: var(--primary-light);
     }
-    .nav-icon { font-size: 20px; line-height: 1; }
+    .nav-icon { font-size: 18px; line-height: 1; }
+    .nav-item span:not(.nav-icon) {
+      font-size: 9.5px;
+      letter-spacing: -0.2px;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      display: block;
+    }
 
     /* ====== TAB TRANSITIONS ====== */
     .tab-content { display: none; animation: fadeInUp 0.25s ease; }

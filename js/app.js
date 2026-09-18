@@ -77,7 +77,7 @@
     // ================================================================
     // VERSIÓN DE LA APP
     // ================================================================
-    const APP_VERSION = 'v63.2';
+    const APP_VERSION = 'v64.1';
     // Plantilla inicial 100% limpia para cualquier usuario nuevo
     function getCleanUserState() {
       const now = new Date();
@@ -1741,7 +1741,7 @@
 
       container.innerHTML = cats.map(c => `
         <div class="chip ${c === currentCategoryFilter ? 'active' : ''}" onclick="selectCategoryChip('${c}')">
-          ${c === 'TODAS' ? '✨ Todas' : CATEGORIES[c].icon + ' ' + c}
+          ${c === 'TODAS' ? '✨ Todas' : (((CATEGORIES[c] && CATEGORIES[c].icon) || '🏷️') + ' ' + c)}
         </div>
       `).join('');
     }
@@ -2445,7 +2445,7 @@
         if (amount > 0) {
           labels.push(cat);
           data.push(amount);
-          colors.push(CATEGORIES[cat].color);
+          colors.push((CATEGORIES[cat] && CATEGORIES[cat].color) || '#64748b');
         }
       });
 
@@ -2961,7 +2961,7 @@
         return `
           <div class="budget-row">
             <div class="budget-info">
-              <span>${CATEGORIES[cat].icon} ${cat}</span>
+              <span>${(CATEGORIES[cat] && CATEGORIES[cat].icon) || '🏷️'} ${cat}</span>
               <span>S/ ${spent.toFixed(0)} / S/ ${limit} 
                 <button class="btn-pill primary" onclick="editCategoryBudget('${cat}')" style="margin-left:4px; margin-right:4px;">✏️</button>
                 <button class="btn-pill danger" onclick="deleteCategory('${cat}')">🗑️</button>
@@ -4845,6 +4845,14 @@
       const isDismissed = localStorage.getItem('finanzas_tour_dismissed_' + userKey) === 'true'
                        || localStorage.getItem('finanzas_tour_dismissed') === 'true';
 
+      const isDesk = window.innerWidth >= 1024;
+      const getTarget = (mobileSel, deskSel) => {
+        if (window.innerWidth >= 1024 && deskSel && document.querySelector(deskSel)) {
+          return deskSel;
+        }
+        return mobileSel;
+      };
+
       const driverObj = window.driver.js.driver({
         showProgress: true,
         animate: true,
@@ -4862,7 +4870,7 @@
           }
           driverObj.destroy();
         },
-        onHighlightStarted: (element, step, { config, state }) => {
+        onHighlightStarted: (element, step) => {
           if (step && step.tabToSwitch && typeof switchTab === 'function') {
             switchTab(step.tabToSwitch);
           }
@@ -4888,15 +4896,15 @@
               title: '🎉 ¡Bienvenido a AliviaFin!',
               description: `
                 <div style="font-size: 13px; line-height: 1.5; color: #334155;">
-                  <p style="margin: 0 0 10px 0;">Recorreremos juntos en 1 minuto las herramientas esenciales para dominar tus finanzas:</p>
+                  <p style="margin: 0 0 10px 0;">Recorreremos juntos en 1 minuto las herramientas esenciales para dominar tus finanzas con paz mental:</p>
                   <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 12px; font-size: 12px; color: #475569; display: flex; flex-direction: column; gap: 6px;">
                     <div>💵 <b>Configurar sueldo y presupuestos</b></div>
-                    <div>📉 <b>Registrar gastos e ingresos extra</b></div>
+                    <div>🔴 <b>Registrar gastos e ingresos extra</b></div>
                     <div>💳 <b>Simulador de compras en cuotas</b></div>
                     <div>💬 <b>Ayuda y soporte directo en 1 clic</b></div>
                     <div>📥 <b>Descargar reporte mensual en PDF</b></div>
-                    <div>🌙 <b>Activar el Modo Oscuro</b></div>
-                    <div>📊 <b>Conocer cada sección de la barra inferior</b></div>
+                    <div>🌙 <b>Activar el Modo Noche Suave</b></div>
+                    <div>📊 <b>Conocer cada sección y pestaña</b></div>
                   </div>
                 </div>
               `
@@ -4918,7 +4926,7 @@
             element: '#btnRegistrarGasto',
             tabToSwitch: 'inicio',
             popover: {
-              title: '📉 Cómo Registrar un Gasto',
+              title: '🔴 Cómo Registrar un Gasto',
               description: 'Toca este botón cada vez que realices una compra o pago. Elige la categoría, monto, fecha de vencimiento y define si es al contado o en cuotas con tarjeta de crédito.',
               side: 'bottom',
               align: 'start'
@@ -4929,10 +4937,10 @@
             element: '#btnRegistrarIngreso',
             tabToSwitch: 'inicio',
             popover: {
-              title: '📈 Cómo Registrar Ingresos Extra',
+              title: '🟢 Cómo Registrar Ingresos Extra',
               description: '¿Cobraste un bono, utilidades o trabajo freelance? Regístralo aquí con un toque para que se sume de inmediato a tu saldo en banco real.',
               side: 'bottom',
-              align: 'end'
+              align: 'center'
             }
           },
           // 5. Simulador de Cuotas & Crédito
@@ -4954,7 +4962,7 @@
               title: '💬 ¿Dudas o Sugerencias? Soporte Directo',
               description: 'Estamos para ayudarte. Toca aquí en cualquier momento para enviarnos dudas, sugerencias o reportar cualquier detalle directamente al equipo en 1 clic.',
               side: 'bottom',
-              align: 'end'
+              align: 'center'
             }
           },
           // 7. Configurar Sueldo y Gastos Mensuales
@@ -4965,7 +4973,7 @@
               title: '⚙️ Configurar Sueldo y Gastos Mensuales',
               description: 'Desde este botón de Ajustes puedes cambiar tu sueldo en <b>"✏️ Editar mi Sueldo Inicial"</b>, ajustar presupuestos de gastos fijos en <b>"⚙️ Gestor de Categorías"</b>, o relanzar el asistente completo en <b>"🔧 Reconfigurar Ingresos y Gastos"</b>.',
               side: 'bottom',
-              align: 'end'
+              align: 'center'
             }
           },
           // 8. Descargar Reporte en PDF
@@ -4976,7 +4984,7 @@
               title: '📥 Descargar Reporte Mensual en PDF',
               description: 'Exporta en segundos un informe ejecutivo completo en PDF con tus gastos pagados, pendientes y balances netos del mes, listo para imprimir o archivar.',
               side: 'bottom',
-              align: 'end'
+              align: 'center'
             }
           },
           // 9. Modo Oscuro
@@ -4987,56 +4995,56 @@
               title: '🌙 Cambiar a Modo Oscuro / Claro',
               description: 'Alterna con un solo clic entre el Modo Claro y el Modo Noche Suave, diseñado para proteger tu vista de noche y reducir el consumo de batería.',
               side: 'bottom',
-              align: 'end'
-            }
-          },
-          // 9. Tab Plan (Auto-navega a Plan)
-          {
-            element: '#navTabPlan',
-            tabToSwitch: 'plan',
-            popover: {
-              title: '📊 Pestaña: Plan Financiero',
-              description: '<i>¡La app navegó automáticamente al Plan!</i> Aquí tienes tu distribución inteligente <b>50/30/20</b> (Necesidades, Deseos, Ahorro), gráficos comparativos de gastos y el rastreador de tus compras en cuotas.',
-              side: 'top',
               align: 'center'
             }
           },
-          // 10. Tab Metas (Auto-navega a Metas)
+          // 10. Tab Movimientos (Auto-navega a Movimientos)
           {
-            element: '#navTabMetas',
+            element: getTarget('#navTabMovimientos', '#deskNavTabMovimientos'),
+            tabToSwitch: 'movimientos',
+            popover: {
+              title: '💳 Pestaña: Movimientos',
+              description: '<i>¡Navegamos a Movimientos!</i> Aquí tienes tu lista completa de gastos e ingresos, con vista en <b>Lista</b> o <b>Calendario</b>, filtros por categoría y búsqueda instantánea.',
+              side: isDesk ? 'right' : 'top',
+              align: 'center'
+            }
+          },
+          // 11. Tab Plan (Auto-navega a Plan)
+          {
+            element: getTarget('#navTabPlan', '#deskNavTabPlan'),
+            tabToSwitch: 'plan',
+            popover: {
+              title: '📊 Pestaña: Plan Financiero',
+              description: '<i>¡Llegamos a tu Plan!</i> Aquí tienes tu distribución inteligente <b>50/30/20</b> (Necesidades, Deseos, Ahorro), gráficos comparativos de gastos y el rastreador de tus compras en cuotas.',
+              side: isDesk ? 'right' : 'top',
+              align: 'center'
+            }
+          },
+          // 12. Tab Metas (Auto-navega a Metas)
+          {
+            element: getTarget('#navTabMetas', '#deskNavTabMetas'),
             tabToSwitch: 'metas',
             popover: {
               title: '🎯 Pestaña: Metas de Ahorro',
               description: '<i>¡Ahora estamos en Metas!</i> Establece objetivos como tu Fondo de Emergencia, viajes o compras grandes. AliviaFin calcula cuánto dinero debes apartar cada mes para lograrlas.',
-              side: 'top',
+              side: isDesk ? 'right' : 'top',
               align: 'center'
             }
           },
-          // 11. Tab Consejos (Auto-navega a Consejos)
+          // 13. Tab Consejos (Auto-navega a Consejos)
           {
-            element: '#navTabConsejos',
+            element: getTarget('#navTabConsejos', '#deskNavTabConsejos'),
             tabToSwitch: 'consejos',
             popover: {
-              title: '💡 Pestaña: Consejos y Diagnóstico',
-              description: '<i>¡Llegamos a Consejos!</i> Aquí encuentras a tu <b>Asesor Financiero Personal</b> y el <b>Diagnóstico Automático del Mes</b> (reubicado aquí para un análisis más claro y profundo), junto a recomendaciones para optimizar tus gastos.',
-              side: 'top',
+              title: '💡 Pestaña: Consejos & Asesor',
+              description: '<i>¡Aquí está tu Asesor!</i> Diagnóstico inteligente automático de tu presupuesto mensual y el método <b>Bola de Nieve</b> para liquidar deudas rápidamente.',
+              side: isDesk ? 'right' : 'top',
               align: 'center'
             }
           },
-          // 12. Tab Historial (Auto-navega a Historial)
+          // 14. Cierre y Opción No Volver a Mostrar (Vuelve a Inicio)
           {
-            element: '#navTabHistorial',
-            tabToSwitch: 'auditoria',
-            popover: {
-              title: '📜 Pestaña: Historial y Auditoría',
-              description: '<i>¡Aquí está tu Historial!</i> Consulta la bitácora cronológica completa de cada gasto registrado, edición o ajuste de saldo, garantizando máxima trazabilidad en tus finanzas.',
-              side: 'top',
-              align: 'center'
-            }
-          },
-          // 13. Cierre y Opción No Volver a Mostrar (Vuelve a Inicio)
-          {
-            element: '#navTabInicio',
+            element: getTarget('#navTabInicio', '#deskNavTabInicio'),
             tabToSwitch: 'inicio',
             popover: {
               title: '🚀 ¡Todo Listo para Dominar tus Finanzas!',
@@ -5051,7 +5059,7 @@
                   </div>
                 </div>
               `,
-              side: 'top',
+              side: isDesk ? 'right' : 'top',
               align: 'center',
               onNextClick: () => {
                 const userKey = currentUser ? currentUser.id : 'guest';
@@ -5373,14 +5381,27 @@ window.closeTour = function() {
 // Exponer funciones críticas al scope global explícitamente para evitar problemas de binding
 window.startInteractiveTour = startInteractiveTour;
 window.toggleFAB = typeof toggleFAB === 'function' ? toggleFAB : function(){};
+window.openSettingsModal = openSettingsModal;
+window.closeModal = closeModal;
+window.closeGlassModal = typeof closeGlassModal === 'function' ? closeGlassModal : function(id){ const el = document.getElementById(id); if (el) el.style.display = 'none'; };
+window.handleBackdropClick = handleBackdropClick;
 window.openAddExpenseModal = openAddExpenseModal;
+window.handleAddExpense = handleAddExpense;
 window.openAddExtraIncomeModal = openAddExtraIncomeModal;
+window.handleAddExtraIncome = handleAddExtraIncome;
+window.openQuickExpenseModal = openQuickExpenseModal;
+window.closeQuickExpenseModal = closeQuickExpenseModal;
+window.selectQuickCategory = selectQuickCategory;
+window.selectQuickMethod = selectQuickMethod;
+window.saveQuickExpense = saveQuickExpense;
 window.openCategoryManagerModal = openCategoryManagerModal;
 window.openFeedbackModal = openFeedbackModal;
 window.openInstallmentsSimulatorModal = openInstallmentsSimulatorModal;
 window.handleSimulatedPurchaseClick = handleSimulatedPurchaseClick;
 window.handleSaveCategoryClick = handleSaveCategoryClick;
 window.handleOpenAddGoalClick = handleOpenAddGoalClick;
+window.handleAddGoal = typeof handleAddGoal === 'function' ? handleAddGoal : function(){};
+window.handleDepositGoal = typeof handleDepositGoal === 'function' ? handleDepositGoal : function(){};
 window.handleDebtAdvisorClick = handleDebtAdvisorClick;
 window.openDebtSnowballModal = openDebtSnowballModal;
 window.renderSnowballDebtsList = renderSnowballDebtsList;
@@ -5402,13 +5423,38 @@ window.handleResetPasswordSubmit = handleResetPasswordSubmit;
 window.handleOAuthLogin = handleOAuthLogin;
 window.isUserPro = isUserPro;
 window.goToWizardStep = goToWizardStep;
+window.openOnboardingWizard = openOnboardingWizard;
 window.completeOnboardingWizard = completeOnboardingWizard;
 window.dismissOnboardingWizard = dismissOnboardingWizard;
+window.openEditSalaryModal = openEditSalaryModal;
+window.handleSaveSalary = handleSaveSalary;
+window.openSecurityModal = openSecurityModal;
+window.openExplainSurplusModal = openExplainSurplusModal;
 window.openWhatsNewModal = openWhatsNewModal;
 window.dismissWhatsNewModal = dismissWhatsNewModal;
 window.syncVersionUI = syncVersionUI;
 window.saveCustomUserName = saveCustomUserName;
 window.toggleTourPreference = toggleTourPreference;
+window.handleLogout = handleLogout;
+window.toggleTheme = toggleTheme;
+window.changeMonth = changeMonth;
+window.switchTab = switchTab;
+window.setTxViewMode = setTxViewMode;
+window.selectStatusFilter = selectStatusFilter;
+window.clearSearchInput = clearSearchInput;
+window.clearAllFilters = clearAllFilters;
+window.togglePasswordVisibility = togglePasswordVisibility;
+window.switchAuthTab = switchAuthTab;
+window.handleTourCheckboxChange = function(val) {
+  const userKey = currentUser ? currentUser.id : 'guest';
+  if (val) {
+    localStorage.setItem('finanzas_tour_dismissed_' + userKey, 'true');
+    localStorage.setItem('finanzas_tour_dismissed', 'true');
+  } else {
+    localStorage.removeItem('finanzas_tour_dismissed_' + userKey);
+    localStorage.removeItem('finanzas_tour_dismissed');
+  }
+};
 
 
 // ================================================================
