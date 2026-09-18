@@ -1,0 +1,11 @@
+.git
+.github
+*.backup*
+*backup*
+*.bak*
+*.md
+.DS_Store
+database*.json
+parsed_data.json
+scratch.js
+tests/

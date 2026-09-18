@@ -684,9 +684,9 @@
     // Registrar Service Worker v48 (Network-First, sin caché de datos)
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=61.0')
+        navigator.serviceWorker.register('./sw.js?v=64.0')
           .then(reg => {
-            console.log('SW v48 registrado:', reg.scope);
+            console.log('SW v64 registrado:', reg.scope);
             // Forzar actualización inmediata del SW en todos los dispositivos
             reg.update();
             if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
