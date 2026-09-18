@@ -107,7 +107,7 @@
       </div>
 
       <!-- Footer versión -->
-      <p id="loginFooterVersion" style="text-align: center; font-size: 10px; color: #94a3b8; margin-top: 20px; margin-bottom: 0;">AliviaFin v63.1 · Powered by Supabase</p>
+      <p id="loginFooterVersion" style="text-align: center; font-size: 10px; color: #94a3b8; margin-top: 20px; margin-bottom: 0;">AliviaFin v63.2 · Powered by Supabase</p>
     </div>
   </div>
 
@@ -609,10 +609,27 @@
       <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 12px;">
         
         <div style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 2px;">Mi Perfil & App</div>
+        <!-- Nombre de Usuario / Apodo Personalizado -->
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 12px; margin-bottom: 4px;">
+          <label for="settingsUserNameInput" style="display: block; font-size: 11px; font-weight: 700; color: var(--text-secondary); margin-bottom: 6px;">👤 Nombre o Apodo en la App:</label>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="settingsUserNameInput" placeholder="Ej: makiados" style="flex: 1; padding: 8px 10px; font-size: 13px; font-weight: 700; border: 1.5px solid #cbd5e1; border-radius: 8px; color: #0f172a; background: #ffffff;">
+            <button type="button" onclick="saveCustomUserName()" class="btn btn-primary" style="padding: 8px 14px; font-size: 12px; font-weight: 800; border-radius: 8px; white-space: nowrap;">Guardar</button>
+          </div>
+        </div>
+
         <button class="btn btn-secondary" onclick="openEditSalaryModal(); closeModal('settingsModal');" style="width: 100%; text-align: left; padding: 10px;">✏️ Editar mi Sueldo Inicial</button>
         <button class="btn btn-secondary" onclick="openCategoryManagerModal(); closeModal('settingsModal');" style="width: 100%; text-align: left; padding: 10px;">⚙️ Gestor de Categorías</button>
-        <button class="btn btn-secondary" onclick="closeModal('settingsModal'); startInteractiveTour();" style="width: 100%; text-align: left; padding: 10px;">🧭 Repetir Tour Guiado</button>
+        <button class="btn btn-secondary" onclick="closeModal('settingsModal'); startInteractiveTour();" style="width: 100%; text-align: left; padding: 10px;">🧭 Ver Tour Guiado</button>
         <button class="btn btn-secondary" onclick="closeModal('settingsModal'); openOnboardingWizard(true);" style="width: 100%; text-align: left; padding: 10px;">🔧 Reconfigurar Ingresos y Gastos</button>
+
+        <!-- Toggle: Mostrar tour al iniciar -->
+        <div style="padding: 10px 12px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; margin-top: 2px;">
+          <label style="display: flex; align-items: center; justify-content: space-between; font-size: 11.5px; font-weight: 700; color: #374151; cursor: pointer; margin: 0;">
+            <span>🧭 Mostrar tour guiado al iniciar</span>
+            <input type="checkbox" id="settingsTourToggle" onchange="toggleTourPreference(this.checked)" style="width: 16px; height: 16px; accent-color: #4f46e5; cursor: pointer;">
+          </label>
+        </div>
 
         <div style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-top: 6px; margin-bottom: 2px;">Exportación & Reportes</div>
         <button class="btn btn-secondary" onclick="exportMonthlyReportPDF(); closeModal('settingsModal');" style="width: 100%; text-align: left; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
@@ -625,7 +642,7 @@
         </button>
 
         <div style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-top: 6px; margin-bottom: 2px;">Soporte y Novedades</div>
-        <button class="btn btn-secondary" id="settingsWhatsNewBtn" onclick="closeModal('settingsModal'); openWhatsNewModal();" style="width: 100%; text-align: left; padding: 10px;">🚀 Novedades (v61.0)</button>
+        <button class="btn btn-secondary" id="settingsWhatsNewBtn" onclick="closeModal('settingsModal'); openWhatsNewModal();" style="width: 100%; text-align: left; padding: 10px;">🚀 Novedades (v63.1)</button>
         <button class="btn btn-secondary" onclick="closeModal('settingsModal'); openFeedbackModal();" style="width: 100%; text-align: left; padding: 10px;">💬 Contacto y Soporte</button>
         <button class="btn btn-secondary" onclick="closeModal('settingsModal'); openSecurityModal();" style="width: 100%; text-align: left; padding: 10px;">🛡️ Privacidad de Datos</button>
         
@@ -638,7 +655,7 @@
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center;">
               <span style="font-size: 11px; font-weight: 700; color: #374151;">📱 Versión</span>
-              <span style="font-size: 11px; color: #4f46e5; font-weight: 800;" id="settingsVersion">v61.0</span>
+              <span style="font-size: 11px; color: #4f46e5; font-weight: 800;" id="settingsVersion">v63.1</span>
             </div>
           </div>
         </div>
@@ -1354,29 +1371,71 @@
             <span>🚀</span> <span>¡Novedades en AliviaFin!</span>
           </div>
           <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
-            <span class="whats-new-card-badge" id="whatsNewVersionBadge">Versión v62.0</span>
-            <span style="font-size: 11px; color: var(--text-muted); font-weight: 600;" id="whatsNewVersionSub">Actualización v62.0 · Rebranding AliviaFin & Plan Bola de Nieve</span>
+            <span class="whats-new-card-badge" id="whatsNewVersionBadge">Versión v63.1</span>
+            <span style="font-size: 11px; color: var(--text-muted); font-weight: 600;" id="whatsNewVersionSub">Actualización v63.1 · Acceso con Google & Recuperación de Clave</span>
           </div>
         </div>
         <button type="button" onclick="dismissWhatsNewModal()" style="background:none; border:none; font-size:20px; cursor:pointer; color:var(--text-muted); line-height: 1;">✕</button>
       </div>
 
       <div style="margin-top: 14px; max-height: 55vh; overflow-y: auto; padding-right: 4px;">
-        <!-- Card 1: Rebranding AliviaFin -->
+        <!-- Card 1: Acceso con Google -->
+        <div class="whats-new-feature-card">
+          <div class="whats-new-icon-box" style="color: #4285F4;">🌐</div>
+          <div style="flex: 1;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+              <h5 style="margin: 0; font-size: 13px; font-weight: 800; color: var(--text-main);">Iniciar Sesión con Google (1-Clic)</h5>
+              <span class="whats-new-card-badge" style="background: rgba(66, 133, 244, 0.12); color: #2563eb;">Nuevo</span>
+            </div>
+            <p style="margin: 0; font-size: 11px; color: var(--text-muted); line-height: 1.4;">
+              Accede al instante con tu cuenta de Google con un solo toque, sin tener que escribir contraseñas. Funciona a la perfección en computadoras, Safari en iPhone, Chrome en Android y app instalada.
+            </p>
+          </div>
+        </div>
+
+        <!-- Card 2: Recuperación de Contraseña -->
+        <div class="whats-new-feature-card">
+          <div class="whats-new-icon-box" style="color: #f59e0b;">🔑</div>
+          <div style="flex: 1;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+              <h5 style="margin: 0; font-size: 13px; font-weight: 800; color: var(--text-main);">Recuperación Segura de Contraseña</h5>
+              <span class="whats-new-card-badge" style="background: rgba(245, 158, 11, 0.12); color: #d97706;">Seguridad</span>
+            </div>
+            <p style="margin: 0; font-size: 11px; color: var(--text-muted); line-height: 1.4;">
+              ¿Olvidaste tu contraseña? Ahora encuentras el enlace directo <b>«¿Olvidaste tu contraseña?»</b> en el inicio de sesión. Te enviamos un enlace seguro a tu correo para restablecerla de inmediato.
+            </p>
+          </div>
+        </div>
+
+        <!-- Card 3: Vinculación Inteligente de Cuentas -->
+        <div class="whats-new-feature-card">
+          <div class="whats-new-icon-box" style="color: #10b981;">🔗</div>
+          <div style="flex: 1;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+              <h5 style="margin: 0; font-size: 13px; font-weight: 800; color: var(--text-main);">Vinculación Inteligente de Cuentas</h5>
+              <span class="whats-new-card-badge" style="background: rgba(16, 185, 129, 0.12); color: #10b981;">Cero Fricción</span>
+            </div>
+            <p style="margin: 0; font-size: 11px; color: var(--text-muted); line-height: 1.4;">
+              Si ya tenías una cuenta con correo y contraseña, puedes ingresar indistintamente con tu contraseña habitual o con el botón «Continuar con Google». Tus gastos, saldos y estado PRO se mantienen intactos.
+            </p>
+          </div>
+        </div>
+
+        <!-- Card 4: Rebranding AliviaFin -->
         <div class="whats-new-feature-card">
           <div class="whats-new-icon-box" style="color: #10b981;">🌿</div>
           <div style="flex: 1;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
               <h5 style="margin: 0; font-size: 13px; font-weight: 800; color: var(--text-main);">Evolución Oficial a AliviaFin</h5>
-              <span class="whats-new-card-badge" style="background: rgba(16, 185, 129, 0.12); color: #10b981;">Nueva Marca</span>
+              <span class="whats-new-card-badge" style="background: rgba(16, 185, 129, 0.12); color: #10b981;">Marca Oficial</span>
             </div>
             <p style="margin: 0; font-size: 11px; color: var(--text-muted); line-height: 1.4;">
-              Nos renovamos como AliviaFin: paz mental para tu dinero. Nuevo dominio oficial <b>aliviafin.vercel.app</b>, nuevo isotipo ejecutivo y mayor claridad para tus finanzas.
+              Paz mental para tu dinero: nuevo dominio oficial <b>aliviafin.vercel.app</b>, nuevo isotipo ejecutivo de alta resolución y mayor velocidad en todos tus dispositivos.
             </p>
           </div>
         </div>
 
-        <!-- Card 2: Plan Anti-Deudas Bola de Nieve -->
+        <!-- Card 5: Plan Anti-Deudas Bola de Nieve -->
         <div class="whats-new-feature-card">
           <div class="whats-new-icon-box" style="color: #4f46e5;">❄️</div>
           <div style="flex: 1;">
@@ -1385,63 +1444,21 @@
               <span class="whats-new-card-badge" style="background: linear-gradient(135deg, rgba(79, 70, 229, 0.15), rgba(124, 58, 237, 0.15)); color: #4f46e5;">PRO 👑</span>
             </div>
             <p style="margin: 0; font-size: 11px; color: var(--text-muted); line-height: 1.4;">
-              Estrategia acelerada para liquidar pasivos de menor a mayor saldo con efecto avalancha. Calcula en tiempo real tus meses exactos para alcanzar la libertad de deudas y el dinero mensual que quedará libre para ahorro.
+              Estrategia acelerada para liquidar pasivos de menor a mayor saldo con efecto avalancha. Calcula en tiempo real tus meses exactos para alcanzar la libertad de deudas.
             </p>
           </div>
         </div>
 
-        <!-- Card 3: AliviaFin PRO & Modelo Freemium -->
+        <!-- Card 6: Exportación Excel y CSV -->
         <div class="whats-new-feature-card">
-          <div class="whats-new-icon-box" style="color: #f59e0b;">👑</div>
-          <div style="flex: 1;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
-              <h5 style="margin: 0; font-size: 13px; font-weight: 800; color: var(--text-main);">Modelo Freemium & AliviaFin PRO</h5>
-              <span class="whats-new-card-badge" style="background: rgba(245, 158, 11, 0.12); color: #d97706;">Exclusivo</span>
-            </div>
-            <p style="margin: 0; font-size: 11px; color: var(--text-muted); line-height: 1.4;">
-              Acceso a inyección automática de cuotas futuras en tus presupuestos, categorías personalizadas ilimitadas, metas múltiples y reportes avanzados.
-            </p>
-          </div>
-        </div>
-
-        <!-- Card 3: Exportación Excel y CSV -->
-        <div class="whats-new-feature-card">
-          <div class="whats-new-icon-box" style="color: #10b981;">📊</div>
+          <div class="whats-new-icon-box" style="color: #06b6d4;">📊</div>
           <div style="flex: 1;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
               <h5 style="margin: 0; font-size: 13px; font-weight: 800; color: var(--text-main);">Exportación a Excel / CSV (PRO)</h5>
-              <span class="whats-new-card-badge" style="background: rgba(16, 185, 129, 0.12); color: #10b981;">Nuevo</span>
+              <span class="whats-new-card-badge" style="background: rgba(6, 182, 212, 0.12); color: #0891b2;">Reportes</span>
             </div>
             <p style="margin: 0; font-size: 11px; color: var(--text-muted); line-height: 1.4;">
-              Descarga todo tu historial financiero mensual en formato .CSV con codificación UTF-8 BOM, 100% compatible y formateado para Microsoft Excel.
-            </p>
-          </div>
-        </div>
-
-        <!-- Card 4: Experiencia Móvil iOS Fluida -->
-        <div class="whats-new-feature-card">
-          <div class="whats-new-icon-box" style="color: #06b6d4;">📱</div>
-          <div style="flex: 1;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
-              <h5 style="margin: 0; font-size: 13px; font-weight: 800; color: var(--text-main);">Onboarding Fluido para iPhone & Móvil</h5>
-              <span class="whats-new-card-badge" style="background: rgba(6, 182, 212, 0.12); color: #0891b2;">Mobile UX</span>
-            </div>
-            <p style="margin: 0; font-size: 11px; color: var(--text-muted); line-height: 1.4;">
-              Nueva arquitectura de pantalla completa con botones adheridos permanentemente al pie de pantalla. Registra tus gastos con agilidad y sin bloqueos de scroll.
-            </p>
-          </div>
-        </div>
-
-        <!-- Card 5: Límite de 11 Categorías -->
-        <div class="whats-new-feature-card">
-          <div class="whats-new-icon-box" style="color: #8b5cf6;">⚡</div>
-          <div style="flex: 1;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
-              <h5 style="margin: 0; font-size: 13px; font-weight: 800; color: var(--text-main);">11 Categorías en Plan Gratuito</h5>
-              <span class="whats-new-card-badge" style="background: rgba(139, 92, 246, 0.12); color: #7c3aed;">Freemium</span>
-            </div>
-            <p style="margin: 0; font-size: 11px; color: var(--text-muted); line-height: 1.4;">
-              Organización clara de tus presupuestos de vida con las 11 categorías esenciales, con opción de categorías ilimitadas al activar AliviaFin PRO.
+              Descarga todo tu historial financiero mensual en formato .CSV compatible con Microsoft Excel y Google Sheets, formateado con tildes y caracteres limpios.
             </p>
           </div>
         </div>

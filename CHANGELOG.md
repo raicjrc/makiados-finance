@@ -3,6 +3,16 @@
 Todas las versiones notables de esta aplicación están documentadas aquí.
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
+## [v63.2] — 2026-09-18 — Persistencia de Perfil, Control Total del Tour y Novedades v63
+
+### 🛡️ Corrección de Identidad y Experiencia
+- **Restauración y Edición de Nombre de Usuario**: Solucionado el reemplazo automático de nombre ("makiados" por "cesar risso") ocasionado por los metadatos de Google OAuth. Se restablece "makiados" por defecto para el administrador y se incorpora un nuevo campo en **⚙️ Ajustes** para personalizar y guardar el nombre/apodo en cualquier momento.
+- **Supresión Definitiva de Ventana de Configuración Inicial (Wizard)**: Blindado el cargador remoto con verificación insensible a mayúsculas (`isAdminCesar()`) y flag `_serverStateLoaded`, garantizando que a los usuarios con datos nunca se les abra el asistente de onboarding.
+- **Control Total y Opt-Out del Tour Guiado**: Ahora el tour recuerda la opción "No volver a mostrar" sin importar en qué paso se cierre (con la "✕" o al final). Se añadió además un interruptor en **⚙️ Ajustes** para activar o desactivar el tour al inicio con un solo clic.
+- **Actualización Integral del Modal de Novedades**: Incorporadas las tarjetas oficiales que presentan el Inicio de Sesión con Google en 1 Clic, la Recuperación Segura de Contraseña y la Vinculación Inteligente de Cuentas.
+
+---
+
 ## [v63.1] — 2026-09-18 — Optimización Ejecutiva de Acceso Social (Google Full-Width)
 
 ### 🎨 Refinamiento de Interfaz & Experiencia de Usuario

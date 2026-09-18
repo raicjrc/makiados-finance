@@ -38,10 +38,17 @@
       'Otros': { icon: '📦', badgeClass: 'badge-otros', color: '#64748b', budget: 500 }
     };
 
+    // Helper: identifica si el usuario es el administrador César
+    function isAdminCesar(userOrEmail) {
+      const u = userOrEmail || currentUser;
+      if (!u) return false;
+      const email = typeof u === 'string' ? u : (u.email || '');
+      return email.trim().toLowerCase() === 'cesar.risso.f@gmail.com';
+    }
+
     // Helper: devuelve las categorías correctas según el usuario actual
     function getUserDefaultCategories() {
-      const isCesar = currentUser && currentUser.email === 'cesar.risso.f@gmail.com';
-      return isCesar ? CESAR_CATEGORIES : GENERIC_CATEGORIES;
+      return isAdminCesar() ? CESAR_CATEGORIES : GENERIC_CATEGORIES;
     }
 
 
@@ -70,7 +77,7 @@
     // ================================================================
     // VERSIÓN DE LA APP
     // ================================================================
-    const APP_VERSION = 'v63.1';
+    const APP_VERSION = 'v63.2';
     // Plantilla inicial 100% limpia para cualquier usuario nuevo
     function getCleanUserState() {
       const now = new Date();
@@ -220,17 +227,32 @@
 
     // Se llama cuando el login/registro es exitoso
     async function onLoginSuccess(user) {
-      // Obtener nombre del usuario desde metadata o email
-      const displayName = (user.user_metadata && user.user_metadata.full_name)
-        ? user.user_metadata.full_name
-        : user.email.split('@')[0];
+      const userKey = user.id;
+      const isCesar = isAdminCesar(user);
+
+      // Obtener nombre del usuario:
+      // 1. Preferencia personalizada guardada en localStorage
+      // 2. Si es César, mantener por defecto 'makiados'
+      // 3. Metadata de Supabase (full_name)
+      // 4. Prefijo del correo
+      let customName = localStorage.getItem('aliviafin_custom_display_name_' + userKey)
+                    || localStorage.getItem('aliviafin_custom_display_name');
+
+      if (!customName && isCesar) {
+        customName = 'makiados';
+        localStorage.setItem('aliviafin_custom_display_name_' + userKey, 'makiados');
+        localStorage.setItem('aliviafin_custom_display_name', 'makiados');
+      }
+
+      const displayName = customName
+        || (user.user_metadata && user.user_metadata.full_name)
+        || user.email.split('@')[0];
 
       currentUser = {
         id: user.id,
         email: user.email,
         name: displayName
       };
-
 
       const badge = document.getElementById('userBadgeText');
       if (badge) badge.textContent = displayName;
@@ -255,7 +277,7 @@
     // ================================================================
     function isUserPro() {
       // 1. César (admin) siempre tiene acceso Pro de por vida
-      if (currentUser && currentUser.email === 'cesar.risso.f@gmail.com') return true;
+      if (isAdminCesar()) return true;
       // 2. Si tiene flag 'is_pro' en metadata de Supabase
       if (currentUser && currentUser.user_metadata && currentUser.user_metadata.is_pro === true) return true;
       // 3. Si en user_subscriptions está como 'premium'
@@ -287,7 +309,7 @@
       window._currentUserSubscriptionStatus = 'free';
 
       // Administrador siempre Pro
-      if (user && user.email === 'cesar.risso.f@gmail.com') {
+      if (isAdminCesar(user)) {
         window._currentUserSubscriptionStatus = 'premium';
         const pb = document.getElementById('proBadge');
         if (pb) pb.style.display = 'inline-flex';
@@ -332,7 +354,7 @@
     // LOGIN con Supabase Auth
     async function handleLoginSubmit(e) {
       e.preventDefault();
-      const email = document.getElementById('loginEmail').value.trim();
+      const email = document.getElementById('loginEmail').value.trim().toLowerCase();
       const pass  = document.getElementById('loginPassword').value;
       const btn   = document.getElementById('loginSubmitBtn');
       const errEl = document.getElementById('loginErrorMsg');
@@ -361,7 +383,7 @@
     async function handleRegisterSubmit(e) {
       e.preventDefault();
       const name  = document.getElementById('registerName').value.trim();
-      const email = document.getElementById('registerEmail').value.trim();
+      const email = document.getElementById('registerEmail').value.trim().toLowerCase();
       const pass  = document.getElementById('registerPassword').value;
       const btn   = document.getElementById('registerSubmitBtn');
       const errEl = document.getElementById('registerErrorMsg');
@@ -427,7 +449,7 @@
 
     async function handleForgotPasswordSubmit(e) {
       e.preventDefault();
-      const email = document.getElementById('forgotPasswordEmail').value.trim();
+      const email = document.getElementById('forgotPasswordEmail').value.trim().toLowerCase();
       const btn = document.getElementById('forgotPasswordBtn');
       const errEl = document.getElementById('forgotPassErrorMsg');
       const okEl = document.getElementById('forgotPassSuccessMsg');
@@ -577,8 +599,65 @@
       // Rellenar info de usuario y versión
       const emailEl = document.getElementById('settingsUserEmail');
       if (emailEl && currentUser) emailEl.textContent = currentUser.email;
+
+      // Rellenar nombre personalizado en Ajustes
+      const nameInput = document.getElementById('settingsUserNameInput');
+      if (nameInput && currentUser) {
+        nameInput.value = currentUser.name || '';
+      }
+
+      // Estado del toggle del tour
+      const tourTgl = document.getElementById('settingsTourToggle');
+      if (tourTgl) {
+        const userKey = currentUser ? currentUser.id : 'guest';
+        const isDismissed = localStorage.getItem('finanzas_tour_dismissed_' + userKey) === 'true'
+                         || localStorage.getItem('finanzas_tour_dismissed') === 'true';
+        tourTgl.checked = !isDismissed;
+      }
+
       if (typeof syncVersionUI === 'function') syncVersionUI();
       document.getElementById('settingsModal').classList.add('active');
+    }
+
+    async function saveCustomUserName() {
+      const input = document.getElementById('settingsUserNameInput');
+      if (!input) return;
+      const newName = input.value.trim();
+      if (!newName) {
+        showToast('Por favor ingresa un nombre o apodo válido', 'error');
+        return;
+      }
+      if (currentUser) {
+        currentUser.name = newName;
+        const userKey = currentUser.id;
+        localStorage.setItem('aliviafin_custom_display_name_' + userKey, newName);
+        localStorage.setItem('aliviafin_custom_display_name', newName);
+
+        const badge = document.getElementById('userBadgeText');
+        if (badge) badge.textContent = newName;
+
+        try {
+          await supabaseClient.auth.updateUser({
+            data: { full_name: newName }
+          });
+        } catch(e) {
+          console.warn('Nota guardando nombre en Supabase:', e);
+        }
+        showToast('✅ Nombre actualizado a "' + newName + '"', 'success');
+      }
+    }
+
+    function toggleTourPreference(showTour) {
+      const userKey = currentUser ? currentUser.id : 'guest';
+      if (!showTour) {
+        localStorage.setItem('finanzas_tour_dismissed_' + userKey, 'true');
+        localStorage.setItem('finanzas_tour_dismissed', 'true');
+        showToast('Tour desactivado al iniciar sesión', 'info');
+      } else {
+        localStorage.removeItem('finanzas_tour_dismissed_' + userKey);
+        localStorage.removeItem('finanzas_tour_dismissed');
+        showToast('Tour activado al iniciar sesión', 'info');
+      }
     }
 
     function switchSegmentView(type) {
@@ -721,7 +800,7 @@
       lastKnownServerDataHash = newHash;
       const userSelectedMonth = appState.currentMonth;
 
-      const isCesar = currentUser && currentUser.email === 'cesar.risso.f@gmail.com';
+      const isCesar = isAdminCesar();
       appState = isCesar ? applyDataMigrations(remoteData) : remoteData;
 
       if (userSelectedMonth && appState.transactions[userSelectedMonth]) {
@@ -826,17 +905,19 @@
           .single();
 
         if (!error && data && data.data) {
-          const isCesar = currentUser && currentUser.email === 'cesar.risso.f@gmail.com';
+          const isCesar = isAdminCesar();
           if (!isCesar && isLegacyClonedState(data.data)) {
             console.warn('Usuario no-admin con datos clonados por defecto. Reseteando a espacio limpio...');
             appState = getCleanUserState();
             saveLocalState();
             syncStateToServer();
             renderAll();
+            window._serverStateLoaded = true;
             setTimeout(() => openOnboardingWizard(false), 500);
             return;
           }
           applyRemoteState(data.data);
+          window._serverStateLoaded = true;
           lastSuccessfulSyncTime = Date.now();
           updateSyncIndicator('synced', '🟢 En Vivo');
         } else if (error && error.code === 'PGRST116') {
@@ -844,11 +925,14 @@
           console.log('Usuario nuevo: inicializando con espacio 100% limpio...');
           appState = getCleanUserState();
           saveLocalState();
+          window._serverStateLoaded = true;
           lastSuccessfulSyncTime = Date.now();
           updateSyncIndicator('synced', '🟢 En Vivo');
           renderAll();
           syncStateToServer(); // Crea el row limpio del usuario
-          setTimeout(() => openOnboardingWizard(false), 500);
+          if (!isAdminCesar()) {
+            setTimeout(() => openOnboardingWizard(false), 500);
+          }
         } else {
           throw new Error('Supabase fetch failed: ' + (error ? error.message : 'no data'));
         }
@@ -1022,7 +1106,7 @@
     }
 
     function loadLocalState() {
-      const isCesar = currentUser && currentUser.email === 'cesar.risso.f@gmail.com';
+      const isCesar = isAdminCesar();
       const defaultState = getCleanUserState();
 
       const stored = localStorage.getItem(getStorageKey());
@@ -1513,7 +1597,7 @@
       // Si el mes ya tiene transacciones, no tocarlo
       if (appState.transactions[targetMonth].length > 0) return;
 
-      const isCesar = currentUser && currentUser.email === 'cesar.risso.f@gmail.com';
+      const isCesar = isAdminCesar();
       if (isCesar) return; // César ya tiene sus meses históricos y cuotas definidas
 
       // Si es un usuario regular y el mes está vacío, propagar gastos fijos desde el último mes con datos
@@ -1607,7 +1691,7 @@
 
       const banner = document.getElementById('juntaBanner');
       if (banner) {
-        const isCesarForBanner = currentUser && currentUser.email === 'cesar.risso.f@gmail.com';
+        const isCesarForBanner = isAdminCesar();
         const curM = appState.currentMonth;
         if (!isCesarForBanner || ['Septiembre 2026', 'Octubre 2026', 'Noviembre 2026', 'Diciembre 2026'].includes(curM)) {
           banner.style.display = 'none';
@@ -1646,7 +1730,7 @@
 
     function ensureMonthIncomes(m) {
       if (!appState.incomes) appState.incomes = {};
-      const isCesar = currentUser && currentUser.email === 'cesar.risso.f@gmail.com';
+      const isCesar = isAdminCesar();
 
       if (!appState.incomes[m] || appState.incomes[m].length === 0) {
         if (isCesar) {
@@ -3229,7 +3313,7 @@
       const totalIncome = getMonthTotalIncome();
       const totalSpent = txs.reduce((s, t) => s + t.amount, 0);
       const pendingCount = txs.filter(t => (t.status || 'Pagado') === 'Pendiente').length;
-      const isCesarTips = currentUser && currentUser.email === 'cesar.risso.f@gmail.com';
+      const isCesarTips = isAdminCesar();
       
       const catTotals = {};
       txs.forEach(t => catTotals[t.category] = (catTotals[t.category] || 0) + t.amount);
@@ -3449,7 +3533,7 @@
       const val = parseFloat(document.getElementById('newSalaryInput').value);
       if (val > 0) {
         appState.salary = val;
-        const isCesar = currentUser && currentUser.email === 'cesar.risso.f@gmail.com';
+        const isCesar = isAdminCesar();
         if (!isCesar) {
           const curM = appState.currentMonth || getCurrentCalendarMonthName();
           if (!appState.incomes) appState.incomes = {};
@@ -4208,10 +4292,12 @@
       if (markSkipped) {
         const userKey = currentUser ? currentUser.id : 'guest';
         localStorage.setItem('finanzas_setup_completed_' + userKey, 'skipped');
+        localStorage.setItem('finanzas_setup_completed', 'skipped');
         showToast('Asistente cerrado. Puedes reabrirlo en Ajustes ⚙️', 'info');
         
         // Si no ha marcado "No volver a mostrar tour", lanzar el tour interactivo
-        const tourDismissed = localStorage.getItem('finanzas_tour_dismissed_' + userKey) === 'true';
+        const tourDismissed = localStorage.getItem('finanzas_tour_dismissed_' + userKey) === 'true'
+                           || localStorage.getItem('finanzas_tour_dismissed') === 'true';
         if (!tourDismissed) {
           setTimeout(() => startInteractiveTour(), 800);
         }
@@ -4235,7 +4321,7 @@
       if (wnBadge) wnBadge.textContent = 'Versión ' + APP_VERSION;
 
       const wnSub = document.getElementById('whatsNewVersionSub');
-      if (wnSub) wnSub.textContent = 'Actualización ' + APP_VERSION + ' · Rebranding AliviaFin & Plan Bola de Nieve';
+      if (wnSub) wnSub.textContent = 'Actualización ' + APP_VERSION + ' · Acceso con Google & Recuperación de Clave';
     }
 
     function openWhatsNewModal() {
@@ -4264,19 +4350,24 @@
     function checkOnboardingAndVersionAnnouncements() {
       syncVersionUI();
       const userKey = currentUser ? currentUser.id : 'guest';
-      const isCesar = currentUser && currentUser.email === 'cesar.risso.f@gmail.com';
-      const setupDone = localStorage.getItem('finanzas_setup_completed_' + userKey);
-      const tourDismissed = localStorage.getItem('finanzas_tour_dismissed_' + userKey) === 'true';
+      const isCesar = isAdminCesar();
+      const setupDone = localStorage.getItem('finanzas_setup_completed_' + userKey) || localStorage.getItem('finanzas_setup_completed');
+      const tourDismissed = localStorage.getItem('finanzas_tour_dismissed_' + userKey) === 'true' || localStorage.getItem('finanzas_tour_dismissed') === 'true';
       const seenVer = localStorage.getItem('finanzas_last_seen_version_' + userKey) || localStorage.getItem('finanzas_last_seen_version');
 
-      if (!isCesar) {
+      // Si es el administrador César, nunca mostrar el wizard de configuración inicial
+      if (isCesar) {
+        localStorage.setItem('finanzas_setup_completed_' + userKey, 'true');
+        localStorage.setItem('finanzas_setup_completed', 'true');
+      } else {
         const hasData = (appState.salary && appState.salary > 0) || (appState.transactions && Object.keys(appState.transactions).some(m => appState.transactions[m].length > 0));
         
-        if (!setupDone && !hasData) {
+        if (!setupDone && !hasData && window._serverStateLoaded === true) {
           setTimeout(() => openOnboardingWizard(false), 500);
           return;
-        } else if (!setupDone && hasData) {
+        } else if (hasData) {
           localStorage.setItem('finanzas_setup_completed_' + userKey, 'true');
+          localStorage.setItem('finanzas_setup_completed', 'true');
         }
       }
 
@@ -4378,8 +4469,10 @@
       const userKey = currentUser ? currentUser.id : 'guest';
       if (isChecked) {
         localStorage.setItem('finanzas_tour_dismissed_' + userKey, 'true');
+        localStorage.setItem('finanzas_tour_dismissed', 'true');
       } else {
         localStorage.removeItem('finanzas_tour_dismissed_' + userKey);
+        localStorage.removeItem('finanzas_tour_dismissed');
       }
     };
 
@@ -4395,7 +4488,8 @@
       }
 
       const userKey = currentUser ? currentUser.id : 'guest';
-      const isDismissed = localStorage.getItem('finanzas_tour_dismissed_' + userKey) === 'true';
+      const isDismissed = localStorage.getItem('finanzas_tour_dismissed_' + userKey) === 'true'
+                       || localStorage.getItem('finanzas_tour_dismissed') === 'true';
 
       const driverObj = window.driver.js.driver({
         showProgress: true,
@@ -4407,10 +4501,8 @@
         progressText: '{{current}} de {{total}}',
         showButtons: ['next', 'previous', 'close'],
         onCloseClick: () => {
-          const chk = document.getElementById('tourDontShowAgain');
-          if (chk && chk.checked) {
-            localStorage.setItem('finanzas_tour_dismissed_' + userKey, 'true');
-          }
+          localStorage.setItem('finanzas_tour_dismissed_' + userKey, 'true');
+          localStorage.setItem('finanzas_tour_dismissed', 'true');
           if (typeof switchTab === 'function') {
             switchTab('inicio');
           }
@@ -4422,10 +4514,8 @@
           }
         },
         onDestroyStarted: () => {
-          const chk = document.getElementById('tourDontShowAgain');
-          if (chk && chk.checked) {
-            localStorage.setItem('finanzas_tour_dismissed_' + userKey, 'true');
-          }
+          localStorage.setItem('finanzas_tour_dismissed_' + userKey, 'true');
+          localStorage.setItem('finanzas_tour_dismissed', 'true');
           if (typeof switchTab === 'function') {
             switchTab('inicio');
           }
@@ -4610,9 +4700,11 @@
               side: 'top',
               align: 'center',
               onNextClick: () => {
+                const userKey = currentUser ? currentUser.id : 'guest';
                 const chk = document.getElementById('tourDontShowAgain');
                 if (chk && chk.checked) {
                   localStorage.setItem('finanzas_tour_dismissed_' + userKey, 'true');
+                  localStorage.setItem('finanzas_tour_dismissed', 'true');
                 }
                 if (typeof switchTab === 'function') {
                   switchTab('inicio');
@@ -4632,10 +4724,8 @@
 // Función para cerrar el tour de forma garantizada desde cualquier evento
 window.closeTour = function() {
   const userKey = currentUser ? currentUser.id : 'guest';
-  const chk = document.getElementById('tourDontShowAgain');
-  if (chk && chk.checked) {
-    localStorage.setItem('finanzas_tour_dismissed_' + userKey, 'true');
-  }
+  localStorage.setItem('finanzas_tour_dismissed_' + userKey, 'true');
+  localStorage.setItem('finanzas_tour_dismissed', 'true');
   if (typeof switchTab === 'function') {
     switchTab('inicio');
   }
@@ -4963,6 +5053,8 @@ window.dismissOnboardingWizard = dismissOnboardingWizard;
 window.openWhatsNewModal = openWhatsNewModal;
 window.dismissWhatsNewModal = dismissWhatsNewModal;
 window.syncVersionUI = syncVersionUI;
+window.saveCustomUserName = saveCustomUserName;
+window.toggleTourPreference = toggleTourPreference;
 
 
 // ================================================================
