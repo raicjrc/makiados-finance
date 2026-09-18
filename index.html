@@ -15,7 +15,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <link rel="stylesheet" href="css/styles.css?v=63.0">
+  <link rel="stylesheet" href="css/styles.css?v=64.0">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
 </head>
 <body>
@@ -172,6 +172,58 @@
   <!-- APP CONTENT CONTAINER (HIDDEN UNTIL LOGIN) -->
   <div id="appMainWrapper" style="display: none;">
 
+    <!-- Desktop Executive Sidebar (Visible en monitores y laptops >= 1024px) -->
+    <aside class="desktop-sidebar" id="desktopSidebar">
+      <div class="desktop-sidebar-brand">
+        <img src="logo.jpg" alt="AliviaFin Logo" style="width: 38px; height: 38px; border-radius: 10px; box-shadow: 0 4px 10px rgba(139, 92, 246, 0.3);">
+        <div>
+          <div style="font-size: 15px; font-weight: 900; color: var(--text-main); display: flex; align-items: center; gap: 6px;">
+            AliviaFin <span class="badge-pro-gold" id="sidebarProBadge" style="display: none; font-size: 8.5px; padding: 1px 4px;">PRO</span>
+          </div>
+          <div style="font-size: 10px; color: var(--text-muted); font-weight: 600;">Paz Mental Financiera</div>
+        </div>
+      </div>
+
+      <nav class="desktop-sidebar-nav">
+        <button class="desktop-nav-item active" id="deskNavTabInicio" onclick="switchTab('inicio')">
+          <span class="desk-nav-icon">🏠</span>
+          <span>Inicio</span>
+        </button>
+        <button class="desktop-nav-item" id="deskNavTabMovimientos" onclick="switchTab('movimientos')">
+          <span class="desk-nav-icon">💳</span>
+          <span>Movimientos</span>
+        </button>
+        <button class="desktop-nav-item" id="deskNavTabPlan" onclick="switchTab('plan')">
+          <span class="desk-nav-icon">📊</span>
+          <span>Plan 50/30/20</span>
+        </button>
+        <button class="desktop-nav-item" id="deskNavTabMetas" onclick="switchTab('metas')">
+          <span class="desk-nav-icon">🎯</span>
+          <span>Metas de Ahorro</span>
+        </button>
+        <button class="desktop-nav-item" id="deskNavTabConsejos" onclick="switchTab('consejos')">
+          <span class="desk-nav-icon">💡</span>
+          <span>Asesor & Bola de Nieve</span>
+        </button>
+      </nav>
+
+      <div class="desktop-sidebar-footer">
+        <button class="desktop-nav-item" onclick="openSettingsModal()" style="margin-bottom: 6px;">
+          <span class="desk-nav-icon">⚙️</span>
+          <span>Ajustes</span>
+        </button>
+        <div class="desktop-sidebar-user-card" onclick="handleLogout()" title="Cerrar sesión">
+          <span style="font-size: 15px;">👤</span>
+          <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1;">
+            <div id="deskSidebarUser" style="font-size: 11px; font-weight: 800; color: var(--text-main);">Usuario</div>
+            <div style="font-size: 9.5px; color: var(--text-muted);">Cerrar sesión</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <div class="desktop-main-pane">
+
     <!-- Sleek Executive Crystal Header -->
     <div class="top-navbar">
       <div class="top-navbar-inner">
@@ -201,41 +253,107 @@
 
     <div class="container">
 
-      <!-- TAB 1: INICIO (RESUMEN DEL MES) -->
+      <!-- TAB 1: INICIO (ZEN EXECUTIVE RESUMEN) -->
       <div id="tab-inicio" class="tab-content active">
         
+        <!-- Hero Card: Paz Mental - Dinero Libre Hoy (Safe to Spend) -->
+        <div id="heroSafeToSpendCard" class="hero-zen-card">
+          <div class="hero-zen-top">
+            <div class="hero-zen-badge">
+              <span class="hero-zen-pulse"></span>
+              <span>PAZ MENTAL · DISPONIBLE HOY</span>
+            </div>
+            <span id="heroSafeStatusPill" class="hero-zen-pill-status">🟢 Holgado</span>
+          </div>
 
+          <div class="hero-zen-main">
+            <div class="hero-zen-number" id="heroSafeDailyAmount">
+              S/ 0.00 <span class="hero-zen-unit">/ día</span>
+            </div>
+            <div class="hero-zen-subtext" id="heroSafeMonthSubtitle">
+              S/ 0.00 libre proyectado este mes
+            </div>
+          </div>
 
-        <!-- 3 Stat Cards Grid (Limpiado) -->
-        <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));">
+          <div class="hero-zen-progress-wrap">
+            <div class="hero-zen-progress-bar">
+              <div id="heroSafeProgressBar" class="hero-zen-progress-fill" style="width: 0%;"></div>
+            </div>
+            <div class="hero-zen-progress-labels">
+              <span id="heroSafeDaysLeftLabel">Calculando días restantes...</span>
+              <span id="heroSafeSpendRateLabel">0% comprometido</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3 Stat Cards Grid (Compact & Minimalist) -->
+        <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); margin-bottom: 14px;">
           <div class="stat-card">
-            <div class="stat-label">💵 INGRESO MENSUAL</div>
-            <div class="stat-value" id="metricSalary" style="font-size: 18px;">S/ 0</div>
+            <div class="stat-label">💵 INGRESO</div>
+            <div class="stat-value" id="metricSalary" style="font-size: 17px;">S/ 0</div>
           </div>
 
           <div class="stat-card">
             <div class="stat-label">🛍️ GASTO REAL</div>
-            <div class="stat-value text-danger" id="metricSpent" style="font-size: 18px;">S/ 0</div>
+            <div class="stat-value text-danger" id="metricSpent" style="font-size: 17px;">S/ 0</div>
           </div>
 
-          <div class="stat-card">
+          <div class="stat-card" onclick="openExplainSurplusModal()" style="cursor: pointer;" title="Ver desglose del saldo bancario">
             <div class="stat-label" style="display: flex; align-items: center; justify-content: space-between;">
-              <span>🏦 SALDO EN BANCO</span>
-              <button class="stat-card-action-btn stat-btn-info" onclick="openExplainSurplusModal()" title="Ver explicación del saldo" style="padding: 2px 4px; font-size: 9px;"><span>ℹ️</span></button>
+              <span>🏦 SALDO BANCO</span>
+              <span style="font-size: 10px; opacity: 0.7;">ℹ️</span>
             </div>
-            <div class="stat-value" id="metricSavings" style="font-size: 18px;">S/ 0</div>
+            <div class="stat-value" id="metricSavings" style="font-size: 17px;">S/ 0</div>
           </div>
         </div>
 
-        <!-- Big Action Buttons -->
-        <div style="display: flex; gap: 12px; margin-bottom: 12px;">
-          <button id="btnRegistrarGasto" onclick="openAddExpenseModal()" style="flex: 1; padding: 18px; border-radius: 20px; background: linear-gradient(135deg, #fb7185, #e11d48); border: none; color: white; font-weight: 800; font-size: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 8px 20px rgba(225, 29, 72, 0.3); cursor: pointer; transition: transform 0.2s;">
-            <span style="font-size: 28px; margin-bottom: 4px;">📉</span>
-            Registrar Gasto
+        <!-- Action Buttons (Express Quick Log & Extra Income) -->
+        <div class="zen-actions-grid" style="display: flex; gap: 10px; margin-bottom: 15px;">
+          <button id="btnRegistrarGasto" onclick="openQuickExpenseModal()" style="flex: 1.2; padding: 14px 16px; border-radius: 16px; background: linear-gradient(135deg, #10b981, #059669); border: none; color: white; font-weight: 800; font-size: 14.5px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 16px rgba(16, 185, 129, 0.35); cursor: pointer; transition: transform 0.15s ease;">
+            <span style="font-size: 20px;">⚡</span>
+            <span>+ Registrar Gasto</span>
           </button>
-          <button id="btnRegistrarIngreso" onclick="openAddExtraIncomeModal()" style="flex: 1; padding: 18px; border-radius: 20px; background: linear-gradient(135deg, #34d399, #059669); border: none; color: white; font-weight: 800; font-size: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 8px 20px rgba(5, 150, 105, 0.3); cursor: pointer; transition: transform 0.2s;">
-            <span style="font-size: 28px; margin-bottom: 4px;">📈</span>
-            Registrar Ingreso
+          <button id="btnRegistrarIngreso" onclick="openAddExtraIncomeModal()" style="flex: 1; padding: 14px 14px; border-radius: 16px; background: var(--card-bg); border: 1.5px solid var(--border); color: var(--text-main); font-weight: 800; font-size: 13.5px; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: var(--shadow-sm); cursor: pointer; transition: transform 0.15s ease;">
+            <span style="font-size: 18px;">📈</span>
+            <span>+ Ingreso</span>
+          </button>
+        </div>
+
+        <!-- Quick Semáforo 50/30/20 Summary Pill -->
+        <div id="quickSemaforoBanner" class="card" style="padding: 10px 14px; margin-bottom: 14px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;" onclick="switchTab('plan');">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 18px;">⚖️</span>
+            <div>
+              <div style="font-size: 12px; font-weight: 800; color: var(--text-main);">Semáforo Financiero 50/30/20</div>
+              <div id="quickSemaforoStatus" style="font-size: 10px; color: var(--text-muted); font-weight: 600;">Calculando distribución...</div>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div id="quickSemaforoPills" style="display: flex; gap: 4px; font-size: 11px; font-weight: 800;"></div>
+            <span style="font-size: 11px; font-weight: 800; color: var(--primary);">Ver plan ↗</span>
+          </div>
+        </div>
+
+        <!-- FEED: ÚLTIMOS MOVIMIENTOS (Solo los últimos 3-4 para mantener la mente despejada) -->
+        <div class="card" style="margin-bottom: 14px;">
+          <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <div class="card-title" style="font-size: 13px; font-weight: 800; display: flex; align-items: center; gap: 6px;">
+              <span>🕒</span>
+              <span>Movimientos Recientes</span>
+            </div>
+            <button type="button" onclick="switchTab('movimientos')" style="background: none; border: none; font-size: 11.5px; font-weight: 800; color: var(--primary); cursor: pointer; padding: 2px 4px;">
+              Ver todos ↗
+            </button>
+          </div>
+
+          <div id="recentTxContainer" class="recent-tx-feed">
+            <!-- Renders via renderRecentTransactions() -->
+          </div>
+
+          <button type="button" class="btn-see-all-tx" onclick="switchTab('movimientos')">
+            <span>Ver todos los movimientos del mes</span>
+            <span id="recentTxCountBadge" class="badge-count">0</span>
+            <span>➔</span>
           </button>
         </div>
 
@@ -263,44 +381,34 @@
           </button>
         </div>
 
-        <!-- Special Windfall Banner (solo admin) -->
-        <div id="juntaBanner" class="compact-banner" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); color: white; display: none; margin-bottom: 15px;">
+        <!-- Special Windfall Banner (solo admin si aplica) -->
+        <div id="juntaBanner" class="compact-banner" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); color: white; display: none; margin-top: 10px;">
           <div>
             <strong>🎉 Junta 15 de Agosto (+S/ 4,500):</strong> S/ 1k Ropa/Viáticos + S/ 3.5k Pago de Deudas.
           </div>
           <button class="banner-close-btn" style="color: white;" onclick="closeBanner('juntaBanner')">✕</button>
         </div>
 
-        <!-- Quick Semáforo 50/30/20 Summary Pill -->
-        <div id="quickSemaforoBanner" class="card" style="padding: 10px 16px; margin-bottom: 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;" onclick="switchTab('plan');">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <span style="font-size: 18px;">⚖️</span>
-            <div>
-              <div style="font-size: 12px; font-weight: 800; color: var(--text-main);">Semáforo Financiero 50/30/20</div>
-              <div id="quickSemaforoStatus" style="font-size: 10px; color: var(--text-muted); font-weight: 600;">Calculando distribución...</div>
-            </div>
+      </div>
+
+      <!-- TAB 2: MOVIMIENTOS COMPLETOS (TRANSACCIONES & AUDITORÍA) -->
+      <div id="tab-movimientos" class="tab-content">
+        
+        <div class="flex-between mb-2" style="margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+          <div>
+            <h2 style="font-size: 16px; font-weight: 800; margin: 0;">Movimientos del Mes</h2>
+            <div style="font-size: 11px; color: var(--text-muted); font-weight: 600;">Control detallado, filtros y vista calendario</div>
           </div>
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <div id="quickSemaforoPills" style="display: flex; gap: 4px; font-size: 11px; font-weight: 800;"></div>
-            <span style="font-size: 11px; font-weight: 800; color: var(--primary);">Ver detalle ↗</span>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-primary btn-sm" onclick="openAddExpenseModal()" style="font-size: 12px; font-weight: 800; padding: 6px 12px;">+ Gasto Detallado</button>
+            <button class="btn btn-secondary btn-sm" onclick="openAddExtraIncomeModal()" style="font-size: 12px; font-weight: 700; padding: 6px 12px;">+ Ingreso</button>
           </div>
         </div>
 
-        <div class="desktop-split">
-          <div class="desktop-side">
-        <!-- Incomes Tracker Widget -->
-        <div class="card" style="background: #ecfdf5f5; border-color: #6ee7b7; margin-bottom: 15px;">
-          <div class="card-title" style="color: #065f46; font-size: 13px;">💰 Ingresos del Mes</div>
-          <div id="incomesContainer" style="margin-top: 8px; display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 6px;"></div>
-        </div>
-
-        <!-- Auto Diagnosis Card — MOVIDO A TAB CONSEJOS -->
-          </div> <!-- End desktop-side -->
-          <div class="desktop-main">
         <!-- Dynamic Transaction Web Table Card -->
         <div class="card">
           <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-            <div class="card-title">📋 Transacciones Dinámicas</div>
+            <div class="card-title">📋 Registro de Gastos</div>
             <div class="view-mode-toggle">
               <button id="btnViewList" class="view-btn active" onclick="setTxViewMode('list')">📋 Lista</button>
               <button id="btnViewCalendar" class="view-btn" onclick="setTxViewMode('calendar')">📅 Calendario</button>
@@ -384,8 +492,15 @@
           <!-- CALENDAR VIEW WRAPPER -->
           <div id="txCalendarViewContainer" style="display: none;"></div>
         </div>
-          </div> <!-- End desktop-main -->
-        </div> <!-- End desktop-split -->
+
+        <!-- Incomes Tracker Widget -->
+        <div class="card" style="background: #ecfdf5f5; border-color: #6ee7b7; margin-top: 15px;">
+          <div class="card-header flex-between">
+            <div class="card-title" style="color: #065f46; font-size: 13px;">💰 Ingresos Registrados en el Mes</div>
+            <button class="btn btn-outline btn-sm" onclick="openAddExtraIncomeModal()" style="font-size: 11px; padding: 2px 8px; border-color: #34d399; color: #065f46; font-weight: 700;">+ Agregar</button>
+          </div>
+          <div id="incomesContainer" style="margin-top: 8px; display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 6px;"></div>
+        </div>
 
       </div>
       <!-- TAB 2: PLAN DE ACCIÓN -->
@@ -543,44 +658,58 @@
             Enviar Mensaje ✍️
           </button>
         </div>
-      </div>
-
-      <!-- TAB 5: AUDITORÍA Y TRAZABILIDAD -->
-      <div id="tab-auditoria" class="tab-content">
-        <div class="card">
-          <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-            <div class="card-title">📜 Histórico de Cambios & Auditoría</div>
-            <div style="display: flex; gap: 8px; align-items: center;">
-              <button class="btn btn-primary btn-sm" onclick="handleExportExcelCSVClick()" style="font-size: 11px; padding: 4px 10px; display: flex; align-items: center; gap: 5px; background: linear-gradient(135deg, #059669, #10b981); border: none;">
-                <span>📊 Exportar Excel</span>
-                <span class="badge-pro-gold" style="font-size: 9px; padding: 1px 4px;">PRO</span>
+        <!-- Card: Histórico de Cambios & Auditoría (Integrado y Colapsable) -->
+        <div class="card" id="auditCardSection" style="margin-top: 14px;">
+          <div class="card-header" style="cursor: pointer;" onclick="toggleCollapseCard('auditTableContainerCollapse', 'collapseBtnAudit')">
+            <div class="card-title" style="display: flex; align-items: center; gap: 6px; font-size: 13px;">
+              <span>📜</span>
+              <span>Historial de Cambios & Auditoría</span>
+            </div>
+            <div style="display: flex; gap: 6px; align-items: center; margin-left: auto;">
+              <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); handleExportExcelCSVClick();" style="font-size: 11px; padding: 3px 8px; display: flex; align-items: center; gap: 4px; background: linear-gradient(135deg, #059669, #10b981); border: none;">
+                <span>📊 Excel</span>
+                <span class="badge-pro-gold" style="font-size: 9px; padding: 1px 3px;">PRO</span>
               </button>
-              <button class="btn btn-secondary btn-sm" onclick="clearAuditLog()">🗑️ Limpiar</button>
+              <button type="button" id="collapseBtnAudit" style="background:none; border:none; font-size:14px; cursor:pointer; color:var(--text-muted); transition: transform 0.2s;">▼</button>
             </div>
           </div>
-          <div class="table-responsive">
-            <table class="tx-table">
-              <thead>
-                <tr>
-                  <th>Fecha / Hora</th>
-                  <th>Mes</th>
-                  <th>Acción</th>
-                  <th>Detalles</th>
-                </tr>
-              </thead>
-              <tbody id="auditTableBody"></tbody>
-            </table>
+          <div id="auditTableContainerCollapse" style="display: none; margin-top: 8px;">
+            <div style="display: flex; justify-content: flex-end; margin-bottom: 6px;">
+              <button class="btn btn-secondary btn-sm" onclick="clearAuditLog()" style="font-size: 10px; padding: 2px 6px;">🗑️ Limpiar Historial</button>
+            </div>
+            <div class="table-responsive">
+              <table class="tx-table">
+                <thead>
+                  <tr>
+                    <th>Fecha / Hora</th>
+                    <th>Mes</th>
+                    <th>Acción</th>
+                    <th>Detalles</th>
+                  </tr>
+                </thead>
+                <tbody id="auditTableBody"></tbody>
+              </table>
+            </div>
           </div>
         </div>
+
       </div>
 
-    </div>
+      <!-- Tab contenedor de compatibilidad para auditoria (oculto) -->
+      <div id="tab-auditoria" class="tab-content" style="display: none;"></div>
 
-    <!-- Bottom Navigation Bar -->
+    </div> <!-- End container -->
+    </div> <!-- End desktop-main-pane -->
+
+    <!-- Bottom Navigation Bar (Móvil / PWA) -->
     <div class="bottom-nav">
       <button id="navTabInicio" class="nav-item active" onclick="switchTab('inicio')">
         <span class="nav-icon">🏠</span>
         <span>Inicio</span>
+      </button>
+      <button id="navTabMovimientos" class="nav-item" onclick="switchTab('movimientos')">
+        <span class="nav-icon">💳</span>
+        <span>Movimientos</span>
       </button>
       <button id="navTabPlan" class="nav-item" onclick="switchTab('plan')">
         <span class="nav-icon">📊</span>
@@ -592,11 +721,7 @@
       </button>
       <button id="navTabConsejos" class="nav-item" onclick="switchTab('consejos')">
         <span class="nav-icon">💡</span>
-        <span>Consejos</span>
-      </button>
-      <button id="navTabHistorial" class="nav-item" onclick="switchTab('auditoria')">
-        <span class="nav-icon">📜</span>
-        <span>Historial</span>
+        <span>Asesor</span>
       </button>
     </div>
 
@@ -1027,6 +1152,90 @@
       <div class="flex-between mt-4">
         <button type="button" class="btn btn-outline" onclick="closeModal('addCategoryModal')">Cancelar</button>
         <button type="button" class="btn btn-primary" onclick="saveCategory()">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: REGISTRO RÁPIDO EXPRESS (2 TOQUES) -->
+  <div class="glass-backdrop" id="quickExpenseModal" style="display: none; z-index: 100002;" onclick="if(event.target === this) closeQuickExpenseModal()">
+    <div class="quick-expense-sheet">
+      <div class="quick-sheet-header">
+        <div class="quick-sheet-title">
+          <span style="font-size: 18px;">⚡</span>
+          <span>Registro Rápido</span>
+          <span class="quick-sheet-tag">1 toque</span>
+        </div>
+        <button type="button" class="quick-sheet-close" onclick="closeQuickExpenseModal()" title="Cerrar">✕</button>
+      </div>
+
+      <!-- Display del Monto Gigante -->
+      <div class="quick-display-card">
+        <div class="quick-currency">S/</div>
+        <div id="quickDisplayAmount" class="quick-amount-digits">0.00</div>
+        <button type="button" id="quickBackspaceBtn" onclick="handleQuickKeypad('backspace')" class="quick-backspace-inline" title="Borrar">⌫</button>
+      </div>
+
+      <!-- Selector Rápido de Origen / Método -->
+      <div class="quick-method-pills">
+        <button type="button" class="quick-method-pill active" id="quickMethodYape" onclick="selectQuickMethod('Yape')">💜 Yape / Plin</button>
+        <button type="button" class="quick-method-pill" id="quickMethodEfectivo" onclick="selectQuickMethod('Efectivo')">💵 Efectivo</button>
+        <button type="button" class="quick-method-pill" id="quickMethodTarjeta" onclick="selectQuickMethod('Tarjeta')">💳 Tarjeta</button>
+      </div>
+
+      <!-- Grilla 3x2 de Categorías Rápidas -->
+      <div class="quick-categories-grid">
+        <button type="button" class="quick-cat-btn active" data-cat="Comida fuera" onclick="selectQuickCategory('Comida fuera', this)">
+          <span class="quick-cat-icon">🍽️</span>
+          <span class="quick-cat-name">Almuerzo / Comida</span>
+        </button>
+        <button type="button" class="quick-cat-btn" data-cat="Carro" onclick="selectQuickCategory('Carro', this)">
+          <span class="quick-cat-icon">🚕</span>
+          <span class="quick-cat-name">Taxi / Transporte</span>
+        </button>
+        <button type="button" class="quick-cat-btn" data-cat="Comida casa" onclick="selectQuickCategory('Comida casa', this)">
+          <span class="quick-cat-icon">🛒</span>
+          <span class="quick-cat-name">Supermercado</span>
+        </button>
+        <button type="button" class="quick-cat-btn" data-cat="Otros" onclick="selectQuickCategory('Otros', this)">
+          <span class="quick-cat-icon">☕</span>
+          <span class="quick-cat-name">Café / Antojo</span>
+        </button>
+        <button type="button" class="quick-cat-btn" data-cat="Gimnasio & Salud" onclick="selectQuickCategory('Gimnasio & Salud', this)">
+          <span class="quick-cat-icon">💊</span>
+          <span class="quick-cat-name">Farmacia / Salud</span>
+        </button>
+        <button type="button" class="quick-cat-btn" data-cat="Casa" onclick="selectQuickCategory('Casa', this)">
+          <span class="quick-cat-icon">🏠</span>
+          <span class="quick-cat-name">Hogar / Servicios</span>
+        </button>
+      </div>
+
+      <!-- Teclado Numérico Táctil Ergonómico -->
+      <div class="quick-keypad-grid">
+        <button type="button" class="quick-key" onclick="handleQuickKeypad('1')">1</button>
+        <button type="button" class="quick-key" onclick="handleQuickKeypad('2')">2</button>
+        <button type="button" class="quick-key" onclick="handleQuickKeypad('3')">3</button>
+        <button type="button" class="quick-key" onclick="handleQuickKeypad('4')">4</button>
+        <button type="button" class="quick-key" onclick="handleQuickKeypad('5')">5</button>
+        <button type="button" class="quick-key" onclick="handleQuickKeypad('6')">6</button>
+        <button type="button" class="quick-key" onclick="handleQuickKeypad('7')">7</button>
+        <button type="button" class="quick-key" onclick="handleQuickKeypad('8')">8</button>
+        <button type="button" class="quick-key" onclick="handleQuickKeypad('9')">9</button>
+        <button type="button" class="quick-key" onclick="handleQuickKeypad('.')">.</button>
+        <button type="button" class="quick-key" onclick="handleQuickKeypad('0')">0</button>
+        <button type="button" class="quick-key quick-key-del" onclick="handleQuickKeypad('backspace')">⌫</button>
+      </div>
+
+      <!-- Botón de Acción Principal -->
+      <button type="button" id="quickSaveExpenseBtn" onclick="saveQuickExpense()" class="quick-save-btn">
+        <span>💾 Guardar Gasto en 1 Segundo</span>
+      </button>
+
+      <!-- Enlace al Modo Detallado -->
+      <div class="quick-sheet-footer">
+        <button type="button" onclick="switchToDetailedExpenseModal()" class="quick-link-detailed">
+          ⚙️ ¿Es a cuotas o recurrente? Abrir formulario detallado
+        </button>
       </div>
     </div>
   </div>
@@ -1653,6 +1862,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
-  <script src="js/app.js?v=63.0"></script>
+  <script src="js/app.js?v=64.0"></script>
 </body>
 </html>

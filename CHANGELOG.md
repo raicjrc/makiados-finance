@@ -3,6 +3,23 @@
 Todas las versiones notables de esta aplicación están documentadas aquí.
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
+## [v64.0] — 2026-09-18 — Rediseño Zen Ejecutivo (Fase 1: Descongestión, Dinero Libre Hoy & Registro Express)
+
+### 🧘 Rediseño de Arquitectura y Paz Mental
+- **Tarjeta Hero «Paz Mental · Dinero Libre Hoy» (Safe to Spend)**: Nueva tarjeta insignia en el Inicio que calcula matemáticamente cuánto dinero real puede gastar el usuario por día (`S/ XX.XX / día`) y en el mes sin tocar gastos fijos, cuotas ni ahorro. Cuenta con indicador de holgura semafórico (Verde, Amarillo, Rojo) y barra de progreso.
+- **Descongestión Radical del Inicio**: Se eliminó la saturación visual retirando la tabla masiva de transacciones del Inicio y reemplazándola por un feed minimalista de los últimos 3 a 4 movimientos con acceso directo `Ver todos los movimientos (N) ➔`.
+- **Nueva Pestaña Dedicada «💳 Movimientos»**: Aloja el registro completo de transacciones con vista Lista/Calendario, buscador en vivo, chips de estado, filtros avanzados por categoría y montos, y resumen de ingresos.
+- **Navegación Ergonómica de 5 Pestañas**: En móviles y PWA la barra inferior ahora se compone de: **🏠 Inicio**, **💳 Movimientos**, **📊 Plan**, **🎯 Metas** y **💡 Asesor** (con auditoría y exportación a Excel integradas).
+
+### ⚡ Registro Rápido Express (2 Toques)
+- **Modal Bottom-Sheet de Registro Inmediato**: Teclado numérico táctil ergonómico de alta precisión, selección de método de pago (`Yape/Plin`, `Efectivo`, `Tarjeta`) y 6 categorías de un toque para registrar gastos cotidianos en menos de 3 segundos desde la calle con una sola mano.
+
+### 💻 Adaptabilidad Ejecutiva Celular vs. Escritorio (Mac/PC)
+- **Sidebar Ejecutivo Desktop (>= 1024px)**: En computadoras se despliega automáticamente una barra lateral fija a la izquierda con marca, usuario, accesos de navegación y ajustes, ocultando la barra inferior y distribuyendo los módulos en columnas balanceadas sin scroll vertical infinito.
+- **PWA & Mobile Ready**: Respeto total de áreas seguras (`safe-area-inset`) para iPhone (Dynamic Island / Notch) y Android.
+
+---
+
 ## [v63.2] — 2026-09-18 — Persistencia de Perfil, Control Total del Tour y Novedades v63
 
 ### 🛡️ Corrección de Identidad y Experiencia

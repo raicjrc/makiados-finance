@@ -207,9 +207,9 @@
         });
       }
 
-      // Soporte para depuración / vista previa local (?debug_tour=1 o ?demo=1)
-      if (window.location.search.includes('debug_tour=1') || window.location.search.includes('demo=1')) {
-        await onLoginSuccess({ id: 'test_user_tour', email: 'test@aliviafin.app', user_metadata: { full_name: 'Usuario Demo' } });
+      // Soporte para depuración / vista previa local (?debug_tour=1 o ?demo=1 o ?preview=1)
+      if (window.location.search.includes('debug_tour=1') || window.location.search.includes('demo=1') || window.location.search.includes('preview=1')) {
+        await onLoginSuccess({ id: 'test_user_tour', email: 'cesar.risso.f@gmail.com', user_metadata: { full_name: 'makiados' } });
         if (window.location.search.includes('debug_tour=1')) {
           setTimeout(() => startInteractiveTour(), 500);
         }
@@ -256,9 +256,15 @@
 
       const badge = document.getElementById('userBadgeText');
       if (badge) badge.textContent = displayName;
+      const deskUser = document.getElementById('deskSidebarUser');
+      if (deskUser) deskUser.textContent = displayName;
 
       document.getElementById('loginModalScreen').style.display = 'none';
-      document.getElementById('appMainWrapper').style.display = 'block';
+      const mainWrap = document.getElementById('appMainWrapper');
+      if (mainWrap) {
+        mainWrap.style.display = '';
+        mainWrap.classList.add('authenticated');
+      }
 
       // Inicializar app con datos del usuario
       loadLocalState();
@@ -271,6 +277,11 @@
       // Verificar suscripción de Paywall
       await verifySubscription(user);
     }
+
+    // Helper para pruebas y preview local
+    window.testBypassLogin = async function(email = 'cesar.risso.f@gmail.com') {
+      await onLoginSuccess({ id: 'local_test_user', email: email });
+    };
 
     // ================================================================
     // SISTEMA DE MONETIZACIÓN FREEMIUM (FREE VS PRO)
@@ -635,6 +646,8 @@
 
         const badge = document.getElementById('userBadgeText');
         if (badge) badge.textContent = newName;
+        const deskUser = document.getElementById('deskSidebarUser');
+        if (deskUser) deskUser.textContent = newName;
 
         try {
           await supabaseClient.auth.updateUser({
@@ -1353,18 +1366,357 @@
       renderAll();
     }
 
-    function switchTab(tabId) {
-      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+    /* ================================================================
+       ZEN EXECUTIVE LOGIC: SAFE TO SPEND & RECENT FEED (FASE 1)
+       ================================================================ */
 
-      document.getElementById('tab-' + tabId).classList.add('active');
+    function calculateSafeToSpend() {
+      const curMonth = appState.currentMonth || 'Septiembre 2026';
+      const totalIncome = getMonthTotalIncome();
+      const txs = getMonthTxList();
+      const totalSpent = txs.reduce((sum, item) => sum + item.amount, 0);
+
+      // Mapeo de meses en español
+      const monthMap = {
+        'Enero': 0, 'Febrero': 1, 'Marzo': 2, 'Abril': 3, 'Mayo': 4, 'Junio': 5,
+        'Julio': 6, 'Agosto': 7, 'Septiembre': 8, 'Octubre': 9, 'Noviembre': 10, 'Diciembre': 11
+      };
+      const parts = curMonth.split(' ');
+      const mName = parts[0];
+      const mYear = parseInt(parts[1], 10) || new Date().getFullYear();
+      const mIndex = monthMap[mName] !== undefined ? monthMap[mName] : new Date().getMonth();
+
+      const totalDaysInMonth = new Date(mYear, mIndex + 1, 0).getDate();
       
-      const tabIndices = { 'inicio': 0, 'plan': 1, 'metas': 2, 'consejos': 3, 'auditoria': 4 };
-      if (tabIndices[tabId] !== undefined) {
-        document.querySelectorAll('.nav-item')[tabIndices[tabId]].classList.add('active');
+      const now = new Date();
+      const isCurrentRealMonth = (now.getFullYear() === mYear && now.getMonth() === mIndex);
+      const isPastMonth = (mYear < now.getFullYear() || (mYear === now.getFullYear() && mIndex < now.getMonth()));
+
+      let remainingDays = 1;
+      if (isPastMonth) {
+        remainingDays = 1;
+      } else if (isCurrentRealMonth) {
+        remainingDays = Math.max(1, totalDaysInMonth - now.getDate() + 1);
+      } else {
+        remainingDays = totalDaysInMonth; // Mes futuro
       }
 
-      if (tabId === 'plan') {
+      // Dinero libre total del mes
+      const freeTotalMonth = totalIncome - totalSpent;
+      const freePerDay = freeTotalMonth > 0 ? (freeTotalMonth / remainingDays) : 0;
+
+      const spendPct = totalIncome > 0 ? Math.min(100, Math.round((totalSpent / totalIncome) * 100)) : (totalSpent > 0 ? 100 : 0);
+
+      let status = 'green';
+      let statusLabel = '🟢 Holgado';
+      if (freeTotalMonth <= 0 || spendPct >= 95) {
+        status = 'red';
+        statusLabel = '🔴 Al Límite';
+      } else if (spendPct >= 80 || freePerDay < 35) {
+        status = 'yellow';
+        statusLabel = '🟡 Ajustado';
+      }
+
+      return {
+        totalIncome,
+        totalSpent,
+        freeTotalMonth,
+        freePerDay,
+        remainingDays,
+        totalDaysInMonth,
+        spendPct,
+        status,
+        statusLabel,
+        isPastMonth
+      };
+    }
+
+    function renderSafeToSpendCard() {
+      const data = calculateSafeToSpend();
+      
+      const elDaily = document.getElementById('heroSafeDailyAmount');
+      if (elDaily) {
+        elDaily.innerHTML = `S/ ${data.freePerDay.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span class="hero-zen-unit">/ día</span>`;
+      }
+
+      const elSubtitle = document.getElementById('heroSafeMonthSubtitle');
+      if (elSubtitle) {
+        if (data.freeTotalMonth >= 0) {
+          elSubtitle.textContent = `S/ ${data.freeTotalMonth.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} libre proyectado este mes`;
+        } else {
+          elSubtitle.textContent = `⚠️ Presupuesto excedido por S/ ${Math.abs(data.freeTotalMonth).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        }
+      }
+
+      const elProgressBar = document.getElementById('heroSafeProgressBar');
+      if (elProgressBar) {
+        elProgressBar.style.width = Math.min(data.spendPct, 100) + '%';
+        if (data.status === 'red') {
+          elProgressBar.style.background = 'linear-gradient(90deg, #ef4444, #f87171)';
+        } else if (data.status === 'yellow') {
+          elProgressBar.style.background = 'linear-gradient(90deg, #f59e0b, #fbbf24)';
+        } else {
+          elProgressBar.style.background = 'linear-gradient(90deg, #10b981, #34d399)';
+        }
+      }
+
+      const elDays = document.getElementById('heroSafeDaysLeftLabel');
+      if (elDays) {
+        elDays.textContent = data.isPastMonth ? 'Mes cerrado' : `${data.remainingDays} días restantes`;
+      }
+
+      const elRate = document.getElementById('heroSafeSpendRateLabel');
+      if (elRate) {
+        elRate.textContent = `${data.spendPct}% comprometido`;
+      }
+
+      const elStatus = document.getElementById('heroSafeStatusPill');
+      if (elStatus) {
+        elStatus.className = `hero-zen-pill-status status-${data.status}`;
+        elStatus.textContent = data.statusLabel;
+      }
+    }
+
+    function renderRecentTransactions() {
+      const container = document.getElementById('recentTxContainer');
+      const badge = document.getElementById('recentTxCountBadge');
+      if (!container) return;
+
+      const txs = getMonthTxList();
+      if (badge) badge.textContent = txs.length.toString();
+
+      if (txs.length === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; padding: 22px 10px; color: var(--text-muted); font-size: 12px;">
+            <span style="font-size: 26px; display: block; margin-bottom: 6px;">✨</span>
+            Aún no tienes gastos registrados este mes.<br>
+            <button type="button" class="btn btn-primary btn-sm" onclick="openQuickExpenseModal()" style="margin-top: 10px; font-size: 11.5px; padding: 6px 14px;">
+              ⚡ Registrar Gasto en 1 toque
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      // Ordenar: últimos añadidos primero (slice de 4)
+      const sorted = [...txs].reverse().slice(0, 4);
+
+      container.innerHTML = sorted.map(t => {
+        const catInfo = CATEGORIES[t.category] || { icon: '🏷️', color: '#6366f1' };
+        const icon = catInfo.icon || '🏷️';
+        const isPagado = (t.status || 'Pagado') === 'Pagado';
+        const methodTag = t.paymentMethod ? `· <span>${t.paymentMethod}</span>` : '';
+
+        return `
+          <div class="recent-tx-item" onclick="openEditExpenseModal('${t.id}')" title="Toca para ver o editar">
+            <div class="recent-tx-left">
+              <div class="recent-tx-icon-box">${icon}</div>
+              <div class="recent-tx-info">
+                <div class="recent-tx-name">${escapeHtml(t.name)}</div>
+                <div class="recent-tx-meta">
+                  <span>${escapeHtml(t.category)}</span>
+                  <span title="${isPagado ? 'Pagado' : 'Pendiente'}">${isPagado ? '🟢' : '⏳'}</span>
+                  ${methodTag}
+                </div>
+              </div>
+            </div>
+            <div class="recent-tx-amount">- S/ ${(t.amount || 0).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    /* ====== REGISTRO RÁPIDO EXPRESS (2 TOQUES) ====== */
+    let _quickAmountBuffer = '0';
+    let _quickSelectedMethod = 'Yape';
+    let _quickSelectedCategory = 'Comida fuera';
+
+    function openQuickExpenseModal() {
+      _quickAmountBuffer = '0';
+      _quickSelectedMethod = 'Yape';
+      _quickSelectedCategory = 'Comida fuera';
+      updateQuickDisplay();
+
+      // Resetear métodos
+      document.querySelectorAll('.quick-method-pill').forEach(b => {
+        b.classList.toggle('active', b.id === 'quickMethodYape');
+      });
+
+      // Resetear categorías
+      document.querySelectorAll('.quick-cat-btn').forEach(b => {
+        b.classList.toggle('active', b.getAttribute('data-cat') === 'Comida fuera');
+      });
+
+      const modal = document.getElementById('quickExpenseModal');
+      if (modal) {
+        modal.style.display = 'block';
+        modal.classList.add('active');
+      }
+    }
+
+    function closeQuickExpenseModal() {
+      const modal = document.getElementById('quickExpenseModal');
+      if (modal) {
+        modal.style.display = 'none';
+        modal.classList.remove('active');
+      }
+    }
+
+    function updateQuickDisplay() {
+      const el = document.getElementById('quickDisplayAmount');
+      if (!el) return;
+      if (_quickAmountBuffer === '' || _quickAmountBuffer === '0') {
+        el.textContent = '0.00';
+        el.style.opacity = '0.55';
+      } else {
+        el.textContent = _quickAmountBuffer;
+        el.style.opacity = '1';
+      }
+    }
+
+    function handleQuickKeypad(key) {
+      if (key === 'backspace') {
+        if (_quickAmountBuffer.length > 1) {
+          _quickAmountBuffer = _quickAmountBuffer.slice(0, -1);
+        } else {
+          _quickAmountBuffer = '0';
+        }
+      } else if (key === '.') {
+        if (!_quickAmountBuffer.includes('.')) {
+          _quickAmountBuffer += '.';
+        }
+      } else {
+        // Dígitos 0-9
+        if (_quickAmountBuffer === '0') {
+          _quickAmountBuffer = key;
+        } else {
+          // Si ya tiene punto, limitar a 2 decimales
+          if (_quickAmountBuffer.includes('.')) {
+            const decPart = _quickAmountBuffer.split('.')[1];
+            if (decPart && decPart.length >= 2) return;
+          }
+          if (_quickAmountBuffer.length < 8) {
+            _quickAmountBuffer += key;
+          }
+        }
+      }
+      updateQuickDisplay();
+    }
+
+    function selectQuickMethod(method) {
+      _quickSelectedMethod = method;
+      document.querySelectorAll('.quick-method-pill').forEach(b => {
+        b.classList.toggle('active', b.textContent.includes(method));
+      });
+    }
+
+    function selectQuickCategory(cat, btn) {
+      _quickSelectedCategory = cat;
+      document.querySelectorAll('.quick-cat-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+    }
+
+    function switchToDetailedExpenseModal() {
+      const amt = parseFloat(_quickAmountBuffer) || 0;
+      closeQuickExpenseModal();
+      openAddExpenseModal();
+      if (amt > 0) {
+        const txAmt = document.getElementById('txAmount');
+        if (txAmt) txAmt.value = amt.toFixed(2);
+      }
+      const txCat = document.getElementById('txCategory');
+      if (txCat && _quickSelectedCategory) {
+        txCat.value = _quickSelectedCategory;
+      }
+    }
+
+    async function saveQuickExpense() {
+      const amount = parseFloat(_quickAmountBuffer);
+      if (isNaN(amount) || amount <= 0) {
+        showToast('⚠️ Ingresa un monto mayor a 0', 'warning');
+        return;
+      }
+
+      ensureMonthTransactions(appState.currentMonth);
+      
+      const newTx = {
+        id: 'tx_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+        name: _quickSelectedCategory,
+        amount: amount,
+        category: _quickSelectedCategory,
+        status: 'Pagado',
+        paymentMethod: _quickSelectedMethod,
+        dueDate: new Date().getDate(),
+        date: new Date().toISOString().split('T')[0],
+        notes: `⚡ Registro rápido (${_quickSelectedMethod})`
+      };
+
+      appState.transactions[appState.currentMonth].push(newTx);
+      addAuditLog('⚡ Gasto Rápido', `S/ ${amount.toFixed(2)} en ${_quickSelectedCategory} vía ${_quickSelectedMethod}`);
+      
+      saveState();
+      closeQuickExpenseModal();
+      showToast(`✨ S/ ${amount.toFixed(2)} registrado en ${_quickSelectedCategory}`, 'success');
+      renderAll();
+
+      if (currentUser && supabaseClient) {
+        try {
+          await syncStateToServer();
+        } catch (e) {
+          console.warn('Sync server error:', e);
+        }
+      }
+    }
+
+    /* ====== SWITCH TAB (NAVEGACIÓN 5 PESTAÑAS RESPONSIVE) ====== */
+    function switchTab(tabId) {
+      // Redirección de compatibilidad para auditoria -> consejos con scroll
+      if (tabId === 'auditoria') {
+        tabId = 'consejos';
+        setTimeout(() => {
+          const sec = document.getElementById('auditCardSection');
+          if (sec) sec.scrollIntoView({ behavior: 'smooth' });
+          const collapse = document.getElementById('auditTableContainerCollapse');
+          if (collapse) collapse.style.display = 'block';
+        }, 150);
+      }
+
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.desktop-nav-item').forEach(el => el.classList.remove('active'));
+
+      const targetTab = document.getElementById('tab-' + tabId);
+      if (targetTab) targetTab.classList.add('active');
+      
+      const tabIndices = { 'inicio': 0, 'movimientos': 1, 'plan': 2, 'metas': 3, 'consejos': 4 };
+      if (tabIndices[tabId] !== undefined) {
+        const bottomItems = document.querySelectorAll('.bottom-nav .nav-item');
+        if (bottomItems[tabIndices[tabId]]) {
+          bottomItems[tabIndices[tabId]].classList.add('active');
+        }
+      }
+
+      // Sincronizar items de la barra lateral de escritorio
+      const deskNavMap = {
+        'inicio': 'deskNavTabInicio',
+        'movimientos': 'deskNavTabMovimientos',
+        'plan': 'deskNavTabPlan',
+        'metas': 'deskNavTabMetas',
+        'consejos': 'deskNavTabConsejos'
+      };
+      if (deskNavMap[tabId]) {
+        const dBtn = document.getElementById(deskNavMap[tabId]);
+        if (dBtn) dBtn.classList.add('active');
+      }
+
+      if (tabId === 'inicio') {
+        renderSafeToSpendCard();
+        renderRecentTransactions();
+        renderMetrics();
+      } else if (tabId === 'movimientos') {
+        renderTransactions();
+        renderIncomes();
+      } else if (tabId === 'plan') {
         setTimeout(() => {
           renderDonutChart();
           renderHistoryChart();
@@ -1375,10 +1727,9 @@
         }, 100);
       } else if (tabId === 'metas') {
         renderGoals();
-        renderMetrics(); // Re-render emergency fund card
+        renderMetrics();
       } else if (tabId === 'consejos') {
         renderPersonalizedTips();
-      } else if (tabId === 'auditoria') {
         renderAuditTable();
       }
     }
@@ -1701,6 +2052,8 @@
       }
 
       renderMetrics();
+      renderSafeToSpendCard();
+      renderRecentTransactions();
       renderCuotasTracker();
       renderDonutChart();
       renderCategoryChips();
