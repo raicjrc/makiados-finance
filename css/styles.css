@@ -2702,3 +2702,44 @@
         border-radius: 0 !important;
       }
     }
+
+    /* ====== OAUTH BUTTONS & RECOVERY MODALS (v63.0) ====== */
+    .oauth-buttons-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      width: 100%;
+    }
+    .btn-oauth {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 11px 14px;
+      background: #ffffff;
+      color: #1e293b;
+      font-size: 13px;
+      font-weight: 700;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.04);
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-oauth:hover {
+      background: #f8fafc;
+      border-color: #cbd5e1;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+    .btn-oauth:active {
+      transform: translateY(0);
+      background: #f1f5f9;
+    }
+    @media (max-width: 360px) {
+      .oauth-buttons-container {
+        grid-template-columns: 1fr;
+      }
+    }

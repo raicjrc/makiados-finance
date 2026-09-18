@@ -5,6 +5,16 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
 ---
 
+## [v63.0] — 2026-09-17 — Recuperación de Contraseña + Inicio de Sesión Social (Google y Microsoft)
+
+### 🔐 Seguridad y Autenticación Mejorada
+- **Recuperación de Contraseña (Password Reset)**: Enlace `¿Olvidaste tu contraseña?` directo en la pantalla de inicio de sesión. Modal de solicitud vía correo electrónico con token seguro de recuperación y modal para establecer la nueva contraseña con validación inmediata.
+- **Inicio de Sesión Social (OAuth)**: Botones oficiales para iniciar sesión con **Google** y **Microsoft**, adaptados para computadoras, tablets y celulares con soporte touch nativo.
+- **Vinculación Inteligente de Cuentas (Identity Linking)**: Los usuarios que ya están registrados pueden ingresar con su cuenta de Google o Microsoft sin perder sus gastos, saldos o estado PRO.
+- **Feedback Amigable**: Mensajes informativos y claros en caso de errores de red o credenciales incorrectas.
+
+---
+
 ## [v62.0] — 2026-09-17 — Rebranding Oficial a AliviaFin + Dominio aliviafin.vercel.app
 
 ### 🌿 Identidad de Marca Renovada

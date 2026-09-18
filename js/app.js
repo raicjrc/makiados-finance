@@ -70,7 +70,7 @@
     // ================================================================
     // VERSIÓN DE LA APP
     // ================================================================
-    const APP_VERSION = 'v62.0';
+    const APP_VERSION = 'v63.0';
     // Plantilla inicial 100% limpia para cualquier usuario nuevo
     function getCleanUserState() {
       const now = new Date();
@@ -182,6 +182,24 @@
 
     // Verifica si hay sesión activa de Supabase al cargar la app
     async function checkLoginStatus() {
+      // Detección de enlace de recuperación de contraseña desde correo
+      if (window.location.hash.includes('type=recovery') || window.location.search.includes('type=recovery')) {
+        openResetPasswordModal();
+        return;
+      }
+
+      // Listener global de cambios de autenticación (OAuth y Password Recovery)
+      if (!window._hasConfiguredAuthListener) {
+        window._hasConfiguredAuthListener = true;
+        supabaseClient.auth.onAuthStateChange(async (event, session) => {
+          if (event === 'PASSWORD_RECOVERY') {
+            openResetPasswordModal();
+          } else if (event === 'SIGNED_IN' && session && session.user && !currentUser) {
+            await onLoginSuccess(session.user);
+          }
+        });
+      }
+
       // Soporte para depuración / vista previa local (?debug_tour=1 o ?demo=1)
       if (window.location.search.includes('debug_tour=1') || window.location.search.includes('demo=1')) {
         await onLoginSuccess({ id: 'test_user_tour', email: 'test@aliviafin.app', user_metadata: { full_name: 'Usuario Demo' } });
@@ -375,6 +393,165 @@
         // Confirmación requerida activada por César en Supabase
         okEl.textContent = '📧 ¡Casi listo! Revisa tu bandeja de entrada o SPAM. Te hemos enviado un link para activar tu cuenta de AliviaFin.';
         okEl.style.display = 'block';
+      }
+    }
+
+    // ================================================================
+    // RECUPERACIÓN DE CONTRASEÑA & AUTH SOCIAL (v63.0)
+    // ================================================================
+    function openForgotPasswordModal() {
+      const modal = document.getElementById('forgotPasswordModal');
+      const errEl = document.getElementById('forgotPassErrorMsg');
+      const okEl  = document.getElementById('forgotPassSuccessMsg');
+      const emailInp = document.getElementById('forgotPasswordEmail');
+      const loginEmailInp = document.getElementById('loginEmail');
+
+      if (errEl) errEl.style.display = 'none';
+      if (okEl) okEl.style.display = 'none';
+      if (emailInp && loginEmailInp && loginEmailInp.value) {
+        emailInp.value = loginEmailInp.value;
+      }
+      if (modal) {
+        modal.style.display = 'flex';
+        modal.classList.add('active');
+      }
+    }
+
+    function closeForgotPasswordModal() {
+      const modal = document.getElementById('forgotPasswordModal');
+      if (modal) {
+        modal.style.display = 'none';
+        modal.classList.remove('active');
+      }
+    }
+
+    async function handleForgotPasswordSubmit(e) {
+      e.preventDefault();
+      const email = document.getElementById('forgotPasswordEmail').value.trim();
+      const btn = document.getElementById('forgotPasswordBtn');
+      const errEl = document.getElementById('forgotPassErrorMsg');
+      const okEl = document.getElementById('forgotPassSuccessMsg');
+
+      btn.disabled = true;
+      btn.textContent = '⏳ Enviando enlace...';
+      errEl.style.display = 'none';
+      okEl.style.display = 'none';
+
+      try {
+        const { data, error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+          redirectTo: window.location.origin + window.location.pathname
+        });
+
+        btn.disabled = false;
+        btn.textContent = '✉️ Enviar Enlace de Recuperación';
+
+        if (error) {
+          errEl.textContent = '🚨 ' + error.message;
+          errEl.style.display = 'block';
+        } else {
+          okEl.innerHTML = `✅ ¡Listo! Te enviamos un correo a <b>${email}</b> con el enlace seguro para restablecer tu contraseña. Revisa también tu carpeta de Spam.`;
+          okEl.style.display = 'block';
+        }
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = '✉️ Enviar Enlace de Recuperación';
+        errEl.textContent = '🚨 Error de conexión: ' + (err.message || err);
+        errEl.style.display = 'block';
+      }
+    }
+
+    function openResetPasswordModal() {
+      const modal = document.getElementById('resetPasswordModal');
+      const loginModal = document.getElementById('loginModalScreen');
+      if (loginModal) loginModal.style.display = 'none';
+      if (modal) {
+        modal.style.display = 'flex';
+        modal.classList.add('active');
+      }
+    }
+
+    function closeResetPasswordModal() {
+      const modal = document.getElementById('resetPasswordModal');
+      if (modal) {
+        modal.style.display = 'none';
+        modal.classList.remove('active');
+      }
+    }
+
+    async function handleResetPasswordSubmit(e) {
+      e.preventDefault();
+      const pass = document.getElementById('newPasswordInput').value;
+      const pass2 = document.getElementById('confirmNewPasswordInput').value;
+      const errEl = document.getElementById('resetPassErrorMsg');
+      const btn = document.getElementById('resetPasswordBtn');
+
+      if (pass.length < 6) {
+        errEl.textContent = '🚨 La contraseña debe tener al menos 6 caracteres.';
+        errEl.style.display = 'block';
+        return;
+      }
+      if (pass !== pass2) {
+        errEl.textContent = '🚨 Las contraseñas no coinciden.';
+        errEl.style.display = 'block';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = '⏳ Guardando contraseña...';
+      errEl.style.display = 'none';
+
+      try {
+        const { data, error } = await supabaseClient.auth.updateUser({ password: pass });
+
+        btn.disabled = false;
+        btn.textContent = '💾 Guardar Nueva Contraseña';
+
+        if (error) {
+          errEl.textContent = '🚨 ' + error.message;
+          errEl.style.display = 'block';
+        } else {
+          showToast('🎉 ¡Contraseña actualizada con éxito!', 'success');
+          closeResetPasswordModal();
+          // Limpiar hash de recuperación de la URL
+          if (window.history && window.history.replaceState) {
+            window.history.replaceState(null, '', window.location.pathname);
+          }
+          if (data.user) {
+            await onLoginSuccess(data.user);
+          } else {
+            const { data: sessionData } = await supabaseClient.auth.getSession();
+            if (sessionData && sessionData.session && sessionData.session.user) {
+              await onLoginSuccess(sessionData.session.user);
+            }
+          }
+        }
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = '💾 Guardar Nueva Contraseña';
+        errEl.textContent = '🚨 ' + (err.message || err);
+        errEl.style.display = 'block';
+      }
+    }
+
+    // AUTH SOCIAL (GOOGLE / MICROSOFT)
+    async function handleOAuthLogin(provider) {
+      try {
+        const { data, error } = await supabaseClient.auth.signInWithOAuth({
+          provider: provider,
+          options: {
+            redirectTo: window.location.origin + window.location.pathname
+          }
+        });
+        if (error) {
+          const providerName = provider === 'azure' ? 'Microsoft' : 'Google';
+          if (error.message.includes('not enabled') || error.message.includes('unsupported') || error.message.includes('invalid_client')) {
+            alert(`ℹ️ El acceso con ${providerName} aún no ha sido activado en tu panel de Supabase. Puedes ingresar mientras tanto con tu correo y contraseña habitual.`);
+          } else {
+            alert('🚨 ' + error.message);
+          }
+        }
+      } catch (err) {
+        alert('🚨 ' + (err.message || err));
       }
     }
 
@@ -4772,6 +4949,13 @@ window.handleExportExcelCSVClick = handleExportExcelCSVClick;
 window.exportTransactionsCSV = exportTransactionsCSV;
 window.openFinZenProModal = openFinZenProModal;
 window.openAliviaFinProModal = openFinZenProModal;
+window.openForgotPasswordModal = openForgotPasswordModal;
+window.closeForgotPasswordModal = closeForgotPasswordModal;
+window.handleForgotPasswordSubmit = handleForgotPasswordSubmit;
+window.openResetPasswordModal = openResetPasswordModal;
+window.closeResetPasswordModal = closeResetPasswordModal;
+window.handleResetPasswordSubmit = handleResetPasswordSubmit;
+window.handleOAuthLogin = handleOAuthLogin;
 window.isUserPro = isUserPro;
 window.goToWizardStep = goToWizardStep;
 window.completeOnboardingWizard = completeOnboardingWizard;
