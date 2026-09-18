@@ -3,6 +3,12 @@
 Todas las versiones notables de esta aplicación están documentadas aquí.
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
+## [v63.1] — 2026-09-18 — Optimización Ejecutiva de Acceso Social (Google Full-Width)
+
+### 🎨 Refinamiento de Interfaz & Experiencia de Usuario
+- **Botón Google Full-Width Ejecutivo**: Rediseño del botón de inicio social a ancho completo con estilo limpio, moderno y centrado («Continuar con Google»), optimizando la tasa de conversión y reduciendo fricción visual tanto en móviles como en computadoras.
+- **Simplificación de Autenticación**: Retiro del proveedor Microsoft tras verificar que la gran mayoría de usuarios consumer operan con Google o correo directo, evitando bloqueos por requisitos corporativos/Azure en cuentas personales Hotmail/Outlook.
+
 ---
 
 ## [v63.0] — 2026-09-17 — Recuperación de Contraseña + Inicio de Sesión Social (Google y Microsoft)

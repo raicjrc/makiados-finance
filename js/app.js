@@ -70,7 +70,7 @@
     // ================================================================
     // VERSIÓN DE LA APP
     // ================================================================
-    const APP_VERSION = 'v63.0';
+    const APP_VERSION = 'v63.1';
     // Plantilla inicial 100% limpia para cualquier usuario nuevo
     function getCleanUserState() {
       const now = new Date();
