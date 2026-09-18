@@ -4371,15 +4371,16 @@
         }
       }
 
-      // Si el tour interactivo aún no ha sido marcado con opt-out ("No volver a mostrar"), lanzarlo
-      if (!tourDismissed) {
-        setTimeout(() => startInteractiveTour(), 700);
+      // 1. Prioridad: Si hay una nueva versión de la app, mostrar el modal de Novedades automáticamente
+      if (seenVer !== APP_VERSION) {
+        setTimeout(() => openWhatsNewModal(), 700);
         return;
       }
 
-      // Si no mostramos onboarding ni tour, chequear si hay nueva versión para alertar al usuario
-      if (seenVer !== APP_VERSION) {
-        setTimeout(() => openWhatsNewModal(), 700);
+      // 2. Si no hay versión pendiente y el tour interactivo aún no ha sido marcado con opt-out, lanzarlo
+      if (!tourDismissed) {
+        setTimeout(() => startInteractiveTour(), 700);
+        return;
       }
     }
 
