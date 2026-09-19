@@ -208,7 +208,7 @@
       </nav>
 
       <div class="desktop-sidebar-footer">
-        <button class="desktop-nav-item" onclick="openSettingsModal()" style="margin-bottom: 6px;">
+        <button class="desktop-nav-item" id="deskNavTabSettings" onclick="openSettingsModal()" style="margin-bottom: 6px;">
           <span class="desk-nav-icon">⚙️</span>
           <span>Ajustes</span>
         </button>
@@ -510,70 +510,81 @@
           <h2 style="font-size: 16px; font-weight: 800;">Plan de Acción Financiera 2026</h2>
         </div>
 
-        <!-- Segmented Tab Switcher Grid: Donut Chart vs Cuotas Tracker -->
-        <div class="card">
-          <div class="segmented-switch">
-            <button class="segmented-btn active" id="segBtnChart" onclick="switchSegmentView('chart')">📊 Distribución de Gastos</button>
-            <button class="segmented-btn" id="segBtnCuotas" onclick="switchSegmentView('cuotas')">💳 Cuotas Pendientes</button>
-          </div>
+        <!-- Fila 1 Desktop (2 Columnas): Donut Chart + Rendimiento 2026 -->
+        <div class="desktop-plan-grid">
+          <!-- Segmented Tab Switcher Grid: Donut Chart vs Cuotas Tracker -->
+          <div class="card plan-card-left">
+            <div class="segmented-switch">
+              <button class="segmented-btn active" id="segBtnChart" onclick="switchSegmentView('chart')">📊 Distribución de Gastos</button>
+              <button class="segmented-btn" id="segBtnCuotas" onclick="switchSegmentView('cuotas')">💳 Cuotas Pendientes</button>
+            </div>
 
-          <div id="segmentChartBox">
-            <div class="chart-container">
-              <canvas id="categoryChart"></canvas>
+            <div id="segmentChartBox">
+              <div class="chart-container" style="height: 250px; position: relative;">
+                <canvas id="categoryChart"></canvas>
+              </div>
+            </div>
+
+            <div id="segmentCuotasBox" style="display: none;">
+              <div id="cuotasTrackerContainer"></div>
             </div>
           </div>
 
-          <div id="segmentCuotasBox" style="display: none;">
-            <div id="cuotasTrackerContainer"></div>
+          <!-- History & Projections Chart with Period Filters (FIRST) -->
+          <div class="card plan-card-right">
+            <div class="card-header">
+              <div class="card-title">📈 Rendimiento 2026</div>
+            </div>
+
+            <div class="chip-group" style="margin-bottom: 10px;">
+              <div class="chip active" id="periodFilterALL" onclick="setHistoryPeriodFilter('ALL')">✨ Todo 2026</div>
+              <div class="chip" id="periodFilterCURR" onclick="setHistoryPeriodFilter('CURR')">📍 Mes Actual</div>
+              <div class="chip" id="periodFilterQ3" onclick="setHistoryPeriodFilter('Q3')">Q3 (Jul-Set)</div>
+              <div class="chip" id="periodFilterQ4" onclick="setHistoryPeriodFilter('Q4')">Q4 (Oct-Dic)</div>
+            </div>
+
+            <div class="chart-container" style="height: 200px; position: relative;">
+              <canvas id="historyChart"></canvas>
+            </div>
+            <div id="historyTableContainer" class="mt-4"></div>
           </div>
         </div>
 
-        
-<!-- History & Projections Chart with Period Filters (FIRST) -->
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">📈 Rendimiento 2026</div>
+        <!-- Fila 2 Desktop (2 Columnas): 50/30/20 & Hormiga vs Presupuesto por Categoría -->
+        <div class="desktop-plan-grid-2">
+          <!-- Columna Izquierda: Regla 50/30/20 y Radar Hormiga -->
+          <div class="plan-subcolumn">
+            <!-- 50/30/20 Rule Card (collapsible) -->
+            <div class="card">
+              <div class="card-header" style="cursor: pointer;" onclick="toggleCollapseCard('rule503020Container', 'collapseBtn503020')">
+                <div class="card-title">⚖️ Regla 50/30/20 Aplicada</div>
+                <button type="button" id="collapseBtn503020" style="background:none; border:none; font-size:16px; cursor:pointer; color:var(--text-muted); transition: transform 0.2s;">▼</button>
+              </div>
+              <div id="rule503020Container"></div>
+            </div>
+
+            <!-- Radar de Gastos Hormiga & Fugas de Capital (collapsible) -->
+            <div class="card">
+              <div class="card-header" style="cursor: pointer;" onclick="toggleCollapseCard('radarHormigaContainer', 'collapseBtnHormiga')">
+                <div class="card-title">🐜 Radar de Gastos Hormiga & Fugas</div>
+                <button type="button" id="collapseBtnHormiga" style="background:none; border:none; font-size:16px; cursor:pointer; color:var(--text-muted); transition: transform 0.2s;">▼</button>
+              </div>
+              <div id="radarHormigaContainer"></div>
+            </div>
           </div>
 
-          <div class="chip-group" style="margin-bottom: 10px;">
-            <div class="chip active" id="periodFilterALL" onclick="setHistoryPeriodFilter('ALL')">✨ Todo 2026</div>
-            <div class="chip" id="periodFilterCURR" onclick="setHistoryPeriodFilter('CURR')">📍 Mes Actual</div>
-            <div class="chip" id="periodFilterQ3" onclick="setHistoryPeriodFilter('Q3')">Q3 (Jul-Set)</div>
-            <div class="chip" id="periodFilterQ4" onclick="setHistoryPeriodFilter('Q4')">Q4 (Oct-Dic)</div>
+          <!-- Columna Derecha: Presupuesto por Categoría -->
+          <div class="plan-subcolumn">
+            <!-- Category Budget vs Real Progress (collapsible) -->
+            <div class="card">
+              <div class="card-header" style="cursor: pointer;" onclick="toggleCollapseCard('categoryBudgetsContainer', 'collapseBtnBudgets')">
+                <div class="card-title">🎯 Presupuesto por Categoría</div>
+                <button type="button" class="btn btn-outline btn-sm" onclick="event.stopPropagation(); openCategoryManagerModal();" style="font-size:11px; padding:3px 10px; border-radius:12px; margin-left:auto; margin-right:8px; border-color:#cbd5e1; font-weight:700;">⚙️ Gestionar</button>
+                <button type="button" id="collapseBtnBudgets" style="background:none; border:none; font-size:16px; cursor:pointer; color:var(--text-muted); transition: transform 0.2s;">▼</button>
+              </div>
+              <div id="categoryBudgetsContainer"></div>
+            </div>
           </div>
-
-          <div class="chart-container" style="height: 200px;">
-            <canvas id="historyChart"></canvas>
-          </div>
-          <div id="historyTableContainer" class="mt-4"></div>
-        </div>
-
-        <!-- 50/30/20 Rule Card (collapsible) -->
-        <div class="card">
-          <div class="card-header" style="cursor: pointer;" onclick="toggleCollapseCard('rule503020Container', 'collapseBtn503020')">
-            <div class="card-title">⚖️ Regla 50/30/20 Aplicada</div>
-            <button type="button" id="collapseBtn503020" style="background:none; border:none; font-size:16px; cursor:pointer; color:var(--text-muted); transition: transform 0.2s;">▼</button>
-          </div>
-          <div id="rule503020Container"></div>
-        </div>
-
-        <!-- Radar de Gastos Hormiga & Fugas de Capital (collapsible) -->
-        <div class="card">
-          <div class="card-header" style="cursor: pointer;" onclick="toggleCollapseCard('radarHormigaContainer', 'collapseBtnHormiga')">
-            <div class="card-title">🐜 Radar de Gastos Hormiga & Fugas</div>
-            <button type="button" id="collapseBtnHormiga" style="background:none; border:none; font-size:16px; cursor:pointer; color:var(--text-muted); transition: transform 0.2s;">▼</button>
-          </div>
-          <div id="radarHormigaContainer"></div>
-        </div>
-
-        <!-- Category Budget vs Real Progress (collapsible) -->
-        <div class="card">
-          <div class="card-header" style="cursor: pointer;" onclick="toggleCollapseCard('categoryBudgetsContainer', 'collapseBtnBudgets')">
-            <div class="card-title">🎯 Presupuesto por Categoría</div>
-            <button type="button" class="btn btn-outline btn-sm" onclick="event.stopPropagation(); openCategoryManagerModal();" style="font-size:11px; padding:3px 10px; border-radius:12px; margin-left:auto; margin-right:8px; border-color:#cbd5e1; font-weight:700;">⚙️ Gestionar</button>
-            <button type="button" id="collapseBtnBudgets" style="background:none; border:none; font-size:16px; cursor:pointer; color:var(--text-muted); transition: transform 0.2s;">▼</button>
-          </div>
-          <div id="categoryBudgetsContainer"></div>
         </div>
 
       </div>

@@ -607,14 +607,25 @@
     }
 
     function openSettingsModal() {
+      const modal = document.getElementById('settingsModal');
+      if (!modal) return;
+
+      // Cerrar cualquier otro modal abierto para evitar superposiciones
+      document.querySelectorAll('.modal-backdrop.active, .glass-backdrop.active').forEach(m => {
+        if (m.id !== 'settingsModal') {
+          m.classList.remove('active');
+          m.style.display = 'none';
+        }
+      });
+
       // Rellenar info de usuario y versión
       const emailEl = document.getElementById('settingsUserEmail');
-      if (emailEl && currentUser) emailEl.textContent = currentUser.email;
+      if (emailEl && currentUser) emailEl.textContent = currentUser.email || '';
 
       // Rellenar nombre personalizado en Ajustes
       const nameInput = document.getElementById('settingsUserNameInput');
-      if (nameInput && currentUser) {
-        nameInput.value = currentUser.name || '';
+      if (nameInput) {
+        nameInput.value = (currentUser && currentUser.name) ? currentUser.name : '';
       }
 
       // Estado del toggle del tour
@@ -627,7 +638,8 @@
       }
 
       if (typeof syncVersionUI === 'function') syncVersionUI();
-      document.getElementById('settingsModal').classList.add('active');
+      modal.style.display = 'flex';
+      modal.classList.add('active');
     }
 
     async function saveCustomUserName() {
@@ -681,10 +693,10 @@
       document.getElementById('segmentCuotasBox').style.display = type === 'cuotas' ? 'block' : 'none';
     }
 
-    // Registrar Service Worker v48 (Network-First, sin caché de datos)
+    // Registrar Service Worker v64.1 (Network-First, sin caché de datos)
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=64.0')
+        navigator.serviceWorker.register('./sw.js?v=64.1')
           .then(reg => {
             console.log('SW v64 registrado:', reg.scope);
             // Forzar actualización inmediata del SW en todos los dispositivos
@@ -2701,7 +2713,11 @@
     }
 
     function closeModal(id) {
-      document.getElementById(id).classList.remove('active');
+      const el = document.getElementById(id);
+      if (el) {
+        el.classList.remove('active');
+        el.style.display = 'none';
+      }
     }
 
     function handleAddExpense(e) {
@@ -3877,8 +3893,14 @@
     }
 
     function openEditSalaryModal() {
-      document.getElementById('newSalaryInput').value = appState.salary;
-      document.getElementById('editSalaryModal').classList.add('active');
+      closeModal('settingsModal');
+      const input = document.getElementById('newSalaryInput');
+      if (input) input.value = appState.salary || 0;
+      const modal = document.getElementById('editSalaryModal');
+      if (modal) {
+        modal.style.display = 'flex';
+        modal.classList.add('active');
+      }
     }
 
     function handleSaveSalary(e) {
@@ -5383,12 +5405,17 @@ window.startInteractiveTour = startInteractiveTour;
 window.toggleFAB = typeof toggleFAB === 'function' ? toggleFAB : function(){};
 window.openSettingsModal = openSettingsModal;
 window.closeModal = closeModal;
-window.closeGlassModal = typeof closeGlassModal === 'function' ? closeGlassModal : function(id){ const el = document.getElementById(id); if (el) el.style.display = 'none'; };
+window.closeGlassModal = typeof closeGlassModal === 'function' ? closeGlassModal : function(id){ const el = document.getElementById(id); if (el) { el.classList.remove('active'); el.style.display = 'none'; } };
 window.handleBackdropClick = handleBackdropClick;
 window.openAddExpenseModal = openAddExpenseModal;
+window.openEditExpenseModal = openEditExpenseModal;
 window.handleAddExpense = handleAddExpense;
+window.deleteTransaction = deleteTransaction;
+window.toggleTxStatus = toggleTxStatus;
 window.openAddExtraIncomeModal = openAddExtraIncomeModal;
 window.handleAddExtraIncome = handleAddExtraIncome;
+window.toggleIncomeStatus = toggleIncomeStatus;
+window.editIncomeDate = editIncomeDate;
 window.openQuickExpenseModal = openQuickExpenseModal;
 window.closeQuickExpenseModal = closeQuickExpenseModal;
 window.selectQuickCategory = selectQuickCategory;
@@ -5400,7 +5427,10 @@ window.openInstallmentsSimulatorModal = openInstallmentsSimulatorModal;
 window.handleSimulatedPurchaseClick = handleSimulatedPurchaseClick;
 window.handleSaveCategoryClick = handleSaveCategoryClick;
 window.handleOpenAddGoalClick = handleOpenAddGoalClick;
+window.openAddGoalModal = openAddGoalModal;
 window.handleAddGoal = typeof handleAddGoal === 'function' ? handleAddGoal : function(){};
+window.deleteGoal = deleteGoal;
+window.openDepositGoalModal = openDepositGoalModal;
 window.handleDepositGoal = typeof handleDepositGoal === 'function' ? handleDepositGoal : function(){};
 window.handleDebtAdvisorClick = handleDebtAdvisorClick;
 window.openDebtSnowballModal = openDebtSnowballModal;
@@ -5439,6 +5469,19 @@ window.handleLogout = handleLogout;
 window.toggleTheme = toggleTheme;
 window.changeMonth = changeMonth;
 window.switchTab = switchTab;
+window.switchSegmentView = switchSegmentView;
+window.setHistoryPeriodFilter = setHistoryPeriodFilter;
+window.toggleCollapseCard = toggleCollapseCard;
+window.selectCategoryChip = selectCategoryChip;
+window.editCategoryBudget = editCategoryBudget;
+window.deleteCategory = deleteCategory;
+window.openAddCategoryModal = openAddCategoryModal;
+window.deleteCategoryFromManager = deleteCategoryFromManager;
+window.editCategoryBudgetFromManager = editCategoryBudgetFromManager;
+window.showHormigaAdvice = showHormigaAdvice;
+window.filterHormigaGroup = filterHormigaGroup;
+window.showGroupOptimizationTip = showGroupOptimizationTip;
+window.selectCalendarDay = selectCalendarDay;
 window.setTxViewMode = setTxViewMode;
 window.selectStatusFilter = selectStatusFilter;
 window.clearSearchInput = clearSearchInput;

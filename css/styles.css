@@ -1274,6 +1274,24 @@
     /* ====== TAB TRANSITIONS ====== */
     .tab-content { display: none; animation: fadeInUp 0.25s ease; }
     .tab-content.active { display: block; }
+
+    /* ====== DESKTOP 2-COLUMN GRID (PLAN & DASHBOARDS) ====== */
+    .desktop-plan-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+    .desktop-plan-grid-2 {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .plan-subcolumn {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
     @keyframes fadeInUp {
       from { opacity: 0; transform: translateY(6px); }
       to { opacity: 1; transform: translateY(0); }
@@ -3296,6 +3314,38 @@
     }
 
     @media (min-width: 1024px) {
+      .container {
+        max-width: 1320px;
+        padding: 16px 28px;
+      }
+      .top-navbar-inner {
+        max-width: 1320px;
+      }
+      .desktop-plan-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+        align-items: stretch;
+        margin-bottom: 18px;
+      }
+      .desktop-plan-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+        align-items: start;
+      }
+      .plan-card-left, .plan-card-right {
+        margin-bottom: 0 !important;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+      }
+      .plan-card-left #segmentChartBox {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
       #appMainWrapper {
         display: flex !important;
         flex-direction: row;
