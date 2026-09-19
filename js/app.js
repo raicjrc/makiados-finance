@@ -77,7 +77,7 @@
     // ================================================================
     // VERSIÓN DE LA APP
     // ================================================================
-    const APP_VERSION = 'v64.3';
+    const APP_VERSION = 'v64.4';
     // Plantilla inicial 100% limpia para cualquier usuario nuevo
     function getCleanUserState() {
       const now = new Date();
@@ -681,12 +681,12 @@
       document.getElementById('segmentCuotasBox').style.display = type === 'cuotas' ? 'block' : 'none';
     }
 
-    // Registrar Service Worker v64.3 (Network-First, sin caché de datos)
+    // Registrar Service Worker v64.4 (Network-First, sin caché de datos)
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=64.3')
+        navigator.serviceWorker.register('./sw.js?v=64.4')
           .then(reg => {
-            console.log('SW v64.3 registrado:', reg.scope);
+            console.log('SW v64.4 registrado:', reg.scope);
             // Forzar actualización inmediata del SW en todos los dispositivos
             reg.update();
             if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });

@@ -15,7 +15,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <link rel="stylesheet" href="css/styles.css?v=64.3">
+  <link rel="stylesheet" href="css/styles.css?v=64.4">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
 </head>
 <body>
@@ -174,6 +174,11 @@
 
     <!-- Desktop Executive Sidebar (Visible en monitores y laptops >= 1024px) -->
     <aside class="desktop-sidebar" id="desktopSidebar">
+      <div class="mac-traffic-lights" style="display: flex; gap: 7px; margin-bottom: 14px; padding-left: 4px;">
+        <span style="width: 11px; height: 11px; border-radius: 50%; background: #ff5f56; box-shadow: 0 0 1px #e0443e; display: inline-block;"></span>
+        <span style="width: 11px; height: 11px; border-radius: 50%; background: #ffbd2e; box-shadow: 0 0 1px #dea123; display: inline-block;"></span>
+        <span style="width: 11px; height: 11px; border-radius: 50%; background: #27c93f; box-shadow: 0 0 1px #1aab29; display: inline-block;"></span>
+      </div>
       <div class="desktop-sidebar-brand">
         <img src="logo.jpg" alt="AliviaFin Logo" style="width: 38px; height: 38px; border-radius: 10px; box-shadow: 0 4px 10px rgba(139, 92, 246, 0.3);">
         <div>
@@ -256,33 +261,35 @@
       <!-- TAB 1: INICIO (ZEN EXECUTIVE RESUMEN) -->
       <div id="tab-inicio" class="tab-content active">
         
-        <!-- Hero Card: Paz Mental - Dinero Libre Hoy (Safe to Spend) -->
+        <!-- Hero Card: Paz Mental - Dinero Libre Hoy (Double-Layer Glass Plate) -->
         <div id="heroSafeToSpendCard" class="hero-zen-card">
-          <div class="hero-zen-top">
-            <div class="hero-zen-badge" onclick="openExplainSafeToSpendModal()" style="cursor: pointer;" title="Toca para ver la explicación detallada de tu dinero libre diario">
-              <span class="hero-zen-pulse"></span>
-              <span>PAZ MENTAL · DISPONIBLE HOY</span>
-              <span style="font-size: 10px; opacity: 0.85; margin-left: 2px;">ℹ️</span>
+          <div class="hero-zen-glass-plate">
+            <div class="hero-zen-top">
+              <div class="hero-zen-badge" onclick="openExplainSafeToSpendModal()" style="cursor: pointer;" title="Toca para ver la explicación detallada de tu dinero libre diario">
+                <span class="hero-zen-pulse"></span>
+                <span>PAZ MENTAL · DISPONIBLE HOY</span>
+                <span style="font-size: 10px; opacity: 0.85; margin-left: 2px;">ℹ️</span>
+              </div>
+              <span id="heroSafeStatusPill" class="hero-zen-pill-status" onclick="openExplainSafeToSpendModal()" style="cursor: pointer;" title="Toca para ver el diagnóstico de tu estado">🟢 Holgado</span>
             </div>
-            <span id="heroSafeStatusPill" class="hero-zen-pill-status" onclick="openExplainSafeToSpendModal()" style="cursor: pointer;" title="Toca para ver el diagnóstico de tu estado">🟢 Holgado</span>
-          </div>
 
-          <div class="hero-zen-main">
-            <div class="hero-zen-number" id="heroSafeDailyAmount">
-              S/ 0.00 <span class="hero-zen-unit">/ día</span>
+            <div class="hero-zen-main">
+              <div class="hero-zen-number" id="heroSafeDailyAmount">
+                S/ 0.00 <span class="hero-zen-unit">/ día</span>
+              </div>
+              <div class="hero-zen-subtext" id="heroSafeMonthSubtitle">
+                S/ 0.00 libre proyectado este mes
+              </div>
             </div>
-            <div class="hero-zen-subtext" id="heroSafeMonthSubtitle">
-              S/ 0.00 libre proyectado este mes
-            </div>
-          </div>
 
-          <div class="hero-zen-progress-wrap">
-            <div class="hero-zen-progress-bar">
-              <div id="heroSafeProgressBar" class="hero-zen-progress-fill" style="width: 0%;"></div>
-            </div>
-            <div class="hero-zen-progress-labels">
-              <span id="heroSafeDaysLeftLabel">Calculando días restantes...</span>
-              <span id="heroSafeSpendRateLabel">0% comprometido</span>
+            <div class="hero-zen-progress-wrap">
+              <div class="hero-zen-progress-bar">
+                <div id="heroSafeProgressBar" class="hero-zen-progress-fill" style="width: 0%;"></div>
+              </div>
+              <div class="hero-zen-progress-labels">
+                <span id="heroSafeDaysLeftLabel">Calculando días restantes...</span>
+                <span id="heroSafeSpendRateLabel">0% comprometido</span>
+              </div>
             </div>
           </div>
         </div>
@@ -312,11 +319,11 @@
         <div class="zen-actions-grid">
           <button id="btnRegistrarGasto" class="action-pill action-pill-expense" onclick="openQuickExpenseModal()">
             <span class="action-pill-icon">⚡</span>
-            <span>+ Registrar Gasto</span>
+            <span>Registrar Gasto</span>
           </button>
           <button id="btnRegistrarIngreso" class="action-pill action-pill-income" onclick="openAddExtraIncomeModal()">
             <span class="action-pill-icon">💵</span>
-            <span>+ Ingreso</span>
+            <span>Registrar Ingreso</span>
           </button>
         </div>
 
@@ -1932,6 +1939,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
-  <script src="js/app.js?v=64.3"></script>
+  <script src="js/app.js?v=64.4"></script>
 </body>
 </html>
