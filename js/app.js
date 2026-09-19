@@ -77,7 +77,7 @@
     // ================================================================
     // VERSIÓN DE LA APP
     // ================================================================
-    const APP_VERSION = 'v64.4';
+    const APP_VERSION = 'v65.0';
     // Plantilla inicial 100% limpia para cualquier usuario nuevo
     function getCleanUserState() {
       const now = new Date();
@@ -684,7 +684,7 @@
     // Registrar Service Worker v64.4 (Network-First, sin caché de datos)
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=64.4')
+        navigator.serviceWorker.register('./sw.js?v=65.0')
           .then(reg => {
             console.log('SW v64.4 registrado:', reg.scope);
             // Forzar actualización inmediata del SW en todos los dispositivos
@@ -3440,7 +3440,10 @@
     }
 
     function filterHormigaGroup(key) {
-      switchTab('inicio');
+      switchTab('movimientos');
+      if (typeof setTxViewMode === 'function') {
+        setTxViewMode('list');
+      }
       const searchInput = document.getElementById('searchTx');
       const advAmount = document.getElementById('advFilterAmount');
       if (key === 'otros') {
@@ -3456,8 +3459,10 @@
         if (searchInput) searchInput.value = keywords[key] || '';
       }
       onAdvFilterChange();
-      const el = document.getElementById('txListViewContainer');
-      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(() => {
+        const el = document.getElementById('txListViewContainer');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
       showToast(`🔍 Filtrando gastos vinculados`, 'info');
     }
 

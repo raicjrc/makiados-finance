@@ -126,3 +126,14 @@ Never use raw `#ff0000` or `#00ff00`. Use calibrated, organic tones that evoke p
 - **Modal Sheets:**
   - On mobile: Slide up smoothly as bottom sheets with drag handles (`border-radius: 24px 24px 0 0`).
   - On desktop: Centered dialog with frosted backdrop (`backdrop-filter: blur(16px)`).
+
+---
+
+## 7. Official AliviaFin Brand Identity (Monograma Fluido)
+
+- **Isotipo:** Monograma Fluido "A" continuo con gradiente jade/esmeralda (`#1b5e4c` a `#38a17e`).
+- **Logotipo:** "aliviafin" estrictamente en minúsculas, tipografía geométrica pulcra antracita (`#334155`).
+- **Insignia PRO:** Píldora dorada/champagne limpia con el texto `PRO` (sin estrellas ni emojis ornamentales).
+- **Equilibrio de Acciones:** Los botones primarios de acción (`Registrar Gasto` y `Registrar Ingreso`) deben mantener simetría matemática exacta al 50% (`flex: 1 1 0px`).
+- **Lienzo Sereno (Whisper-Quiet):** Fondo reposado `#fbfbfd` sin halos agresivos ni gradientes saturados que distraigan del contenido financiero del usuario.
+
