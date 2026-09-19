@@ -4,6 +4,10 @@
        Inspirado en: Apple macOS Sonoma, visionOS, Linear, Revolut
     ============================================================ */
     :root {
+      /* Apple Spring Physics & Motion Standards */
+      --apple-spring: cubic-bezier(0.32, 0.72, 0, 1);
+      --apple-spring-tactile: cubic-bezier(0.175, 0.885, 0.32, 1.15);
+
       /* Paleta Principal - Índigo & Violeta Neón */
       --primary: #4f46e5;
       --primary-hover: #4338ca;
@@ -58,8 +62,36 @@
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Plus Jakarta Sans", -system-ui, sans-serif;
       -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Apple Tactile Micro-Press Feedback */
+    .btn:active,
+    .action-pill:active,
+    .stat-card:active,
+    .nav-item:active,
+    .desktop-nav-item:active,
+    .chip:active,
+    .segmented-btn:active {
+      transform: scale(0.965);
+      transition: transform 0.12s var(--apple-spring);
+    }
+
+    /* Tabular Numbers for Mathematical Financial Precision */
+    .stat-value,
+    .hero-zen-number,
+    .recent-tx-amount,
+    .month-stat-val,
+    .metric-val,
+    .radar-stat-val,
+    .safe-breakdown-val,
+    .val,
+    td.amount,
+    .cal-day-spent,
+    .total-value,
+    .budget-amount {
+      font-variant-numeric: tabular-nums;
     }
 
     html {
@@ -2838,54 +2870,69 @@
        ZEN EXECUTIVE REDESIGN (FASE 1)
        ================================================================ */
 
-    /* ====== 1. HERO CARD: PAZ MENTAL - DINERO LIBRE HOY ====== */
+    /* ====== 1. HERO CARD: PAZ MENTAL - DINERO LIBRE HOY (APPLE CARD STYLE) ====== */
     .hero-zen-card {
-      background: linear-gradient(135deg, #090d16 0%, #0f172a 60%, #111c30 100%);
-      border: 1.5px solid rgba(16, 185, 129, 0.35);
-      border-radius: 20px;
-      padding: 18px 20px;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      border-radius: 24px;
+      padding: 20px 22px;
       margin-bottom: 14px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25), 0 0 20px rgba(16, 185, 129, 0.12);
+      box-shadow: 0 12px 32px rgba(16, 185, 129, 0.28), 0 2px 6px rgba(0, 0, 0, 0.04);
       color: #ffffff;
       position: relative;
       overflow: hidden;
+      transition: all 0.35s var(--apple-spring);
     }
     .hero-zen-card::before {
       content: '';
       position: absolute;
       top: -40px;
       right: -40px;
-      width: 140px;
-      height: 140px;
-      background: radial-gradient(circle, rgba(16, 185, 129, 0.2) 0%, transparent 70%);
+      width: 160px;
+      height: 160px;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.25) 0%, transparent 70%);
       pointer-events: none;
+    }
+    .hero-zen-card.status-yellow {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      box-shadow: 0 12px 32px rgba(245, 158, 11, 0.28), 0 2px 6px rgba(0, 0, 0, 0.04);
+    }
+    .hero-zen-card.status-red {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      box-shadow: 0 12px 32px rgba(239, 68, 68, 0.28), 0 2px 6px rgba(0, 0, 0, 0.04);
     }
     .hero-zen-top {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
     }
     .hero-zen-badge {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      font-size: 10px;
+      font-size: 10.5px;
       font-weight: 800;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.06em;
       text-transform: uppercase;
-      color: #6ee7b7;
-      background: rgba(16, 185, 129, 0.15);
-      border: 1px solid rgba(16, 185, 129, 0.3);
-      padding: 3px 10px;
-      border-radius: 20px;
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.22);
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      padding: 4px 11px;
+      border-radius: 9999px;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      transition: transform 0.15s var(--apple-spring);
+    }
+    .hero-zen-badge:active {
+      transform: scale(0.95);
     }
     .hero-zen-pulse {
-      width: 6px;
-      height: 6px;
+      width: 7px;
+      height: 7px;
       border-radius: 50%;
-      background: #10b981;
-      box-shadow: 0 0 8px #10b981;
+      background: #ffffff;
+      box-shadow: 0 0 8px rgba(255, 255, 255, 0.9);
       animation: pulseGlow 2s infinite ease-in-out;
     }
     @keyframes pulseGlow {
@@ -2893,48 +2940,55 @@
       50% { opacity: 0.4; transform: scale(1.3); }
     }
     .hero-zen-pill-status {
-      font-size: 10.5px;
+      font-size: 11px;
       font-weight: 700;
-      padding: 2px 8px;
-      border-radius: 12px;
-      background: rgba(255, 255, 255, 0.1);
-      color: #e2e8f0;
+      padding: 3px 10px;
+      border-radius: 9999px;
+      background: rgba(255, 255, 255, 0.22);
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      color: #ffffff;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      transition: transform 0.15s var(--apple-spring);
+    }
+    .hero-zen-pill-status:active {
+      transform: scale(0.95);
     }
     .hero-zen-pill-status.status-green {
-      background: rgba(16, 185, 129, 0.2);
-      color: #34d399;
-      border: 1px solid rgba(16, 185, 129, 0.3);
+      background: rgba(255, 255, 255, 0.25);
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.4);
     }
     .hero-zen-pill-status.status-yellow {
-      background: rgba(245, 158, 11, 0.2);
-      color: #fbbf24;
-      border: 1px solid rgba(245, 158, 11, 0.3);
+      background: rgba(255, 255, 255, 0.25);
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.4);
     }
     .hero-zen-pill-status.status-red {
-      background: rgba(239, 68, 68, 0.2);
-      color: #f87171;
-      border: 1px solid rgba(239, 68, 68, 0.3);
+      background: rgba(255, 255, 255, 0.25);
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.4);
     }
     .hero-zen-main {
       margin-bottom: 12px;
     }
     .hero-zen-number {
-      font-size: 32px;
+      font-size: 34px;
       font-weight: 900;
-      color: #34d399;
+      color: #ffffff;
       letter-spacing: -0.02em;
       line-height: 1.1;
-      text-shadow: 0 2px 14px rgba(52, 211, 153, 0.3);
+      text-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
+      font-variant-numeric: tabular-nums;
     }
     .hero-zen-unit {
-      font-size: 14px;
+      font-size: 15px;
       font-weight: 700;
-      color: #a7f3d0;
-      opacity: 0.85;
+      color: rgba(255, 255, 255, 0.85);
     }
     .hero-zen-subtext {
-      font-size: 12px;
-      color: #94a3b8;
+      font-size: 12.5px;
+      color: rgba(255, 255, 255, 0.9);
       font-weight: 600;
       margin-top: 4px;
     }
@@ -2944,24 +2998,214 @@
     .hero-zen-progress-bar {
       width: 100%;
       height: 6px;
-      background: rgba(255, 255, 255, 0.12);
-      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.24);
+      border-radius: 9999px;
       overflow: hidden;
     }
     .hero-zen-progress-fill {
       height: 100%;
-      background: linear-gradient(90deg, #10b981, #34d399);
-      border-radius: 8px;
-      transition: width 0.4s ease;
+      background: #ffffff;
+      box-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
+      border-radius: 9999px;
+      transition: width 0.4s var(--apple-spring);
     }
     .hero-zen-progress-labels {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-top: 5px;
-      font-size: 10px;
+      margin-top: 6px;
+      font-size: 11px;
       font-weight: 600;
-      color: #64748b;
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    /* Twilight Mode Hero Zen Card */
+    body.theme-twilight .hero-zen-card {
+      background: linear-gradient(135deg, #090d16 0%, #0f172a 60%, #111c30 100%);
+      border: 1.5px solid rgba(16, 185, 129, 0.4);
+      box-shadow: 0 0 30px rgba(16, 185, 129, 0.22), 0 14px 36px rgba(0, 0, 0, 0.45);
+    }
+    body.theme-twilight .hero-zen-card.status-yellow {
+      border: 1.5px solid rgba(245, 158, 11, 0.4);
+      box-shadow: 0 0 30px rgba(245, 158, 11, 0.22), 0 14px 36px rgba(0, 0, 0, 0.45);
+    }
+    body.theme-twilight .hero-zen-card.status-red {
+      border: 1.5px solid rgba(239, 68, 68, 0.4);
+      box-shadow: 0 0 30px rgba(239, 68, 68, 0.22), 0 14px 36px rgba(0, 0, 0, 0.45);
+    }
+    body.theme-twilight .hero-zen-card .hero-zen-number {
+      color: #34d399;
+      text-shadow: 0 0 20px rgba(52, 211, 153, 0.4);
+    }
+    body.theme-twilight .hero-zen-card.status-yellow .hero-zen-number {
+      color: #fbbf24;
+      text-shadow: 0 0 20px rgba(251, 191, 36, 0.4);
+    }
+    body.theme-twilight .hero-zen-card.status-red .hero-zen-number {
+      color: #f87171;
+      text-shadow: 0 0 20px rgba(248, 113, 113, 0.4);
+    }
+    body.theme-twilight .hero-zen-card .hero-zen-badge {
+      background: rgba(16, 185, 129, 0.15);
+      border-color: rgba(16, 185, 129, 0.35);
+      color: #6ee7b7;
+    }
+    body.theme-twilight .hero-zen-card .hero-zen-pulse {
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+    }
+    body.theme-twilight .hero-zen-card .hero-zen-subtext {
+      color: #94a3b8;
+    }
+    body.theme-twilight .hero-zen-card .hero-zen-progress-bar {
+      background: rgba(255, 255, 255, 0.12);
+    }
+    body.theme-twilight .hero-zen-card .hero-zen-progress-fill {
+      background: linear-gradient(90deg, #10b981, #34d399);
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+    }
+    body.theme-twilight .hero-zen-card .hero-zen-progress-labels {
+      color: #94a3b8;
+    }
+
+    /* ====== 1.1 TRÍO DE TARJETAS DE ALIVIO (APPLE SQUIRCLE) ====== */
+    .stat-card-ingreso,
+    .stat-card-gasto,
+    .stat-card-saldo {
+      border-radius: 18px !important;
+      padding: 14px 12px;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.18s var(--apple-spring), box-shadow 0.18s var(--apple-spring);
+    }
+    .stat-card-ingreso::after,
+    .stat-card-gasto::after,
+    .stat-card-saldo::after {
+      display: none !important;
+    }
+    .stat-card-ingreso {
+      background: #ffffff !important;
+      border: 1px solid rgba(226, 232, 240, 0.95) !important;
+      box-shadow: 0 3px 12px rgba(0, 0, 0, 0.03) !important;
+    }
+    .stat-card-ingreso .stat-label {
+      color: #059669 !important;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+    }
+    .stat-card-ingreso .stat-value {
+      color: #0f172a !important;
+      font-size: 17.5px;
+      font-weight: 800;
+    }
+
+    .stat-card-gasto {
+      background: #fff5f5 !important;
+      border: 1px solid rgba(254, 202, 202, 0.8) !important;
+      box-shadow: 0 3px 12px rgba(239, 68, 68, 0.05) !important;
+    }
+    .stat-card-gasto .stat-label {
+      color: #dc2626 !important;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+    }
+    .stat-card-gasto .stat-value {
+      color: #dc2626 !important;
+      font-size: 17.5px;
+      font-weight: 800;
+    }
+
+    .stat-card-saldo {
+      background: #eff6ff !important;
+      border: 1px solid rgba(191, 219, 254, 0.8) !important;
+      box-shadow: 0 3px 12px rgba(59, 130, 246, 0.05) !important;
+    }
+    .stat-card-saldo .stat-label {
+      color: #2563eb !important;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+    }
+    .stat-card-saldo .stat-value {
+      color: #2563eb !important;
+      font-size: 17.5px;
+      font-weight: 800;
+    }
+
+    /* Twilight mode stat cards */
+    body.theme-twilight .stat-card-ingreso {
+      background: rgba(16, 185, 129, 0.08) !important;
+      border: 1px solid rgba(16, 185, 129, 0.25) !important;
+    }
+    body.theme-twilight .stat-card-ingreso .stat-label { color: #6ee7b7 !important; }
+    body.theme-twilight .stat-card-ingreso .stat-value { color: #f8fafc !important; }
+
+    body.theme-twilight .stat-card-gasto {
+      background: rgba(239, 68, 68, 0.08) !important;
+      border: 1px solid rgba(239, 68, 68, 0.25) !important;
+    }
+    body.theme-twilight .stat-card-gasto .stat-label { color: #fca5a5 !important; }
+    body.theme-twilight .stat-card-gasto .stat-value { color: #f87171 !important; }
+
+    body.theme-twilight .stat-card-saldo {
+      background: rgba(59, 130, 246, 0.08) !important;
+      border: 1px solid rgba(59, 130, 246, 0.25) !important;
+    }
+    body.theme-twilight .stat-card-saldo .stat-label { color: #93c5fd !important; }
+    body.theme-twilight .stat-card-saldo .stat-value { color: #60a5fa !important; }
+
+    /* ====== 1.2 BOTONES DE ACCIÓN (APPLE PILL SPRINGS) ====== */
+    .zen-actions-grid {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    .action-pill {
+      border-radius: 9999px !important;
+      padding: 13px 18px;
+      border: none;
+      font-weight: 800;
+      font-size: 14px;
+      letter-spacing: -0.01em;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: transform 0.18s var(--apple-spring), box-shadow 0.18s var(--apple-spring), filter 0.15s ease;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .action-pill:active {
+      transform: scale(0.96) !important;
+    }
+    .action-pill-icon {
+      font-size: 18px;
+      line-height: 1;
+    }
+    .action-pill-expense {
+      flex: 1.2;
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      color: #ffffff;
+      box-shadow: 0 4px 16px rgba(239, 68, 68, 0.32), 0 1px 2px rgba(0, 0, 0, 0.06);
+    }
+    .action-pill-expense:hover {
+      filter: brightness(1.05);
+      box-shadow: 0 6px 20px rgba(239, 68, 68, 0.42);
+      transform: translateY(-1px);
+    }
+    .action-pill-income {
+      flex: 1;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: #ffffff;
+      box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3), 0 1px 2px rgba(0, 0, 0, 0.06);
+    }
+    .action-pill-income:hover {
+      filter: brightness(1.05);
+      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+      transform: translateY(-1px);
     }
 
     /* ====== 2. FEED DE ÚLTIMOS MOVIMIENTOS ====== */
@@ -3357,13 +3601,21 @@
         flex-direction: column;
         width: 240px;
         flex-shrink: 0;
-        background: var(--card-bg);
-        border-right: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.78);
+        backdrop-filter: blur(28px) saturate(190%);
+        -webkit-backdrop-filter: blur(28px) saturate(190%);
+        border-right: 1px solid rgba(226, 232, 240, 0.85);
         padding: 20px 14px;
         position: sticky;
         top: 0;
         height: 100vh;
         z-index: 1000;
+        box-shadow: 2px 0 16px rgba(0, 0, 0, 0.02);
+      }
+      body.theme-twilight .desktop-sidebar {
+        background: rgba(15, 23, 42, 0.82);
+        border-right: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 2px 0 20px rgba(0, 0, 0, 0.35);
       }
       .desktop-sidebar-brand {
         display: flex;

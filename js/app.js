@@ -77,7 +77,7 @@
     // ================================================================
     // VERSIÓN DE LA APP
     // ================================================================
-    const APP_VERSION = 'v64.2';
+    const APP_VERSION = 'v64.3';
     // Plantilla inicial 100% limpia para cualquier usuario nuevo
     function getCleanUserState() {
       const now = new Date();
@@ -681,12 +681,12 @@
       document.getElementById('segmentCuotasBox').style.display = type === 'cuotas' ? 'block' : 'none';
     }
 
-    // Registrar Service Worker v64.2 (Network-First, sin caché de datos)
+    // Registrar Service Worker v64.3 (Network-First, sin caché de datos)
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=64.2')
+        navigator.serviceWorker.register('./sw.js?v=64.3')
           .then(reg => {
-            console.log('SW v64 registrado:', reg.scope);
+            console.log('SW v64.3 registrado:', reg.scope);
             // Forzar actualización inmediata del SW en todos los dispositivos
             reg.update();
             if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
@@ -1434,7 +1434,7 @@
       
       const elDaily = document.getElementById('heroSafeDailyAmount');
       if (elDaily) {
-        elDaily.innerHTML = `S/ ${data.freePerDay.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span class="hero-zen-unit">/ día</span>`;
+        elDaily.innerHTML = `<span class="hero-zen-unit">S/ </span>${data.freePerDay.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span class="hero-zen-unit">/ día</span>`;
       }
 
       const elSubtitle = document.getElementById('heroSafeMonthSubtitle');
@@ -1472,6 +1472,12 @@
       if (elStatus) {
         elStatus.className = `hero-zen-pill-status status-${data.status}`;
         elStatus.textContent = data.statusLabel;
+      }
+
+      const heroCard = document.getElementById('heroSafeToSpendCard');
+      if (heroCard) {
+        heroCard.classList.remove('status-green', 'status-yellow', 'status-red');
+        heroCard.classList.add(`status-${data.status}`);
       }
     }
 
@@ -2448,6 +2454,14 @@
       const ctx = document.getElementById('categoryChart').getContext('2d');
       if (categoryChartObj) categoryChartObj.destroy();
 
+      const isDark = document.body.classList.contains('theme-twilight');
+      const hasExpenses = data.length > 0;
+      if (!hasExpenses) {
+        labels.push('Sin gastos aún');
+        data.push(1);
+        colors.push(isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)');
+      }
+
       categoryChartObj = new Chart(ctx, {
         type: 'doughnut',
         data: {
@@ -2455,9 +2469,10 @@
           datasets: [{
             data: data,
             backgroundColor: colors,
-            borderWidth: 0,
-            hoverOffset: 12,
-            borderRadius: 6
+            borderWidth: hasExpenses ? 2 : 0,
+            borderColor: isDark ? '#0f172a' : '#ffffff',
+            hoverOffset: hasExpenses ? 10 : 0,
+            borderRadius: hasExpenses ? 6 : 0
           }]
         },
         options: {
@@ -2465,15 +2480,19 @@
           maintainAspectRatio: false,
           plugins: {
             legend: {
+              display: hasExpenses,
               position: 'bottom',
               labels: {
                 font: { family: 'Plus Jakarta Sans', size: 9, weight: '600' },
                 boxWidth: 8,
                 padding: 6
               }
+            },
+            tooltip: {
+              enabled: hasExpenses
             }
           },
-          cutout: '70%',
+          cutout: '72%',
           layout: {
             padding: 10
           }
@@ -3110,8 +3129,8 @@
         data: {
           labels: months,
           datasets: [
-            { label: 'Gastos Total', data: spentData, backgroundColor: '#ef4444', borderRadius: 4 },
-            { label: 'Superávit', data: savingsData, backgroundColor: '#10b981', borderRadius: 4 }
+            { label: 'Gastos Total', data: spentData, backgroundColor: '#ef4444', borderRadius: 8, barPercentage: 0.7, categoryPercentage: 0.8 },
+            { label: 'Superávit', data: savingsData, backgroundColor: '#10b981', borderRadius: 8, barPercentage: 0.7, categoryPercentage: 0.8 }
           ]
         },
         options: {

@@ -15,7 +15,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <link rel="stylesheet" href="css/styles.css?v=64.0">
+  <link rel="stylesheet" href="css/styles.css?v=64.3">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
 </head>
 <body>
@@ -287,19 +287,19 @@
           </div>
         </div>
 
-        <!-- 3 Stat Cards Grid (Compact & Minimalist) -->
+        <!-- 3 Stat Cards Grid (Compact & Minimalist - Apple Squircle) -->
         <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); margin-bottom: 14px;">
-          <div class="stat-card">
+          <div class="stat-card stat-card-ingreso">
             <div class="stat-label">💵 INGRESO</div>
             <div class="stat-value" id="metricSalary" style="font-size: 17px;">S/ 0</div>
           </div>
 
-          <div class="stat-card">
+          <div class="stat-card stat-card-gasto">
             <div class="stat-label">🛍️ GASTO REAL</div>
             <div class="stat-value text-danger" id="metricSpent" style="font-size: 17px;">S/ 0</div>
           </div>
 
-          <div class="stat-card" onclick="openExplainSurplusModal()" style="cursor: pointer;" title="Ver desglose del saldo bancario">
+          <div class="stat-card stat-card-saldo" onclick="openExplainSurplusModal()" style="cursor: pointer;" title="Ver desglose del saldo bancario">
             <div class="stat-label" style="display: flex; align-items: center; justify-content: space-between;">
               <span>🏦 SALDO BANCO</span>
               <span style="font-size: 10px; opacity: 0.7;">ℹ️</span>
@@ -308,14 +308,14 @@
           </div>
         </div>
 
-        <!-- Action Buttons (Express Quick Log & Extra Income) -->
-        <div class="zen-actions-grid" style="display: flex; gap: 10px; margin-bottom: 15px;">
-          <button id="btnRegistrarGasto" onclick="openQuickExpenseModal()" style="flex: 1.2; padding: 14px 16px; border-radius: 16px; background: linear-gradient(135deg, #ef4444, #dc2626); border: none; color: white; font-weight: 800; font-size: 14.5px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 16px rgba(239, 68, 68, 0.35); cursor: pointer; transition: transform 0.15s ease;">
-            <span style="font-size: 20px;">⚡</span>
+        <!-- Action Buttons (Apple Pill Springs) -->
+        <div class="zen-actions-grid">
+          <button id="btnRegistrarGasto" class="action-pill action-pill-expense" onclick="openQuickExpenseModal()">
+            <span class="action-pill-icon">⚡</span>
             <span>+ Registrar Gasto</span>
           </button>
-          <button id="btnRegistrarIngreso" onclick="openAddExtraIncomeModal()" style="flex: 1; padding: 14px 14px; border-radius: 16px; background: linear-gradient(135deg, #10b981, #059669); border: none; color: white; font-weight: 800; font-size: 13.5px; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3); cursor: pointer; transition: transform 0.15s ease;">
-            <span style="font-size: 18px;">💵</span>
+          <button id="btnRegistrarIngreso" class="action-pill action-pill-income" onclick="openAddExtraIncomeModal()">
+            <span class="action-pill-icon">💵</span>
             <span>+ Ingreso</span>
           </button>
         </div>
@@ -1932,6 +1932,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
-  <script src="js/app.js?v=64.2"></script>
+  <script src="js/app.js?v=64.3"></script>
 </body>
 </html>
