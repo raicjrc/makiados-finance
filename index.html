@@ -259,11 +259,12 @@
         <!-- Hero Card: Paz Mental - Dinero Libre Hoy (Safe to Spend) -->
         <div id="heroSafeToSpendCard" class="hero-zen-card">
           <div class="hero-zen-top">
-            <div class="hero-zen-badge">
+            <div class="hero-zen-badge" onclick="openExplainSafeToSpendModal()" style="cursor: pointer;" title="Toca para ver la explicación detallada de tu dinero libre diario">
               <span class="hero-zen-pulse"></span>
               <span>PAZ MENTAL · DISPONIBLE HOY</span>
+              <span style="font-size: 10px; opacity: 0.85; margin-left: 2px;">ℹ️</span>
             </div>
-            <span id="heroSafeStatusPill" class="hero-zen-pill-status">🟢 Holgado</span>
+            <span id="heroSafeStatusPill" class="hero-zen-pill-status" onclick="openExplainSafeToSpendModal()" style="cursor: pointer;" title="Toca para ver el diagnóstico de tu estado">🟢 Holgado</span>
           </div>
 
           <div class="hero-zen-main">
@@ -741,8 +742,11 @@
   <!-- MODAL: SETTINGS & OPTIONS POPOVER -->
   <div class="modal-backdrop" id="settingsModal" onclick="handleBackdropClick(event, 'settingsModal')">
     <div class="modal">
-      <div class="modal-title">⚙️ Ajustes de AliviaFin</div>
-      <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 12px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #f1f5f9;">
+        <div class="modal-title" style="margin: 0; font-size: 16px;">⚙️ Ajustes de AliviaFin</div>
+        <button type="button" onclick="closeModal('settingsModal')" aria-label="Cerrar Ajustes" style="background: #f1f5f9; border: 1px solid #cbd5e1; width: 32px; height: 32px; border-radius: 50%; font-size: 16px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #475569; transition: all 0.15s ease;">✕</button>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px;">
         
         <div style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 2px;">Mi Perfil & App</div>
         <!-- Nombre de Usuario / Apodo Personalizado -->
@@ -754,10 +758,10 @@
           </div>
         </div>
 
-        <button class="btn btn-secondary" onclick="openEditSalaryModal(); closeModal('settingsModal');" style="width: 100%; text-align: left; padding: 10px;">✏️ Editar mi Sueldo Inicial</button>
-        <button class="btn btn-secondary" onclick="openCategoryManagerModal(); closeModal('settingsModal');" style="width: 100%; text-align: left; padding: 10px;">⚙️ Gestor de Categorías</button>
-        <button class="btn btn-secondary" onclick="closeModal('settingsModal'); startInteractiveTour();" style="width: 100%; text-align: left; padding: 10px;">🧭 Ver Tour Guiado</button>
-        <button class="btn btn-secondary" onclick="closeModal('settingsModal'); openOnboardingWizard(true);" style="width: 100%; text-align: left; padding: 10px;">🔧 Reconfigurar Ingresos y Gastos</button>
+        <button type="button" class="btn btn-secondary" onclick="openEditSalaryModal();" style="width: 100%; text-align: left; padding: 10px;">✏️ Editar mi Sueldo Inicial</button>
+        <button type="button" class="btn btn-secondary" onclick="openCategoryManagerModal();" style="width: 100%; text-align: left; padding: 10px;">⚙️ Gestor de Categorías</button>
+        <button type="button" class="btn btn-secondary" onclick="startInteractiveTour();" style="width: 100%; text-align: left; padding: 10px;">🧭 Ver Tour Guiado</button>
+        <button type="button" class="btn btn-secondary" onclick="openOnboardingWizard(true);" style="width: 100%; text-align: left; padding: 10px;">🔧 Reconfigurar Ingresos y Gastos</button>
 
         <!-- Toggle: Mostrar tour al iniciar -->
         <div style="padding: 10px 12px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; margin-top: 2px;">
@@ -768,19 +772,19 @@
         </div>
 
         <div style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-top: 6px; margin-bottom: 2px;">Exportación & Reportes</div>
-        <button class="btn btn-secondary" onclick="exportMonthlyReportPDF(); closeModal('settingsModal');" style="width: 100%; text-align: left; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
+        <button type="button" class="btn btn-secondary" onclick="exportMonthlyReportPDF(); closeModal('settingsModal');" style="width: 100%; text-align: left; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
           <span>📄 Descargar Reporte Mensual (PDF)</span>
           <span style="font-size: 10px; font-weight: 700; color: #10b981; background: rgba(16,185,129,0.1); padding: 2px 6px; border-radius: 6px;">Gratis</span>
         </button>
-        <button class="btn btn-secondary" onclick="closeModal('settingsModal'); handleExportExcelCSVClick();" style="width: 100%; text-align: left; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('settingsModal'); handleExportExcelCSVClick();" style="width: 100%; text-align: left; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
           <span>📊 Exportar Historial a Excel / CSV</span>
           <span class="badge-pro-gold" style="font-size: 10px; padding: 2px 6px;">PRO 👑</span>
         </button>
 
         <div style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-top: 6px; margin-bottom: 2px;">Soporte y Novedades</div>
-        <button class="btn btn-secondary" id="settingsWhatsNewBtn" onclick="closeModal('settingsModal'); openWhatsNewModal();" style="width: 100%; text-align: left; padding: 10px;">🚀 Novedades (v63.1)</button>
-        <button class="btn btn-secondary" onclick="closeModal('settingsModal'); openFeedbackModal();" style="width: 100%; text-align: left; padding: 10px;">💬 Contacto y Soporte</button>
-        <button class="btn btn-secondary" onclick="closeModal('settingsModal'); openSecurityModal();" style="width: 100%; text-align: left; padding: 10px;">🛡️ Privacidad de Datos</button>
+        <button type="button" class="btn btn-secondary" id="settingsWhatsNewBtn" onclick="openWhatsNewModal();" style="width: 100%; text-align: left; padding: 10px;">🚀 Novedades (v64.2)</button>
+        <button type="button" class="btn btn-secondary" onclick="openFeedbackModal();" style="width: 100%; text-align: left; padding: 10px;">💬 Contacto y Soporte</button>
+        <button type="button" class="btn btn-secondary" onclick="openSecurityModal();" style="width: 100%; text-align: left; padding: 10px;">🛡️ Privacidad de Datos</button>
         
         <!-- Info de cuenta y versión -->
         <div style="border-top: 1px solid #f3f4f6; padding-top: 12px; margin-top: 4px;">
@@ -791,15 +795,15 @@
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center;">
               <span style="font-size: 11px; font-weight: 700; color: #374151;">📱 Versión</span>
-              <span style="font-size: 11px; color: #4f46e5; font-weight: 800;" id="settingsVersion">v63.1</span>
+              <span style="font-size: 11px; color: #4f46e5; font-weight: 800;" id="settingsVersion">v64.2</span>
             </div>
           </div>
         </div>
 
-        <button class="btn btn-pill danger" onclick="handleLogout()" style="width: 100%; padding: 10px; font-size: 12px;">🔒 Cerrar Sesión</button>
+        <button type="button" class="btn btn-pill danger" onclick="handleLogout()" style="width: 100%; padding: 10px; font-size: 12px;">🔒 Cerrar Sesión</button>
       </div>
-      <div class="modal-actions">
-        <button type="button" class="btn btn-secondary" onclick="closeModal('settingsModal')">Cerrar [ESC]</button>
+      <div class="modal-actions" style="margin-top: 14px;">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('settingsModal')" style="width: 100%; font-weight: 800; padding: 10px;">✕ Cerrar Ajustes [ESC]</button>
       </div>
     </div>
   </div>
@@ -807,7 +811,10 @@
   <!-- MODAL: ADD EXTRA INCOME -->
   <div class="modal-backdrop" id="addExtraIncomeModal" onclick="handleBackdropClick(event, 'addExtraIncomeModal')">
     <div class="modal">
-      <div class="modal-title">💵 Registrar Ingreso Extra</div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <div class="modal-title" style="margin: 0;">💵 Registrar Ingreso Extra</div>
+        <button type="button" onclick="closeModal('addExtraIncomeModal')" aria-label="Cerrar" style="background: #f1f5f9; border: 1px solid #cbd5e1; width: 30px; height: 30px; border-radius: 50%; font-size: 15px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #475569;">✕</button>
+      </div>
       <form onsubmit="handleAddExtraIncome(event)">
         <div class="form-group">
           <label>Concepto del Ingreso Extra</label>
@@ -828,13 +835,53 @@
   <!-- MODAL: EXPLAIN SURPLUS -->
   <div class="modal-backdrop" id="explainSurplusModal" onclick="handleBackdropClick(event, 'explainSurplusModal')">
     <div class="modal">
-      <div class="modal-title">💡 ¿Qué es el Saldo en Cuenta?</div>
-      <div style="font-size: 12px; color: #334155; line-height: 1.5; margin-bottom: 14px;">
-        <p style="margin-bottom: 6px;">Representa el dinero real que tienes disponible en tu cuenta. Es la diferencia entre tus ingresos y <strong>únicamente los gastos que ya has marcado como "Pagado"</strong>.</p>
-        <p>⚠️ A medida que pagues tus gastos pendientes, este monto irá bajando automáticamente.</p>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <div class="modal-title" style="margin: 0;">💡 ¿Qué es el Saldo en Cuenta?</div>
+        <button type="button" onclick="closeModal('explainSurplusModal')" aria-label="Cerrar" style="background: #f1f5f9; border: 1px solid #cbd5e1; width: 30px; height: 30px; border-radius: 50%; font-size: 15px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #475569;">✕</button>
+      </div>
+      <div style="font-size: 12.5px; color: #334155; line-height: 1.6; margin-bottom: 14px;">
+        <p style="margin-bottom: 8px;">Representa el dinero real disponible en tu cuenta. Es la diferencia entre tus ingresos totales y <strong>únicamente los gastos que ya has marcado como "Pagado"</strong>.</p>
+        <p style="margin: 0; color: #b45309; font-weight: 600;">⚠️ A medida que vayas pagando y marcando tus gastos pendientes, este monto irá bajando automáticamente.</p>
       </div>
       <div class="modal-actions">
-        <button type="button" class="btn btn-primary" onclick="closeModal('explainSurplusModal')">¡Entendido! [ESC]</button>
+        <button type="button" class="btn btn-primary" onclick="closeModal('explainSurplusModal')" style="width: 100%;">¡Entendido! [ESC]</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: EXPLAIN SAFE TO SPEND / PAZ MENTAL -->
+  <div class="modal-backdrop" id="explainSafeToSpendModal" onclick="handleBackdropClick(event, 'explainSafeToSpendModal')">
+    <div class="modal" style="max-width: 460px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid #f1f5f9;">
+        <div class="modal-title" style="margin: 0; font-size: 15px;">🛡️ Paz Mental · Disponible Hoy</div>
+        <button type="button" onclick="closeModal('explainSafeToSpendModal')" aria-label="Cerrar" style="background: #f1f5f9; border: 1px solid #cbd5e1; width: 30px; height: 30px; border-radius: 50%; font-size: 15px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #475569;">✕</button>
+      </div>
+      <div style="font-size: 12.5px; color: #334155; line-height: 1.55; display: flex; flex-direction: column; gap: 10px;">
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 11px 13px;">
+          <div style="font-weight: 800; color: #0f172a; margin-bottom: 3px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.3px;">🎯 ¿Qué significa esta tarjeta?</div>
+          <p style="margin: 0; color: #475569;">Es tu <strong>presupuesto diario seguro</strong>. Te dice cuánto puedes gastar cada día sin poner en riesgo tus cuentas ni endeudarte.</p>
+        </div>
+
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 11px 13px;">
+          <div style="font-weight: 800; color: #0f172a; margin-bottom: 3px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.3px;">📐 Fórmula de cálculo</div>
+          <p style="margin: 0; font-family: monospace; font-size: 11.5px; color: #4338ca; font-weight: 700; background: #e0e7ff; padding: 4px 8px; border-radius: 6px; display: inline-block;">
+            (Ingresos del Mes − Total Gastos) ÷ Días Restantes
+          </p>
+          <p style="margin: 6px 0 0; font-size: 11.5px; color: #64748b;">Si al mes le sobran S/ 600 y faltan 20 días, tienes exactamente S/ 30.00 por día para gastar libremente.</p>
+        </div>
+
+        <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 11px 13px;">
+          <div style="font-weight: 800; color: #b91c1c; margin-bottom: 3px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.3px;">🔴 ¿Por qué dice S/ 0.00 / día y "Presupuesto excedido"?</div>
+          <p style="margin: 0; font-size: 12px; color: #991b1b;">Porque en este mes tus gastos registrados o presupuestados superan a tus ingresos. Como no hay excedente del sueldo para gastar en el día a día, el sistema te protege fijándolo en <strong>S/ 0.00</strong>.</p>
+        </div>
+
+        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 11px 13px;">
+          <div style="font-weight: 800; color: #15803d; margin-bottom: 3px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.3px;">🟢 ¿Cómo pasarlo a Holgado?</div>
+          <p style="margin: 0; font-size: 12px; color: #166534;">Puedes registrar un <strong>Ingreso Extra</strong> (ej: freelance, bono o venta) o reducir/postergar gastos en la pestaña <em>Movimientos</em>.</p>
+        </div>
+      </div>
+      <div class="modal-actions" style="margin-top: 14px;">
+        <button type="button" class="btn btn-primary" onclick="closeModal('explainSafeToSpendModal')" style="width: 100%; padding: 10px; font-weight: 800;">¡Entendido! [ESC]</button>
       </div>
     </div>
   </div>
@@ -1254,7 +1301,10 @@
   <!-- MODAL: ADD / EDIT EXPENSE -->
   <div class="modal-backdrop" id="addExpenseModal" onclick="handleBackdropClick(event, 'addExpenseModal')">
     <div class="modal">
-      <div class="modal-title" id="expenseModalTitle">+ Registrar Nuevo Gasto</div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <div class="modal-title" id="expenseModalTitle" style="margin: 0;">+ Registrar Nuevo Gasto</div>
+        <button type="button" onclick="closeModal('addExpenseModal')" aria-label="Cerrar" style="background: #f1f5f9; border: 1px solid #cbd5e1; width: 30px; height: 30px; border-radius: 50%; font-size: 15px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #475569;">✕</button>
+      </div>
       <form onsubmit="handleAddExpense(event)">
         <input type="hidden" id="editingTxId" value="">
         
@@ -1342,7 +1392,10 @@
   <!-- MODAL: EDIT SALARY -->
   <div class="modal-backdrop" id="editSalaryModal" onclick="handleBackdropClick(event, 'editSalaryModal')">
     <div class="modal">
-      <div class="modal-title">✏️ Editar Sueldo Combinado</div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <div class="modal-title" style="margin: 0;">✏️ Editar Sueldo Combinado</div>
+        <button type="button" onclick="closeModal('editSalaryModal')" aria-label="Cerrar" style="background: #f1f5f9; border: 1px solid #cbd5e1; width: 30px; height: 30px; border-radius: 50%; font-size: 15px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #475569;">✕</button>
+      </div>
       <form onsubmit="handleSaveSalary(event)">
         <div class="form-group">
           <label>Nuevo Sueldo Mensual Bolsa Común (S/)</label>
@@ -1359,7 +1412,10 @@
   <!-- MODAL: ADD SAVINGS GOAL -->
   <div class="modal-backdrop" id="addGoalModal" onclick="handleBackdropClick(event, 'addGoalModal')">
     <div class="modal">
-      <div class="modal-title">🎯 Crear Nueva Meta de Ahorro</div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <div class="modal-title" style="margin: 0;">🎯 Crear Nueva Meta de Ahorro</div>
+        <button type="button" onclick="closeModal('addGoalModal')" aria-label="Cerrar" style="background: #f1f5f9; border: 1px solid #cbd5e1; width: 30px; height: 30px; border-radius: 50%; font-size: 15px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #475569;">✕</button>
+      </div>
       <form onsubmit="handleAddGoal(event)">
         <div class="form-group">
           <label>Nombre de la Meta</label>
@@ -1399,7 +1455,10 @@
   <!-- MODAL: DEPOSIT TO GOAL -->
   <div class="modal-backdrop" id="depositGoalModal" onclick="handleBackdropClick(event, 'depositGoalModal')">
     <div class="modal">
-      <div class="modal-title">💰 Agregar Aporte a Meta</div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <div class="modal-title" style="margin: 0;">💰 Agregar Aporte a Meta</div>
+        <button type="button" onclick="closeModal('depositGoalModal')" aria-label="Cerrar" style="background: #f1f5f9; border: 1px solid #cbd5e1; width: 30px; height: 30px; border-radius: 50%; font-size: 15px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #475569;">✕</button>
+      </div>
       <form onsubmit="handleDepositGoal(event)">
         <input type="hidden" id="depositGoalId">
         <div class="form-group">
@@ -1873,6 +1932,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
-  <script src="js/app.js?v=64.1"></script>
+  <script src="js/app.js?v=64.2"></script>
 </body>
 </html>

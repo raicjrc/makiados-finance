@@ -1828,16 +1828,17 @@
       background: rgba(15, 23, 42, 0.45);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
-      z-index: 2500;
-      display: flex;
+      z-index: 10005;
+      display: none;
       align-items: center;
       justify-content: center;
       padding: 16px;
       opacity: 0;
       visibility: hidden;
-      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.2s;
     }
     .glass-backdrop.active {
+      display: flex;
       opacity: 1;
       visibility: visible;
     }

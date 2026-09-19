@@ -77,7 +77,7 @@
     // ================================================================
     // VERSIÓN DE LA APP
     // ================================================================
-    const APP_VERSION = 'v64.1';
+    const APP_VERSION = 'v64.2';
     // Plantilla inicial 100% limpia para cualquier usuario nuevo
     function getCleanUserState() {
       const now = new Date();
@@ -308,12 +308,7 @@
     };
 
     function openFinZenProModal(featureName) {
-      const modal = document.getElementById('finzenProModal');
-      if (modal) {
-        modal.classList.add('active');
-        modal.style.visibility = 'visible';
-        modal.style.opacity = '1';
-      }
+      openModalById('finzenProModal');
     }
 
     async function verifySubscription(user) {
@@ -607,15 +602,9 @@
     }
 
     function openSettingsModal() {
-      const modal = document.getElementById('settingsModal');
-      if (!modal) return;
-
       // Cerrar cualquier otro modal abierto para evitar superposiciones
       document.querySelectorAll('.modal-backdrop.active, .glass-backdrop.active').forEach(m => {
-        if (m.id !== 'settingsModal') {
-          m.classList.remove('active');
-          m.style.display = 'none';
-        }
+        if (m.id !== 'settingsModal') closeModal(m);
       });
 
       // Rellenar info de usuario y versión
@@ -638,8 +627,7 @@
       }
 
       if (typeof syncVersionUI === 'function') syncVersionUI();
-      modal.style.display = 'flex';
-      modal.classList.add('active');
+      openModalById('settingsModal');
     }
 
     async function saveCustomUserName() {
@@ -693,10 +681,10 @@
       document.getElementById('segmentCuotasBox').style.display = type === 'cuotas' ? 'block' : 'none';
     }
 
-    // Registrar Service Worker v64.1 (Network-First, sin caché de datos)
+    // Registrar Service Worker v64.2 (Network-First, sin caché de datos)
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=64.1')
+        navigator.serviceWorker.register('./sw.js?v=64.2')
           .then(reg => {
             console.log('SW v64 registrado:', reg.scope);
             // Forzar actualización inmediata del SW en todos los dispositivos
@@ -1294,9 +1282,7 @@
 
     function closeAllModals() {
       document.querySelectorAll('.modal-backdrop, .glass-backdrop').forEach(mb => {
-        mb.classList.remove('active');
-        mb.style.visibility = 'hidden';
-        mb.style.opacity = '0';
+        closeModal(mb);
       });
       const fabMenu = document.getElementById('fabMenu');
       const fabOverlay = document.getElementById('fabOverlay');
@@ -1559,19 +1545,11 @@
         b.classList.toggle('active', b.getAttribute('data-cat') === 'Comida fuera');
       });
 
-      const modal = document.getElementById('quickExpenseModal');
-      if (modal) {
-        modal.style.display = 'block';
-        modal.classList.add('active');
-      }
+      openModalById('quickExpenseModal');
     }
 
     function closeQuickExpenseModal() {
-      const modal = document.getElementById('quickExpenseModal');
-      if (modal) {
-        modal.style.display = 'none';
-        modal.classList.remove('active');
-      }
+      closeModal('quickExpenseModal');
     }
 
     function updateQuickDisplay() {
@@ -2182,13 +2160,19 @@
     }
 
     function openExplainSurplusModal() {
-      document.getElementById('explainSurplusModal').classList.add('active');
+      openModalById('explainSurplusModal');
+    }
+
+    function openExplainSafeToSpendModal() {
+      openModalById('explainSafeToSpendModal');
     }
 
     function openAddExtraIncomeModal() {
-      document.getElementById('extraIncomeName').value = '';
-      document.getElementById('extraIncomeAmount').value = '';
-      document.getElementById('addExtraIncomeModal').classList.add('active');
+      const name = document.getElementById('extraIncomeName');
+      if (name) name.value = '';
+      const amount = document.getElementById('extraIncomeAmount');
+      if (amount) amount.value = '';
+      openModalById('addExtraIncomeModal');
     }
 
     function handleAddExtraIncome(e) {
@@ -2709,15 +2693,36 @@
       document.getElementById('expenseModalTitle').textContent = '✏️ Editar Gasto';
       document.getElementById('saveExpenseBtn').textContent = 'Actualizar Gasto';
 
-      document.getElementById('addExpenseModal').classList.add('active');
+      openModalById('addExpenseModal');
+    }
+
+    function openModalById(id) {
+      const modal = typeof id === 'string' ? document.getElementById(id) : id;
+      if (!modal) return;
+      modal.classList.add('active');
+      modal.style.display = 'flex';
+      modal.style.visibility = 'visible';
+      modal.style.opacity = '1';
+      modal.style.pointerEvents = 'auto';
+      if (modal.classList.contains('glass-backdrop')) {
+        modal.style.zIndex = '10005';
+      } else {
+        modal.style.zIndex = '10000';
+      }
     }
 
     function closeModal(id) {
-      const el = document.getElementById(id);
-      if (el) {
-        el.classList.remove('active');
-        el.style.display = 'none';
-      }
+      const modal = typeof id === 'string' ? document.getElementById(id) : id;
+      if (!modal) return;
+      modal.classList.remove('active');
+      modal.style.display = 'none';
+      modal.style.visibility = 'hidden';
+      modal.style.opacity = '0';
+      modal.style.pointerEvents = 'none';
+    }
+
+    function closeGlassModal(id) {
+      closeModal(id);
     }
 
     function handleAddExpense(e) {
@@ -3216,14 +3221,20 @@
     }
 
     function openAddGoalModal() {
-      document.getElementById('goalName').value = '';
-      document.getElementById('goalTarget').value = '';
-      document.getElementById('goalCurrent').value = '0';
-      document.getElementById('goalMonthly').value = '250';
-      document.getElementById('addGoalModal').classList.add('active');
+      closeModal('settingsModal');
+      const name = document.getElementById('goalName');
+      if (name) name.value = '';
+      const target = document.getElementById('goalTarget');
+      if (target) target.value = '';
+      const cur = document.getElementById('goalCurrent');
+      if (cur) cur.value = '0';
+      const m = document.getElementById('goalMonthly');
+      if (m) m.value = '250';
+      openModalById('addGoalModal');
     }
 
     function handleOpenAddGoalClick() {
+      closeModal('settingsModal');
       if (appState.savingsGoals && appState.savingsGoals.length >= 1 && !isUserPro()) {
         openFinZenProModal('Metas de Ahorro Múltiples');
         return;
@@ -3271,7 +3282,7 @@
       if (!g) return;
       document.getElementById('depositGoalId').value = id;
       document.getElementById('depositAmount').value = '';
-      document.getElementById('depositGoalModal').classList.add('active');
+      openModalById('depositGoalModal');
     }
 
     function handleDepositGoal(e) {
@@ -3885,22 +3896,14 @@
 
       document.getElementById('expenseModalTitle').textContent = '+ Registrar Nuevo Gasto';
       document.getElementById('saveExpenseBtn').textContent = 'Guardar Gasto';
-      document.getElementById('addExpenseModal').classList.add('active');
-    }
-
-    function closeModal(id) {
-      document.getElementById(id).classList.remove('active');
+      openModalById('addExpenseModal');
     }
 
     function openEditSalaryModal() {
       closeModal('settingsModal');
       const input = document.getElementById('newSalaryInput');
       if (input) input.value = appState.salary || 0;
-      const modal = document.getElementById('editSalaryModal');
-      if (modal) {
-        modal.style.display = 'flex';
-        modal.classList.add('active');
-      }
+      openModalById('editSalaryModal');
     }
 
     function handleSaveSalary(e) {
@@ -3941,23 +3944,10 @@
     let selectedManagerEmoji = '⭐';
     let selectedManagerColor = '#38bdf8';
 
-    function closeGlassModal(id) {
-      const el = document.getElementById(id);
-      if (el) {
-        el.classList.remove('active');
-        el.style.visibility = 'hidden';
-        el.style.opacity = '0';
-      }
-    }
-
     function openCategoryManagerModal() {
+      closeModal('settingsModal');
       renderCategoryManagerList();
-      const el = document.getElementById('categoryManagerModal');
-      if (el) {
-        el.style.visibility = 'visible';
-        el.style.opacity = '1';
-        el.classList.add('active');
-      }
+      openModalById('categoryManagerModal');
     }
 
     function selectManagerEmoji(emoji, btn) {
@@ -4131,12 +4121,7 @@
         ).join('');
       }
 
-      const simModalEl = document.getElementById('installmentsSimulatorModal');
-      if (simModalEl) {
-        simModalEl.style.visibility = 'visible';
-        simModalEl.style.opacity = '1';
-        simModalEl.classList.add('active');
-      }
+      openModalById('installmentsSimulatorModal');
       setTimeout(updateSimulation, 150);
     }
 
@@ -4377,12 +4362,8 @@
         addWizardCardRow('Tarjeta Principal (BCP / BBVA / Interbank)', '15', '30');
       }
 
-      const modal = document.getElementById('onboardingWizardModal');
-      if (modal) {
-        modal.classList.add('active');
-        modal.style.visibility = 'visible';
-        modal.style.opacity = '1';
-      }
+      closeModal('settingsModal');
+      openModalById('onboardingWizardModal');
     }
 
     function goToWizardStep(step) {
@@ -4658,12 +4639,7 @@
     }
 
     function dismissOnboardingWizard(markSkipped = true) {
-      const modal = document.getElementById('onboardingWizardModal');
-      if (modal) {
-        modal.classList.remove('active');
-        modal.style.visibility = 'hidden';
-        modal.style.opacity = '0';
-      }
+      closeModal('onboardingWizardModal');
       if (markSkipped) {
         const userKey = currentUser ? currentUser.id : 'guest';
         localStorage.setItem('finanzas_setup_completed_' + userKey, 'skipped');
@@ -4700,22 +4676,13 @@
     }
 
     function openWhatsNewModal() {
+      closeModal('settingsModal');
       syncVersionUI();
-      const modal = document.getElementById('whatsNewModal');
-      if (modal) {
-        modal.classList.add('active');
-        modal.style.visibility = 'visible';
-        modal.style.opacity = '1';
-      }
+      openModalById('whatsNewModal');
     }
 
     function dismissWhatsNewModal() {
-      const modal = document.getElementById('whatsNewModal');
-      if (modal) {
-        modal.classList.remove('active');
-        modal.style.visibility = 'hidden';
-        modal.style.opacity = '0';
-      }
+      closeModal('whatsNewModal');
       const userKey = currentUser ? currentUser.id : 'guest';
       localStorage.setItem('finanzas_last_seen_version_' + userKey, APP_VERSION);
       localStorage.setItem('finanzas_last_seen_version', APP_VERSION);
@@ -4763,20 +4730,18 @@
     // MODALES DE SEGURIDAD & FEEDBACK (SOPORTE)
     // ================================================================
     function openSecurityModal() {
-      const modal = document.getElementById('securityModal');
-      if (modal) modal.classList.add('active');
+      closeModal('settingsModal');
+      openModalById('securityModal');
     }
 
     function openFeedbackModal() {
-      const modal = document.getElementById('feedbackModal');
-      if (modal) {
-        const msgEl = document.getElementById('feedbackMessage');
-        if (msgEl) msgEl.value = '';
-        modal.classList.add('active');
-        setTimeout(() => {
-          if (msgEl) msgEl.focus();
-        }, 200);
-      }
+      closeModal('settingsModal');
+      const msgEl = document.getElementById('feedbackMessage');
+      if (msgEl) msgEl.value = '';
+      openModalById('feedbackModal');
+      setTimeout(() => {
+        if (msgEl) msgEl.focus();
+      }, 200);
     }
 
     async function submitAppFeedback() {
@@ -4853,6 +4818,7 @@
     };
 
     function startInteractiveTour() {
+      closeAllModals();
       if (!window.driver || !window.driver.js || !window.driver.js.driver) {
         console.warn("Driver.js no cargado");
         return;
@@ -5161,13 +5127,7 @@ window.closeTour = function() {
 
       renderSnowballDebtsList();
       calculateDebtSnowball();
-
-      const el = document.getElementById('debtSnowballModal');
-      if (el) {
-        el.style.visibility = 'visible';
-        el.style.opacity = '1';
-        el.classList.add('active');
-      }
+      openModalById('debtSnowballModal');
     }
 
     function renderSnowballDebtsList() {
@@ -5401,11 +5361,14 @@ window.closeTour = function() {
     }
 
 // Exponer funciones críticas al scope global explícitamente para evitar problemas de binding
+window.openModalById = openModalById;
+window.closeModal = closeModal;
+window.closeGlassModal = closeGlassModal;
+window.closeAllModals = closeAllModals;
+window.openExplainSafeToSpendModal = openExplainSafeToSpendModal;
 window.startInteractiveTour = startInteractiveTour;
 window.toggleFAB = typeof toggleFAB === 'function' ? toggleFAB : function(){};
 window.openSettingsModal = openSettingsModal;
-window.closeModal = closeModal;
-window.closeGlassModal = typeof closeGlassModal === 'function' ? closeGlassModal : function(id){ const el = document.getElementById(id); if (el) { el.classList.remove('active'); el.style.display = 'none'; } };
 window.handleBackdropClick = handleBackdropClick;
 window.openAddExpenseModal = openAddExpenseModal;
 window.openEditExpenseModal = openEditExpenseModal;
