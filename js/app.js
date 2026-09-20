@@ -724,6 +724,19 @@
       }
     }
 
+    function toggleTourPreference(showTour) {
+      const userKey = currentUser ? currentUser.id : 'guest';
+      if (!showTour) {
+        localStorage.setItem('finanzas_tour_dismissed_' + userKey, 'true');
+        localStorage.setItem('finanzas_tour_dismissed', 'true');
+        showToast('Tour desactivado al iniciar sesión', 'info');
+      } else {
+        localStorage.removeItem('finanzas_tour_dismissed_' + userKey);
+        localStorage.removeItem('finanzas_tour_dismissed');
+        showToast('Tour activado al iniciar sesión', 'info');
+      }
+    }
+
     function switchSegmentView(type) {
       document.getElementById('segBtnChart').className = 'segmented-btn ' + (type === 'chart' ? 'active' : '');
       document.getElementById('segBtnCuotas').className = 'segmented-btn ' + (type === 'cuotas' ? 'active' : '');
@@ -4681,16 +4694,281 @@
     }
 
     // ================================================================
-    // TOUR INTERACTIVO (STUB)
+    // TOUR INTERACTIVO COMPLETO (ONBOARDING GUIADO & AUTO-NAVEGACIÓN)
     // ================================================================
-    window.handleTourCheckboxChange = function(isChecked) {};
+    window.handleTourCheckboxChange = function(isChecked) {
+      const userKey = currentUser ? currentUser.id : 'guest';
+      if (isChecked) {
+        localStorage.setItem('finanzas_tour_dismissed_' + userKey, 'true');
+        localStorage.setItem('finanzas_tour_dismissed', 'true');
+      } else {
+        localStorage.removeItem('finanzas_tour_dismissed_' + userKey);
+        localStorage.removeItem('finanzas_tour_dismissed');
+      }
+    };
 
     function startInteractiveTour() {
-      // Tour interactivo desactivado para una experiencia minimalista zen sin distracciones
-      console.log("Tour interactivo omitido");
+      closeAllModals();
+      if (!window.driver || !window.driver.js || !window.driver.js.driver) {
+        console.warn("Driver.js no cargado");
+        return;
+      }
+
+      // Asegurar que empezamos en el tab de Inicio
+      if (typeof switchTab === 'function') {
+        switchTab('inicio');
+      }
+
+      const userKey = currentUser ? currentUser.id : 'guest';
+      const isDismissed = localStorage.getItem('finanzas_tour_dismissed_' + userKey) === 'true'
+                       || localStorage.getItem('finanzas_tour_dismissed') === 'true';
+
+      const isDesk = window.innerWidth >= 1024;
+      const getTarget = (mobileSel, deskSel) => {
+        if (window.innerWidth >= 1024 && deskSel && document.querySelector(deskSel)) {
+          return deskSel;
+        }
+        return mobileSel;
+      };
+
+      const driverObj = window.driver.js.driver({
+        showProgress: true,
+        animate: true,
+        allowClose: true,
+        doneBtnText: '¡Comenzar a Usar! 🚀',
+        nextBtnText: 'Siguiente →',
+        prevBtnText: '← Atrás',
+        progressText: '{{current}} de {{total}}',
+        showButtons: ['next', 'previous', 'close'],
+        onCloseClick: () => {
+          localStorage.setItem('finanzas_tour_dismissed_' + userKey, 'true');
+          localStorage.setItem('finanzas_tour_dismissed', 'true');
+          if (typeof switchTab === 'function') {
+            switchTab('inicio');
+          }
+          driverObj.destroy();
+        },
+        onHighlightStarted: (element, step) => {
+          if (step && step.tabToSwitch && typeof switchTab === 'function') {
+            switchTab(step.tabToSwitch);
+          }
+        },
+        onDestroyStarted: () => {
+          localStorage.setItem('finanzas_tour_dismissed_' + userKey, 'true');
+          localStorage.setItem('finanzas_tour_dismissed', 'true');
+          if (typeof switchTab === 'function') {
+            switchTab('inicio');
+          }
+          driverObj.destroy();
+        },
+        onDestroyed: () => {
+          if (typeof switchTab === 'function') {
+            switchTab('inicio');
+          }
+        },
+        steps: [
+          // 1. Bienvenida
+          {
+            tabToSwitch: 'inicio',
+            popover: {
+              title: '🎉 ¡Bienvenido a AliviaFin!',
+              description: `
+                <div style="font-size: 13px; line-height: 1.5; color: #334155;">
+                  <p style="margin: 0 0 10px 0;">Recorreremos juntos en 1 minuto las herramientas esenciales para dominar tus finanzas con paz mental:</p>
+                  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 12px; font-size: 12px; color: #475569; display: flex; flex-direction: column; gap: 6px;">
+                    <div>💵 <b>Configurar sueldo y presupuestos</b></div>
+                    <div>🔴 <b>Registrar gastos e ingresos extra</b></div>
+                    <div>💳 <b>Simulador de compras en cuotas</b></div>
+                    <div>💬 <b>Ayuda y soporte directo en 1 clic</b></div>
+                    <div>📥 <b>Descargar reporte mensual en PDF</b></div>
+                    <div>🌙 <b>Activar el Modo Noche Suave</b></div>
+                    <div>📊 <b>Conocer cada sección y pestaña</b></div>
+                  </div>
+                </div>
+              `
+            }
+          },
+          // 2. Stat Cards Métricas
+          {
+            element: '.stats-grid',
+            tabToSwitch: 'inicio',
+            popover: {
+              title: '💵 Tus Métricas Clave',
+              description: 'Tu termómetro financiero instantáneo: consulta en tiempo real tu <b>Ingreso Mensual</b> total, tu <b>Gasto Real</b> acumulado y tu <b>Saldo en Banco</b> disponible para terminar el mes en verde.',
+              side: 'bottom',
+              align: 'start'
+            }
+          },
+          // 3. Registrar Gasto
+          {
+            element: '#btnRegistrarGasto',
+            tabToSwitch: 'inicio',
+            popover: {
+              title: '🔴 Cómo Registrar un Gasto',
+              description: 'Toca este botón cada vez que realices una compra o pago. Elige la categoría, monto, fecha de vencimiento y define si es al contado o en cuotas con tarjeta de crédito.',
+              side: 'bottom',
+              align: 'start'
+            }
+          },
+          // 4. Registrar Ingreso Extra
+          {
+            element: '#btnRegistrarIngreso',
+            tabToSwitch: 'inicio',
+            popover: {
+              title: '🟢 Cómo Registrar Ingresos Extra',
+              description: '¿Cobraste un bono, utilidades o trabajo freelance? Regístralo aquí con un toque para que se sume de inmediato a tu saldo en banco real.',
+              side: 'bottom',
+              align: 'center'
+            }
+          },
+          // 5. Simulador de Cuotas & Crédito
+          {
+            element: '#btnQuickSimulador',
+            tabToSwitch: 'inicio',
+            popover: {
+              title: '💳 Simulador de Cuotas & Crédito',
+              description: '¿Planeas una compra a plazos? Simúlala aquí antes de pasar la tarjeta para ver tu cuota mensual con o sin intereses y su impacto en tu presupuesto.',
+              side: 'bottom',
+              align: 'start'
+            }
+          },
+          // 6. Centro de Ayuda & Feedback
+          {
+            element: '#btnQuickHelp',
+            tabToSwitch: 'inicio',
+            popover: {
+              title: '💬 ¿Dudas o Sugerencias? Soporte Directo',
+              description: 'Estamos para ayudarte. Toca aquí en cualquier momento para enviarnos dudas, sugerencias o reportar cualquier detalle directamente al equipo en 1 clic.',
+              side: 'bottom',
+              align: 'center'
+            }
+          },
+          // 7. Configurar Sueldo y Gastos Mensuales
+          {
+            element: '#btnSettings',
+            tabToSwitch: 'inicio',
+            popover: {
+              title: '⚙️ Configurar Sueldo y Gastos Mensuales',
+              description: 'Desde este botón de Ajustes puedes cambiar tu sueldo en <b>"✏️ Editar mi Sueldo Inicial"</b>, ajustar presupuestos de gastos fijos en <b>"⚙️ Gestor de Categorías"</b>, o relanzar el asistente completo en <b>"🔧 Reconfigurar Ingresos y Gastos"</b>.',
+              side: 'bottom',
+              align: 'center'
+            }
+          },
+          // 8. Descargar Reporte en PDF
+          {
+            element: '#btnExportPDF',
+            tabToSwitch: 'inicio',
+            popover: {
+              title: '📥 Descargar Reporte Mensual en PDF',
+              description: 'Exporta en segundos un informe ejecutivo completo en PDF con tus gastos pagados, pendientes y balances netos del mes, listo para imprimir o archivar.',
+              side: 'bottom',
+              align: 'center'
+            }
+          },
+          // 9. Modo Oscuro
+          {
+            element: '#themeToggleBtn',
+            tabToSwitch: 'inicio',
+            popover: {
+              title: '🌙 Cambiar a Modo Oscuro / Claro',
+              description: 'Alterna con un solo clic entre el Modo Claro y el Modo Noche Suave, diseñado para proteger tu vista de noche y reducir el consumo de batería.',
+              side: 'bottom',
+              align: 'center'
+            }
+          },
+          // 10. Tab Movimientos (Auto-navega a Movimientos)
+          {
+            element: getTarget('#navTabMovimientos', '#deskNavTabMovimientos'),
+            tabToSwitch: 'movimientos',
+            popover: {
+              title: '💳 Pestaña: Movimientos',
+              description: '<i>¡Navegamos a Movimientos!</i> Aquí tienes tu lista completa de gastos e ingresos, con buscador instantáneo, ordenación y control de estados.',
+              side: isDesk ? 'right' : 'top',
+              align: 'center'
+            }
+          },
+          // 11. Tab Plan (Auto-navega a Plan)
+          {
+            element: getTarget('#navTabPlan', '#deskNavTabPlan'),
+            tabToSwitch: 'plan',
+            popover: {
+              title: '📊 Pestaña: Plan Financiero',
+              description: '<i>¡Llegamos a tu Plan!</i> Aquí tienes tu distribución inteligente <b>50/30/20</b> (Necesidades, Deseos, Ahorro), gráficos comparativos de gastos y el rastreador de tus compras en cuotas.',
+              side: isDesk ? 'right' : 'top',
+              align: 'center'
+            }
+          },
+          // 12. Tab Metas (Auto-navega a Metas)
+          {
+            element: getTarget('#navTabMetas', '#deskNavTabMetas'),
+            tabToSwitch: 'metas',
+            popover: {
+              title: '🎯 Pestaña: Metas de Ahorro',
+              description: '<i>¡Ahora estamos en Metas!</i> Establece objetivos como tu Fondo de Emergencia, viajes o compras grandes. AliviaFin calcula cuánto dinero debes apartar cada mes para lograrlas.',
+              side: isDesk ? 'right' : 'top',
+              align: 'center'
+            }
+          },
+          // 13. Tab Consejos (Auto-navega a Consejos)
+          {
+            element: getTarget('#navTabConsejos', '#deskNavTabConsejos'),
+            tabToSwitch: 'consejos',
+            popover: {
+              title: '💡 Pestaña: Consejos & Asesor',
+              description: '<i>¡Aquí está tu Asesor!</i> Diagnóstico inteligente automático de tu presupuesto mensual y el método <b>Bola de Nieve</b> para liquidar deudas rápidamente.',
+              side: isDesk ? 'right' : 'top',
+              align: 'center'
+            }
+          },
+          // 14. Cierre y Opción No Volver a Mostrar (Vuelve a Inicio)
+          {
+            element: getTarget('#navTabInicio', '#deskNavTabInicio'),
+            tabToSwitch: 'inicio',
+            popover: {
+              title: '🚀 ¡Todo Listo para Dominar tus Finanzas!',
+              description: `
+                <div style="font-size: 13px; line-height: 1.5; color: #334155;">
+                  <p style="margin: 0 0 10px 0;">Regresamos a tu pantalla de Inicio. Recuerda que siempre puedes volver a consultar este tour guiado desde <b>⚙️ Ajustes</b>.</p>
+                  <div style="margin-top: 14px; padding-top: 10px; border-top: 1px solid #e2e8f0; text-align: left;">
+                    <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: #475569; cursor: pointer; font-weight: 600;">
+                      <input type="checkbox" id="tourDontShowAgain" onchange="window.handleTourCheckboxChange(this.checked)" ${isDismissed ? 'checked' : ''} style="width: 16px; height: 16px; accent-color: #0d9488; cursor: pointer;">
+                      <span>No volver a mostrar este tour al iniciar</span>
+                    </label>
+                  </div>
+                </div>
+              `,
+              side: isDesk ? 'right' : 'top',
+              align: 'center',
+              onNextClick: () => {
+                const userKey = currentUser ? currentUser.id : 'guest';
+                const chk = document.getElementById('tourDontShowAgain');
+                if (chk && chk.checked) {
+                  localStorage.setItem('finanzas_tour_dismissed_' + userKey, 'true');
+                  localStorage.setItem('finanzas_tour_dismissed', 'true');
+                }
+                if (typeof switchTab === 'function') {
+                  switchTab('inicio');
+                }
+                driverObj.destroy();
+              }
+            }
+          }
+        ]
+      });
+
+      window.currentAliviaFinTour = driverObj;
+      window.currentFinZenTour = driverObj;
+      driverObj.drive();
     }
 
-    window.closeTour = function() {};
+    window.closeTour = function() {
+      const userKey = currentUser ? currentUser.id : 'guest';
+      localStorage.setItem('finanzas_tour_dismissed_' + userKey, 'true');
+      localStorage.setItem('finanzas_tour_dismissed', 'true');
+      if (typeof switchTab === 'function') {
+        switchTab('inicio');
+      }
+    };
 
     // ================================================================
     // ASESOR DE DEUDAS: MÉTODO BOLA DE NIEVE (ALIVIAFIN PRO)
