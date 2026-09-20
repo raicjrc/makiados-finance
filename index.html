@@ -4,24 +4,22 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>AliviaFin — Paz mental para tu dinero</title>
-  <link rel="icon" type="image/png" sizes="32x32" href="favicon.png?v=62.0">
-  <link rel="icon" type="image/x-icon" href="favicon.ico?v=62.0">
-  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=62.0">
-  <link rel="manifest" href="manifest.json?v=62.0">
-  <meta name="theme-color" content="#f1f5f9">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png?v=66.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png?v=66.0">
+  <link rel="shortcut icon" type="image/x-icon" href="favicon.ico?v=66.0">
+  <link rel="icon" type="image/x-icon" href="favicon.ico?v=66.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=66.0">
+  <link rel="manifest" href="manifest.json?v=66.0">
+  <meta name="theme-color" content="#0d9488">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <link rel="stylesheet" href="css/styles.css?v=65.0">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
+  <link rel="stylesheet" href="css/styles.css?v=66.0">
 </head>
 <body>
-
-  <!-- HIDDEN FILE INPUT FOR IMPORT -->
-  <input type="file" id="importJsonFileInput" accept=".json" style="display: none;" onchange="importDataJSON(event)">
 
   <!-- MANDATORY LOGIN/REGISTER SCREEN v50 -->
   <div id="loginModalScreen">
@@ -29,7 +27,7 @@
       
       <!-- Logo y Marca -->
       <div style="text-align: center; margin-bottom: 24px;">
-        <img src="logo.png?v=65.0" alt="aliviafin" style="width: 68px; height: 68px; border-radius: 18px; margin-bottom: 12px; box-shadow: 0 4px 14px rgba(0,0,0,0.08);">
+        <img src="logo.png?v=66.0" alt="aliviafin" style="width: 68px; height: 68px; border-radius: 18px; margin-bottom: 12px; box-shadow: 0 4px 14px rgba(0,0,0,0.08);">
         <h2 style="font-size: 24px; font-weight: 800; color: #0f172a; margin-bottom: 4px; letter-spacing: -0.5px;">aliviafin</h2>
         <p style="font-size: 12px; color: #64748b; margin-bottom: 0;">Paz mental para tu dinero</p>
       </div>
@@ -180,7 +178,7 @@
         <span style="width: 11px; height: 11px; border-radius: 50%; background: #27c93f; box-shadow: 0 0 1px #1aab29; display: inline-block;"></span>
       </div>
       <div class="desktop-sidebar-brand">
-        <img src="logo.png?v=65.0" alt="aliviafin" style="width: 36px; height: 36px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.06);">
+        <img src="logo.png?v=66.0" alt="aliviafin" style="width: 36px; height: 36px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.06);">
         <div>
           <div style="font-size: 16px; font-weight: 800; letter-spacing: -0.02em; color: var(--text-main); display: flex; align-items: center; gap: 6px;">
             aliviafin <span class="badge-pro-gold" id="sidebarProBadge" style="display: none; font-size: 8.5px; padding: 1px 5px;">PRO</span>
@@ -233,7 +231,7 @@
     <div class="top-navbar">
       <div class="top-navbar-inner">
         <div class="brand-group">
-          <img src="logo.png?v=65.0" alt="aliviafin" class="brand-avatar" style="width: 38px; height: 38px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); background: transparent; display: block; border: none; padding: 0;">
+          <img src="logo.png?v=66.0" alt="aliviafin" class="brand-avatar" style="width: 38px; height: 38px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); background: transparent; display: block; border: none; padding: 0;">
           <div class="brand-title">
             <h1 style="display:flex; align-items:center; gap:6px; font-size:17px; font-weight:800; letter-spacing:-0.02em;">aliviafin <span id="proBadge" style="display:none;" class="badge-pro-gold">PRO</span></h1>
             <p><span class="sync-status-dot" id="syncDot"></span> <span id="syncText">🟢 Sincronizado</span></p>
@@ -392,7 +390,7 @@
         <div class="flex-between mb-2" style="margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
           <div>
             <h2 style="font-size: 16px; font-weight: 800; margin: 0;">Movimientos del Mes</h2>
-            <div style="font-size: 11px; color: var(--text-muted); font-weight: 600;">Control detallado, filtros y vista calendario</div>
+            <div style="font-size: 11px; color: var(--text-muted); font-weight: 600;">Control detallado de tus gastos e ingresos</div>
           </div>
           <div style="display: flex; gap: 8px;">
             <button class="btn btn-primary btn-sm" onclick="openAddExpenseModal()" style="font-size: 12px; font-weight: 800; padding: 6px 12px; background: linear-gradient(135deg, #ef4444, #dc2626); border-color: #dc2626; color: white; box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);">+ Gasto Detallado</button>
@@ -404,10 +402,6 @@
         <div class="card">
           <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
             <div class="card-title">📋 Registro de Gastos</div>
-            <div class="view-mode-toggle">
-              <button id="btnViewList" class="view-btn active" onclick="setTxViewMode('list')">📋 Lista</button>
-              <button id="btnViewCalendar" class="view-btn" onclick="setTxViewMode('calendar')">📅 Calendario</button>
-            </div>
           </div>
 
           <!-- Filter Chips Bar (Categorías & Estado) -->
@@ -433,38 +427,25 @@
             </button>
           </div>
 
-          <!-- Advanced Filters Row (Categoría, Rango Monto) -->
-          <div class="advanced-filter-panel">
-            <select class="adv-filter-select" id="advFilterCategory" onchange="onAdvFilterChange()">
-              <option value="ALL">🏷️ Todas las categorías</option>
-            </select>
-            <select class="adv-filter-select" id="advFilterAmount" onchange="onAdvFilterChange()">
-              <option value="ALL">💵 Cualquier monto</option>
-              <option value="MICRO">🐜 Micro-gastos (&le; S/ 35)</option>
-              <option value="MID">🪙 Medianos (S/ 35 - S/ 150)</option>
-              <option value="HIGH">💎 Mayores (&gt; S/ 150)</option>
-            </select>
-          </div>
-
           <!-- Live Results Bar -->
           <div class="filter-stats-bar">
             <span id="filteredTxCount">Mostrando 0 gastos</span>
-            <span id="filteredTxSum" style="font-weight: 800; color: var(--primary);">Total: S/ 0.00</span>
+            <span id="filteredTxSum" style="font-weight: 800; color: var(--primary);">Total: <span class="app-currency-symbol">S/</span> 0.00</span>
           </div>
 
           <!-- Paid / Pending Summary Indicators -->
           <div class="tx-summary-grid">
             <div class="tx-summary-cell">
               <div class="tx-summary-label">Total Mes</div>
-              <div id="txSummaryTotal" class="tx-summary-val" style="color: var(--text-main);">S/ 0.00</div>
+              <div id="txSummaryTotal" class="tx-summary-val" style="color: var(--text-main);"><span class="app-currency-symbol">S/</span> 0.00</div>
             </div>
             <div class="tx-summary-cell">
               <div class="tx-summary-label" style="color: var(--success);">✅ Ya Pagado</div>
-              <div id="txSummaryPagado" class="tx-summary-val text-success">S/ 0.00</div>
+              <div id="txSummaryPagado" class="tx-summary-val text-success"><span class="app-currency-symbol">S/</span> 0.00</div>
             </div>
             <div class="tx-summary-cell">
               <div class="tx-summary-label" style="color: var(--warning);">⏳ Pendiente</div>
-              <div id="txSummaryPendiente" class="tx-summary-val text-warning">S/ 0.00</div>
+              <div id="txSummaryPendiente" class="tx-summary-val text-warning"><span class="app-currency-symbol">S/</span> 0.00</div>
             </div>
           </div>
 
@@ -476,16 +457,13 @@
                   <th style="cursor:pointer; user-select:none;" onclick="document.getElementById('sortTx').value='name'; renderTransactions();">Concepto / Vencimiento <span style='font-size:9px;opacity:0.5;'>&#x25B2;&#x25BC;</span></th>
                   <th style="cursor:pointer; user-select:none;" onclick="document.getElementById('sortTx').value='category'; renderTransactions();">Categoría <span style='font-size:9px;opacity:0.5;'>&#x25B2;&#x25BC;</span></th>
                   <th>Estado</th>
-                  <th style="cursor:pointer; user-select:none;" onclick="document.getElementById('sortTx').value='highest'; renderTransactions();">Monto (S/) <span style='font-size:9px;opacity:0.5;'>&#x25B2;&#x25BC;</span></th>
+                  <th style="cursor:pointer; user-select:none;" onclick="document.getElementById('sortTx').value='highest'; renderTransactions();">Monto (<span class="app-currency-symbol">S/</span>) <span style='font-size:9px;opacity:0.5;'>&#x25B2;&#x25BC;</span></th>
                   <th style="text-align: right;">Acciones</th>
                 </tr>
               </thead>
               <tbody id="txTableBody"></tbody>
             </table>
           </div>
-
-          <!-- CALENDAR VIEW WRAPPER -->
-          <div id="txCalendarViewContainer" style="display: none;"></div>
         </div>
 
         <!-- Incomes Tracker Widget -->
@@ -752,18 +730,23 @@
           </div>
         </div>
 
+        <!-- Selector Multi-Moneda Oficial -->
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 12px; margin-bottom: 4px;">
+          <label for="settingCurrencySelect" style="display: block; font-size: 11px; font-weight: 700; color: var(--text-secondary); margin-bottom: 6px;">💵 Moneda Principal de la Cuenta:</label>
+          <select id="settingCurrencySelect" onchange="changeCurrency(this.value)" class="form-control" style="width: 100%; padding: 8px 10px; font-size: 13px; font-weight: 700; border: 1.5px solid #cbd5e1; border-radius: 8px; color: #0f172a; background: #ffffff; cursor: pointer;">
+            <option value="PEN">🇵🇪 Soles (S/ - PEN)</option>
+            <option value="USD">🇺🇸 Dólares ($ - USD)</option>
+            <option value="EUR">🇪🇺 Euros (€ - EUR)</option>
+            <option value="MXN">🇲🇽 Pesos Mexicanos ($ - MXN)</option>
+            <option value="COP">🇨🇴 Pesos Colombianos ($ - COP)</option>
+            <option value="ARS">🇦🇷 Pesos Argentinos ($ - ARS)</option>
+            <option value="CLP">🇨🇱 Pesos Chilenos ($ - CLP)</option>
+          </select>
+        </div>
+
         <button type="button" class="btn btn-secondary" onclick="openEditSalaryModal();" style="width: 100%; text-align: left; padding: 10px;">✏️ Editar mi Sueldo Inicial</button>
         <button type="button" class="btn btn-secondary" onclick="openCategoryManagerModal();" style="width: 100%; text-align: left; padding: 10px;">⚙️ Gestor de Categorías</button>
-        <button type="button" class="btn btn-secondary" onclick="startInteractiveTour();" style="width: 100%; text-align: left; padding: 10px;">🧭 Ver Tour Guiado</button>
         <button type="button" class="btn btn-secondary" onclick="openOnboardingWizard(true);" style="width: 100%; text-align: left; padding: 10px;">🔧 Reconfigurar Ingresos y Gastos</button>
-
-        <!-- Toggle: Mostrar tour al iniciar -->
-        <div style="padding: 10px 12px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; margin-top: 2px;">
-          <label style="display: flex; align-items: center; justify-content: space-between; font-size: 11.5px; font-weight: 700; color: #374151; cursor: pointer; margin: 0;">
-            <span>🧭 Mostrar tour guiado al iniciar</span>
-            <input type="checkbox" id="settingsTourToggle" onchange="toggleTourPreference(this.checked)" style="width: 16px; height: 16px; accent-color: #4f46e5; cursor: pointer;">
-          </label>
-        </div>
 
         <div style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-top: 6px; margin-bottom: 2px;">Exportación & Reportes</div>
         <button type="button" class="btn btn-secondary" onclick="exportMonthlyReportPDF(); closeModal('settingsModal');" style="width: 100%; text-align: left; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
@@ -776,7 +759,7 @@
         </button>
 
         <div style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-top: 6px; margin-bottom: 2px;">Soporte y Novedades</div>
-        <button type="button" class="btn btn-secondary" id="settingsWhatsNewBtn" onclick="openWhatsNewModal();" style="width: 100%; text-align: left; padding: 10px;">🚀 Novedades (v64.2)</button>
+        <button type="button" class="btn btn-secondary" id="settingsWhatsNewBtn" onclick="openWhatsNewModal();" style="width: 100%; text-align: left; padding: 10px;">🚀 Novedades (v66.0)</button>
         <button type="button" class="btn btn-secondary" onclick="openFeedbackModal();" style="width: 100%; text-align: left; padding: 10px;">💬 Contacto y Soporte</button>
         <button type="button" class="btn btn-secondary" onclick="openSecurityModal();" style="width: 100%; text-align: left; padding: 10px;">🛡️ Privacidad de Datos</button>
         
@@ -789,7 +772,7 @@
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center;">
               <span style="font-size: 11px; font-weight: 700; color: #374151;">📱 Versión</span>
-              <span style="font-size: 11px; color: #4f46e5; font-weight: 800;" id="settingsVersion">v64.2</span>
+              <span style="font-size: 11px; color: #0d9488; font-weight: 800;" id="settingsVersion">v66.0</span>
             </div>
           </div>
         </div>
@@ -815,7 +798,7 @@
           <input type="text" id="extraIncomeName" class="form-control" placeholder="Ej: Trabajo Freelance, Venta..." required>
         </div>
         <div class="form-group">
-          <label>Monto (Soles S/)</label>
+          <label>Monto (<span class="app-currency-symbol">S/</span>)</label>
           <input type="number" step="0.01" id="extraIncomeAmount" class="form-control" placeholder="500.00" required>
         </div>
         <div class="modal-actions">
@@ -952,8 +935,8 @@
 
           <div style="margin-bottom: 18px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <label class="glass-label" style="margin-bottom: 0;">Límite Mensual (S/)</label>
-              <span id="managerBudgetPreview" style="font-size: 12px; font-weight: 800; color: #38bdf8;">S/ 1,000.00</span>
+              <label class="glass-label" style="margin-bottom: 0;">Límite Mensual (<span class="app-currency-symbol">S/</span>)</label>
+              <span id="managerBudgetPreview" style="font-size: 12px; font-weight: 800; color: #38bdf8;"><span class="app-currency-symbol">S/</span> 1,000.00</span>
             </div>
             <input type="number" id="managerCatBudget" class="glass-input" placeholder="1000" value="1000" oninput="document.getElementById('managerBudgetPreview').textContent = 'S/ ' + (parseFloat(this.value)||0).toLocaleString('es-PE', {minimumFractionDigits:2})">
           </div>
@@ -992,7 +975,7 @@
           </div>
 
           <div style="margin-bottom: 12px;">
-            <label class="glass-label">Monto Total de la Compra (S/)</label>
+            <label class="glass-label">Monto Total de la Compra (<span class="app-currency-symbol">S/</span>)</label>
             <input type="number" id="simAmount" class="glass-input" placeholder="3600" value="3600" oninput="updateSimulation()">
           </div>
 
@@ -1222,7 +1205,7 @@
 
       <!-- Display del Monto Gigante -->
       <div class="quick-display-card">
-        <div class="quick-currency">S/</div>
+        <div class="quick-currency app-currency-symbol">S/</div>
         <div id="quickDisplayAmount" class="quick-amount-digits">0.00</div>
         <button type="button" id="quickBackspaceBtn" onclick="handleQuickKeypad('backspace')" class="quick-backspace-inline" title="Borrar">⌫</button>
       </div>
@@ -1308,7 +1291,7 @@
         </div>
         
         <div class="form-group">
-          <label>Monto del Gasto (S/)</label>
+          <label>Monto del Gasto (<span class="app-currency-symbol">S/</span>)</label>
           <input type="number" step="0.01" id="txAmount" class="form-control" placeholder="0.00" required>
         </div>
 
@@ -1392,7 +1375,7 @@
       </div>
       <form onsubmit="handleSaveSalary(event)">
         <div class="form-group">
-          <label>Nuevo Sueldo Mensual Bolsa Común (S/)</label>
+          <label>Nuevo Sueldo Mensual Bolsa Común (<span class="app-currency-symbol">S/</span>)</label>
           <input type="number" id="newSalaryInput" class="form-control" required>
         </div>
         <div class="modal-actions">
@@ -1416,15 +1399,15 @@
           <input type="text" id="goalName" class="form-control" placeholder="Ej: Viaje Cusco..." required>
         </div>
         <div class="form-group">
-          <label>Monto Objetivo (S/)</label>
+          <label>Monto Objetivo (<span class="app-currency-symbol">S/</span>)</label>
           <input type="number" id="goalTarget" class="form-control" placeholder="5000" required>
         </div>
         <div class="form-group">
-          <label>Monto Inicial Ahorrado (S/)</label>
+          <label>Monto Inicial Ahorrado (<span class="app-currency-symbol">S/</span>)</label>
           <input type="number" id="goalCurrent" class="form-control" value="0" required>
         </div>
         <div class="form-group">
-          <label>Aporte Mensual Programado (S/)</label>
+          <label>Aporte Mensual Programado (<span class="app-currency-symbol">S/</span>)</label>
           <input type="number" id="goalMonthly" class="form-control" placeholder="300" required>
         </div>
         <div class="form-group">
@@ -1456,7 +1439,7 @@
       <form onsubmit="handleDepositGoal(event)">
         <input type="hidden" id="depositGoalId">
         <div class="form-group">
-          <label>Monto a Depositar (S/)</label>
+          <label>Monto a Depositar (<span class="app-currency-symbol">S/</span>)</label>
           <input type="number" id="depositAmount" class="form-control" placeholder="100" required>
         </div>
         <div class="modal-actions">
@@ -1601,11 +1584,11 @@
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
               <div class="form-group" style="margin: 0;">
-                <label style="font-size: 11px; font-weight: 700;">Monto Objetivo (S/)</label>
+                <label style="font-size: 11px; font-weight: 700;">Monto Objetivo (<span class="app-currency-symbol">S/</span>)</label>
                 <input type="number" id="wGoalTarget" class="form-control" placeholder="3000" value="2000" step="any" required>
               </div>
               <div class="form-group" style="margin: 0;">
-                <label style="font-size: 11px; font-weight: 700;">Aporte Mensual (S/)</label>
+                <label style="font-size: 11px; font-weight: 700;">Aporte Mensual (<span class="app-currency-symbol">S/</span>)</label>
                 <input type="number" id="wGoalMonthly" class="form-control" placeholder="200" value="250" step="any" required>
               </div>
             </div>
@@ -1644,94 +1627,66 @@
             <span>🚀</span> <span>¡Novedades en AliviaFin!</span>
           </div>
           <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
-            <span class="whats-new-card-badge" id="whatsNewVersionBadge">Versión v63.1</span>
-            <span style="font-size: 11px; color: var(--text-muted); font-weight: 600;" id="whatsNewVersionSub">Actualización v63.1 · Acceso con Google & Recuperación de Clave</span>
+            <span class="whats-new-card-badge" id="whatsNewVersionBadge">Versión v66.0</span>
+            <span style="font-size: 11px; color: var(--text-muted); font-weight: 600;" id="whatsNewVersionSub">Actualización v66.0 · Multi-Moneda & Diseño Minimalista</span>
           </div>
         </div>
         <button type="button" onclick="dismissWhatsNewModal()" style="background:none; border:none; font-size:20px; cursor:pointer; color:var(--text-muted); line-height: 1;">✕</button>
       </div>
 
       <div style="margin-top: 14px; max-height: 55vh; overflow-y: auto; padding-right: 4px;">
-        <!-- Card 1: Acceso con Google -->
+        <!-- Card 1: Selector Multi-Moneda -->
         <div class="whats-new-feature-card">
-          <div class="whats-new-icon-box" style="color: #4285F4;">🌐</div>
+          <div class="whats-new-icon-box" style="color: #0d9488;">💵</div>
           <div style="flex: 1;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
-              <h5 style="margin: 0; font-size: 13px; font-weight: 800; color: var(--text-main);">Iniciar Sesión con Google (1-Clic)</h5>
-              <span class="whats-new-card-badge" style="background: rgba(66, 133, 244, 0.12); color: #2563eb;">Nuevo</span>
+              <h5 style="margin: 0; font-size: 13px; font-weight: 800; color: var(--text-main);">Selector Multi-Moneda Internacional</h5>
+              <span class="whats-new-card-badge" style="background: rgba(13, 148, 136, 0.12); color: #0d9488;">Nuevo 🌎</span>
             </div>
             <p style="margin: 0; font-size: 11px; color: var(--text-muted); line-height: 1.4;">
-              Accede al instante con tu cuenta de Google con un solo toque, sin tener que escribir contraseñas. Funciona a la perfección en computadoras, Safari en iPhone, Chrome en Android y app instalada.
+              Elige tu moneda en Ajustes: Soles (PEN 🇵🇪), Dólares (USD 🇺🇸), Euros (EUR 🇪🇺), Pesos Mexicanos (MXN 🇲🇽), Colombianos (COP 🇨🇴), Argentinos (ARS 🇦🇷) o Chilenos (CLP 🇨🇱). Toda la app actualiza sus símbolos de inmediato.
             </p>
           </div>
         </div>
 
-        <!-- Card 2: Recuperación de Contraseña -->
-        <div class="whats-new-feature-card">
-          <div class="whats-new-icon-box" style="color: #f59e0b;">🔑</div>
-          <div style="flex: 1;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
-              <h5 style="margin: 0; font-size: 13px; font-weight: 800; color: var(--text-main);">Recuperación Segura de Contraseña</h5>
-              <span class="whats-new-card-badge" style="background: rgba(245, 158, 11, 0.12); color: #d97706;">Seguridad</span>
-            </div>
-            <p style="margin: 0; font-size: 11px; color: var(--text-muted); line-height: 1.4;">
-              ¿Olvidaste tu contraseña? Ahora encuentras el enlace directo <b>«¿Olvidaste tu contraseña?»</b> en el inicio de sesión. Te enviamos un enlace seguro a tu correo para restablecerla de inmediato.
-            </p>
-          </div>
-        </div>
-
-        <!-- Card 3: Vinculación Inteligente de Cuentas -->
-        <div class="whats-new-feature-card">
-          <div class="whats-new-icon-box" style="color: #10b981;">🔗</div>
-          <div style="flex: 1;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
-              <h5 style="margin: 0; font-size: 13px; font-weight: 800; color: var(--text-main);">Vinculación Inteligente de Cuentas</h5>
-              <span class="whats-new-card-badge" style="background: rgba(16, 185, 129, 0.12); color: #10b981;">Cero Fricción</span>
-            </div>
-            <p style="margin: 0; font-size: 11px; color: var(--text-muted); line-height: 1.4;">
-              Si ya tenías una cuenta con correo y contraseña, puedes ingresar indistintamente con tu contraseña habitual o con el botón «Continuar con Google». Tus gastos, saldos y estado PRO se mantienen intactos.
-            </p>
-          </div>
-        </div>
-
-        <!-- Card 4: Rebranding AliviaFin -->
+        <!-- Card 2: Minimalismo Apple -->
         <div class="whats-new-feature-card">
           <div class="whats-new-icon-box" style="color: #10b981;">🌿</div>
           <div style="flex: 1;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
-              <h5 style="margin: 0; font-size: 13px; font-weight: 800; color: var(--text-main);">Evolución Oficial a AliviaFin</h5>
-              <span class="whats-new-card-badge" style="background: rgba(16, 185, 129, 0.12); color: #10b981;">Marca Oficial</span>
+              <h5 style="margin: 0; font-size: 13px; font-weight: 800; color: var(--text-main);">Depuración de Clutter & Cero Distracciones</h5>
+              <span class="whats-new-card-badge" style="background: rgba(16, 185, 129, 0.12); color: #10b981;">Minimalismo</span>
             </div>
             <p style="margin: 0; font-size: 11px; color: var(--text-muted); line-height: 1.4;">
-              Paz mental para tu dinero: nuevo dominio oficial <b>aliviafin.vercel.app</b>, nuevo isotipo ejecutivo de alta resolución y mayor velocidad en todos tus dispositivos.
+              Diseño simplificado al estilo Apple: optimizamos la vista de Movimientos, eliminando paneles redundantes para que gestiones tus finanzas con la máxima fluidez.
             </p>
           </div>
         </div>
 
-        <!-- Card 5: Plan Anti-Deudas Bola de Nieve -->
+        <!-- Card 3: Simulador de Cuotas Adaptado -->
         <div class="whats-new-feature-card">
-          <div class="whats-new-icon-box" style="color: #4f46e5;">❄️</div>
+          <div class="whats-new-icon-box" style="color: #38bdf8;">💳</div>
           <div style="flex: 1;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
-              <h5 style="margin: 0; font-size: 13px; font-weight: 800; color: var(--text-main);">Plan Anti-Deudas: Bola de Nieve</h5>
-              <span class="whats-new-card-badge" style="background: linear-gradient(135deg, rgba(79, 70, 229, 0.15), rgba(124, 58, 237, 0.15)); color: #4f46e5;">PRO 👑</span>
+              <h5 style="margin: 0; font-size: 13px; font-weight: 800; color: var(--text-main);">Simulador de Cuotas & Crédito</h5>
+              <span class="whats-new-card-badge" style="background: rgba(56, 189, 248, 0.12); color: #0284c7;">Refinado</span>
             </div>
             <p style="margin: 0; font-size: 11px; color: var(--text-muted); line-height: 1.4;">
-              Estrategia acelerada para liquidar pasivos de menor a mayor saldo con efecto avalancha. Calcula en tiempo real tus meses exactos para alcanzar la libertad de deudas.
+              Calcula y proyecta tus compras a plazos en tu moneda seleccionada, viendo claramente el porcentaje de impacto en tu flujo de caja de los próximos meses.
             </p>
           </div>
         </div>
 
-        <!-- Card 6: Exportación Excel y CSV -->
+        <!-- Card 4: Favicon & Logo Oficial -->
         <div class="whats-new-feature-card">
-          <div class="whats-new-icon-box" style="color: #06b6d4;">📊</div>
+          <div class="whats-new-icon-box" style="color: #0d9488;">✨</div>
           <div style="flex: 1;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
-              <h5 style="margin: 0; font-size: 13px; font-weight: 800; color: var(--text-main);">Exportación a Excel / CSV (PRO)</h5>
-              <span class="whats-new-card-badge" style="background: rgba(6, 182, 212, 0.12); color: #0891b2;">Reportes</span>
+              <h5 style="margin: 0; font-size: 13px; font-weight: 800; color: var(--text-main);">Favicon & Logo Oficial en el Navegador</h5>
+              <span class="whats-new-card-badge" style="background: rgba(13, 148, 136, 0.12); color: #0d9488;">Diseño</span>
             </div>
             <p style="margin: 0; font-size: 11px; color: var(--text-muted); line-height: 1.4;">
-              Descarga todo tu historial financiero mensual en formato .CSV compatible con Microsoft Excel y Google Sheets, formateado con tildes y caracteres limpios.
+              La pestaña de tu navegador ahora luce el nuevo logo turquesa y esmeralda de AliviaFin con soporte multi-resolución de alta fidelidad.
             </p>
           </div>
         </div>
@@ -1925,7 +1880,6 @@
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
-  <script src="js/app.js?v=65.0"></script>
+  <script src="js/app.js?v=66.0"></script>
 </body>
 </html>

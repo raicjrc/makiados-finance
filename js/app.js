@@ -75,9 +75,59 @@
     let CATEGORIES = { ...GENERIC_CATEGORIES };
 
     // ================================================================
-    // VERSIÓN DE LA APP
+    // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v66.0)
     // ================================================================
-    const APP_VERSION = 'v65.0';
+    const APP_VERSION = 'v66.0';
+
+    const SUPPORTED_CURRENCIES = {
+      'PEN': { code: 'PEN', symbol: 'S/', name: 'Soles peruanos', flag: '🇵🇪', locale: 'es-PE' },
+      'USD': { code: 'USD', symbol: '$', name: 'Dólares estadounidenses', flag: '🇺🇸', locale: 'en-US' },
+      'EUR': { code: 'EUR', symbol: '€', name: 'Euros', flag: '🇪🇺', locale: 'de-DE' },
+      'MXN': { code: 'MXN', symbol: '$', name: 'Pesos mexicanos', flag: '🇲🇽', locale: 'es-MX' },
+      'COP': { code: 'COP', symbol: '$', name: 'Pesos colombianos', flag: '🇨🇴', locale: 'es-CO' },
+      'ARS': { code: 'ARS', symbol: '$', name: 'Pesos argentinos', flag: '🇦🇷', locale: 'es-AR' },
+      'CLP': { code: 'CLP', symbol: '$', name: 'Pesos chilenos', flag: '🇨🇱', locale: 'es-CL' }
+    };
+
+    function getActiveCurrency() {
+      const savedCode = (typeof localStorage !== 'undefined' && localStorage.getItem('aliviafin_currency')) || 
+                        (typeof appState !== 'undefined' && appState && appState.currency) || 'PEN';
+      return SUPPORTED_CURRENCIES[savedCode] || SUPPORTED_CURRENCIES['PEN'];
+    }
+
+    function getCurrencySymbol() {
+      return getActiveCurrency().symbol;
+    }
+
+    function getCurrencyCode() {
+      return getActiveCurrency().code;
+    }
+
+    function updateCurrencyDOMElements() {
+      const sym = getCurrencySymbol();
+      const code = getCurrencyCode();
+      document.querySelectorAll('.app-currency-symbol').forEach(el => {
+        el.textContent = sym;
+      });
+      const sel = document.getElementById('settingCurrencySelect');
+      if (sel && sel.value !== code) {
+        sel.value = code;
+      }
+    }
+
+    function changeCurrency(code) {
+      if (!SUPPORTED_CURRENCIES[code]) return;
+      localStorage.setItem('aliviafin_currency', code);
+      if (typeof appState !== 'undefined' && appState) {
+        appState.currency = code;
+        if (typeof saveData === 'function') saveData();
+      }
+      updateCurrencyDOMElements();
+      if (typeof renderAll === 'function') renderAll();
+      if (typeof updateSimulation === 'function') updateSimulation();
+      showToast(`Moneda cambiada a ${SUPPORTED_CURRENCIES[code].flag} ${SUPPORTED_CURRENCIES[code].name} (${SUPPORTED_CURRENCIES[code].symbol})`, 'success');
+    }
+
     // Plantilla inicial 100% limpia para cualquier usuario nuevo
     function getCleanUserState() {
       const now = new Date();
@@ -91,6 +141,7 @@
       });
       return {
         salary: 0,
+        currency: (typeof localStorage !== 'undefined' && localStorage.getItem('aliviafin_currency')) || 'PEN',
         incomes: {
           [curM]: []
         },
@@ -681,12 +732,12 @@
       document.getElementById('segmentCuotasBox').style.display = type === 'cuotas' ? 'block' : 'none';
     }
 
-    // Registrar Service Worker v64.4 (Network-First, sin caché de datos)
+    // Registrar Service Worker v66.0 (Network-First, sin caché de datos)
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=65.0')
+        navigator.serviceWorker.register('./sw.js?v=66.0')
           .then(reg => {
-            console.log('SW v64.4 registrado:', reg.scope);
+            console.log('SW v66.0 registrado:', reg.scope);
             // Forzar actualización inmediata del SW en todos los dispositivos
             reg.update();
             if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
@@ -1247,7 +1298,7 @@
       if ('serviceWorker' in navigator && 'caches' in window) {
         caches.keys().then(names => {
           names.forEach(name => {
-            if (name !== 'finanzas-pro-v74') {
+            if (name !== 'aliviafin-v102') {
               caches.delete(name);
               console.log('Caché viejo eliminado:', name);
             }
@@ -1255,9 +1306,20 @@
         });
       }
 
+      // Forzar actualización inmediata del Favicon en pestaña del navegador
+      try {
+        const favicons = document.querySelectorAll("link[rel*='icon']");
+        favicons.forEach(fav => {
+          if (fav.type === 'image/png') {
+            fav.href = 'favicon-32x32.png?v=66.0';
+          }
+        });
+      } catch (e) {}
+
       // v50: Toda la inicialización de la app ocurre en onLoginSuccess()
       // Solo verificamos si hay sesión activa de Supabase
       syncVersionUI();
+      updateCurrencyDOMElements();
       checkLoginStatus();
 
       window.addEventListener('offline', () => {
@@ -1431,18 +1493,20 @@
 
     function renderSafeToSpendCard() {
       const data = calculateSafeToSpend();
+      const sym = getCurrencySymbol();
+      const loc = getActiveCurrency().locale;
       
       const elDaily = document.getElementById('heroSafeDailyAmount');
       if (elDaily) {
-        elDaily.innerHTML = `<span class="hero-zen-unit">S/ </span>${data.freePerDay.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span class="hero-zen-unit">/ día</span>`;
+        elDaily.innerHTML = `<span class="hero-zen-unit">${sym} </span>${data.freePerDay.toLocaleString(loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span class="hero-zen-unit">/ día</span>`;
       }
 
       const elSubtitle = document.getElementById('heroSafeMonthSubtitle');
       if (elSubtitle) {
         if (data.freeTotalMonth >= 0) {
-          elSubtitle.textContent = `S/ ${data.freeTotalMonth.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} libre proyectado este mes`;
+          elSubtitle.textContent = `${sym} ${data.freeTotalMonth.toLocaleString(loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} libre proyectado este mes`;
         } else {
-          elSubtitle.textContent = `⚠️ Presupuesto excedido por S/ ${Math.abs(data.freeTotalMonth).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+          elSubtitle.textContent = `⚠️ Presupuesto excedido por ${sym} ${Math.abs(data.freeTotalMonth).toLocaleString(loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
         }
       }
 
@@ -1524,7 +1588,7 @@
                 </div>
               </div>
             </div>
-            <div class="recent-tx-amount">- S/ ${(t.amount || 0).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+            <div class="recent-tx-amount">- ${getCurrencySymbol()} ${(t.amount || 0).toLocaleString(getActiveCurrency().locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
           </div>
         `;
       }).join('');
@@ -2068,9 +2132,6 @@
       renderPersonalizedTips();
       renderAuditTable();
       renderIncomes();
-      if (typeof txViewMode !== 'undefined' && txViewMode === 'calendar') {
-        renderCalendarView();
-      }
     }
 
     function getMonthTxList() {
@@ -2216,35 +2277,44 @@
       
       const currentBalance = getAccumulatedBalance(appState.currentMonth);
 
-      document.getElementById('metricSalary').textContent = 'S/ ' + totalIncome.toLocaleString('es-PE', {minimumFractionDigits: 0});
-      document.getElementById('metricSpent').textContent = 'S/ ' + totalSpent.toLocaleString('es-PE', {minimumFractionDigits: 2});
+      const sym = getCurrencySymbol();
+      const loc = getActiveCurrency().locale;
+
+      const elSalary = document.getElementById('metricSalary');
+      if (elSalary) elSalary.textContent = sym + ' ' + totalIncome.toLocaleString(loc, {minimumFractionDigits: 0});
+      const elSpent = document.getElementById('metricSpent');
+      if (elSpent) elSpent.textContent = sym + ' ' + totalSpent.toLocaleString(loc, {minimumFractionDigits: 2});
       
       const elSavings = document.getElementById('metricSavings');
-      elSavings.textContent = 'S/ ' + currentBalance.toLocaleString('es-PE', {minimumFractionDigits: 2});
+      if (elSavings) elSavings.textContent = sym + ' ' + currentBalance.toLocaleString(loc, {minimumFractionDigits: 2});
       
-      if (currentBalance >= 440) {
-        elSavings.className = 'stat-value text-success';
-      } else if (currentBalance >= 0) {
-        elSavings.className = 'stat-value text-warning';
-      } else {
-        elSavings.className = 'stat-value text-danger';
+      if (elSavings) {
+        if (currentBalance >= 440) {
+          elSavings.className = 'stat-value text-success';
+        } else if (currentBalance >= 0) {
+          elSavings.className = 'stat-value text-warning';
+        } else {
+          elSavings.className = 'stat-value text-danger';
+        }
       }
 
       // Alerta de Liquidez (Opción D)
       const totalPending = totalSpent - totalPaid;
       let liquidityAlert = document.getElementById('liquidityAlertMsg');
-      if (!liquidityAlert) {
+      if (!liquidityAlert && elSavings) {
         liquidityAlert = document.createElement('div');
         liquidityAlert.id = 'liquidityAlertMsg';
         liquidityAlert.style.cssText = 'font-size: 9px; margin-top: 4px; font-weight: 800; background: #fee2e2; color: #b91c1c; padding: 2px 6px; border-radius: 4px; display: inline-block; line-height: 1.2;';
         elSavings.parentNode.appendChild(liquidityAlert);
       }
-      if (currentBalance < totalPending && currentBalance >= 0) {
-        const shortfall = totalPending - currentBalance;
-        liquidityAlert.textContent = `⚠️ Faltan S/ ${shortfall.toLocaleString('es-PE', {minimumFractionDigits: 2})} para pendientes`;
-        liquidityAlert.style.display = 'inline-block';
-      } else {
-        liquidityAlert.style.display = 'none';
+      if (liquidityAlert) {
+        if (currentBalance < totalPending && currentBalance >= 0) {
+          const shortfall = totalPending - currentBalance;
+          liquidityAlert.textContent = `⚠️ Faltan ${sym} ${shortfall.toLocaleString(loc, {minimumFractionDigits: 2})} para pendientes`;
+          liquidityAlert.style.display = 'inline-block';
+        } else {
+          liquidityAlert.style.display = 'none';
+        }
       }
 
       // Termómetro Fondo Emergencia (Opción F)
@@ -2253,7 +2323,7 @@
       
       const elEmergency = document.getElementById('metricEmergencyFund');
       if (elEmergency) {
-        elEmergency.textContent = 'S/ ' + emAmount.toLocaleString('es-PE', {minimumFractionDigits: 2});
+        elEmergency.textContent = sym + ' ' + emAmount.toLocaleString(loc, {minimumFractionDigits: 2});
         
         let emProgress = document.getElementById('emergencyProgress');
         if (!emProgress) {
@@ -2285,7 +2355,7 @@
             <div class="cuota-row" style="background: #fdf4ff; border-color: #f5d0fe; transition: transform 0.2s; cursor: pointer;" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='none'">
               <div>
                 <div class="cuota-title" style="color: #86198f;">💳 ${ci.name}</div>
-                <div class="cuota-sub">S/ ${ci.amount.toFixed(2)} / mes</div>
+                <div class="cuota-sub">${getCurrencySymbol()} ${ci.amount.toFixed(2)} / mes</div>
               </div>
               <div class="cuota-badge" style="background: linear-gradient(135deg, #fdf4ff, #fae8ff); color: #86198f; border: 1px solid #f0abfc; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">${ci.installmentsCurrent} de ${ci.installmentsTotal}</div>
             </div>
@@ -2381,7 +2451,7 @@
           <div style="background: white; padding: 6px 10px; border-radius: 6px; border: 1px solid ${border}; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: all 0.2s ease;" onclick="toggleIncomeStatus('${i.id}')" onmouseover="this.style.filter='brightness(0.95)'" onmouseout="this.style.filter='none'">
             <div>
               <div style="font-size: 11px; font-weight: 800; color: #1f2937;">${i.name}</div>
-              <div style="font-size: 10px; color: var(--text-muted);">S/ ${i.amount.toLocaleString('es-PE', {minimumFractionDigits: 2})} • <span onclick="editIncomeDate('${i.id}', event)" style="cursor: pointer; text-decoration: underline; color: #0284c7;" onmouseover="this.style.color='#0369a1'" onmouseout="this.style.color='#0284c7'">Día ${i.date} ✎</span></div>
+              <div style="font-size: 10px; color: var(--text-muted);">${getCurrencySymbol()} ${i.amount.toLocaleString(getActiveCurrency().locale, {minimumFractionDigits: 2})} • <span onclick="editIncomeDate('${i.id}', event)" style="cursor: pointer; text-decoration: underline; color: #0284c7;" onmouseover="this.style.color='#0369a1'" onmouseout="this.style.color='#0284c7'">Día ${i.date} ✎</span></div>
             </div>
             <span style="background: ${bg}; color: ${color}; font-size: 9px; font-weight: 800; padding: 3px 8px; border-radius: 12px; white-space: nowrap; user-select: none;">
               ${icon} ${i.status}
@@ -2518,22 +2588,9 @@
       const container = document.getElementById('txTableBody');
       const search = (document.getElementById('searchTx')?.value || '').toLowerCase().trim();
       const sortBy = document.getElementById('sortTx')?.value || 'newest';
+      const sym = getCurrencySymbol();
 
-      // Poblar selector avanzado de categorías si aún no está poblado
-      const advCatSelect = document.getElementById('advFilterCategory');
-      if (advCatSelect && advCatSelect.options.length <= 1) {
-        Object.keys(CATEGORIES).sort().forEach(cat => {
-          const opt = document.createElement('option');
-          opt.value = cat;
-          opt.textContent = `${CATEGORIES[cat].icon || '🏷️'} ${cat}`;
-          advCatSelect.appendChild(opt);
-        });
-      }
-
-      const advCategory = document.getElementById('advFilterCategory')?.value || 'ALL';
-      const advAmount = document.getElementById('advFilterAmount')?.value || 'ALL';
-
-      const filterCat = (advCategory !== 'ALL') ? advCategory : currentCategoryFilter;
+      const filterCat = currentCategoryFilter;
       const filterStatus = currentStatusFilter;
 
       let allTxs = getMonthTxList();
@@ -2542,9 +2599,12 @@
       const paidTotal = allTxs.filter(t => (t.status || 'Pagado') === 'Pagado').reduce((s, t) => s + t.amount, 0);
       const pendingTotal = grandTotal - paidTotal;
 
-      document.getElementById('txSummaryTotal').textContent = 'S/ ' + grandTotal.toFixed(2);
-      document.getElementById('txSummaryPagado').textContent = 'S/ ' + paidTotal.toFixed(2);
-      document.getElementById('txSummaryPendiente').textContent = 'S/ ' + pendingTotal.toFixed(2);
+      const elTot = document.getElementById('txSummaryTotal');
+      if (elTot) elTot.textContent = sym + ' ' + grandTotal.toFixed(2);
+      const elPag = document.getElementById('txSummaryPagado');
+      if (elPag) elPag.textContent = sym + ' ' + paidTotal.toFixed(2);
+      const elPen = document.getElementById('txSummaryPendiente');
+      if (elPen) elPen.textContent = sym + ' ' + pendingTotal.toFixed(2);
 
       let txs = [...allTxs];
 
@@ -2556,13 +2616,6 @@
       }
       if (filterStatus !== 'TODOS') {
         txs = txs.filter(t => (t.status || 'Pagado') === filterStatus);
-      }
-      if (advAmount === 'MICRO') {
-        txs = txs.filter(t => (t.amount || 0) <= 35);
-      } else if (advAmount === 'MID') {
-        txs = txs.filter(t => (t.amount || 0) > 35 && (t.amount || 0) <= 150);
-      } else if (advAmount === 'HIGH') {
-        txs = txs.filter(t => (t.amount || 0) > 150);
       }
 
       if (sortBy === 'highest') {
@@ -2576,8 +2629,10 @@
       }
 
       const totalSum = txs.reduce((s, t) => s + t.amount, 0);
-      document.getElementById('filteredTxCount').textContent = `Mostrando ${txs.length} de ${allTxs.length} gastos`;
-      document.getElementById('filteredTxSum').textContent = `Total: S/ ${totalSum.toFixed(2)}`;
+      const elCount = document.getElementById('filteredTxCount');
+      if (elCount) elCount.textContent = `Mostrando ${txs.length} de ${allTxs.length} gastos`;
+      const elSum = document.getElementById('filteredTxSum');
+      if (elSum) elSum.textContent = `Total: ${sym} ${totalSum.toFixed(2)}`;
 
       if (txs.length === 0) {
         container.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 20px;">No hay gastos.</td></tr>`;
@@ -2620,7 +2675,7 @@
               </span>
             </td>
             <td style="font-weight: 800; font-size: 13px;">
-              S/ ${t.amount.toFixed(2)}
+              ${sym} ${t.amount.toFixed(2)}
             </td>
             <td style="text-align: right;">
               <button class="btn-pill primary" onclick="openEditExpenseModal('${t.id}')">✏️</button>
@@ -2930,7 +2985,7 @@
         <div class="budget-row">
           <div class="budget-info">
             <span>🏠 50% Necesidades Básicas</span>
-            <span>S/ ${needsReal.toFixed(0)} / S/ ${target50.toFixed(0)}</span>
+            <span>${getCurrencySymbol()} ${needsReal.toFixed(0)} / ${getCurrencySymbol()} ${target50.toFixed(0)}</span>
           </div>
           <div class="progress-bar-wrap">
             <div class="progress-fill" style="width: ${Math.min(100, (needsReal/target50)*100)}%; background: ${needsReal > target50 ? '#ef4444' : '#4f46e5'}"></div>
@@ -2940,7 +2995,7 @@
         <div class="budget-row">
           <div class="budget-info">
             <span>🎉 30% Deseos & Estilo de Vida</span>
-            <span>S/ ${wantsReal.toFixed(0)} / S/ ${target30.toFixed(0)}</span>
+            <span>${getCurrencySymbol()} ${wantsReal.toFixed(0)} / ${getCurrencySymbol()} ${target30.toFixed(0)}</span>
           </div>
           <div class="progress-bar-wrap">
             <div class="progress-fill" style="width: ${Math.min(100, (wantsReal/target30)*100)}%; background: ${wantsReal > target30 ? '#f59e0b' : '#06b6d4'}"></div>
@@ -2950,7 +3005,7 @@
         <div class="budget-row">
           <div class="budget-info">
             <span>💰 20% Ahorro & Deudas</span>
-            <span>S/ ${totalSavingsAndDebt.toFixed(0)} / S/ ${target20.toFixed(0)}</span>
+            <span>${getCurrencySymbol()} ${totalSavingsAndDebt.toFixed(0)} / ${getCurrencySymbol()} ${target20.toFixed(0)}</span>
           </div>
           <div class="progress-bar-wrap">
             <div class="progress-fill" style="width: ${Math.min(100, (totalSavingsAndDebt/target20)*100)}%; background: #10b981"></div>
@@ -3002,7 +3057,7 @@
           <div class="budget-row">
             <div class="budget-info">
               <span>${(CATEGORIES[cat] && CATEGORIES[cat].icon) || '🏷️'} ${cat}</span>
-              <span>S/ ${spent.toFixed(0)} / S/ ${limit} 
+              <span>${getCurrencySymbol()} ${spent.toFixed(0)} / ${getCurrencySymbol()} ${limit} 
                 <button class="btn-pill primary" onclick="editCategoryBudget('${cat}')" style="margin-left:4px; margin-right:4px;">✏️</button>
                 <button class="btn-pill danger" onclick="deleteCategory('${cat}')">🗑️</button>
               </span>
@@ -3092,8 +3147,8 @@
         html += `
           <tr style="border-bottom: 1px solid var(--border);">
             <td style="padding: 6px; font-weight: 700;">${m}</td>
-            <td style="padding: 6px;">S/ ${spent.toFixed(2)}</td>
-            <td style="padding: 6px; font-weight: 700;">S/ ${savings.toFixed(2)}</td>
+            <td style="padding: 6px;">${getCurrencySymbol()} ${spent.toFixed(2)}</td>
+            <td style="padding: 6px; font-weight: 700;">${getCurrencySymbol()} ${savings.toFixed(2)}</td>
             <td style="padding: 6px; font-weight: 800;" class="${pctColor}">${savings >= 0 ? 'Superávit' : 'Déficit'}</td>
           </tr>
         `;
@@ -3211,8 +3266,8 @@
             </div>
 
             <div class="goal-amounts-row">
-              <span class="goal-saved-val">S/ ${current.toLocaleString('es-PE', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
-              <span class="goal-target-val">Meta: S/ ${target.toLocaleString('es-PE', { minimumFractionDigits: 0 })}</span>
+              <span class="goal-saved-val">${getCurrencySymbol()} ${current.toLocaleString(getActiveCurrency().locale, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
+              <span class="goal-target-val">Meta: ${getCurrencySymbol()} ${target.toLocaleString(getActiveCurrency().locale, { minimumFractionDigits: 0 })}</span>
             </div>
 
             <div class="goal-progress-track">
@@ -3221,7 +3276,7 @@
 
             <div class="flex-between" style="font-size: 11px; color: var(--text-muted); font-weight: 700;">
               <span>Progreso: ${pct}%</span>
-              <span>Faltan: S/ ${remaining.toLocaleString('es-PE', { minimumFractionDigits: 0 })}</span>
+              <span>Faltan: ${getCurrencySymbol()} ${remaining.toLocaleString(getActiveCurrency().locale, { minimumFractionDigits: 0 })}</span>
             </div>
 
             <div class="ai-projection-badge">
@@ -3384,9 +3439,9 @@
         <div class="radar-banner">
           <div>
             <div class="radar-leak-amount">
-              <span>⚠️</span> S/ ${totalFugaAnual.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} al año
+              <span>⚠️</span> ${getCurrencySymbol()} ${totalFugaAnual.toLocaleString(getActiveCurrency().locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} al año
             </div>
-            <div class="radar-leak-sub">Fuga proyectada basada en S/ ${totalFugaMes.toFixed(2)} detectados en ${appState.currentMonth}</div>
+            <div class="radar-leak-sub">Fuga proyectada basada en ${getCurrencySymbol()} ${totalFugaMes.toFixed(2)} detectados en ${appState.currentMonth}</div>
           </div>
           <button class="btn btn-outline btn-sm" onclick="showHormigaAdvice(${totalFugaAnual})" style="background: rgba(255,255,255,0.7); border-color: rgba(239, 68, 68, 0.4); font-weight: 800; color: #dc2626; border-radius: 10px;">
             💡 Optimizar
@@ -3416,8 +3471,8 @@
                 <span class="badge badge-warning" style="font-size: 10px;">${g.count} gastos</span>
               </div>
               <div class="flex-between" style="font-size: 12px; margin-top: 4px;">
-                <span style="font-weight: 800; color: var(--text-main);">S/ ${g.sum.toFixed(2)}/mes</span>
-                <span style="font-weight: 900; color: #ef4444;">S/ ${annual.toLocaleString('es-PE', { minimumFractionDigits: 0 })}/año</span>
+                <span style="font-weight: 800; color: var(--text-main);">${getCurrencySymbol()} ${g.sum.toFixed(2)}/mes</span>
+                <span style="font-weight: 900; color: #ef4444;">${getCurrencySymbol()} ${annual.toLocaleString(getActiveCurrency().locale, { minimumFractionDigits: 0 })}/año</span>
               </div>
               <div class="leak-impact-bar">
                 <div class="leak-impact-fill" style="width: ${barPct}%;"></div>
@@ -3482,207 +3537,11 @@
       alert(tips[key] || `Optimizando este rubro puedes recuperar parte de los S/ ${annual.toLocaleString()} al año.`);
     }
 
-    /* ====== 4. CALENDARIO FINANCIERO DE VENCIMIENTOS ====== */
-    let txViewMode = 'list';
-    let selectedCalendarDay = 15;
 
-    function setTxViewMode(mode) {
-      txViewMode = mode;
-      const btnList = document.getElementById('btnViewList');
-      const btnCal = document.getElementById('btnViewCalendar');
-      const listWrap = document.getElementById('txListViewContainer');
-      const calWrap = document.getElementById('txCalendarViewContainer');
-
-      if (mode === 'calendar') {
-        if (btnList) btnList.classList.remove('active');
-        if (btnCal) btnCal.classList.add('active');
-        if (listWrap) listWrap.style.display = 'none';
-        if (calWrap) calWrap.style.display = 'block';
-        renderCalendarView();
-      } else {
-        if (btnList) btnList.classList.add('active');
-        if (btnCal) btnCal.classList.remove('active');
-        if (listWrap) listWrap.style.display = 'block';
-        if (calWrap) calWrap.style.display = 'none';
-        renderTransactions();
-      }
-    }
-
-    function renderCalendarView() {
-      const container = document.getElementById('txCalendarViewContainer');
-      if (!container) return;
-
-      const curMonthStr = appState.currentMonth || 'Septiembre 2026';
-      const monthParts = curMonthStr.split(' ');
-      const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-      let mIndex = monthNames.findIndex(m => m.toLowerCase() === (monthParts[0] || '').toLowerCase());
-      if (mIndex === -1) mIndex = 8;
-      const yearNum = parseInt(monthParts[1]) || 2026;
-
-      const totalDays = new Date(yearNum, mIndex + 1, 0).getDate();
-      const firstDayOfWeek = (new Date(yearNum, mIndex, 1).getDay() + 6) % 7;
-
-      const allIncomes = appState.incomes && appState.incomes[curMonthStr] ? appState.incomes[curMonthStr] : [];
-      const allExpenses = getMonthTxList();
-
-      const dayEvents = {};
-      for (let d = 1; d <= totalDays; d++) {
-        dayEvents[d] = { incomes: [], expenses: [] };
-      }
-
-      allIncomes.forEach(inc => {
-        const d = parseInt(inc.date) || 15;
-        if (dayEvents[d]) dayEvents[d].incomes.push(inc);
-      });
-
-      allExpenses.forEach(exp => {
-        const due = parseInt(getEffectiveDueDate(exp)) || parseInt(exp.dueDate) || 15;
-        if (dayEvents[due]) dayEvents[due].expenses.push(exp);
-      });
-
-      if (selectedCalendarDay > totalDays) selectedCalendarDay = 1;
-
-      let gridHtml = `
-        <div class="cal-grid-wrapper">
-          <div class="cal-header-bar">
-            <div class="cal-header-title">
-              <span>📅</span> ${monthNames[mIndex]} ${yearNum}
-            </div>
-            <div style="font-size: 11px; color: var(--text-muted); font-weight: 700;">
-              Toca cualquier día para ver vencimientos
-            </div>
-          </div>
-
-          <div class="cal-weekdays">
-            <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
-          </div>
-
-          <div class="cal-days-grid">
-      `;
-
-      for (let i = 0; i < firstDayOfWeek; i++) {
-        gridHtml += `<div class="cal-day-box cal-day-empty"></div>`;
-      }
-
-      for (let day = 1; day <= totalDays; day++) {
-        const ev = dayEvents[day];
-        const isSelected = day === selectedCalendarDay;
-        const hasInc = ev.incomes.length > 0;
-        const hasExpPending = ev.expenses.some(e => (e.status || 'Pagado') === 'Pendiente');
-        const hasExpPaid = ev.expenses.some(e => (e.status || 'Pagado') === 'Pagado');
-        const hasCard = ev.expenses.some(e => (e.category || '').toLowerCase().includes('tarjeta') || e.isInstallment);
-
-        let dotsHtml = '';
-        if (hasInc) dotsHtml += `<div class="cal-dot income" title="Ingresos"></div>`;
-        if (hasExpPending) {
-          dotsHtml += `<div class="cal-dot ${hasCard ? 'expense-pending' : 'service'}" title="Gastos pendientes"></div>`;
-        } else if (hasExpPaid) {
-          dotsHtml += `<div class="cal-dot paid" title="Pagado"></div>`;
-        }
-
-        gridHtml += `
-          <div class="cal-day-box ${isSelected ? 'cal-day-selected' : ''}" onclick="selectCalendarDay(${day})">
-            <div class="cal-day-num">${day}</div>
-            <div class="cal-day-dots">${dotsHtml}</div>
-          </div>
-        `;
-      }
-
-      gridHtml += `</div>`;
-
-      const selEvents = dayEvents[selectedCalendarDay] || { incomes: [], expenses: [] };
-      const selDayDate = new Date(yearNum, mIndex, selectedCalendarDay);
-      const dayName = selDayDate.toLocaleDateString('es-PE', { weekday: 'long' });
-      const dayCap = dayName.charAt(0).toUpperCase() + dayName.slice(1);
-
-      const totalDayExp = selEvents.expenses.reduce((acc, e) => acc + (e.amount || 0), 0);
-      const totalDayPending = selEvents.expenses.filter(e => (e.status || 'Pagado') === 'Pendiente').reduce((acc, e) => acc + (e.amount || 0), 0);
-      const totalDayInc = selEvents.incomes.reduce((acc, i) => acc + (i.amount || 0), 0);
-      const netDayFlow = totalDayInc - totalDayExp;
-
-      let itemsListHtml = '';
-      if (selEvents.incomes.length === 0 && selEvents.expenses.length === 0) {
-        itemsListHtml = `
-          <div style="text-align: center; color: var(--text-muted); padding: 14px; font-size: 12px;">
-            Sin vencimientos ni cobros registrados para este día.
-          </div>
-        `;
-      } else {
-        selEvents.incomes.forEach(inc => {
-          itemsListHtml += `
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px; margin-bottom: 6px;">
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <span style="font-size: 16px;">💵</span>
-                <div>
-                  <div style="font-size: 12px; font-weight: 800; color: var(--text-main);">${inc.name}</div>
-                  <div style="font-size: 10px; color: #059669; font-weight: 700;">Ingreso programado</div>
-                </div>
-              </div>
-              <div style="font-size: 13px; font-weight: 900; color: #059669;">+ S/ ${inc.amount.toFixed(2)}</div>
-            </div>
-          `;
-        });
-
-        selEvents.expenses.forEach(exp => {
-          const isPending = (exp.status || 'Pagado') === 'Pendiente';
-          itemsListHtml += `
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 12px; margin-bottom: 6px;">
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <span style="font-size: 16px;">${(CATEGORIES[exp.category] || {}).icon || '🏷️'}</span>
-                <div>
-                  <div style="font-size: 12px; font-weight: 800; color: var(--text-main);">${exp.name}</div>
-                  <div style="font-size: 10px; color: var(--text-muted); font-weight: 600;">${exp.category} · ${isPending ? '⏳ Pendiente' : '🟢 Pagado'}</div>
-                </div>
-              </div>
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <span style="font-size: 13px; font-weight: 900; color: ${isPending ? '#ef4444' : 'var(--text-main)'};">
-                  S/ ${exp.amount.toFixed(2)}
-                </span>
-                <button class="btn btn-outline btn-sm" onclick="toggleTxStatus('${exp.id}')" style="font-size: 10px; padding: 2px 6px; border-radius: 6px;">
-                  ${isPending ? 'Pagar' : 'Deshacer'}
-                </button>
-              </div>
-            </div>
-          `;
-        });
-      }
-
-      gridHtml += `
-        <div class="cal-day-inspector">
-          <div class="flex-between mb-2">
-            <div>
-              <div style="font-size: 14px; font-weight: 900; color: var(--text-main);">${dayCap} ${selectedCalendarDay} de ${monthNames[mIndex]}</div>
-              <div style="font-size: 11px; color: var(--text-muted); font-weight: 600;">
-                ${selEvents.expenses.length} pagos · ${selEvents.incomes.length} ingresos
-              </div>
-            </div>
-            <div style="text-align: right;">
-              <div style="font-size: 10px; color: var(--text-muted); font-weight: 700;">Flujo Neto del Día</div>
-              <div style="font-size: 14px; font-weight: 900; color: ${netDayFlow >= 0 ? '#10b981' : '#ef4444'};">
-                ${netDayFlow >= 0 ? '+' : ''} S/ ${netDayFlow.toFixed(2)}
-              </div>
-            </div>
-          </div>
-
-          <div style="margin-top: 10px;">
-            ${itemsListHtml}
-          </div>
-
-          <div class="flex-between" style="font-size: 11px; margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border); color: var(--text-muted);">
-            <span>Pendiente por pagar hoy: <strong style="color: #ef4444;">S/ ${totalDayPending.toFixed(2)}</strong></span>
-            <span>Total compromisos: <strong>S/ ${totalDayExp.toFixed(2)}</strong></span>
-          </div>
-        </div>
-      </div>
-      `;
-
-      container.innerHTML = gridHtml;
-    }
-
-    function selectCalendarDay(day) {
-      selectedCalendarDay = day;
-      renderCalendarView();
-    }
+    /* ====== 4. CALENDARIO FINANCIERO REMOVIDO (OPTIMIZACIÓN MINIMALISTA) ====== */
+    function setTxViewMode(mode) {}
+    function selectCalendarDay(day) {}
+    function renderCalendarView() {}
 
     function renderAuditTable() {
       const container = document.getElementById('auditTableBody');
@@ -4027,14 +3886,14 @@
                   ${cat}
                 </div>
                 <div style="font-size:11px; font-weight:700; color:#cbd5e1;">
-                  S/ ${spent.toFixed(0)} <span style="color:#64748b;">/ S/ ${limit.toFixed(0)}</span>
+                  ${getCurrencySymbol()} ${spent.toFixed(0)} <span style="color:#64748b;">/ ${getCurrencySymbol()} ${limit.toFixed(0)}</span>
                 </div>
               </div>
               <div style="height:6px; background:rgba(255,255,255,0.08); border-radius:999px; overflow:hidden; margin-bottom:4px;">
                 <div style="height:100%; width:${pct}%; background:${barColor}; border-radius:999px; transition:width 0.3s ease;"></div>
               </div>
               <div style="display:flex; justify-content:space-between; align-items:center; font-size:10px; color:#94a3b8;">
-                <span>S/ ${left.toFixed(0)} restante</span>
+                <span>${getCurrencySymbol()} ${left.toFixed(0)} restante</span>
                 ${pct >= 100 ? '<span style="color:#ef4444; font-weight:800;">⚠️ Excedido</span>' : ''}
               </div>
             </div>
@@ -4185,8 +4044,9 @@
         totalToPay = monthlyQuota * cuotas;
       }
 
-      document.getElementById('simMonthlyQuotaDisplay').textContent = `S/ ${monthlyQuota.toFixed(2)}`;
-      document.getElementById('simTotalToPayDisplay').textContent = `S/ ${totalToPay.toFixed(2)}`;
+      const sym = getCurrencySymbol();
+      document.getElementById('simMonthlyQuotaDisplay').textContent = `${sym} ${monthlyQuota.toFixed(2)}`;
+      document.getElementById('simTotalToPayDisplay').textContent = `${sym} ${totalToPay.toFixed(2)}`;
 
       const totalIncome = getMonthTotalIncome() || 8800;
       const pctImpact = totalIncome > 0 ? ((monthlyQuota / totalIncome) * 100).toFixed(1) : 0;
@@ -4696,7 +4556,7 @@
       if (wnBadge) wnBadge.textContent = 'Versión ' + APP_VERSION;
 
       const wnSub = document.getElementById('whatsNewVersionSub');
-      if (wnSub) wnSub.textContent = 'Actualización ' + APP_VERSION + ' · Acceso con Google & Recuperación de Clave';
+      if (wnSub) wnSub.textContent = 'Actualización ' + APP_VERSION + ' · Multi-Moneda & Diseño Minimalista';
     }
 
     function openWhatsNewModal() {
@@ -4712,13 +4572,12 @@
       localStorage.setItem('finanzas_last_seen_version', APP_VERSION);
     }
 
-    // Comprobación automática de bienvenida, tour interactivo y versión
+    // Comprobación automática de bienvenida, versión y anuncios
     function checkOnboardingAndVersionAnnouncements() {
       syncVersionUI();
       const userKey = currentUser ? currentUser.id : 'guest';
       const isCesar = isAdminCesar();
       const setupDone = localStorage.getItem('finanzas_setup_completed_' + userKey) || localStorage.getItem('finanzas_setup_completed');
-      const tourDismissed = localStorage.getItem('finanzas_tour_dismissed_' + userKey) === 'true' || localStorage.getItem('finanzas_tour_dismissed') === 'true';
       const seenVer = localStorage.getItem('finanzas_last_seen_version_' + userKey) || localStorage.getItem('finanzas_last_seen_version');
 
       // Si es el administrador César, nunca mostrar el wizard de configuración inicial
@@ -4740,12 +4599,6 @@
       // 1. Prioridad: Si hay una nueva versión de la app, mostrar el modal de Novedades automáticamente
       if (seenVer !== APP_VERSION) {
         setTimeout(() => openWhatsNewModal(), 700);
-        return;
-      }
-
-      // 2. Si no hay versión pendiente y el tour interactivo aún no ha sido marcado con opt-out, lanzarlo
-      if (!tourDismissed) {
-        setTimeout(() => startInteractiveTour(), 700);
         return;
       }
     }
@@ -4828,285 +4681,16 @@
     }
 
     // ================================================================
-    // TOUR INTERACTIVO COMPLETO (ONBOARDING GUIADO & AUTO-NAVEGACIÓN)
+    // TOUR INTERACTIVO (STUB)
     // ================================================================
-    window.handleTourCheckboxChange = function(isChecked) {
-      const userKey = currentUser ? currentUser.id : 'guest';
-      if (isChecked) {
-        localStorage.setItem('finanzas_tour_dismissed_' + userKey, 'true');
-        localStorage.setItem('finanzas_tour_dismissed', 'true');
-      } else {
-        localStorage.removeItem('finanzas_tour_dismissed_' + userKey);
-        localStorage.removeItem('finanzas_tour_dismissed');
-      }
-    };
+    window.handleTourCheckboxChange = function(isChecked) {};
 
     function startInteractiveTour() {
-      closeAllModals();
-      if (!window.driver || !window.driver.js || !window.driver.js.driver) {
-        console.warn("Driver.js no cargado");
-        return;
-      }
-
-      // Asegurar que empezamos en el tab de Inicio
-      if (typeof switchTab === 'function') {
-        switchTab('inicio');
-      }
-
-      const userKey = currentUser ? currentUser.id : 'guest';
-      const isDismissed = localStorage.getItem('finanzas_tour_dismissed_' + userKey) === 'true'
-                       || localStorage.getItem('finanzas_tour_dismissed') === 'true';
-
-      const isDesk = window.innerWidth >= 1024;
-      const getTarget = (mobileSel, deskSel) => {
-        if (window.innerWidth >= 1024 && deskSel && document.querySelector(deskSel)) {
-          return deskSel;
-        }
-        return mobileSel;
-      };
-
-      const driverObj = window.driver.js.driver({
-        showProgress: true,
-        animate: true,
-        allowClose: true,
-        doneBtnText: '¡Comenzar a Usar! 🚀',
-        nextBtnText: 'Siguiente →',
-        prevBtnText: '← Atrás',
-        progressText: '{{current}} de {{total}}',
-        showButtons: ['next', 'previous', 'close'],
-        onCloseClick: () => {
-          localStorage.setItem('finanzas_tour_dismissed_' + userKey, 'true');
-          localStorage.setItem('finanzas_tour_dismissed', 'true');
-          if (typeof switchTab === 'function') {
-            switchTab('inicio');
-          }
-          driverObj.destroy();
-        },
-        onHighlightStarted: (element, step) => {
-          if (step && step.tabToSwitch && typeof switchTab === 'function') {
-            switchTab(step.tabToSwitch);
-          }
-        },
-        onDestroyStarted: () => {
-          localStorage.setItem('finanzas_tour_dismissed_' + userKey, 'true');
-          localStorage.setItem('finanzas_tour_dismissed', 'true');
-          if (typeof switchTab === 'function') {
-            switchTab('inicio');
-          }
-          driverObj.destroy();
-        },
-        onDestroyed: () => {
-          if (typeof switchTab === 'function') {
-            switchTab('inicio');
-          }
-        },
-        steps: [
-          // 1. Bienvenida
-          {
-            tabToSwitch: 'inicio',
-            popover: {
-              title: '🎉 ¡Bienvenido a AliviaFin!',
-              description: `
-                <div style="font-size: 13px; line-height: 1.5; color: #334155;">
-                  <p style="margin: 0 0 10px 0;">Recorreremos juntos en 1 minuto las herramientas esenciales para dominar tus finanzas con paz mental:</p>
-                  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 12px; font-size: 12px; color: #475569; display: flex; flex-direction: column; gap: 6px;">
-                    <div>💵 <b>Configurar sueldo y presupuestos</b></div>
-                    <div>🔴 <b>Registrar gastos e ingresos extra</b></div>
-                    <div>💳 <b>Simulador de compras en cuotas</b></div>
-                    <div>💬 <b>Ayuda y soporte directo en 1 clic</b></div>
-                    <div>📥 <b>Descargar reporte mensual en PDF</b></div>
-                    <div>🌙 <b>Activar el Modo Noche Suave</b></div>
-                    <div>📊 <b>Conocer cada sección y pestaña</b></div>
-                  </div>
-                </div>
-              `
-            }
-          },
-          // 2. Stat Cards Métricas
-          {
-            element: '.stats-grid',
-            tabToSwitch: 'inicio',
-            popover: {
-              title: '💵 Tus Métricas Clave',
-              description: 'Tu termómetro financiero instantáneo: consulta en tiempo real tu <b>Ingreso Mensual</b> total, tu <b>Gasto Real</b> acumulado y tu <b>Saldo en Banco</b> disponible para terminar el mes en verde.',
-              side: 'bottom',
-              align: 'start'
-            }
-          },
-          // 3. Registrar Gasto
-          {
-            element: '#btnRegistrarGasto',
-            tabToSwitch: 'inicio',
-            popover: {
-              title: '🔴 Cómo Registrar un Gasto',
-              description: 'Toca este botón cada vez que realices una compra o pago. Elige la categoría, monto, fecha de vencimiento y define si es al contado o en cuotas con tarjeta de crédito.',
-              side: 'bottom',
-              align: 'start'
-            }
-          },
-          // 4. Registrar Ingreso Extra
-          {
-            element: '#btnRegistrarIngreso',
-            tabToSwitch: 'inicio',
-            popover: {
-              title: '🟢 Cómo Registrar Ingresos Extra',
-              description: '¿Cobraste un bono, utilidades o trabajo freelance? Regístralo aquí con un toque para que se sume de inmediato a tu saldo en banco real.',
-              side: 'bottom',
-              align: 'center'
-            }
-          },
-          // 5. Simulador de Cuotas & Crédito
-          {
-            element: '#btnQuickSimulador',
-            tabToSwitch: 'inicio',
-            popover: {
-              title: '💳 Simulador de Cuotas & Crédito',
-              description: '¿Planeas una compra a plazos? Simúlala aquí antes de pasar la tarjeta para ver tu cuota mensual con o sin intereses y su impacto en tu presupuesto.',
-              side: 'bottom',
-              align: 'start'
-            }
-          },
-          // 6. Centro de Ayuda & Feedback
-          {
-            element: '#btnQuickHelp',
-            tabToSwitch: 'inicio',
-            popover: {
-              title: '💬 ¿Dudas o Sugerencias? Soporte Directo',
-              description: 'Estamos para ayudarte. Toca aquí en cualquier momento para enviarnos dudas, sugerencias o reportar cualquier detalle directamente al equipo en 1 clic.',
-              side: 'bottom',
-              align: 'center'
-            }
-          },
-          // 7. Configurar Sueldo y Gastos Mensuales
-          {
-            element: '#btnSettings',
-            tabToSwitch: 'inicio',
-            popover: {
-              title: '⚙️ Configurar Sueldo y Gastos Mensuales',
-              description: 'Desde este botón de Ajustes puedes cambiar tu sueldo en <b>"✏️ Editar mi Sueldo Inicial"</b>, ajustar presupuestos de gastos fijos en <b>"⚙️ Gestor de Categorías"</b>, o relanzar el asistente completo en <b>"🔧 Reconfigurar Ingresos y Gastos"</b>.',
-              side: 'bottom',
-              align: 'center'
-            }
-          },
-          // 8. Descargar Reporte en PDF
-          {
-            element: '#btnExportPDF',
-            tabToSwitch: 'inicio',
-            popover: {
-              title: '📥 Descargar Reporte Mensual en PDF',
-              description: 'Exporta en segundos un informe ejecutivo completo en PDF con tus gastos pagados, pendientes y balances netos del mes, listo para imprimir o archivar.',
-              side: 'bottom',
-              align: 'center'
-            }
-          },
-          // 9. Modo Oscuro
-          {
-            element: '#themeToggleBtn',
-            tabToSwitch: 'inicio',
-            popover: {
-              title: '🌙 Cambiar a Modo Oscuro / Claro',
-              description: 'Alterna con un solo clic entre el Modo Claro y el Modo Noche Suave, diseñado para proteger tu vista de noche y reducir el consumo de batería.',
-              side: 'bottom',
-              align: 'center'
-            }
-          },
-          // 10. Tab Movimientos (Auto-navega a Movimientos)
-          {
-            element: getTarget('#navTabMovimientos', '#deskNavTabMovimientos'),
-            tabToSwitch: 'movimientos',
-            popover: {
-              title: '💳 Pestaña: Movimientos',
-              description: '<i>¡Navegamos a Movimientos!</i> Aquí tienes tu lista completa de gastos e ingresos, con vista en <b>Lista</b> o <b>Calendario</b>, filtros por categoría y búsqueda instantánea.',
-              side: isDesk ? 'right' : 'top',
-              align: 'center'
-            }
-          },
-          // 11. Tab Plan (Auto-navega a Plan)
-          {
-            element: getTarget('#navTabPlan', '#deskNavTabPlan'),
-            tabToSwitch: 'plan',
-            popover: {
-              title: '📊 Pestaña: Plan Financiero',
-              description: '<i>¡Llegamos a tu Plan!</i> Aquí tienes tu distribución inteligente <b>50/30/20</b> (Necesidades, Deseos, Ahorro), gráficos comparativos de gastos y el rastreador de tus compras en cuotas.',
-              side: isDesk ? 'right' : 'top',
-              align: 'center'
-            }
-          },
-          // 12. Tab Metas (Auto-navega a Metas)
-          {
-            element: getTarget('#navTabMetas', '#deskNavTabMetas'),
-            tabToSwitch: 'metas',
-            popover: {
-              title: '🎯 Pestaña: Metas de Ahorro',
-              description: '<i>¡Ahora estamos en Metas!</i> Establece objetivos como tu Fondo de Emergencia, viajes o compras grandes. AliviaFin calcula cuánto dinero debes apartar cada mes para lograrlas.',
-              side: isDesk ? 'right' : 'top',
-              align: 'center'
-            }
-          },
-          // 13. Tab Consejos (Auto-navega a Consejos)
-          {
-            element: getTarget('#navTabConsejos', '#deskNavTabConsejos'),
-            tabToSwitch: 'consejos',
-            popover: {
-              title: '💡 Pestaña: Consejos & Asesor',
-              description: '<i>¡Aquí está tu Asesor!</i> Diagnóstico inteligente automático de tu presupuesto mensual y el método <b>Bola de Nieve</b> para liquidar deudas rápidamente.',
-              side: isDesk ? 'right' : 'top',
-              align: 'center'
-            }
-          },
-          // 14. Cierre y Opción No Volver a Mostrar (Vuelve a Inicio)
-          {
-            element: getTarget('#navTabInicio', '#deskNavTabInicio'),
-            tabToSwitch: 'inicio',
-            popover: {
-              title: '🚀 ¡Todo Listo para Dominar tus Finanzas!',
-              description: `
-                <div style="font-size: 13px; line-height: 1.5; color: #334155;">
-                  <p style="margin: 0 0 10px 0;">Regresamos a tu pantalla de Inicio. Recuerda que siempre puedes volver a consultar este tour guiado desde <b>⚙️ Ajustes</b>.</p>
-                  <div style="margin-top: 14px; padding-top: 10px; border-top: 1px solid #e2e8f0; text-align: left;">
-                    <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: #475569; cursor: pointer; font-weight: 600;">
-                      <input type="checkbox" id="tourDontShowAgain" onchange="window.handleTourCheckboxChange(this.checked)" ${isDismissed ? 'checked' : ''} style="width: 16px; height: 16px; accent-color: #4f46e5; cursor: pointer;">
-                      <span>No volver a mostrar este tour al iniciar</span>
-                    </label>
-                  </div>
-                </div>
-              `,
-              side: isDesk ? 'right' : 'top',
-              align: 'center',
-              onNextClick: () => {
-                const userKey = currentUser ? currentUser.id : 'guest';
-                const chk = document.getElementById('tourDontShowAgain');
-                if (chk && chk.checked) {
-                  localStorage.setItem('finanzas_tour_dismissed_' + userKey, 'true');
-                  localStorage.setItem('finanzas_tour_dismissed', 'true');
-                }
-                if (typeof switchTab === 'function') {
-                  switchTab('inicio');
-                }
-                driverObj.destroy();
-              }
-            }
-          }
-        ]
-      });
-
-      window.currentAliviaFinTour = driverObj;
-      window.currentFinZenTour = driverObj;
-      driverObj.drive();
+      // Tour interactivo desactivado para una experiencia minimalista zen sin distracciones
+      console.log("Tour interactivo omitido");
     }
 
-// Función para cerrar el tour de forma garantizada desde cualquier evento
-window.closeTour = function() {
-  const userKey = currentUser ? currentUser.id : 'guest';
-  localStorage.setItem('finanzas_tour_dismissed_' + userKey, 'true');
-  localStorage.setItem('finanzas_tour_dismissed', 'true');
-  if (typeof switchTab === 'function') {
-    switchTab('inicio');
-  }
-  if (window.currentAliviaFinTour || window.currentFinZenTour) {
-    try { (window.currentAliviaFinTour || window.currentFinZenTour).destroy(); } catch(e) {}
-  }
-};
+    window.closeTour = function() {};
 
     // ================================================================
     // ASESOR DE DEUDAS: MÉTODO BOLA DE NIEVE (ALIVIAFIN PRO)
@@ -5238,7 +4822,7 @@ window.closeTour = function() {
 
       if (!currentSnowballDebts || currentSnowballDebts.length === 0) {
         if (totalMonthsEl) totalMonthsEl.textContent = '0 meses';
-        if (monthlyFreedEl) monthlyFreedEl.textContent = 'S/ 0 / mes';
+        if (monthlyFreedEl) monthlyFreedEl.textContent = `${getCurrencySymbol()} 0 / mes`;
         if (timeSavedEl) timeSavedEl.textContent = '¡Sin deudas activas!';
         if (attackPlanEl) attackPlanEl.innerHTML = '<div style="text-align: center; color: var(--text-muted); font-size: 12px; padding: 16px;">Añade tus deudas para calcular tu plan de amortización.</div>';
         return;
@@ -5293,7 +4877,7 @@ window.closeTour = function() {
       const totalFreed = sorted.reduce((sum, d) => sum + d.minPayment, 0) + extraPayment;
 
       if (totalMonthsEl) totalMonthsEl.textContent = `${month} ${month === 1 ? 'mes' : 'meses'}`;
-      if (monthlyFreedEl) monthlyFreedEl.textContent = `S/ ${Math.round(totalFreed)} / mes`;
+      if (monthlyFreedEl) monthlyFreedEl.textContent = `${getCurrencySymbol()} ${Math.round(totalFreed)} / mes`;
       if (timeSavedEl) timeSavedEl.textContent = `¡100% libre de deudas en ${month} meses!`;
 
       // Renderizar los escalones de ataque
@@ -5314,11 +4898,11 @@ window.closeTour = function() {
               </div>
               <div style="display: flex; justify-content: space-between; align-items: baseline;">
                 <div style="font-size: 12px; font-weight: 800; color: var(--text-main);">${escapeHtml(d.name)}</div>
-                <div style="font-size: 11.5px; font-weight: 800; color: #4f46e5;">S/ ${d.balance.toLocaleString()}</div>
+                <div style="font-size: 11.5px; font-weight: 800; color: #4f46e5;">${getCurrencySymbol()} ${d.balance.toLocaleString()}</div>
               </div>
               <div style="display: flex; justify-content: space-between; font-size: 10.5px; color: var(--text-muted);">
                 <span>${isTarget ? 'Cuota + Abono Extra:' : 'Cuota mínima:'}</span>
-                <strong style="color: ${isTarget ? '#4f46e5' : 'var(--text-main)'}; font-size: 11px;">S/ ${Math.round(d.allocatedPayment)} / mes</strong>
+                <strong style="color: ${isTarget ? '#4f46e5' : 'var(--text-main)'}; font-size: 11px;">${getCurrencySymbol()} ${Math.round(d.allocatedPayment)} / mes</strong>
               </div>
             </div>
           `;
@@ -5498,12 +5082,13 @@ window.generatePDFReport = function() {
   element.style.background = '#ffffff';
   
   const curM = appState.currentMonth || getCurrentCalendarMonthName();
+  const sym = getCurrencySymbol();
   
   // Header
   let html = `
     <div style="border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end;">
       <div>
-        <h1 style="margin: 0; color: #4f46e5; font-size: 28px; font-weight: 800;">AliviaFin</h1>
+        <h1 style="margin: 0; color: #0d9488; font-size: 28px; font-weight: 800;">AliviaFin</h1>
         <p style="margin: 4px 0 0; color: #64748b; font-size: 14px;">Reporte Financiero Mensual</p>
       </div>
       <div style="text-align: right;">
@@ -5523,15 +5108,15 @@ window.generatePDFReport = function() {
     <div style="display: flex; gap: 15px; margin-bottom: 30px;">
       <div style="flex: 1; padding: 15px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
         <p style="margin: 0 0 5px; font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase;">Ingresos Totales</p>
-        <p style="margin: 0; font-size: 24px; font-weight: 800; color: #10b981;">S/ ${sueldo.toFixed(2)}</p>
+        <p style="margin: 0; font-size: 24px; font-weight: 800; color: #10b981;">${sym} ${sueldo.toFixed(2)}</p>
       </div>
       <div style="flex: 1; padding: 15px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
         <p style="margin: 0 0 5px; font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase;">Gastos Reales</p>
-        <p style="margin: 0; font-size: 24px; font-weight: 800; color: #ef4444;">S/ ${gastos.toFixed(2)}</p>
+        <p style="margin: 0; font-size: 24px; font-weight: 800; color: #ef4444;">${sym} ${gastos.toFixed(2)}</p>
       </div>
       <div style="flex: 1; padding: 15px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
         <p style="margin: 0 0 5px; font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase;">Saldo Disponible</p>
-        <p style="margin: 0; font-size: 24px; font-weight: 800; color: #3b82f6;">S/ ${saldo.toFixed(2)}</p>
+        <p style="margin: 0; font-size: 24px; font-weight: 800; color: #3b82f6;">${sym} ${saldo.toFixed(2)}</p>
       </div>
     </div>
   `;
@@ -5580,7 +5165,7 @@ window.generatePDFReport = function() {
             <td style="padding: 8px; border-bottom: 1px solid #e2e8f0; font-weight: 700;">${getEffectiveDueDate(t)}</td>
             <td style="padding: 8px; border-bottom: 1px solid #e2e8f0;"><span style="background: #e0e7ff; color: #4338ca; padding: 2px 6px; border-radius: 4px; font-weight: 600; font-size: 11px;">${t.category}</span></td>
             <td style="padding: 8px; border-bottom: 1px solid #e2e8f0;">${t.name}</td>
-            <td style="padding: 8px; border-bottom: 1px solid #e2e8f0; text-align: right; font-weight: 700;">S/ ${t.amount.toFixed(2)}</td>
+            <td style="padding: 8px; border-bottom: 1px solid #e2e8f0; text-align: right; font-weight: 700;">${sym} ${t.amount.toFixed(2)}</td>
           </tr>
         `;
       });
@@ -5617,4 +5202,12 @@ window.generatePDFReport = function() {
   });
 };
 window.exportMonthlyReportPDF = window.generatePDFReport;
+
+// Multi-Moneda Window Exports
+window.SUPPORTED_CURRENCIES = SUPPORTED_CURRENCIES;
+window.getActiveCurrency = getActiveCurrency;
+window.getCurrencySymbol = getCurrencySymbol;
+window.getCurrencyCode = getCurrencyCode;
+window.changeCurrency = changeCurrency;
+window.updateCurrencyDOMElements = updateCurrencyDOMElements;
 

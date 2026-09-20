@@ -13,6 +13,7 @@ parsed_data.json
 index_backup_*.html
 *_backup_*
 *.bak_*
+*.backup*
 scratch.js
 
 # macOS
