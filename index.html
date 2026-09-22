@@ -4,12 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>AliviaFin — Paz mental para tu dinero</title>
-  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png?v=66.0">
-  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png?v=66.0">
-  <link rel="shortcut icon" type="image/x-icon" href="favicon.ico?v=66.0">
-  <link rel="icon" type="image/x-icon" href="favicon.ico?v=66.0">
-  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=66.0">
-  <link rel="manifest" href="manifest.json?v=66.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png?v=67.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png?v=67.0">
+  <link rel="shortcut icon" type="image/x-icon" href="favicon.ico?v=67.0">
+  <link rel="icon" type="image/x-icon" href="favicon.ico?v=67.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=67.0">
+  <link rel="manifest" href="manifest.json?v=67.0">
   <meta name="theme-color" content="#0d9488">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,7 +17,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <link rel="stylesheet" href="css/styles.css?v=66.0">
+  <link rel="stylesheet" href="css/styles.css?v=67.0">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
 </head>
 <body>
@@ -325,7 +325,10 @@
           </button>
         </div>
 
-
+        <!-- RADAR DE PRÓXIMOS VENCIMIENTOS (APPLE FINTECH WIDGET) -->
+        <div id="upcomingBillsContainer">
+          <!-- Renders dynamically via renderUpcomingDueDates() -->
+        </div>
 
         <!-- FEED: ÚLTIMOS MOVIMIENTOS (Solo los últimos 3-4 para mantener la mente despejada) -->
         <div class="card" style="margin-bottom: 14px;">
@@ -352,6 +355,16 @@
 
         <!-- Quick Tools Hub (Minimalista y Compacto) -->
         <div class="quick-tools-grid">
+          <button id="btnQuickConciliar" class="quick-tool-card" onclick="openReconcileModal()" title="Conciliar Saldo con Banco">
+            <div class="quick-tool-icon">⚖️</div>
+            <div class="quick-tool-info">
+              <div class="quick-tool-title">
+                <span>Conciliar Saldo</span>
+                <span class="quick-tool-arrow">↗</span>
+              </div>
+              <div class="quick-tool-desc">Compara con tu banco y cuadra en 1 tap</div>
+            </div>
+          </button>
           <button id="btnQuickSimulador" class="quick-tool-card" onclick="openInstallmentsSimulatorModal()" title="Simulador de Cuotas y Crédito">
             <div class="quick-tool-icon">💳</div>
             <div class="quick-tool-info">
@@ -856,8 +869,60 @@
         <p style="margin-bottom: 8px;">Representa el dinero real disponible en tu cuenta. Es la diferencia entre tus ingresos totales y <strong>únicamente los gastos que ya has marcado como "Pagado"</strong>.</p>
         <p style="margin: 0; color: #b45309; font-weight: 600;">⚠️ A medida que vayas pagando y marcando tus gastos pendientes, este monto irá bajando automáticamente.</p>
       </div>
-      <div class="modal-actions">
-        <button type="button" class="btn btn-primary" onclick="closeModal('explainSurplusModal')" style="width: 100%;">¡Entendido! [ESC]</button>
+      <div class="modal-actions" style="display: flex; flex-direction: column; gap: 8px;">
+        <button type="button" class="btn btn-primary" onclick="closeModal('explainSurplusModal'); openReconcileModal();" style="width: 100%; background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);">
+          ⚖️ Conciliar Saldo con mi Banco
+        </button>
+        <button type="button" class="btn btn-secondary" onclick="closeModal('explainSurplusModal')" style="width: 100%;">¡Entendido! [ESC]</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CONCILIACIÓN BANCARIA (ARQUEO EN 1 TAP) -->
+  <div class="modal-backdrop" id="reconcileBalanceModal" onclick="handleBackdropClick(event, 'reconcileBalanceModal')">
+    <div class="modal" style="max-width: 520px; width: 94%;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+        <div class="modal-title" style="margin: 0; display: flex; align-items: center; gap: 8px;">
+          <span>⚖️</span> <span>Conciliación Bancaria</span>
+        </div>
+        <button type="button" onclick="closeModal('reconcileBalanceModal')" aria-label="Cerrar" style="background: #f1f5f9; border: 1px solid #cbd5e1; width: 30px; height: 30px; border-radius: 50%; font-size: 15px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #475569;">✕</button>
+      </div>
+
+      <p style="font-size: 12px; color: var(--text-muted); line-height: 1.5; margin-bottom: 16px;">
+        Compara tu saldo registrado en AliviaFin con el dinero real disponible en tu aplicación bancaria (BCP, Interbank, BBVA, etc.) para mantener tu tranquilidad financiera.
+      </p>
+
+      <!-- Comparativa Grid -->
+      <div class="reconcile-grid">
+        <div class="reconcile-box">
+          <div class="reconcile-box-label">Saldo Registrado en App</div>
+          <div class="reconcile-box-val" id="reconcileAppBalance"><span class="app-currency-symbol">S/</span> 0.00</div>
+        </div>
+        <div class="reconcile-box">
+          <div class="reconcile-box-label">Saldo Real en tu Banco</div>
+          <div style="position: relative;">
+            <input type="number" step="0.01" id="reconcileBankInput" class="form-control" placeholder="0.00" oninput="calculateReconciliationDiff()" style="font-size: 16px; font-weight: 800; padding: 6px 10px; width: 100%;">
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel de Descuadre en Vivo -->
+      <div id="reconcileDiffPanel" class="reconcile-diff-panel reconcile-diff-unmatched" style="display: none;">
+        <div id="reconcileDiffStatus" style="font-weight: 800; margin-bottom: 4px;"></div>
+        <div id="reconcileDiffExplanation" style="font-size: 11.5px; opacity: 0.9;"></div>
+      </div>
+
+      <!-- Botones de Acción -->
+      <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 14px;">
+        <button type="button" id="btnApplyReconciliation" class="btn btn-primary" onclick="applyReconciliationAdjustment()" style="width: 100%; display: none; background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+          ⚡ Cuadrar Saldo Automáticamente
+        </button>
+        <button type="button" id="btnQuickMissingExpense" class="btn btn-secondary" onclick="openMissingExpenseFromReconcile()" style="width: 100%; display: none;">
+          🔍 Registrar Gasto Faltante con este Monto
+        </button>
+        <button type="button" class="btn btn-secondary" onclick="closeModal('reconcileBalanceModal')" style="width: 100%;">
+          Cerrar
+        </button>
       </div>
     </div>
   </div>
@@ -1663,52 +1728,52 @@
             <span>🚀</span> <span>¡Novedades en AliviaFin!</span>
           </div>
           <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
-            <span class="whats-new-card-badge" id="whatsNewVersionBadge">Versión v66.0</span>
-            <span style="font-size: 11px; color: var(--text-muted); font-weight: 600;" id="whatsNewVersionSub">Actualización v66.0 · Multi-Moneda & Diseño Minimalista</span>
+            <span class="whats-new-card-badge" id="whatsNewVersionBadge">Versión v67.0</span>
+            <span style="font-size: 11px; color: var(--text-muted); font-weight: 600;" id="whatsNewVersionSub">Actualización v67.0 · Vencimientos Inteligentes & Conciliación Bancaria</span>
           </div>
         </div>
         <button type="button" onclick="dismissWhatsNewModal()" style="background:none; border:none; font-size:20px; cursor:pointer; color:var(--text-muted); line-height: 1;">✕</button>
       </div>
 
       <div style="margin-top: 14px; max-height: 55vh; overflow-y: auto; padding-right: 4px;">
-        <!-- Card 1: Selector Multi-Moneda -->
+        <!-- Card 1: Radar de Próximos Vencimientos -->
         <div class="whats-new-feature-card">
-          <div class="whats-new-icon-box" style="color: #0d9488;">💵</div>
+          <div class="whats-new-icon-box" style="color: #f59e0b;">📅</div>
           <div style="flex: 1;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
-              <h5 style="margin: 0; font-size: 13px; font-weight: 800; color: var(--text-main);">Selector Multi-Moneda Internacional</h5>
-              <span class="whats-new-card-badge" style="background: rgba(13, 148, 136, 0.12); color: #0d9488;">Nuevo 🌎</span>
+              <h5 style="margin: 0; font-size: 13px; font-weight: 800; color: var(--text-main);">Radar de Próximos Vencimientos</h5>
+              <span class="whats-new-card-badge" style="background: rgba(245, 158, 11, 0.12); color: #d97706;">Nuevo ⚡</span>
             </div>
             <p style="margin: 0; font-size: 11px; color: var(--text-muted); line-height: 1.4;">
-              Elige tu moneda en Ajustes: Soles (PEN 🇵🇪), Dólares (USD 🇺🇸), Euros (EUR 🇪🇺), Pesos Mexicanos (MXN 🇲🇽), Colombianos (COP 🇨🇴), Argentinos (ARS 🇦🇷) o Chilenos (CLP 🇨🇱). Toda la app actualiza sus símbolos de inmediato.
+              Tu pantalla de Inicio ahora te muestra con anticipación qué cuentas vencen en los siguientes 5 días (servicios, préstamos, alquiler, tarjetas) con un botón para marcarlos como pagados en 1 toque.
             </p>
           </div>
         </div>
 
-        <!-- Card 2: Minimalismo Apple -->
+        <!-- Card 2: Conciliación Bancaria en 1 Tap -->
+        <div class="whats-new-feature-card">
+          <div class="whats-new-icon-box" style="color: #4f46e5;">⚖️</div>
+          <div style="flex: 1;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+              <h5 style="margin: 0; font-size: 13px; font-weight: 800; color: var(--text-main);">Conciliación Bancaria en 1 Tap</h5>
+              <span class="whats-new-card-badge" style="background: rgba(79, 70, 229, 0.12); color: #4f46e5;">Nuevo 🏦</span>
+            </div>
+            <p style="margin: 0; font-size: 11px; color: var(--text-muted); line-height: 1.4;">
+              Compara en segundos el saldo de tu app bancaria (BCP, Interbank, etc.) con AliviaFin. Si detectas un descuadre, puedes cuadrarlo automáticamente o registrar el gasto que olvidaste anotar.
+            </p>
+          </div>
+        </div>
+
+        <!-- Card 3: Modo Zen Apple sin Sobrecarga Cognitiva -->
         <div class="whats-new-feature-card">
           <div class="whats-new-icon-box" style="color: #10b981;">🌿</div>
           <div style="flex: 1;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
-              <h5 style="margin: 0; font-size: 13px; font-weight: 800; color: var(--text-main);">Depuración de Clutter & Cero Distracciones</h5>
-              <span class="whats-new-card-badge" style="background: rgba(16, 185, 129, 0.12); color: #10b981;">Minimalismo</span>
+              <h5 style="margin: 0; font-size: 13px; font-weight: 800; color: var(--text-main);">Experiencia Limpia & Cero Ruido Cognitivo</h5>
+              <span class="whats-new-card-badge" style="background: rgba(16, 185, 129, 0.12); color: #10b981;">Diseño Zen</span>
             </div>
             <p style="margin: 0; font-size: 11px; color: var(--text-muted); line-height: 1.4;">
-              Diseño simplificado al estilo Apple: optimizamos la vista de Movimientos, eliminando paneles redundantes para que gestiones tus finanzas con la máxima fluidez.
-            </p>
-          </div>
-        </div>
-
-        <!-- Card 3: Simulador de Cuotas Adaptado -->
-        <div class="whats-new-feature-card">
-          <div class="whats-new-icon-box" style="color: #38bdf8;">💳</div>
-          <div style="flex: 1;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
-              <h5 style="margin: 0; font-size: 13px; font-weight: 800; color: var(--text-main);">Simulador de Cuotas & Crédito</h5>
-              <span class="whats-new-card-badge" style="background: rgba(56, 189, 248, 0.12); color: #0284c7;">Refinado</span>
-            </div>
-            <p style="margin: 0; font-size: 11px; color: var(--text-muted); line-height: 1.4;">
-              Calcula y proyecta tus compras a plazos en tu moneda seleccionada, viendo claramente el porcentaje de impacto en tu flujo de caja de los próximos meses.
+              Diseño minimalista estilo Apple Card: máxima fluidez táctil y orden visual optimizado para tu iPhone en modo PWA, Mac y Navegador web.
             </p>
           </div>
         </div>

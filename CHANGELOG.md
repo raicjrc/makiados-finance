@@ -3,6 +3,25 @@
 Todas las versiones notables de esta aplicación están documentadas aquí.
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
+## [v67.0] — 2026-09-22 — Radar de Próximos Vencimientos, Conciliación Bancaria en 1 Tap y Blindaje Zen
+
+### 📅 Radar de Próximos Vencimientos (Apple Fintech Widget)
+- **Detección Automática de Cuentas por Vencer**: Widget en la pantalla de Inicio que analiza las fechas de vencimiento (`recurringDueDates`) y alerta con anticipación qué pagos vencen en los siguientes 5 días (servicios, alquiler, gym, préstamos, seguros).
+- **Etiquetas de Urgencia Semafórica**: Badges táctiles (`⚡ Vence Hoy`, `Vence Mañana`, `En X días`, `⚠️ Venció hace X días`).
+- **Botón de Pago Inmediato**: Un toque en `✓ Pagar` marca el gasto como pagado al instante con feedback háptico y audit trail.
+- **Estado Zen Despejado**: Si no hay pagos en los próximos 5 días, se muestra un banner calmado y compacto para evitar sobrecarga cognitiva.
+
+### ⚖️ Conciliación Bancaria (Arqueo en 1 Tap)
+- **Comparación en Tiempo Real**: Modal para contrastar el saldo registrado en la app con el saldo real disponible en la aplicación del banco (BCP, Interbank, etc.).
+- **Detección y Ajuste Automático de Descuadre**: Cálculo instantáneo de diferencias con botón `⚡ Cuadrar Saldo Automáticamente` o `🔍 Registrar Gasto Faltante` con el monto exacto precargado.
+
+### 🛡️ Organización y Rendimiento PWA
+- **Limpieza de Backups Sueltos**: Migración segura de más de 15 archivos `.backup_*` a `_archive/legacy_backups/` y creación de snapshot inmutable `_archive/pre_enhancements_v67/`.
+- **Actualización de Service Worker**: Service Worker v67.0 (`aliviafin-v103`) con invalidación inmediata de caché para iOS Safari y escritorio.
+- **Modal de Novedades v67.0**: Presentación automática de las nuevas funcionalidades para todos los usuarios al iniciar sesión.
+
+---
+
 ## [v64.0] — 2026-09-18 — Rediseño Zen Ejecutivo (Fase 1: Descongestión, Dinero Libre Hoy & Registro Express)
 
 ### 🧘 Rediseño de Arquitectura y Paz Mental

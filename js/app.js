@@ -75,9 +75,9 @@
     let CATEGORIES = { ...GENERIC_CATEGORIES };
 
     // ================================================================
-    // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v66.0)
+    // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v67.0)
     // ================================================================
-    const APP_VERSION = 'v66.0';
+    const APP_VERSION = 'v67.0';
 
     const SUPPORTED_CURRENCIES = {
       'PEN': { code: 'PEN', symbol: 'S/', name: 'Soles peruanos', flag: '🇵🇪', locale: 'es-PE' },
@@ -1558,6 +1558,285 @@
       }
     }
 
+    // ================================================================
+    // RADAR DE PRÓXIMOS VENCIMIENTOS (APPLE FINTECH CARD v67.0)
+    // ================================================================
+    function renderUpcomingDueDates() {
+      const container = document.getElementById('upcomingBillsContainer');
+      if (!container) return;
+
+      const txs = getMonthTxList();
+      const today = new Date().getDate();
+      const sym = getCurrencySymbol();
+      const loc = getActiveCurrency().locale;
+
+      // Filtrar gastos pendientes del mes actual
+      const pendingTxs = txs.filter(t => (t.status || 'Pagado') === 'Pendiente');
+
+      if (pendingTxs.length === 0) {
+        container.innerHTML = `
+          <div class="upcoming-bills-card" style="margin-bottom: 14px; padding: 12px 16px;">
+            <div class="upcoming-bills-zen">
+              <span>✨</span>
+              <span>Todo al día · No tienes gastos pendientes en este mes.</span>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      // Mapear con días restantes
+      const withDue = pendingTxs.map(t => {
+        const dueDay = parseInt(getEffectiveDueDate(t)) || 15;
+        const daysDiff = dueDay - today;
+        return {
+          ...t,
+          dueDay,
+          daysDiff
+        };
+      });
+
+      // Filtrar: vencidos en el mes (daysDiff < 0) o que vencen en los próximos 5 días (daysDiff >= 0 && daysDiff <= 5)
+      const upcoming = withDue.filter(t => t.daysDiff <= 5);
+
+      if (upcoming.length === 0) {
+        const future = withDue.filter(t => t.daysDiff > 5).sort((a, b) => a.daysDiff - b.daysDiff);
+        const nextIn = future.length > 0 ? ` · Próximo pago en ${future[0].daysDiff} días (${escapeHtml(future[0].name)})` : '';
+        container.innerHTML = `
+          <div class="upcoming-bills-card" style="margin-bottom: 14px; padding: 12px 16px;">
+            <div class="upcoming-bills-zen">
+              <span>✨</span>
+              <span>Todo al día por los próximos 5 días${nextIn}.</span>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      // Ordenar por urgencia: días menores primero
+      upcoming.sort((a, b) => a.daysDiff - b.daysDiff);
+
+      const totalUpcomingSum = upcoming.reduce((acc, curr) => acc + (curr.amount || 0), 0);
+      const displayItems = upcoming.slice(0, 3); // Máximo 3 visibles para no saturar la mente
+
+      container.innerHTML = `
+        <div class="upcoming-bills-card">
+          <div class="upcoming-bills-header">
+            <div class="upcoming-bills-title">
+              <span>📅</span>
+              <span>Próximos Vencimientos</span>
+            </div>
+            <div class="upcoming-bills-sum-badge">
+              ${upcoming.length} pendientes · ${sym} ${totalUpcomingSum.toLocaleString(loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </div>
+          </div>
+          <div class="upcoming-bills-list">
+            ${displayItems.map(item => {
+              const catInfo = CATEGORIES[item.category] || { icon: '💳' };
+              const icon = catInfo.icon || '💳';
+              
+              let pillClass = 'due-pill-soon';
+              let pillText = `En ${item.daysDiff} días`;
+              if (item.daysDiff < 0) {
+                pillClass = 'due-pill-urgent';
+                pillText = `⚠️ Venció hace ${Math.abs(item.daysDiff)}d`;
+              } else if (item.daysDiff === 0) {
+                pillClass = 'due-pill-urgent';
+                pillText = `⚡ Vence Hoy`;
+              } else if (item.daysDiff === 1) {
+                pillClass = 'due-pill-tomorrow';
+                pillText = `Vence Mañana`;
+              }
+
+              return `
+                <div class="upcoming-bill-row">
+                  <div class="upcoming-bill-info">
+                    <div class="upcoming-bill-icon">${icon}</div>
+                    <div class="upcoming-bill-texts">
+                      <div class="upcoming-bill-name">${escapeHtml(item.name)}</div>
+                      <div class="upcoming-bill-due">
+                        <span>Día ${item.dueDay}</span>
+                        <span class="upcoming-due-pill ${pillClass}">${pillText}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="upcoming-bill-action">
+                    <div class="upcoming-bill-amount">${sym} ${(item.amount || 0).toLocaleString(loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                    <button type="button" class="btn-pay-quick" onclick="quickPayBill('${item.id}', '${escapeHtml(item.name).replace(/'/g, "\\'")}')" title="Marcar como Pagado">
+                      <span>✓</span> <span>Pagar</span>
+                    </button>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+          ${upcoming.length > 3 ? `
+            <div style="text-align: center; margin-top: 10px;">
+              <button type="button" onclick="switchTab('movimientos'); selectStatusFilter('Pendiente');" style="background:none; border:none; color:var(--primary); font-size:11.5px; font-weight:800; cursor:pointer;">
+                Ver los ${upcoming.length} pagos pendientes ➔
+              </button>
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }
+
+    function quickPayBill(id, name) {
+      const txs = getMonthTxList();
+      const tx = txs.find(t => t.id === id);
+      if (tx) {
+        tx.status = 'Pagado';
+        if (navigator.vibrate) navigator.vibrate(25);
+        addAuditLog('✅ Pago Rápido', `${tx.name} marcado como Pagado en ${appState.currentMonth}`);
+        showToast(`✅ ${tx.name} marcado como Pagado`, 'success');
+        saveState();
+        renderAll();
+      }
+    }
+
+    // ================================================================
+    // CONCILIACIÓN BANCARIA (ARQUEO EN 1 TAP v67.0)
+    // ================================================================
+    let _lastReconciliationDiff = 0;
+
+    function openReconcileModal() {
+      const currentBalance = getAccumulatedBalance(appState.currentMonth);
+      const sym = getCurrencySymbol();
+      const loc = getActiveCurrency().locale;
+
+      const appBalEl = document.getElementById('reconcileAppBalance');
+      if (appBalEl) {
+        appBalEl.textContent = sym + ' ' + currentBalance.toLocaleString(loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      }
+
+      const input = document.getElementById('reconcileBankInput');
+      if (input) input.value = '';
+
+      const diffPanel = document.getElementById('reconcileDiffPanel');
+      if (diffPanel) diffPanel.style.display = 'none';
+
+      const btnApply = document.getElementById('btnApplyReconciliation');
+      if (btnApply) btnApply.style.display = 'none';
+
+      const btnMissing = document.getElementById('btnQuickMissingExpense');
+      if (btnMissing) btnMissing.style.display = 'none';
+
+      _lastReconciliationDiff = 0;
+      openModalById('reconcileBalanceModal');
+    }
+
+    function calculateReconciliationDiff() {
+      const input = document.getElementById('reconcileBankInput');
+      const diffPanel = document.getElementById('reconcileDiffPanel');
+      const statusEl = document.getElementById('reconcileDiffStatus');
+      const explanationEl = document.getElementById('reconcileDiffExplanation');
+      const btnApply = document.getElementById('btnApplyReconciliation');
+      const btnMissing = document.getElementById('btnQuickMissingExpense');
+
+      if (!input || !diffPanel) return;
+
+      const rawVal = input.value.trim();
+      if (rawVal === '') {
+        diffPanel.style.display = 'none';
+        if (btnApply) btnApply.style.display = 'none';
+        if (btnMissing) btnMissing.style.display = 'none';
+        _lastReconciliationDiff = 0;
+        return;
+      }
+
+      const bankReal = parseFloat(rawVal) || 0;
+      const appBalance = getAccumulatedBalance(appState.currentMonth);
+      const diff = Math.round(((bankReal - appBalance) + Number.EPSILON) * 100) / 100;
+      _lastReconciliationDiff = diff;
+
+      const sym = getCurrencySymbol();
+      const loc = getActiveCurrency().locale;
+      diffPanel.style.display = 'block';
+
+      if (Math.abs(diff) < 0.01) {
+        diffPanel.className = 'reconcile-diff-panel reconcile-diff-matched';
+        statusEl.innerHTML = '✨ ¡Tu saldo está 100% cuadrado!';
+        explanationEl.textContent = 'El saldo en tu aplicación bancaria coincide exactamente con lo registrado en AliviaFin.';
+        if (btnApply) btnApply.style.display = 'none';
+        if (btnMissing) btnMissing.style.display = 'none';
+      } else {
+        diffPanel.className = 'reconcile-diff-panel reconcile-diff-unmatched';
+        const formattedDiff = Math.abs(diff).toLocaleString(loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        
+        if (diff < 0) {
+          statusEl.innerHTML = `⚠️ Descuadre detectado: -${sym} ${formattedDiff}`;
+          explanationEl.textContent = `Tu app bancaria tiene ${sym} ${formattedDiff} menos que AliviaFin. Es muy probable que hayas realizado una compra o comisión bancaria sin registrar.`;
+          if (btnApply) {
+            btnApply.style.display = 'block';
+            btnApply.textContent = `⚡ Cuadrar Saldo (-${sym} ${formattedDiff})`;
+          }
+          if (btnMissing) {
+            btnMissing.style.display = 'block';
+            btnMissing.textContent = `🔍 Registrar Gasto Faltante de ${sym} ${formattedDiff}`;
+          }
+        } else {
+          statusEl.innerHTML = `💵 Saldo a favor detectado: +${sym} ${formattedDiff}`;
+          explanationEl.textContent = `Tu app bancaria tiene ${sym} ${formattedDiff} más que AliviaFin. Es probable que hayas recibido un ingreso adicional, devolución o abono.`;
+          if (btnApply) {
+            btnApply.style.display = 'block';
+            btnApply.textContent = `⚡ Cuadrar Saldo (+${sym} ${formattedDiff})`;
+          }
+          if (btnMissing) btnMissing.style.display = 'none';
+        }
+      }
+    }
+
+    function applyReconciliationAdjustment() {
+      if (Math.abs(_lastReconciliationDiff) < 0.01) return;
+
+      const month = appState.currentMonth;
+      const diff = _lastReconciliationDiff;
+      const sym = getCurrencySymbol();
+      const loc = getActiveCurrency().locale;
+      const absAmount = Math.abs(diff);
+
+      if (diff > 0) {
+        // Ingreso de ajuste
+        if (!appState.incomes) appState.incomes = {};
+        if (!appState.incomes[month]) ensureMonthIncomes(month);
+        appState.incomes[month].push({
+          id: 'inc_adj_' + Date.now(),
+          name: 'Ajuste Conciliación Bancaria',
+          amount: absAmount,
+          status: 'Recibido',
+          date: new Date().getDate()
+        });
+        addAuditLog('⚖️ Conciliación', `Ajuste de ingreso +${sym} ${absAmount.toLocaleString(loc)} a favor en ${month}`);
+      } else {
+        // Gasto de ajuste
+        if (!appState.transactions) appState.transactions = {};
+        if (!appState.transactions[month]) appState.transactions[month] = [];
+        appState.transactions[month].push({
+          id: 'exp_adj_' + Date.now(),
+          name: 'Ajuste Conciliación Bancaria',
+          amount: absAmount,
+          category: 'Varios',
+          status: 'Pagado',
+          paymentMethod: 'Banco',
+          date: new Date().getDate()
+        });
+        addAuditLog('⚖️ Conciliación', `Ajuste de gasto -${sym} ${absAmount.toLocaleString(loc)} para cuadrar con banco en ${month}`);
+      }
+
+      saveState();
+      closeModal('reconcileBalanceModal');
+      showToast('✅ Saldo conciliado y cuadrado con éxito', 'success');
+      renderAll();
+    }
+
+    function openMissingExpenseFromReconcile() {
+      const absAmount = Math.abs(_lastReconciliationDiff);
+      closeModal('reconcileBalanceModal');
+      openQuickExpenseModal();
+      _quickAmountBuffer = absAmount.toString();
+      updateQuickDisplay();
+    }
+
     function renderRecentTransactions() {
       const container = document.getElementById('recentTxContainer');
       const badge = document.getElementById('recentTxCountBadge');
@@ -2126,6 +2405,7 @@
 
       renderMetrics();
       renderSafeToSpendCard();
+      renderUpcomingDueDates();
       renderRecentTransactions();
       renderCuotasTracker();
       renderDonutChart();
@@ -5309,6 +5589,12 @@ window.openEditSalaryModal = openEditSalaryModal;
 window.handleSaveSalary = handleSaveSalary;
 window.openSecurityModal = openSecurityModal;
 window.openExplainSurplusModal = openExplainSurplusModal;
+window.renderUpcomingDueDates = renderUpcomingDueDates;
+window.quickPayBill = quickPayBill;
+window.openReconcileModal = openReconcileModal;
+window.calculateReconciliationDiff = calculateReconciliationDiff;
+window.applyReconciliationAdjustment = applyReconciliationAdjustment;
+window.openMissingExpenseFromReconcile = openMissingExpenseFromReconcile;
 window.openWhatsNewModal = openWhatsNewModal;
 window.dismissWhatsNewModal = dismissWhatsNewModal;
 window.syncVersionUI = syncVersionUI;

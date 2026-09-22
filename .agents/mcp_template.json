@@ -1,0 +1,23 @@
+{
+  "$comment": "Plantilla de configuración de servidores MCP (Model Context Protocol). Para activar en Antigravity IDE, copia o añade estas secciones a tu mcp_config.json global (~/.gemini/config/mcp_config.json).",
+  "mcpServers": {
+    "supabase-postgres": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-postgres",
+        "postgresql://postgres:[TU-PASSWORD]@db.[TU-PROJECT-REF].supabase.co:5432/postgres"
+      ]
+    },
+    "github": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-github"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "TU_GITHUB_PAT"
+      }
+    }
+  }
+}
