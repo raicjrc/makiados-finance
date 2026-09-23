@@ -3943,8 +3943,15 @@
     }
 
     /* ================================================================
-       MODO PRIVACIDAD APPLE (FROSTED BLUR DE SALDOS)
+       MODO PRIVACIDAD APPLE (MÁSCARA TRADICIONAL CON PUNTOS S/ ••••• v67.2)
        ================================================================ */
+    :root {
+      --privacy-mask-text: "S/ •••••";
+      --privacy-hero-mask: "S/ ••••• / día";
+      --privacy-sub-mask: "••••••••••••••••••••";
+      --privacy-alert-mask: "⚠️ Faltan S/ ••••• para pendientes";
+    }
+
     .privacy-toggle-btn {
       display: flex;
       align-items: center;
@@ -3972,7 +3979,7 @@
       border-color: var(--primary);
     }
 
-    /* Reglas de desenfoque de alta fidelidad cuando el modo privacidad está activo */
+    /* Ocultar el texto real haciéndolo transparente */
     body.privacy-active .hero-zen-number,
     body.privacy-active .hero-zen-subtext,
     body.privacy-active .stat-value,
@@ -3985,16 +3992,154 @@
     body.privacy-active #filteredTxSum,
     body.privacy-active .budget-card-amount,
     body.privacy-active .goal-current-amount,
+    body.privacy-active .goal-saved-val,
+    body.privacy-active .goal-target-val,
     body.privacy-active .sensitive-amount {
-      filter: blur(10px) !important;
+      position: relative !important;
+      color: transparent !important;
       user-select: none !important;
       -webkit-user-select: none !important;
-      opacity: 0.82;
-      transition: filter 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
       cursor: pointer;
     }
 
-    /* Revelar temporalmente al tocar/mantener presionado un monto específico */
+    body.privacy-active .hero-zen-number * {
+      color: transparent !important;
+    }
+
+    /* Máscara de puntos para la tarjeta Hero (Disponible Hoy) */
+    body.privacy-active .hero-zen-number::after {
+      content: var(--privacy-hero-mask, "S/ ••••• / día") !important;
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      color: #ffffff !important;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      pointer-events: none;
+      letter-spacing: 0.05em;
+    }
+
+    body.privacy-active .hero-zen-subtext::after {
+      content: var(--privacy-sub-mask, "••••••••••••••••••••") !important;
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      color: rgba(255, 255, 255, 0.75) !important;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      pointer-events: none;
+      letter-spacing: 0.1em;
+    }
+
+    /* Máscara de puntos para Stat Cards (Ingreso, Gasto Real, Saldo Banco) */
+    body.privacy-active .stat-card-ingreso .stat-value::after {
+      content: var(--privacy-mask-text, "S/ •••••") !important;
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      color: var(--text-main) !important;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      pointer-events: none;
+      letter-spacing: 0.06em;
+    }
+
+    body.privacy-active .stat-card-gasto .stat-value::after {
+      content: var(--privacy-mask-text, "S/ •••••") !important;
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      color: #ef4444 !important;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      pointer-events: none;
+      letter-spacing: 0.06em;
+    }
+
+    body.privacy-active .stat-card-saldo .stat-value::after {
+      content: var(--privacy-mask-text, "S/ •••••") !important;
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      color: var(--text-main) !important;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      pointer-events: none;
+      letter-spacing: 0.06em;
+    }
+
+    /* Máscara de puntos para Alerta de Liquidez */
+    body.privacy-active #liquidityAlertMsg::after {
+      content: var(--privacy-alert-mask, "⚠️ Faltan S/ ••••• para pendientes") !important;
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      color: #b91c1c !important;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      padding: 2px 6px;
+      pointer-events: none;
+    }
+
+    /* Máscara de puntos para listas de transacciones y vencimientos */
+    body.privacy-active .recent-tx-amount::after,
+    body.privacy-active .upcoming-bill-amount::after,
+    body.privacy-active .tx-row-amount::after,
+    body.privacy-active .tx-summary-val::after,
+    body.privacy-active .budget-card-amount::after,
+    body.privacy-active .goal-current-amount::after,
+    body.privacy-active .goal-saved-val::after,
+    body.privacy-active .goal-target-val::after,
+    body.privacy-active .sensitive-amount::after {
+      content: var(--privacy-mask-text, "S/ •••••") !important;
+      position: absolute;
+      right: 0;
+      top: 0;
+      height: 100%;
+      color: var(--text-main) !important;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      pointer-events: none;
+      letter-spacing: 0.06em;
+    }
+
+    body.privacy-active .upcoming-bills-sum-badge::after {
+      content: "Pendientes: S/ •••••" !important;
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      color: inherit !important;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      border-radius: inherit;
+    }
+
+    /* Revelar temporalmente al tocar/mantener presionado un monto específico (Peek) */
     body.privacy-active .hero-zen-number:active,
     body.privacy-active .hero-zen-subtext:active,
     body.privacy-active .stat-value:active,
@@ -4004,6 +4149,22 @@
     body.privacy-active .tx-row-amount:active,
     body.privacy-active .tx-summary-val:active,
     body.privacy-active .sensitive-amount:active {
-      filter: blur(0px) !important;
-      opacity: 1 !important;
+      color: inherit !important;
+    }
+
+    body.privacy-active .hero-zen-number:active *,
+    body.privacy-active .hero-zen-subtext:active * {
+      color: inherit !important;
+    }
+
+    body.privacy-active .hero-zen-number:active::after,
+    body.privacy-active .hero-zen-subtext:active::after,
+    body.privacy-active .stat-value:active::after,
+    body.privacy-active #liquidityAlertMsg:active::after,
+    body.privacy-active .recent-tx-amount:active::after,
+    body.privacy-active .upcoming-bill-amount:active::after,
+    body.privacy-active .tx-row-amount:active::after,
+    body.privacy-active .tx-summary-val:active::after,
+    body.privacy-active .sensitive-amount:active::after {
+      display: none !important;
     }

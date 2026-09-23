@@ -113,6 +113,9 @@
       if (sel && sel.value !== code) {
         sel.value = code;
       }
+      if (typeof isPrivacyModeActive === 'function' && typeof syncPrivacyUI === 'function') {
+        syncPrivacyUI(isPrivacyModeActive());
+      }
     }
 
     function changeCurrency(code) {
@@ -1403,7 +1406,7 @@
     }
 
     // ================================================================
-    // MODO PRIVACIDAD APPLE (FROSTED BLUR DE SALDOS v67.1)
+    // MODO PRIVACIDAD APPLE (MÁSCARA TRADICIONAL CON PUNTOS S/ ••••• v67.2)
     // ================================================================
     function isPrivacyModeActive() {
       return localStorage.getItem('aliviafin_privacy_mode') === 'true';
@@ -1411,6 +1414,10 @@
 
     function syncPrivacyUI(isActive) {
       if (isActive) {
+        const sym = (typeof getCurrencySymbol === 'function') ? getCurrencySymbol() : 'S/';
+        document.documentElement.style.setProperty('--privacy-mask-text', `"${sym} •••••"`);
+        document.documentElement.style.setProperty('--privacy-hero-mask', `"${sym} ••••• / día"`);
+        document.documentElement.style.setProperty('--privacy-alert-mask', `"⚠️ Faltan ${sym} ••••• para pendientes"`);
         document.body.classList.add('privacy-active');
       } else {
         document.body.classList.remove('privacy-active');
@@ -1437,7 +1444,7 @@
       localStorage.setItem('aliviafin_privacy_mode', next ? 'true' : 'false');
       syncPrivacyUI(next);
       if (navigator.vibrate) navigator.vibrate(25);
-      showToast(next ? '🔒 Modo Privacidad: Saldos ocultos' : '👁️ Modo Privacidad: Saldos visibles', 'info');
+      showToast(next ? '🔒 Modo Privacidad: Saldos protegidos con puntos' : '👁️ Modo Privacidad: Saldos visibles', 'info');
     }
 
     function initPrivacyMode() {
