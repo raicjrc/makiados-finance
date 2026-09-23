@@ -1662,7 +1662,7 @@
                   </div>
                   <div class="upcoming-bill-action">
                     <div class="upcoming-bill-amount">${sym} ${(item.amount || 0).toLocaleString(loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
-                    <button type="button" class="btn-pay-quick" onclick="quickPayBill('${item.id}', '${escapeHtml(item.name).replace(/'/g, "\\'")}')" title="Marcar como Pagado">
+                    <button type="button" class="btn-pay-quick" onclick="promptPayBill('${item.id}')" title="Marcar como Pagado">
                       <span>✓</span> <span>Pagar</span>
                     </button>
                   </div>
@@ -1681,17 +1681,57 @@
       `;
     }
 
-    function quickPayBill(id, name) {
+    let _pendingPayTxId = null;
+
+    function promptPayBill(id) {
+      const txs = getMonthTxList();
+      const tx = txs.find(t => t.id === id);
+      if (!tx) return;
+
+      _pendingPayTxId = id;
+      const sym = getCurrencySymbol();
+      const loc = getActiveCurrency().locale;
+      const dueDay = getEffectiveDueDate(tx);
+
+      const nameEl = document.getElementById('confirmPayBillName');
+      if (nameEl) nameEl.textContent = tx.name;
+
+      const amtEl = document.getElementById('confirmPayBillAmount');
+      if (amtEl) amtEl.textContent = `${sym} ${(tx.amount || 0).toLocaleString(loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+      const dueEl = document.getElementById('confirmPayBillDue');
+      if (dueEl) dueEl.textContent = `Día ${dueDay}`;
+
+      const btnSubmit = document.getElementById('btnConfirmPayBillSubmit');
+      if (btnSubmit) {
+        btnSubmit.onclick = function() {
+          executeConfirmPayBill();
+        };
+      }
+
+      openModalById('confirmPayBillModal');
+    }
+
+    function executeConfirmPayBill() {
+      if (!_pendingPayTxId) return;
+      const id = _pendingPayTxId;
+      _pendingPayTxId = null;
+      closeModal('confirmPayBillModal');
+
       const txs = getMonthTxList();
       const tx = txs.find(t => t.id === id);
       if (tx) {
         tx.status = 'Pagado';
         if (navigator.vibrate) navigator.vibrate(25);
-        addAuditLog('✅ Pago Rápido', `${tx.name} marcado como Pagado en ${appState.currentMonth}`);
+        addAuditLog('✅ Pago Confirmado', `${tx.name} marcado como Pagado en ${appState.currentMonth}`);
         showToast(`✅ ${tx.name} marcado como Pagado`, 'success');
         saveState();
         renderAll();
       }
+    }
+
+    function quickPayBill(id, name) {
+      promptPayBill(id);
     }
 
     // ================================================================
@@ -5590,6 +5630,8 @@ window.handleSaveSalary = handleSaveSalary;
 window.openSecurityModal = openSecurityModal;
 window.openExplainSurplusModal = openExplainSurplusModal;
 window.renderUpcomingDueDates = renderUpcomingDueDates;
+window.promptPayBill = promptPayBill;
+window.executeConfirmPayBill = executeConfirmPayBill;
 window.quickPayBill = quickPayBill;
 window.openReconcileModal = openReconcileModal;
 window.calculateReconciliationDiff = calculateReconciliationDiff;
