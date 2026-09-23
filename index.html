@@ -17,7 +17,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <link rel="stylesheet" href="css/styles.css?v=67.0">
+  <link rel="stylesheet" href="css/styles.css?v=67.1">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
 </head>
 <body>
@@ -211,6 +211,10 @@
       </nav>
 
       <div class="desktop-sidebar-footer">
+        <button class="desktop-nav-item" id="deskNavPrivacyBtn" onclick="togglePrivacyMode()" style="margin-bottom: 6px;">
+          <span class="desk-nav-icon" id="deskPrivacyIcon">👁️</span>
+          <span id="deskPrivacyLabel">Ocultar Saldos</span>
+        </button>
         <button class="desktop-nav-item" id="deskNavTabSettings" onclick="openSettingsModal()" style="margin-bottom: 6px;">
           <span class="desk-nav-icon">⚙️</span>
           <span>Ajustes</span>
@@ -247,6 +251,7 @@
           <div class="month-selector">
             <select id="monthSelect" onchange="changeMonth(this.value)"></select>
           </div>
+          <button class="privacy-toggle-btn" id="privacyToggleBtn" onclick="togglePrivacyMode()" title="Ocultar o mostrar montos (Modo Privacidad)">👁️</button>
           <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Cambiar a Modo Noche Suave">🌙</button>
           <button id="btnExportPDF" class="settings-popover-btn" onclick="generatePDFReport()" title="Exportar Reporte Mensual a PDF" style="background: linear-gradient(135deg, #10b981, #059669); color: white; margin-right: 4px; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);">📥</button>
           <button id="btnSettings" class="settings-popover-btn" onclick="openSettingsModal()" title="Ajustes y Opciones">⚙️</button>

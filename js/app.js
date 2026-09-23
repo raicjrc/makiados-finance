@@ -1353,6 +1353,8 @@
 
       // Inicializar tema guardado (Claro Cristal vs Noche Suave)
       initTheme();
+      // Inicializar Modo Privacidad guardado (Frosted blur)
+      initPrivacyMode();
     });
 
     function closeAllModals() {
@@ -1398,6 +1400,48 @@
         document.body.classList.remove('theme-twilight');
       }
       updateThemeButtons(savedTheme);
+    }
+
+    // ================================================================
+    // MODO PRIVACIDAD APPLE (FROSTED BLUR DE SALDOS v67.1)
+    // ================================================================
+    function isPrivacyModeActive() {
+      return localStorage.getItem('aliviafin_privacy_mode') === 'true';
+    }
+
+    function syncPrivacyUI(isActive) {
+      if (isActive) {
+        document.body.classList.add('privacy-active');
+      } else {
+        document.body.classList.remove('privacy-active');
+      }
+
+      const btnNav = document.getElementById('privacyToggleBtn');
+      if (btnNav) {
+        btnNav.textContent = isActive ? '🙈' : '👁️';
+        btnNav.classList.toggle('active', isActive);
+        btnNav.title = isActive ? 'Mostrar saldos (Privacidad activa)' : 'Ocultar saldos (Modo Privacidad)';
+      }
+
+      const deskIcon = document.getElementById('deskPrivacyIcon');
+      const deskLabel = document.getElementById('deskPrivacyLabel');
+      const deskBtn = document.getElementById('deskNavPrivacyBtn');
+      if (deskIcon) deskIcon.textContent = isActive ? '🙈' : '👁️';
+      if (deskLabel) deskLabel.textContent = isActive ? 'Mostrar Saldos' : 'Ocultar Saldos';
+      if (deskBtn) deskBtn.classList.toggle('active', isActive);
+    }
+
+    function togglePrivacyMode() {
+      const current = isPrivacyModeActive();
+      const next = !current;
+      localStorage.setItem('aliviafin_privacy_mode', next ? 'true' : 'false');
+      syncPrivacyUI(next);
+      if (navigator.vibrate) navigator.vibrate(25);
+      showToast(next ? '🔒 Modo Privacidad: Saldos ocultos' : '👁️ Modo Privacidad: Saldos visibles', 'info');
+    }
+
+    function initPrivacyMode() {
+      syncPrivacyUI(isPrivacyModeActive());
     }
 
     function handleBackdropClick(e, modalId) {
@@ -5644,6 +5688,7 @@ window.saveCustomUserName = saveCustomUserName;
 window.toggleTourPreference = toggleTourPreference;
 window.handleLogout = handleLogout;
 window.toggleTheme = toggleTheme;
+window.togglePrivacyMode = togglePrivacyMode;
 window.changeMonth = changeMonth;
 window.switchTab = switchTab;
 window.switchSegmentView = switchSegmentView;

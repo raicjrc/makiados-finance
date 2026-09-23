@@ -3941,3 +3941,69 @@
       border-color: rgba(245, 158, 11, 0.35);
       color: #fde68a;
     }
+
+    /* ================================================================
+       MODO PRIVACIDAD APPLE (FROSTED BLUR DE SALDOS)
+       ================================================================ */
+    .privacy-toggle-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-main);
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      user-select: none;
+      -webkit-user-select: none;
+      padding: 0;
+      line-height: 1;
+    }
+    .privacy-toggle-btn:hover {
+      background: var(--card-hover-bg);
+      transform: translateY(-1px);
+    }
+    .privacy-toggle-btn.active {
+      background: rgba(99, 102, 241, 0.14);
+      border-color: var(--primary);
+    }
+
+    /* Reglas de desenfoque de alta fidelidad cuando el modo privacidad está activo */
+    body.privacy-active .hero-zen-number,
+    body.privacy-active .hero-zen-subtext,
+    body.privacy-active .stat-value,
+    body.privacy-active #liquidityAlertMsg,
+    body.privacy-active .recent-tx-amount,
+    body.privacy-active .upcoming-bill-amount,
+    body.privacy-active .upcoming-bills-sum-badge,
+    body.privacy-active .tx-row-amount,
+    body.privacy-active .tx-summary-val,
+    body.privacy-active #filteredTxSum,
+    body.privacy-active .budget-card-amount,
+    body.privacy-active .goal-current-amount,
+    body.privacy-active .sensitive-amount {
+      filter: blur(10px) !important;
+      user-select: none !important;
+      -webkit-user-select: none !important;
+      opacity: 0.82;
+      transition: filter 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
+      cursor: pointer;
+    }
+
+    /* Revelar temporalmente al tocar/mantener presionado un monto específico */
+    body.privacy-active .hero-zen-number:active,
+    body.privacy-active .hero-zen-subtext:active,
+    body.privacy-active .stat-value:active,
+    body.privacy-active #liquidityAlertMsg:active,
+    body.privacy-active .recent-tx-amount:active,
+    body.privacy-active .upcoming-bill-amount:active,
+    body.privacy-active .tx-row-amount:active,
+    body.privacy-active .tx-summary-val:active,
+    body.privacy-active .sensitive-amount:active {
+      filter: blur(0px) !important;
+      opacity: 1 !important;
+    }
