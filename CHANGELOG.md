@@ -3,6 +3,19 @@
 Todas las versiones notables de esta aplicación están documentadas aquí.
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
+## [v67.3] — 2026-10-01 — Transición Automática de Mes Calendario y Blindaje de Meses Cerrados
+
+### 📅 Avance Automático de Calendario (Auto-Rollover)
+- **Detección Automática de Cambio de Mes**: Al llegar el día 1 de cada nuevo mes, la app detecta si el mes guardado en caché o localStorage pertenece al pasado y avanza automáticamente al mes del calendario real (`getEffectiveCurrentMonth`).
+- **Sesión Aislada por Dispositivo**: La exploración manual de meses pasados se aísla en `sessionStorage` para que un usuario revisando el historial no fuerce el cambio de mes en el celular de su pareja.
+
+### 🛡️ Claridad Visual en la Tarjeta Hero (Paz Mental / Disponible Hoy)
+- **Mes Actual**: Tarjeta con pulso activo y título `DISPONIBLE HOY` calculando el presupuesto diario real del mes en curso.
+- **Meses Históricos/Cerrados**: La tarjeta ya no muestra "DISPONIBLE HOY" ni pulso engañoso en meses pasados. Muestra `MES CERRADO`, el balance final de cierre y un botón directo para regresar al mes actual en un toque.
+- **Service Worker v107**: Actualización de caché para purgar assets en Safari iOS.
+
+---
+
 ## [v67.0] — 2026-09-22 — Radar de Próximos Vencimientos, Conciliación Bancaria en 1 Tap y Blindaje Zen
 
 ### 📅 Radar de Próximos Vencimientos (Apple Fintech Widget)

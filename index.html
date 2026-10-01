@@ -268,9 +268,9 @@
         <div id="heroSafeToSpendCard" class="hero-zen-card">
           <div class="hero-zen-glass-plate">
             <div class="hero-zen-top">
-              <div class="hero-zen-badge" onclick="openExplainSafeToSpendModal()" style="cursor: pointer;" title="Toca para ver la explicación detallada de tu dinero libre diario">
-                <span class="hero-zen-pulse"></span>
-                <span>DISPONIBLE HOY</span>
+              <div class="hero-zen-badge" id="heroSafeBadge" onclick="openExplainSafeToSpendModal()" style="cursor: pointer;" title="Toca para ver la explicación detallada de tu dinero libre diario">
+                <span class="hero-zen-pulse" id="heroSafePulse"></span>
+                <span id="heroSafeBadgeText">DISPONIBLE HOY</span>
                 <span style="font-size: 10px; opacity: 0.85; margin-left: 2px;">ℹ️</span>
               </div>
               <span id="heroSafeStatusPill" class="hero-zen-pill-status" onclick="openExplainSafeToSpendModal()" style="cursor: pointer;" title="Toca para ver el diagnóstico de tu estado">🟢 Holgado</span>
@@ -294,6 +294,9 @@
                 <span id="heroSafeSpendRateLabel">0% comprometido</span>
               </div>
             </div>
+
+            <!-- Banner interactivo si se visualiza un mes histórico/cerrado -->
+            <div id="heroSafePastMonthBanner" style="display: none; margin-top: 10px; padding: 7px 12px; background: rgba(0,0,0,0.22); border: 1px solid rgba(255,255,255,0.25); border-radius: 10px; font-size: 11.5px; text-align: center; color: #ffffff; cursor: pointer; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);"></div>
           </div>
         </div>
 

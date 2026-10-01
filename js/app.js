@@ -780,29 +780,42 @@
     function getCurrentCalendarMonthName() {
       const now = new Date();
       const monthsEs = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-      const realMonthName = monthsEs[now.getMonth()] + ' ' + now.getFullYear();
+      return monthsEs[now.getMonth()] + ' ' + now.getFullYear();
+    }
 
-      if (typeof appState !== 'undefined' && appState && appState.transactions && appState.transactions[realMonthName]) {
-        return realMonthName;
+    // Calcula el mes efectivo activo, avanzando automáticamente si el mes candidato es del pasado
+    function getEffectiveCurrentMonth(candidateMonth) {
+      const calMonth = getCurrentCalendarMonthName();
+
+      // 1. Si el usuario seleccionó un mes explícitamente en esta pestaña de navegador durante esta sesión:
+      const sessionMonth = sessionStorage.getItem('aliviafin_session_month');
+      if (sessionMonth && appState && appState.transactions && appState.transactions[sessionMonth]) {
+        return sessionMonth;
       }
 
-      // Fallback: el mes válido más reciente que tenga datos
-      if (typeof appState !== 'undefined' && appState && appState.transactions) {
-        const validMonths = Object.keys(appState.transactions || {})
-          .filter(m => {
-            const p = m.split(' ');
-            return p.length === 2 && monthsEs.includes(p[0]) && /^\d{4}$/.test(p[1]);
-          })
-          .sort((a, b) => {
-            const [mA, yA] = a.split(' '), [mB, yB] = b.split(' ');
-            return (parseInt(yA) - parseInt(yB)) || (monthsEs.indexOf(mA) - monthsEs.indexOf(mB));
-          });
-        if (validMonths.length > 0) {
-          return validMonths[validMonths.length - 1];
+      // 2. Si no hay candidato, usar el mes del calendario actual
+      if (!candidateMonth) return calMonth;
+
+      // 3. Si el candidato es un mes pasado respecto a la fecha actual del sistema, avanzar automáticamente
+      const monthMap = {
+        'Enero': 0, 'Febrero': 1, 'Marzo': 2, 'Abril': 3, 'Mayo': 4, 'Junio': 5,
+        'Julio': 6, 'Agosto': 7, 'Septiembre': 8, 'Octubre': 9, 'Noviembre': 10, 'Diciembre': 11
+      };
+      const parts = candidateMonth.split(' ');
+      const now = new Date();
+      const candYear = parseInt(parts[1], 10);
+      const candMonth = monthMap[parts[0]];
+
+      if (!isNaN(candYear) && candMonth !== undefined) {
+        const isPast = (candYear < now.getFullYear() || (candYear === now.getFullYear() && candMonth < now.getMonth()));
+        if (isPast) {
+          // El mes guardado en localStorage o Supabase quedó anclado en un mes pasado ya cerrado.
+          // Avanzamos automáticamente al mes del calendario actual para garantizar que el usuario vea su saldo de hoy.
+          return calMonth;
         }
       }
 
-      return realMonthName;
+      return candidateMonth;
     }
 
     function updateSyncIndicator(status, text) {
@@ -878,16 +891,15 @@
       }
 
       lastKnownServerDataHash = newHash;
-      const userSelectedMonth = appState.currentMonth;
+      const sessionOverride = sessionStorage.getItem('aliviafin_session_month');
+      const candidateMonth = sessionOverride || appState.currentMonth || remoteData.currentMonth;
 
       const isCesar = isAdminCesar();
       appState = isCesar ? applyDataMigrations(remoteData) : remoteData;
 
-      if (userSelectedMonth && appState.transactions[userSelectedMonth]) {
-        appState.currentMonth = userSelectedMonth;
-      } else if (!appState.currentMonth) {
-        appState.currentMonth = getCurrentCalendarMonthName();
-      }
+      appState.currentMonth = getEffectiveCurrentMonth(candidateMonth);
+      ensureMonthTransactions(appState.currentMonth);
+      ensureMonthIncomes(appState.currentMonth);
 
       appState.activeCategoryChip   = currentCategoryFilter;
       appState.activeStatusFilter   = currentStatusFilter;
@@ -1163,14 +1175,30 @@
       }
     });
 
-    // Forzar reload de datos al volver al foco
+    // Forzar reload de datos al volver al foco y verificar si cambió el mes calendario en segundo plano
     document.addEventListener('visibilitychange', () => {
       if (!document.hidden) {
+        const calMonth = getCurrentCalendarMonthName();
+        const sessionOverride = sessionStorage.getItem('aliviafin_session_month');
+        if (!sessionOverride && appState && appState.currentMonth !== calMonth) {
+          appState.currentMonth = getEffectiveCurrentMonth(appState.currentMonth);
+          ensureMonthTransactions(appState.currentMonth);
+          ensureMonthIncomes(appState.currentMonth);
+          renderAll();
+        }
         lastKnownServerDataHash = '';
         loadStateFromServer(3);
       }
     });
     window.addEventListener('focus', () => {
+      const calMonth = getCurrentCalendarMonthName();
+      const sessionOverride = sessionStorage.getItem('aliviafin_session_month');
+      if (!sessionOverride && appState && appState.currentMonth !== calMonth) {
+        appState.currentMonth = getEffectiveCurrentMonth(appState.currentMonth);
+        ensureMonthTransactions(appState.currentMonth);
+        ensureMonthIncomes(appState.currentMonth);
+        renderAll();
+      }
       lastKnownServerDataHash = '';
       loadStateFromServer(3);
     });
@@ -1206,7 +1234,9 @@
       }
       if (!appState.recurringDueDates) appState.recurringDueDates = {};
       if (!appState.auditLog) appState.auditLog = [];
-      if (!appState.currentMonth) appState.currentMonth = getCurrentCalendarMonthName();
+      appState.currentMonth = getEffectiveCurrentMonth(appState.currentMonth);
+      ensureMonthTransactions(appState.currentMonth);
+      ensureMonthIncomes(appState.currentMonth);
       if (!appState.extraIncomes) appState.extraIncomes = {};
       if (!appState.savingsGoals) appState.savingsGoals = [];
       if (!appState.checklists) appState.checklists = {};
@@ -1483,6 +1513,7 @@
     }
 
     function changeMonth(month) {
+      sessionStorage.setItem('aliviafin_session_month', month);
       appState.currentMonth = month;
       ensureMonthTransactions(month);
       ensureMonthIncomes(month);
@@ -1495,7 +1526,7 @@
        ================================================================ */
 
     function calculateSafeToSpend() {
-      const curMonth = appState.currentMonth || 'Septiembre 2026';
+      const curMonth = appState.currentMonth || getCurrentCalendarMonthName();
       const totalIncome = getMonthTotalIncome();
       const txs = getMonthTxList();
       const totalSpent = txs.reduce((sum, item) => sum + item.amount, 0);
@@ -1542,6 +1573,7 @@
       }
 
       return {
+        mName,
         totalIncome,
         totalSpent,
         freeTotalMonth,
@@ -1560,17 +1592,69 @@
       const sym = getCurrencySymbol();
       const loc = getActiveCurrency().locale;
       
-      const elDaily = document.getElementById('heroSafeDailyAmount');
-      if (elDaily) {
-        elDaily.innerHTML = `<span class="hero-zen-unit">${sym} </span>${data.freePerDay.toLocaleString(loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span class="hero-zen-unit">/ día</span>`;
-      }
+      const elBadgeText = document.getElementById('heroSafeBadgeText');
+      const elPulse = document.getElementById('heroSafePulse');
+      const elPastBanner = document.getElementById('heroSafePastMonthBanner');
 
+      const elDaily = document.getElementById('heroSafeDailyAmount');
       const elSubtitle = document.getElementById('heroSafeMonthSubtitle');
-      if (elSubtitle) {
-        if (data.freeTotalMonth >= 0) {
-          elSubtitle.textContent = `${sym} ${data.freeTotalMonth.toLocaleString(loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} libre proyectado este mes`;
-        } else {
-          elSubtitle.textContent = `⚠️ Presupuesto excedido por ${sym} ${Math.abs(data.freeTotalMonth).toLocaleString(loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      const elDays = document.getElementById('heroSafeDaysLeftLabel');
+      const elRate = document.getElementById('heroSafeSpendRateLabel');
+      const elStatus = document.getElementById('heroSafeStatusPill');
+      const heroCard = document.getElementById('heroSafeToSpendCard');
+
+      if (data.isPastMonth) {
+        if (elBadgeText) elBadgeText.textContent = `MES CERRADO · ${data.mName.toUpperCase()}`;
+        if (elPulse) elPulse.style.display = 'none';
+
+        if (elDaily) {
+          if (data.freeTotalMonth < 0) {
+            elDaily.innerHTML = `<span style="font-size: 24px; font-weight: 800; color: #fecaca;">Cierre: -${sym} ${Math.abs(data.freeTotalMonth).toLocaleString(loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>`;
+          } else {
+            elDaily.innerHTML = `<span class="hero-zen-unit">${sym} </span>${data.freeTotalMonth.toLocaleString(loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span class="hero-zen-unit">cierre final</span>`;
+          }
+        }
+
+        if (elSubtitle) {
+          if (data.freeTotalMonth >= 0) {
+            elSubtitle.textContent = `Superávit final del mes: ${sym} ${data.freeTotalMonth.toLocaleString(loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+          } else {
+            elSubtitle.textContent = `⚠️ Este mes cerró con déficit de ${sym} ${Math.abs(data.freeTotalMonth).toLocaleString(loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+          }
+        }
+
+        if (elDays) {
+          elDays.textContent = 'Histórico (Mes cerrado)';
+        }
+
+        if (elPastBanner) {
+          const calMonth = getCurrentCalendarMonthName();
+          elPastBanner.style.display = 'block';
+          elPastBanner.innerHTML = `📅 Viendo historial de ${data.mName}. <strong style="text-decoration: underline;">Toca para volver a ${calMonth} (Hoy) ➔</strong>`;
+          elPastBanner.onclick = () => {
+            sessionStorage.removeItem('aliviafin_session_month');
+            changeMonth(calMonth);
+          };
+        }
+      } else {
+        if (elBadgeText) elBadgeText.textContent = 'DISPONIBLE HOY';
+        if (elPulse) elPulse.style.display = 'inline-block';
+        if (elPastBanner) elPastBanner.style.display = 'none';
+
+        if (elDaily) {
+          elDaily.innerHTML = `<span class="hero-zen-unit">${sym} </span>${data.freePerDay.toLocaleString(loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span class="hero-zen-unit">/ día</span>`;
+        }
+
+        if (elSubtitle) {
+          if (data.freeTotalMonth >= 0) {
+            elSubtitle.textContent = `${sym} ${data.freeTotalMonth.toLocaleString(loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} libre proyectado este mes`;
+          } else {
+            elSubtitle.textContent = `⚠️ Presupuesto excedido por ${sym} ${Math.abs(data.freeTotalMonth).toLocaleString(loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+          }
+        }
+
+        if (elDays) {
+          elDays.textContent = `${data.remainingDays} días restantes`;
         }
       }
 
@@ -1586,23 +1670,15 @@
         }
       }
 
-      const elDays = document.getElementById('heroSafeDaysLeftLabel');
-      if (elDays) {
-        elDays.textContent = data.isPastMonth ? 'Mes cerrado' : `${data.remainingDays} días restantes`;
-      }
-
-      const elRate = document.getElementById('heroSafeSpendRateLabel');
       if (elRate) {
         elRate.textContent = `${data.spendPct}% comprometido`;
       }
 
-      const elStatus = document.getElementById('heroSafeStatusPill');
       if (elStatus) {
         elStatus.className = `hero-zen-pill-status status-${data.status}`;
-        elStatus.textContent = data.statusLabel;
+        elStatus.textContent = data.isPastMonth ? (data.freeTotalMonth >= 0 ? '🟢 Cerrado en Positivo' : '🔴 Cerrado en Déficit') : data.statusLabel;
       }
 
-      const heroCard = document.getElementById('heroSafeToSpendCard');
       if (heroCard) {
         heroCard.classList.remove('status-green', 'status-yellow', 'status-red');
         heroCard.classList.add(`status-${data.status}`);
