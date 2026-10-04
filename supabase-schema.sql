@@ -62,20 +62,31 @@ CREATE POLICY "Solo admin puede leer feedback" ON app_feedback
 
 
 -- ================================================================
--- TABLA SUSCRIPCIONES (Paywall / Trial)
+-- ================================================================
+-- TABLA SUSCRIPCIONES (Paywall / Trial / v68.0 Founder Hub)
 -- ================================================================
 CREATE TABLE IF NOT EXISTS user_subscriptions (
   user_id text PRIMARY KEY,
   email text,
   status text DEFAULT 'trial',
   trial_ends_at timestamp with time zone,
+  plan_type text DEFAULT 'free',
+  price numeric(10,2) DEFAULT 0.00,
+  payment_method text DEFAULT 'yape_plin',
+  updated_at timestamp with time zone DEFAULT now(),
   created_at timestamp with time zone DEFAULT now()
 );
+
+-- Si la tabla ya existe, agregar nuevas columnas de forma segura e idempotente:
+ALTER TABLE user_subscriptions ADD COLUMN IF NOT EXISTS plan_type text DEFAULT 'free';
+ALTER TABLE user_subscriptions ADD COLUMN IF NOT EXISTS price numeric(10,2) DEFAULT 0.00;
+ALTER TABLE user_subscriptions ADD COLUMN IF NOT EXISTS payment_method text DEFAULT 'yape_plin';
+ALTER TABLE user_subscriptions ADD COLUMN IF NOT EXISTS updated_at timestamp with time zone DEFAULT now();
 
 -- Activar RLS
 ALTER TABLE user_subscriptions ENABLE ROW LEVEL SECURITY;
 
--- Todos pueden leer su propia suscripción, pero solo admin puede editar
+-- Todos pueden leer su propia suscripción, pero solo admin puede editar y ver todo
 CREATE POLICY "Usuario puede ver su suscripción" ON user_subscriptions
   FOR SELECT
   USING (user_id = auth.uid()::text);
@@ -95,8 +106,8 @@ CREATE POLICY "Solo admin puede editar todas las suscripciones" ON user_subscrip
 CREATE OR REPLACE FUNCTION public.handle_new_user_subscription()
 RETURNS trigger AS $$
 BEGIN
-  INSERT INTO public.user_subscriptions (user_id, email, status)
-  VALUES (new.id::text, new.email, 'free')
+  INSERT INTO public.user_subscriptions (user_id, email, status, plan_type)
+  VALUES (new.id::text, new.email, 'free', 'free')
   ON CONFLICT (user_id) DO NOTHING;
   RETURN new;
 END;
@@ -106,6 +117,26 @@ DROP TRIGGER IF EXISTS on_auth_user_created_subscription ON auth.users;
 CREATE TRIGGER on_auth_user_created_subscription
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user_subscription();
+
+-- ================================================================
+-- TABLA REGISTRO DE PAGOS / COBROS (FOUNDER AUDIT LOG)
+-- ================================================================
+CREATE TABLE IF NOT EXISTS public.subscription_payments (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id text NOT NULL,
+  user_email text NOT NULL,
+  amount numeric(10,2) NOT NULL, -- 4.90 o 19.90
+  plan_type text NOT NULL, -- 'pro_monthly' o 'pro_lifetime'
+  payment_method text DEFAULT 'yape_plin', -- 'yape_plin', 'transfer', 'card'
+  created_at timestamp with time zone DEFAULT now()
+);
+
+ALTER TABLE public.subscription_payments ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Solo admin gestiona pagos" ON public.subscription_payments
+  FOR ALL
+  USING (auth.email() = 'cesar.risso.f@gmail.com')
+  WITH CHECK (auth.email() = 'cesar.risso.f@gmail.com');
 
 -- ================================================================
 -- SQL PARA PASAR A UN USUARIO A PREMIUM MANUALMENTE:

@@ -3,6 +3,28 @@
 Todas las versiones notables de esta aplicación están documentadas aquí.
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
+## [v68.0] — 2026-10-04 — Panel Master CEO & Fundador: Suscripciones en Tiempo Real, Métricas SaaS e Ingresos
+
+### 👑 Panel Master CEO de Fundador (Exclusivo para César)
+- **Acceso Blindado**: Visible y accesible única y exclusivamente cuando la sesión activa corresponde a `cesar.risso.f@gmail.com`. Totalmente invisible para el resto de usuarios tanto en la interfaz como en el DOM.
+- **Accesos Rápidos**: Botón dorado `👑 Panel Master CEO` en el pie de la barra lateral (Desktop) y tarjeta destacada en el menú de Ajustes (⚙️).
+- **Métricas Clave de Negocio (SaaS KPIs en Vivo)**:
+  - **MRR (Monthly Recurring Revenue)**: Ingresos recurrentes mensuales proyectados calculados automáticamente por las suscripciones activas a **S/ 4.90 / mes**.
+  - **Ingresos Totales Acumulados**: Suma de ventas de planes vitalicios (**S/ 19.90**) y cuotas mensuales cobradas.
+  - **Base de Usuarios Registrados**: Conteo total de cuentas en Supabase y desglose entre cuentas PRO vs Gratuitas.
+  - **Tasa de Conversión (Free ➔ PRO)**: Porcentaje de efectividad de monetización en vivo.
+
+### 👥 Directorio de Suscriptores & Activación en 1-Tap
+- **Tabla Ejecutiva de Clientes**: Búsqueda por correo o ID, visualización del plan actual (`👑 PRO Vitalicio`, `📅 PRO Mensual`, `🆓 Free`) y total aportado.
+- **Gestión Rápida de Pagos WhatsApp/Yape/Plin**: Botones de acción directa para pasar a un usuario a Vitalicio o Mensual con confirmación segura y actualización instantánea en Supabase.
+- **Caja de Alta Manual**: Permite buscar o ingresar cualquier correo de un cliente nuevo para asignarle su membresía en segundos.
+
+### 💬 Buzón Unificado de Feedback & Soporte
+- Lectura en vivo de reportes de errores, sugerencias de funciones y consultas de usuarios enviadas desde la app (`app_feedback`) con botón de respuesta directa por correo electrónico.
+- **Service Worker v110**: Actualización de caché para propagación inmediata en Safari iOS y PWA.
+
+---
+
 ## [v67.5] — 2026-10-04 — Dashboard Widescreen Desktop, Blindaje Completo Modo Privacidad, Actualización de Precios PRO y Sección Legal & Privacidad
 
 ### 🖥️ Dashboard Widescreen de 2 Columnas para Desktop (≥ 1024px)

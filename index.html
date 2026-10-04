@@ -219,6 +219,10 @@
           <span class="desk-nav-icon">⚙️</span>
           <span>Ajustes</span>
         </button>
+        <button class="desktop-nav-item master-admin-only" id="deskNavMasterBtn" onclick="openMasterDashboardModal()" style="display: none; background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(217, 119, 6, 0.16)); border: 1.5px solid rgba(245, 158, 11, 0.4); color: #d97706; font-weight: 800; margin-bottom: 6px;" title="Panel Maestro de Fundador (Suscripciones & Métricas)">
+          <span class="desk-nav-icon">👑</span>
+          <span>Panel Master CEO</span>
+        </button>
         <button class="desktop-nav-item" id="deskNavLegalBtn" onclick="openLegalModal('terms')" style="margin-bottom: 6px;" title="Términos del Servicio y Políticas de Privacidad">
           <span class="desk-nav-icon">⚖️</span>
           <span>Legal & Privacidad</span>
@@ -771,6 +775,17 @@
       </div>
       <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px;">
         
+        <!-- Acceso Exclusivo al Panel Master (Solo para César) -->
+        <div id="settingsMasterAdminRow" style="display: none; margin-bottom: 6px;">
+          <button type="button" class="btn" onclick="closeModal('settingsModal'); openMasterDashboardModal();" style="width: 100%; padding: 12px 14px; background: linear-gradient(135deg, #0f172a, #1e293b); color: #fbbf24; border: 1.5px solid rgba(251, 191, 36, 0.45); border-radius: 14px; font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 16px rgba(0,0,0,0.18); cursor: pointer;">
+            <span style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 17px;">👑</span>
+              <span>Panel Master CEO & Suscripciones</span>
+            </span>
+            <span style="font-size: 10px; background: rgba(251, 191, 36, 0.25); color: #fbbf24; padding: 3px 8px; border-radius: 100px; font-weight: 800; letter-spacing: 0.5px;">ADMIN</span>
+          </button>
+        </div>
+
         <div style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 2px;">Mi Perfil & App</div>
         <!-- Nombre de Usuario / Apodo Personalizado -->
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 12px; margin-bottom: 4px;">
@@ -2122,8 +2137,177 @@
     </div>
   </div>
 
+  <!-- MODAL: MASTER ADMIN DASHBOARD (CEO / FOUNDER PANEL v68.0) -->
+  <div class="glass-backdrop" id="masterDashboardModal" style="z-index: 10010;" onclick="if(event.target === this) closeModal('masterDashboardModal')">
+    <div class="master-modal-container">
+      <!-- Master Header -->
+      <div class="master-modal-header">
+        <div class="master-header-left">
+          <div class="master-crown-icon">👑</div>
+          <div>
+            <h3 class="master-header-title">
+              <span>AliviaFin Founder Hub</span>
+              <span style="font-size: 10px; background: rgba(245, 158, 11, 0.25); color: #fbbf24; padding: 2px 8px; border-radius: 999px; font-weight: 800;">MASTER CEO</span>
+            </h3>
+            <div class="master-header-subtitle">Monitoreo ejecutivo de suscripciones, ingresos en tiempo real y clientes</div>
+          </div>
+        </div>
+        <div class="master-header-actions">
+          <button type="button" class="master-refresh-btn" onclick="loadMasterDashboardData(true)" title="Recargar datos de Supabase en vivo">
+            <span id="masterRefreshSpinner">🔄</span>
+            <span>Sincronizar</span>
+          </button>
+          <button type="button" onclick="closeModal('masterDashboardModal')" style="background: rgba(255,255,255,0.12); border: none; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer; color: #ffffff;">✕</button>
+        </div>
+      </div>
+
+      <!-- Master Tabs -->
+      <div style="background: var(--card-bg, #ffffff); padding: 12px 24px 0 24px; border-bottom: 1px solid var(--border-color, #e2e8f0);">
+        <div class="master-sub-tabs" style="margin-bottom: 0;">
+          <button type="button" class="master-sub-tab-btn active" id="btnMasterTabSubs" onclick="switchMasterTab('subs')">
+            <span>💎 Suscripciones & Ingresos (SaaS)</span>
+          </button>
+          <button type="button" class="master-sub-tab-btn" id="btnMasterTabFeedback" onclick="switchMasterTab('feedback')">
+            <span>💬 Buzón de Feedback (<span id="masterFeedbackCount">0</span>)</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Master Body -->
+      <div class="master-modal-body">
+        
+        <!-- PESTAÑA 1: SUSCRIPCIONES Y CRECIMIENTO SAAS -->
+        <div id="masterSectionSubs">
+          <!-- KPI Cards Grid -->
+          <div class="master-kpi-grid">
+            <!-- KPI 1: MRR -->
+            <div class="master-kpi-card">
+              <div class="master-kpi-top">
+                <span class="master-kpi-label">MRR (Mensual)</span>
+                <span class="master-kpi-badge" style="background: rgba(99, 102, 241, 0.12); color: #6366f1;">S/ 4.90 / mes</span>
+              </div>
+              <div class="master-kpi-val" id="masterMrrVal">S/ 0.00</div>
+              <div class="master-kpi-sub" id="masterMrrSub">0 suscriptores mensuales activos</div>
+            </div>
+
+            <!-- KPI 2: Total Pro Revenue -->
+            <div class="master-kpi-card">
+              <div class="master-kpi-top">
+                <span class="master-kpi-label">Ingresos Totales</span>
+                <span class="master-kpi-badge" style="background: rgba(16, 185, 129, 0.12); color: #059669;">Suscripciones</span>
+              </div>
+              <div class="master-kpi-val" id="masterTotalRevenueVal" style="color: #059669;">S/ 0.00</div>
+              <div class="master-kpi-sub" id="masterLifetimeSalesSub">0 membresías vitalicias vendidas</div>
+            </div>
+
+            <!-- KPI 3: Total Users -->
+            <div class="master-kpi-card">
+              <div class="master-kpi-top">
+                <span class="master-kpi-label">Usuarios Registrados</span>
+                <span class="master-kpi-badge" style="background: rgba(15, 23, 42, 0.08); color: var(--text-main);">Cuentas</span>
+              </div>
+              <div class="master-kpi-val" id="masterTotalUsersVal">0</div>
+              <div class="master-kpi-sub" id="masterUsersBreakdownSub">0 PRO · 0 Gratuitos</div>
+            </div>
+
+            <!-- KPI 4: Conversion Rate -->
+            <div class="master-kpi-card">
+              <div class="master-kpi-top">
+                <span class="master-kpi-label">Conversión Free ➔ PRO</span>
+                <span class="master-kpi-badge" style="background: rgba(245, 158, 11, 0.12); color: #d97706;">Monetización</span>
+              </div>
+              <div class="master-kpi-val" id="masterConversionVal" style="color: #d97706;">0%</div>
+              <div class="master-kpi-sub" id="masterConversionSub">Efectividad de cierre en ventas</div>
+            </div>
+          </div>
+
+          <!-- Controls Toolbar -->
+          <div class="master-toolbar-row">
+            <input type="text" id="masterSearchInput" class="master-search-input" placeholder="🔍 Buscar por correo o nombre de usuario..." oninput="filterMasterSubscribers()">
+            <div class="master-filter-group">
+              <button type="button" class="master-filter-chip active" id="mFilterAll" onclick="setMasterFilter('all')">Todos (<span id="countMAll">0</span>)</button>
+              <button type="button" class="master-filter-chip" id="mFilterLife" onclick="setMasterFilter('pro_lifetime')">👑 Vitalicios (<span id="countMLife">0</span>)</button>
+              <button type="button" class="master-filter-chip" id="mFilterMonth" onclick="setMasterFilter('pro_monthly')">📅 Mensuales (<span id="countMMonth">0</span>)</button>
+              <button type="button" class="master-filter-chip" id="mFilterFree" onclick="setMasterFilter('free')">🆓 Free (<span id="countMFree">0</span>)</button>
+            </div>
+          </div>
+
+          <!-- Subscribers Interactive Table Card -->
+          <div class="master-table-card">
+            <div class="master-table-responsive">
+              <table class="master-table">
+                <thead>
+                  <tr>
+                    <th>Usuario / Correo</th>
+                    <th>Plan Actual</th>
+                    <th>Estado</th>
+                    <th>Aporte Estimado</th>
+                    <th>Acciones de Activación Rápida (1-Tap)</th>
+                  </tr>
+                </thead>
+                <tbody id="masterSubscribersTableBody">
+                  <tr>
+                    <td colspan="5" style="text-align: center; padding: 30px; color: var(--text-muted);">
+                      Cargando suscriptores desde Supabase... ⏳
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Box de Activación Manual por Correo -->
+          <div class="master-manual-add-box">
+            <div style="font-size: 20px;">⚡</div>
+            <div style="flex: 1; min-width: 200px;">
+              <div style="font-size: 12.5px; font-weight: 800; color: var(--text-main);">Activar Suscripción Manual (Yape / Plin / Transferencia)</div>
+              <div style="font-size: 11px; color: var(--text-muted);">Ingresa el correo del cliente que te escribió por WhatsApp para activarle PRO en 1 tap.</div>
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; width: 100%; max-width: 520px;">
+              <input type="email" id="masterManualEmail" placeholder="correo@ejemplo.com" style="flex: 1; min-width: 180px; padding: 8px 12px; border-radius: 10px; border: 1.5px solid var(--border-color, #cbd5e1); font-size: 12px; font-weight: 700;">
+              <select id="masterManualPlan" style="padding: 8px 10px; border-radius: 10px; border: 1.5px solid var(--border-color, #cbd5e1); font-size: 12px; font-weight: 700; background: var(--card-bg, #ffffff); color: var(--text-main);">
+                <option value="pro_lifetime">👑 PRO Vitalicio (S/ 19.90)</option>
+                <option value="pro_monthly">📅 PRO Mensual (S/ 4.90)</option>
+                <option value="free">🆓 Gratuito (Free)</option>
+              </select>
+              <button type="button" class="btn btn-primary" onclick="handleMasterManualActivate()" style="padding: 8px 14px; font-size: 12px; font-weight: 800; border-radius: 10px; white-space: nowrap;">
+                Guardar
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- PESTAÑA 2: BUZÓN DE FEEDBACK & SUGERENCIAS -->
+        <div id="masterSectionFeedback" style="display: none;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div>
+              <h4 style="margin: 0; font-size: 14px; font-weight: 800; color: var(--text-main);">Buzón de Sugerencias & Soporte de Clientes</h4>
+              <div style="font-size: 11.5px; color: var(--text-muted);">Mensajes y reportes enviados desde la app (tabla app_feedback)</div>
+            </div>
+          </div>
+          <div id="masterFeedbackList" style="display: flex; flex-direction: column; gap: 10px;">
+            <div style="text-align: center; padding: 30px; color: var(--text-muted); background: var(--card-bg, #ffffff); border-radius: 16px; border: 1px solid var(--border-color, #e2e8f0);">
+              Cargando mensajes del buzón... ⏳
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Master Footer -->
+      <div style="padding: 12px 24px; background: var(--card-bg, #ffffff); border-top: 1px solid var(--border-color, #e2e8f0); display: flex; justify-content: space-between; align-items: center;">
+        <div style="font-size: 11px; color: var(--text-muted); font-weight: 600;">
+          🔒 Acceso restringido exclusivamente a <strong style="color: var(--text-main);">cesar.risso.f@gmail.com</strong>
+        </div>
+        <button type="button" class="btn btn-secondary" onclick="closeModal('masterDashboardModal')" style="padding: 7px 18px; font-size: 12px; font-weight: 800; border-radius: 10px;">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
-  <script src="js/app.js?v=67.5"></script>
+  <script src="js/app.js?v=68.0"></script>
 </body>
 </html>

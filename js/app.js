@@ -77,7 +77,7 @@
     // ================================================================
     // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v67.0)
     // ================================================================
-    const APP_VERSION = 'v67.5';
+    const APP_VERSION = 'v68.0';
 
     const SUPPORTED_CURRENCIES = {
       'PEN': { code: 'PEN', symbol: 'S/', name: 'Soles peruanos', flag: '🇵🇪', locale: 'es-PE' },
@@ -330,6 +330,7 @@
       
       // Verificar suscripción de Paywall
       await verifySubscription(user);
+      syncAdminUI();
     }
 
     // Helper para pruebas y preview local
@@ -345,8 +346,8 @@
       if (isAdminCesar()) return true;
       // 2. Si tiene flag 'is_pro' en metadata de Supabase
       if (currentUser && currentUser.user_metadata && currentUser.user_metadata.is_pro === true) return true;
-      // 3. Si en user_subscriptions está como 'premium'
-      if (window._currentUserSubscriptionStatus === 'premium') return true;
+      // 3. Si en user_subscriptions está como 'premium', 'pro_monthly' o 'pro_lifetime'
+      if (['premium', 'pro_monthly', 'pro_lifetime'].includes(window._currentUserSubscriptionStatus)) return true;
       // 4. Si tiene desbloqueo local
       if (localStorage.getItem('aliviafin_pro_unlocked') === 'true' || localStorage.getItem('finzen_pro_unlocked') === 'true') return true;
       return false;
@@ -373,6 +374,7 @@
         window._currentUserSubscriptionStatus = 'premium';
         const pb = document.getElementById('proBadge');
         if (pb) pb.style.display = 'inline-flex';
+        syncAdminUI();
         setTimeout(() => checkOnboardingAndVersionAnnouncements(), 400);
         return;
       }
@@ -384,8 +386,8 @@
           .eq('user_id', user.id)
           .maybeSingle();
 
-        if (data && data.status === 'premium') {
-          window._currentUserSubscriptionStatus = 'premium';
+        if (data && ['premium', 'pro_monthly', 'pro_lifetime'].includes(data.status)) {
+          window._currentUserSubscriptionStatus = data.status;
         } else if (!data) {
           // Si el usuario no tiene fila en user_subscriptions, la inicializamos automáticamente como 'free'
           await supabaseClient
@@ -399,6 +401,8 @@
       } catch (err) {
         console.warn('Nota de suscripción:', err);
       }
+
+      syncAdminUI();
 
       // Actualizar badge Pro en cabecera
       const pb = document.getElementById('proBadge');
@@ -643,6 +647,7 @@
       await supabaseClient.auth.signOut();
       currentUser = null;
       appState = getCleanUserState();
+      syncAdminUI();
       document.getElementById('loginModalScreen').style.display = 'flex';
       document.getElementById('appMainWrapper').style.display = 'none';
       // Limpiar datos locales de este usuario
@@ -656,6 +661,7 @@
     }
 
     function openSettingsModal() {
+      syncAdminUI();
       // Cerrar cualquier otro modal abierto para evitar superposiciones
       document.querySelectorAll('.modal-backdrop.active, .glass-backdrop.active').forEach(m => {
         if (m.id !== 'settingsModal') closeModal(m);
@@ -6140,4 +6146,353 @@ window.getCurrencySymbol = getCurrencySymbol;
 window.getCurrencyCode = getCurrencyCode;
 window.changeCurrency = changeCurrency;
 window.updateCurrencyDOMElements = updateCurrencyDOMElements;
+
+// ================================================================
+// MASTER ADMIN / FOUNDER DASHBOARD (CEO PANEL v68.0)
+// ================================================================
+let masterSubscribersData = [];
+let masterFeedbackData = [];
+let masterCurrentFilter = 'all';
+
+function syncAdminUI() {
+  const isCesar = isAdminCesar();
+  const deskMasterBtn = document.getElementById('deskNavMasterBtn');
+  if (deskMasterBtn) deskMasterBtn.style.display = isCesar ? 'flex' : 'none';
+  const settMasterRow = document.getElementById('settingsMasterAdminRow');
+  if (settMasterRow) settMasterRow.style.display = isCesar ? 'block' : 'none';
+}
+
+async function openMasterDashboardModal() {
+  if (!isAdminCesar()) {
+    showToast('Acceso restringido únicamente al fundador de AliviaFin', 'error');
+    return;
+  }
+  openModalById('masterDashboardModal');
+  await loadMasterDashboardData();
+}
+
+function switchMasterTab(tab) {
+  const secSubs = document.getElementById('masterSectionSubs');
+  const secFb = document.getElementById('masterSectionFeedback');
+  const btnSubs = document.getElementById('btnMasterTabSubs');
+  const btnFb = document.getElementById('btnMasterTabFeedback');
+
+  if (tab === 'feedback') {
+    if (secSubs) secSubs.style.display = 'none';
+    if (secFb) secFb.style.display = 'block';
+    if (btnSubs) btnSubs.classList.remove('active');
+    if (btnFb) btnFb.classList.add('active');
+  } else {
+    if (secSubs) secSubs.style.display = 'block';
+    if (secFb) secFb.style.display = 'none';
+    if (btnSubs) btnSubs.classList.add('active');
+    if (btnFb) btnFb.classList.remove('active');
+  }
+}
+
+async function loadMasterDashboardData(force = false) {
+  if (!isAdminCesar()) return;
+  const spinner = document.getElementById('masterRefreshSpinner');
+  if (spinner) spinner.textContent = '⏳';
+
+  try {
+    // 1. Cargar todas las suscripciones
+    const { data: subs, error: subsErr } = await supabaseClient
+      .from('user_subscriptions')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (!subsErr && subs) {
+      masterSubscribersData = subs;
+    }
+
+    // 2. Cargar feedback
+    const { data: feedback, error: fbErr } = await supabaseClient
+      .from('app_feedback')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (!fbErr && feedback) {
+      masterFeedbackData = feedback;
+      const fbCountEl = document.getElementById('masterFeedbackCount');
+      if (fbCountEl) fbCountEl.textContent = feedback.length;
+    }
+
+    calculateMasterKPIs();
+    renderMasterSubscribers();
+    renderMasterFeedback();
+
+    if (force) showToast('⚡ Datos de fundador actualizados en vivo', 'success');
+  } catch (err) {
+    console.error('Error cargando master data:', err);
+  } finally {
+    if (spinner) spinner.textContent = '🔄';
+  }
+}
+
+function calculateMasterKPIs() {
+  const sym = 'S/';
+  const totalUsers = masterSubscribersData.length;
+
+  // Mensuales activos: S/ 4.90 / mes
+  const monthlySubs = masterSubscribersData.filter(s => s.status === 'pro_monthly' || s.plan_type === 'monthly');
+  const mrr = monthlySubs.length * 4.90;
+
+  // Vitalicios: S/ 19.90
+  const lifetimeSubs = masterSubscribersData.filter(s => s.status === 'pro_lifetime' || s.status === 'premium' || s.plan_type === 'lifetime');
+  const lifetimeRevenue = lifetimeSubs.length * 19.90;
+
+  // Total ingresos estimados
+  const totalRevenue = lifetimeRevenue + mrr;
+  const totalPro = monthlySubs.length + lifetimeSubs.length;
+  const freeUsers = Math.max(0, totalUsers - totalPro);
+  const convRate = totalUsers > 0 ? ((totalPro / totalUsers) * 100).toFixed(1) : 0;
+
+  // Render en UI
+  const elMrr = document.getElementById('masterMrrVal');
+  if (elMrr) elMrr.textContent = `${sym} ${mrr.toFixed(2)}`;
+  const elMrrSub = document.getElementById('masterMrrSub');
+  if (elMrrSub) elMrrSub.textContent = `${monthlySubs.length} suscriptores mensuales activos`;
+
+  const elTotalRev = document.getElementById('masterTotalRevenueVal');
+  if (elTotalRev) elTotalRev.textContent = `${sym} ${totalRevenue.toFixed(2)}`;
+  const elLifeSub = document.getElementById('masterLifetimeSalesSub');
+  if (elLifeSub) elLifeSub.textContent = `${lifetimeSubs.length} membresías vitalicias vendidas`;
+
+  const elTotalUsers = document.getElementById('masterTotalUsersVal');
+  if (elTotalUsers) elTotalUsers.textContent = `${totalUsers} Cuentas`;
+  const elUsersBreakdown = document.getElementById('masterUsersBreakdownSub');
+  if (elUsersBreakdown) elUsersBreakdown.textContent = `${totalPro} PRO (${lifetimeSubs.length} Vit. / ${monthlySubs.length} Men.) · ${freeUsers} Free`;
+
+  const elConv = document.getElementById('masterConversionVal');
+  if (elConv) elConv.textContent = `${convRate}%`;
+
+  // Contadores en chips
+  const cAll = document.getElementById('countMAll');
+  if (cAll) cAll.textContent = totalUsers;
+  const cLife = document.getElementById('countMLife');
+  if (cLife) cLife.textContent = lifetimeSubs.length;
+  const cMonth = document.getElementById('countMMonth');
+  if (cMonth) cMonth.textContent = monthlySubs.length;
+  const cFree = document.getElementById('countMFree');
+  if (cFree) cFree.textContent = freeUsers;
+}
+
+function setMasterFilter(filter) {
+  masterCurrentFilter = filter;
+  document.querySelectorAll('.master-filter-chip').forEach(c => c.classList.remove('active'));
+  const activeBtn = document.getElementById(filter === 'pro_lifetime' ? 'mFilterLife' : (filter === 'pro_monthly' ? 'mFilterMonth' : (filter === 'free' ? 'mFilterFree' : 'mFilterAll')));
+  if (activeBtn) activeBtn.classList.add('active');
+  renderMasterSubscribers();
+}
+
+function filterMasterSubscribers() {
+  renderMasterSubscribers();
+}
+
+function renderMasterSubscribers() {
+  const tbody = document.getElementById('masterSubscribersTableBody');
+  if (!tbody) return;
+
+  const q = (document.getElementById('masterSearchInput')?.value || '').toLowerCase().trim();
+
+  let list = masterSubscribersData.filter(item => {
+    const matchesQuery = !q || (item.email && item.email.toLowerCase().includes(q)) || (item.user_id && item.user_id.toLowerCase().includes(q));
+    if (!matchesQuery) return false;
+
+    const isLife = item.status === 'pro_lifetime' || item.status === 'premium' || item.plan_type === 'lifetime';
+    const isMonth = item.status === 'pro_monthly' || item.plan_type === 'monthly';
+
+    if (masterCurrentFilter === 'pro_lifetime') return isLife;
+    if (masterCurrentFilter === 'pro_monthly') return isMonth;
+    if (masterCurrentFilter === 'free') return !isLife && !isMonth;
+    return true;
+  });
+
+  if (list.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="5" style="text-align: center; padding: 28px; color: var(--text-muted); font-size: 12px;">
+          No se encontraron usuarios con el filtro seleccionado.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  let html = '';
+  list.forEach(item => {
+    const email = item.email || item.user_id || 'Sin correo';
+    const isLife = item.status === 'pro_lifetime' || item.status === 'premium' || item.plan_type === 'lifetime';
+    const isMonth = item.status === 'pro_monthly' || item.plan_type === 'monthly';
+
+    let planBadge = '<span class="master-user-badge-free">🆓 Gratuito</span>';
+    let revenueEst = 'S/ 0.00';
+    if (isLife) {
+      planBadge = '<span class="master-user-badge-pro-life">👑 PRO Vitalicio</span>';
+      revenueEst = 'S/ 19.90';
+    } else if (isMonth) {
+      planBadge = '<span class="master-user-badge-pro-month">📅 PRO Mensual</span>';
+      revenueEst = 'S/ 4.90 / mes';
+    }
+
+    const dateStr = item.created_at ? new Date(item.created_at).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Reciente';
+
+    html += `
+      <tr>
+        <td>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 18px;">👤</span>
+            <div>
+              <div style="font-weight: 800; color: var(--text-main); font-size: 13px;">${escapeHtml(email)}</div>
+              <div style="font-size: 10.5px; color: var(--text-muted);">Registrado el ${dateStr}</div>
+            </div>
+          </div>
+        </td>
+        <td>${planBadge}</td>
+        <td>
+          <span style="font-weight: 700; color: #10b981; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;">
+            <span style="width: 7px; height: 7px; border-radius: 50%; background: #10b981;"></span>
+            Activo
+          </span>
+        </td>
+        <td style="font-weight: 800; color: var(--text-main);">${revenueEst}</td>
+        <td>
+          <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+            ${!isLife ? `<button type="button" class="master-action-btn-pill master-action-btn-life" onclick="setMasterUserPlan('${escapeHtml(item.user_id)}', '${escapeHtml(email)}', 'pro_lifetime')" title="Activar PRO Vitalicio S/ 19.90">👑 Vitalicio (S/ 19.90)</button>` : ''}
+            ${!isMonth ? `<button type="button" class="master-action-btn-pill master-action-btn-month" onclick="setMasterUserPlan('${escapeHtml(item.user_id)}', '${escapeHtml(email)}', 'pro_monthly')" title="Activar PRO Mensual S/ 4.90">📅 Mensual (S/ 4.90)</button>` : ''}
+            ${(isLife || isMonth) ? `<button type="button" class="master-action-btn-pill master-action-btn-free" onclick="setMasterUserPlan('${escapeHtml(item.user_id)}', '${escapeHtml(email)}', 'free')" title="Bajar a cuenta gratuita">⚪ Free</button>` : ''}
+          </div>
+        </td>
+      </tr>
+    `;
+  });
+
+  tbody.innerHTML = html;
+}
+
+async function setMasterUserPlan(userId, email, newPlan) {
+  if (!isAdminCesar()) return;
+
+  const planLabel = newPlan === 'pro_lifetime' ? 'PRO Vitalicio (S/ 19.90)' : (newPlan === 'pro_monthly' ? 'PRO Mensual (S/ 4.90)' : 'Gratuito (Free)');
+  const ok = confirm(`¿Confirmas actualizar a ${email} al plan ${planLabel}?`);
+  if (!ok) return;
+
+  try {
+    const updatePayload = {
+      user_id: userId,
+      email: email,
+      status: newPlan,
+      plan_type: newPlan === 'pro_lifetime' ? 'lifetime' : (newPlan === 'pro_monthly' ? 'monthly' : 'free'),
+      price: newPlan === 'pro_lifetime' ? 19.90 : (newPlan === 'pro_monthly' ? 4.90 : 0.00),
+      updated_at: new Date().toISOString()
+    };
+
+    const { error } = await supabaseClient
+      .from('user_subscriptions')
+      .upsert(updatePayload, { onConflict: 'user_id' });
+
+    if (error) {
+      console.error('Error al actualizar plan en Supabase:', error);
+      showToast('Error al actualizar plan: ' + error.message, 'error');
+      return;
+    }
+
+    // Actualizar en memoria local
+    const idx = masterSubscribersData.findIndex(s => s.user_id === userId);
+    if (idx !== -1) {
+      masterSubscribersData[idx] = { ...masterSubscribersData[idx], ...updatePayload };
+    } else {
+      masterSubscribersData.unshift(updatePayload);
+    }
+
+    calculateMasterKPIs();
+    renderMasterSubscribers();
+    if (navigator.vibrate) navigator.vibrate(30);
+    showToast(`✨ ${email} actualizado a ${planLabel}`, 'success');
+  } catch (e) {
+    console.error('Exception updating user plan:', e);
+    showToast('Error de conexión', 'error');
+  }
+}
+
+async function handleMasterManualActivate() {
+  if (!isAdminCesar()) return;
+
+  const emailInput = document.getElementById('masterManualEmail');
+  const planSelect = document.getElementById('masterManualPlan');
+  if (!emailInput || !planSelect) return;
+
+  const email = emailInput.value.trim().toLowerCase();
+  const plan = planSelect.value;
+
+  if (!email || !email.includes('@')) {
+    showToast('Ingresa un correo electrónico válido', 'error');
+    return;
+  }
+
+  // Buscar si el usuario ya está registrado
+  let existing = masterSubscribersData.find(s => s.email && s.email.toLowerCase() === email);
+  const userId = existing ? existing.user_id : 'sub_' + Math.random().toString(36).substring(2, 12);
+
+  await setMasterUserPlan(userId, email, plan);
+  emailInput.value = '';
+}
+
+function renderMasterFeedback() {
+  const container = document.getElementById('masterFeedbackList');
+  if (!container) return;
+
+  if (!masterFeedbackData || masterFeedbackData.length === 0) {
+    container.innerHTML = `
+      <div style="text-align: center; padding: 26px; color: var(--text-muted); background: var(--card-bg, #ffffff); border-radius: 16px; border: 1px solid var(--border-color, #e2e8f0); font-size: 12.5px;">
+        🎉 No hay mensajes nuevos en el buzón.
+      </div>
+    `;
+    return;
+  }
+
+  let html = '';
+  masterFeedbackData.forEach(item => {
+    const typeEmoji = item.type === 'bug' ? '🐞 Reporte de Error' : (item.type === 'feature' ? '💡 Sugerencia' : '❓ Duda / Consulta');
+    const badgeColor = item.type === 'bug' ? '#ef4444' : (item.type === 'feature' ? '#f59e0b' : '#3b82f6');
+    const dateStr = item.created_at ? new Date(item.created_at).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+    const userEmail = item.user_email || 'Anónimo';
+
+    html += `
+      <div style="background: var(--card-bg, #ffffff); border: 1px solid var(--border-color, #e2e8f0); border-radius: 16px; padding: 14px 18px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 6px;">
+          <span style="font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 6px; background: rgba(0,0,0,0.04); color: ${badgeColor};">
+            ${typeEmoji}
+          </span>
+          <span style="font-size: 11px; color: var(--text-muted);">${dateStr}</span>
+        </div>
+        <div style="font-size: 13px; color: var(--text-main); line-height: 1.5; margin: 8px 0; white-space: pre-wrap;">${escapeHtml(item.message || '')}</div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; border-top: 1px solid var(--border-color, #f1f5f9); padding-top: 8px;">
+          <div style="font-size: 11px; color: var(--text-muted); font-weight: 600;">
+            De: <strong style="color: var(--text-main);">${escapeHtml(userEmail)}</strong>
+          </div>
+          ${userEmail.includes('@') ? `
+            <a href="mailto:${escapeHtml(userEmail)}?subject=Respuesta de AliviaFin sobre tu mensaje" class="btn btn-secondary" style="padding: 4px 10px; font-size: 11px; font-weight: 800; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+              <span>✉️ Responder</span>
+            </a>
+          ` : ''}
+        </div>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+}
+
+// Master Dashboard Window Exports
+window.openMasterDashboardModal = openMasterDashboardModal;
+window.switchMasterTab = switchMasterTab;
+window.loadMasterDashboardData = loadMasterDashboardData;
+window.setMasterFilter = setMasterFilter;
+window.filterMasterSubscribers = filterMasterSubscribers;
+window.setMasterUserPlan = setMasterUserPlan;
+window.handleMasterManualActivate = handleMasterManualActivate;
+window.syncAdminUI = syncAdminUI;
+
 
