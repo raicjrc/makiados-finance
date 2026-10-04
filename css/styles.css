@@ -2958,6 +2958,7 @@
       margin-top: 2px;
     }
     .exec-balance-amount {
+      position: relative;
       font-size: 34px;
       font-weight: 800;
       letter-spacing: -0.03em;
@@ -2974,6 +2975,7 @@
       opacity: 0.75;
     }
     .exec-balance-context {
+      position: relative;
       margin-top: 6px;
       font-size: 11.5px;
       color: #64748b;
@@ -3760,13 +3762,32 @@
       flex-direction: column;
     }
 
+    .desktop-home-grid {
+      display: block;
+      width: 100%;
+    }
+    .desktop-home-col-left, .desktop-home-col-right {
+      display: block;
+      width: 100%;
+    }
+
     @media (min-width: 1024px) {
       .container {
-        max-width: 1320px;
+        max-width: 1360px;
         padding: 16px 28px;
       }
       .top-navbar-inner {
-        max-width: 1320px;
+        max-width: 1360px;
+      }
+      .desktop-home-grid {
+        display: grid;
+        grid-template-columns: 1.15fr 1fr;
+        gap: 22px;
+        align-items: start;
+      }
+      .desktop-home-col-left, .desktop-home-col-right {
+        display: flex;
+        flex-direction: column;
       }
       .desktop-plan-grid {
         display: grid;
@@ -4189,6 +4210,9 @@
     }
 
     /* Ocultar el texto real haciéndolo transparente */
+    body.privacy-active .exec-balance-amount,
+    body.privacy-active .exec-balance-context,
+    body.privacy-active .stat-card-pending .stat-value,
     body.privacy-active .hero-zen-number,
     body.privacy-active .hero-zen-subtext,
     body.privacy-active .stat-value,
@@ -4211,8 +4235,65 @@
       cursor: pointer;
     }
 
+    body.privacy-active .exec-balance-amount *,
+    body.privacy-active .exec-balance-context *,
+    body.privacy-active .stat-card-pending .stat-value *,
     body.privacy-active .hero-zen-number * {
       color: transparent !important;
+    }
+
+    /* Máscara de puntos para la tarjeta Ejecutiva (Saldo en Banco) */
+    body.privacy-active .exec-balance-amount::after {
+      content: var(--privacy-mask-text, "S/ •••••") !important;
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      color: var(--text-main, #0f172a) !important;
+      font-weight: 800;
+      font-size: 34px;
+      line-height: 1.15;
+      display: flex;
+      align-items: baseline;
+      pointer-events: none;
+      letter-spacing: -0.02em;
+    }
+    body.theme-twilight.privacy-active .exec-balance-amount::after {
+      color: #f8fafc !important;
+    }
+
+    body.privacy-active .exec-balance-context::after {
+      content: var(--privacy-sub-mask, "••••••••••••••••••••") !important;
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      color: var(--text-muted, #64748b) !important;
+      font-size: 11px;
+      letter-spacing: 2px;
+      display: flex;
+      align-items: center;
+      pointer-events: none;
+    }
+    body.theme-twilight.privacy-active .exec-balance-context::after {
+      color: #94a3b8 !important;
+    }
+
+    body.privacy-active .stat-card-pending .stat-value::after {
+      content: var(--privacy-mask-text, "S/ •••••") !important;
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      color: #f59e0b !important;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      pointer-events: none;
     }
 
     /* Máscara de puntos para la tarjeta Hero (Disponible Hoy) */
@@ -4349,6 +4430,9 @@
     }
 
     /* Revelar temporalmente al tocar/mantener presionado un monto específico (Peek) */
+    body.privacy-active .exec-balance-amount:active,
+    body.privacy-active .exec-balance-context:active,
+    body.privacy-active .stat-card-pending .stat-value:active,
     body.privacy-active .hero-zen-number:active,
     body.privacy-active .hero-zen-subtext:active,
     body.privacy-active .stat-value:active,
@@ -4361,11 +4445,16 @@
       color: inherit !important;
     }
 
+    body.privacy-active .exec-balance-amount:active *,
+    body.privacy-active .exec-balance-context:active *,
     body.privacy-active .hero-zen-number:active *,
     body.privacy-active .hero-zen-subtext:active * {
       color: inherit !important;
     }
 
+    body.privacy-active .exec-balance-amount:active::after,
+    body.privacy-active .exec-balance-context:active::after,
+    body.privacy-active .stat-card-pending .stat-value:active::after,
     body.privacy-active .hero-zen-number:active::after,
     body.privacy-active .hero-zen-subtext:active::after,
     body.privacy-active .stat-value:active::after,
@@ -4376,4 +4465,88 @@
     body.privacy-active .tx-summary-val:active::after,
     body.privacy-active .sensitive-amount:active::after {
       display: none !important;
+    }
+
+    /* ====== MODAL LEGAL & PRIVACIDAD (v67.5) ====== */
+    .legal-modal-container {
+      max-width: 580px;
+      width: 95%;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      border-radius: 24px;
+      background: var(--card-bg, #ffffff);
+      box-shadow: 0 20px 48px rgba(15, 23, 42, 0.2);
+      border: 1px solid var(--border-color, rgba(0,0,0,0.08));
+      overflow: hidden;
+      margin: auto;
+    }
+    .legal-modal-header {
+      padding: 16px 20px 12px 20px;
+      border-bottom: 1px solid var(--border-light, #e2e8f0);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .legal-tabs-row {
+      display: flex;
+      gap: 6px;
+      padding: 10px 20px;
+      background: rgba(15, 23, 42, 0.03);
+      border-bottom: 1px solid var(--border-light, #e2e8f0);
+    }
+    .legal-tab-btn {
+      flex: 1;
+      padding: 8px 12px;
+      border-radius: 10px;
+      border: none;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      background: transparent;
+      color: var(--text-muted, #64748b);
+      transition: all 0.2s var(--apple-spring);
+    }
+    .legal-tab-btn.active {
+      background: #ffffff;
+      color: #0f172a;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    body.theme-twilight .legal-tab-btn.active {
+      background: #1e293b;
+      color: #f8fafc;
+    }
+    .legal-content-body {
+      padding: 18px 20px;
+      overflow-y: auto;
+      font-size: 12.5px;
+      line-height: 1.6;
+      color: var(--text-main, #334155);
+    }
+    .legal-trust-badge {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      margin-bottom: 12px;
+      font-weight: 700;
+      font-size: 12px;
+      color: #059669;
+    }
+    body.theme-twilight .legal-modal-container {
+      background: #0f172a;
+      border-color: rgba(255, 255, 255, 0.12);
+    }
+    body.theme-twilight .legal-modal-header {
+      border-bottom-color: rgba(255, 255, 255, 0.1);
+    }
+    body.theme-twilight .legal-tabs-row {
+      background: rgba(255, 255, 255, 0.04);
+      border-bottom-color: rgba(255, 255, 255, 0.1);
+    }
+    body.theme-twilight .legal-content-body {
+      color: #e2e8f0;
     }

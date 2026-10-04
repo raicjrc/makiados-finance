@@ -3,6 +3,34 @@
 Todas las versiones notables de esta aplicación están documentadas aquí.
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
+## [v67.5] — 2026-10-04 — Dashboard Widescreen Desktop, Blindaje Completo Modo Privacidad, Actualización de Precios PRO y Sección Legal & Privacidad
+
+### 🖥️ Dashboard Widescreen de 2 Columnas para Desktop (≥ 1024px)
+- **Aprovechamiento Óptimo de Pantalla**: Eliminación de márgenes vacíos en Mac/PC mediante un grid ejecutivo de 2 columnas (`1.15fr 1fr` con gap de 22px).
+- **Distribución Ejecutiva Equilibrada**:
+  - *Columna Izquierda*: Tarjeta Ejecutiva de Saldo en Banco, Grid de Métricas (Ingreso, Gasto Real, Por Pagar), Acciones Rápidas (Registrar Gasto/Ingreso) y Radar de Próximos Vencimientos.
+  - *Columna Derecha*: Feed de Movimientos Recientes, Hub de Herramientas Rápidas (Conciliar Saldo, Simulador de Cuotas, Soporte) y Banners destacados.
+- **100% Inmune en Celulares**: En pantallas móviles (< 1024px) la disposición se mantiene como una sola columna vertical sin ninguna alteración ni salto de layout.
+
+### 🙈 Blindaje de Modo Privacidad para Saldo en Banco
+- **Enmascaramiento Total**: La tarjeta ejecutiva de Saldo en Banco (`SALDO EN BANCO`) y su contexto de partida ahora se ocultan inmediatamente con la máscara de puntos (`S/ •••••`) al activar el botón de privacidad (ojito 👁️ / 🙈).
+- **Protección de Gastos Pendientes**: La métrica de gastos "Por Pagar" también queda cubierta bajo el modo privado.
+- **Interacción Peek Táctil**: Mantener presionado cualquier saldo enmascarado revela el valor temporalmente y se vuelve a ocultar al soltar.
+- **Formateo Elegante de Saldos Negativos**: Visualización limpia con prefijo `-S/ 92.60` en lugar de concatenaciones extrañas.
+
+### 💎 Actualización de Precios AliviaFin PRO
+- **Tarifa Mensual Accesible**: Reducción a **S/ 4.90 / mes** con cancelación libre sin compromiso.
+- **Acceso Vitalicio Preferencial**: Reducción a pago único de **S/ 19.90** para acceso de por vida a todas las funciones avanzadas actuales y futuras.
+- **Enlace de Activación Directo**: Mensaje de WhatsApp actualizado con las nuevas tarifas oficiales.
+
+### ⚖️ Términos de Servicio & Políticas de Privacidad Integradas
+- **Nuevo Modal Frosted Glass**: Pestañas interactivas para "Términos del Servicio" y "Políticas de Privacidad".
+- **Accesos Rápidos**: Botón "Legal & Privacidad" en el sidebar de escritorio y enlaces directos dentro del menú de Ajustes.
+- **Declaración Zero-Knowledge**: Garantía explícita de que la app jamás solicita claves bancarias ni comercializa datos personales.
+- **Service Worker v109**: Purgado automático de caché para sincronización sin interrupciones.
+
+---
+
 ## [v67.4] — 2026-10-04 — Rediseño Apple Fintech Sereno: Tarjeta Ejecutiva de Balance, Desglose Matemático y Micro-interacciones Táctiles
 
 ### 💎 Tarjeta Ejecutiva de Balance (Apple Card Serene)

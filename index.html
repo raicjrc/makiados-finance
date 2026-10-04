@@ -219,6 +219,10 @@
           <span class="desk-nav-icon">⚙️</span>
           <span>Ajustes</span>
         </button>
+        <button class="desktop-nav-item" id="deskNavLegalBtn" onclick="openLegalModal('terms')" style="margin-bottom: 6px;" title="Términos del Servicio y Políticas de Privacidad">
+          <span class="desk-nav-icon">⚖️</span>
+          <span>Legal & Privacidad</span>
+        </button>
         <div class="desktop-sidebar-user-card" onclick="handleLogout()" title="Cerrar sesión">
           <span style="font-size: 15px;">👤</span>
           <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1;">
@@ -264,138 +268,146 @@
       <!-- TAB 1: INICIO (ZEN EXECUTIVE RESUMEN) -->
       <div id="tab-inicio" class="tab-content active">
         
-        <!-- EXECUTIVE APPLE CARD: BALANCE GENERAL EN VIVO (SERENE & CLUTTER-FREE) -->
-        <div id="executiveBalanceCard" class="executive-balance-card" onclick="openExplainSurplusModal()" style="cursor: pointer;" title="Toca para ver el desglose exacto de tu saldo bancario">
-          <div class="exec-card-header">
-            <div class="exec-card-title-group">
-              <span class="exec-card-badge-dot"></span>
-              <span class="exec-card-title">SALDO EN BANCO</span>
-              <span class="exec-card-info-icon" title="Ver desglose matemático">ℹ️</span>
-            </div>
-            <div id="balanceLiveBadge" class="exec-badge-live">
-              <span class="exec-pulse-dot" id="balancePulseDot"></span>
-              <span id="balanceLiveBadgeText">🟢 EN VIVO (HOY)</span>
-            </div>
-          </div>
-          
-          <div class="exec-card-body">
-            <div class="exec-balance-amount" id="metricExecutiveBalance">
-              <span class="exec-currency-glyph" id="execBalanceCurrency">S/</span><span id="metricSavingsLarge" class="tabular-nums">0.00</span>
-              <span id="metricSavings" style="display: none;">S/ 0.00</span>
-            </div>
-            <div class="exec-balance-context" id="balanceContextText">
-              <span id="balanceContextSource">Iniciado con cierre anterior</span> · <span id="balanceMonthFlow" class="text-muted">Calculando...</span>
-            </div>
-          </div>
-
-          <!-- Banner interactivo si se visualiza un mes histórico/cerrado -->
-          <div id="historicalMonthBanner" style="display: none;" class="exec-history-banner" onclick="event.stopPropagation(); returnToCurrentMonth();">
-            <span id="historicalMonthBannerText">📅 Viendo histórico cerrado.</span>
-            <strong class="exec-history-return">Volver a Hoy ➔</strong>
-          </div>
-        </div>
-
-        <!-- 3 Stat Cards Grid (Compact & Minimalist - Apple Squircle) -->
-        <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); margin-bottom: 14px;">
-          <div class="stat-card stat-card-ingreso">
-            <div class="stat-label">💵 INGRESO</div>
-            <div class="stat-value" id="metricSalary" style="font-size: 17px;">S/ 0</div>
-          </div>
-
-          <div class="stat-card stat-card-gasto">
-            <div class="stat-label">🛍️ GASTO REAL</div>
-            <div class="stat-value text-danger" id="metricSpent" style="font-size: 17px;">S/ 0</div>
-          </div>
-
-          <div class="stat-card stat-card-pending" style="cursor: pointer;" onclick="switchTab('movimientos'); selectStatusFilter('Pendiente');" title="Ver gastos pendientes de pago">
-            <div class="stat-label" style="display: flex; align-items: center; justify-content: space-between;">
-              <span>⏳ POR PAGAR</span>
-              <span style="font-size: 10px; opacity: 0.7;">↗</span>
-            </div>
-            <div class="stat-value text-warning" id="metricPending" style="font-size: 17px;">S/ 0</div>
-          </div>
-        </div>
-
-        <!-- Action Buttons (Apple Pill Springs) -->
-        <div class="zen-actions-grid">
-          <button id="btnRegistrarGasto" class="action-pill action-pill-expense" onclick="openQuickExpenseModal()">
-            <span class="action-pill-icon">⚡</span>
-            <span>Registrar Gasto</span>
-          </button>
-          <button id="btnRegistrarIngreso" class="action-pill action-pill-income" onclick="openAddExtraIncomeModal()">
-            <span class="action-pill-icon">💵</span>
-            <span>Registrar Ingreso</span>
-          </button>
-        </div>
-
-        <!-- RADAR DE PRÓXIMOS VENCIMIENTOS (APPLE FINTECH WIDGET) -->
-        <div id="upcomingBillsContainer">
-          <!-- Renders dynamically via renderUpcomingDueDates() -->
-        </div>
-
-        <!-- FEED: ÚLTIMOS MOVIMIENTOS (Solo los últimos 3-4 para mantener la mente despejada) -->
-        <div class="card" style="margin-bottom: 14px;">
-          <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <div class="card-title" style="font-size: 13px; font-weight: 800; display: flex; align-items: center; gap: 6px;">
-              <span>🕒</span>
-              <span>Movimientos Recientes</span>
-            </div>
-            <button type="button" onclick="switchTab('movimientos')" style="background: none; border: none; font-size: 11.5px; font-weight: 800; color: var(--primary); cursor: pointer; padding: 2px 4px;">
-              Ver todos ↗
-            </button>
-          </div>
-
-          <div id="recentTxContainer" class="recent-tx-feed">
-            <!-- Renders via renderRecentTransactions() -->
-          </div>
-
-          <button type="button" class="btn-see-all-tx" onclick="switchTab('movimientos')">
-            <span>Ver todos los movimientos del mes</span>
-            <span id="recentTxCountBadge" class="badge-count">0</span>
-            <span>➔</span>
-          </button>
-        </div>
-
-        <!-- Quick Tools Hub (Minimalista y Compacto) -->
-        <div class="quick-tools-grid">
-          <button id="btnQuickConciliar" class="quick-tool-card" onclick="openReconcileModal()" title="Conciliar Saldo con Banco">
-            <div class="quick-tool-icon">⚖️</div>
-            <div class="quick-tool-info">
-              <div class="quick-tool-title">
-                <span>Conciliar Saldo</span>
-                <span class="quick-tool-arrow">↗</span>
+        <div class="desktop-home-grid">
+          <!-- Columna Principal / Izquierda (Desktop): Saldo Banco, Indicadores, Acciones & Radar -->
+          <div class="desktop-home-col-left">
+            <!-- EXECUTIVE APPLE CARD: BALANCE GENERAL EN VIVO (SERENE & CLUTTER-FREE) -->
+            <div id="executiveBalanceCard" class="executive-balance-card" onclick="openExplainSurplusModal()" style="cursor: pointer;" title="Toca para ver el desglose exacto de tu saldo bancario">
+              <div class="exec-card-header">
+                <div class="exec-card-title-group">
+                  <span class="exec-card-badge-dot"></span>
+                  <span class="exec-card-title">SALDO EN BANCO</span>
+                  <span class="exec-card-info-icon" title="Ver desglose matemático">ℹ️</span>
+                </div>
+                <div id="balanceLiveBadge" class="exec-badge-live">
+                  <span class="exec-pulse-dot" id="balancePulseDot"></span>
+                  <span id="balanceLiveBadgeText">🟢 EN VIVO (HOY)</span>
+                </div>
               </div>
-              <div class="quick-tool-desc">Compara con tu banco y cuadra en 1 tap</div>
-            </div>
-          </button>
-          <button id="btnQuickSimulador" class="quick-tool-card" onclick="openInstallmentsSimulatorModal()" title="Simulador de Cuotas y Crédito">
-            <div class="quick-tool-icon">💳</div>
-            <div class="quick-tool-info">
-              <div class="quick-tool-title">
-                <span>Simulador de Cuotas</span>
-                <span class="quick-tool-arrow">↗</span>
+              
+              <div class="exec-card-body">
+                <div class="exec-balance-amount" id="metricExecutiveBalance">
+                  <span class="exec-currency-glyph" id="execBalanceCurrency">S/</span><span id="metricSavingsLarge" class="tabular-nums">0.00</span>
+                  <span id="metricSavings" style="display: none;">S/ 0.00</span>
+                </div>
+                <div class="exec-balance-context" id="balanceContextText">
+                  <span id="balanceContextSource">Iniciado con cierre anterior</span> · <span id="balanceMonthFlow" class="text-muted">Calculando...</span>
+                </div>
               </div>
-              <div class="quick-tool-desc">Calcula y proyecta compras a plazos</div>
-            </div>
-          </button>
-          <button id="btnQuickHelp" class="quick-tool-card" onclick="openFeedbackModal()" title="¿Dudas o Sugerencias?">
-            <div class="quick-tool-icon">💬</div>
-            <div class="quick-tool-info">
-              <div class="quick-tool-title">
-                <span>¿Ayuda o Sugerencias?</span>
-                <span class="quick-tool-arrow">↗</span>
-              </div>
-              <div class="quick-tool-desc">Soporte directo y reporte de ideas</div>
-            </div>
-          </button>
-        </div>
 
-        <!-- Special Windfall Banner (solo admin si aplica) -->
-        <div id="juntaBanner" class="compact-banner" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); color: white; display: none; margin-top: 10px;">
-          <div>
-            <strong>🎉 Junta 15 de Agosto (+S/ 4,500):</strong> S/ 1k Ropa/Viáticos + S/ 3.5k Pago de Deudas.
+              <!-- Banner interactivo si se visualiza un mes histórico/cerrado -->
+              <div id="historicalMonthBanner" style="display: none;" class="exec-history-banner" onclick="event.stopPropagation(); returnToCurrentMonth();">
+                <span id="historicalMonthBannerText">📅 Viendo histórico cerrado.</span>
+                <strong class="exec-history-return">Volver a Hoy ➔</strong>
+              </div>
+            </div>
+
+            <!-- 3 Stat Cards Grid (Compact & Minimalist - Apple Squircle) -->
+            <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); margin-bottom: 14px;">
+              <div class="stat-card stat-card-ingreso">
+                <div class="stat-label">💵 INGRESO</div>
+                <div class="stat-value" id="metricSalary" style="font-size: 17px;">S/ 0</div>
+              </div>
+
+              <div class="stat-card stat-card-gasto">
+                <div class="stat-label">🛍️ GASTO REAL</div>
+                <div class="stat-value text-danger" id="metricSpent" style="font-size: 17px;">S/ 0</div>
+              </div>
+
+              <div class="stat-card stat-card-pending" style="cursor: pointer;" onclick="switchTab('movimientos'); selectStatusFilter('Pendiente');" title="Ver gastos pendientes de pago">
+                <div class="stat-label" style="display: flex; align-items: center; justify-content: space-between;">
+                  <span>⏳ POR PAGAR</span>
+                  <span style="font-size: 10px; opacity: 0.7;">↗</span>
+                </div>
+                <div class="stat-value text-warning" id="metricPending" style="font-size: 17px;">S/ 0</div>
+              </div>
+            </div>
+
+            <!-- Action Buttons (Apple Pill Springs) -->
+            <div class="zen-actions-grid">
+              <button id="btnRegistrarGasto" class="action-pill action-pill-expense" onclick="openQuickExpenseModal()">
+                <span class="action-pill-icon">⚡</span>
+                <span>Registrar Gasto</span>
+              </button>
+              <button id="btnRegistrarIngreso" class="action-pill action-pill-income" onclick="openAddExtraIncomeModal()">
+                <span class="action-pill-icon">💵</span>
+                <span>Registrar Ingreso</span>
+              </button>
+            </div>
+
+            <!-- RADAR DE PRÓXIMOS VENCIMIENTOS (APPLE FINTECH WIDGET) -->
+            <div id="upcomingBillsContainer">
+              <!-- Renders dynamically via renderUpcomingDueDates() -->
+            </div>
           </div>
-          <button class="banner-close-btn" style="color: white;" onclick="closeBanner('juntaBanner')">✕</button>
+
+          <!-- Columna Lateral / Derecha (Desktop): Movimientos Recientes & Quick Tools -->
+          <div class="desktop-home-col-right">
+            <!-- FEED: ÚLTIMOS MOVIMIENTOS (Solo los últimos 3-4 para mantener la mente despejada) -->
+            <div class="card" style="margin-bottom: 14px;">
+              <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div class="card-title" style="font-size: 13px; font-weight: 800; display: flex; align-items: center; gap: 6px;">
+                  <span>🕒</span>
+                  <span>Movimientos Recientes</span>
+                </div>
+                <button type="button" onclick="switchTab('movimientos')" style="background: none; border: none; font-size: 11.5px; font-weight: 800; color: var(--primary); cursor: pointer; padding: 2px 4px;">
+                  Ver todos ↗
+                </button>
+              </div>
+
+              <div id="recentTxContainer" class="recent-tx-feed">
+                <!-- Renders via renderRecentTransactions() -->
+              </div>
+
+              <button type="button" class="btn-see-all-tx" onclick="switchTab('movimientos')">
+                <span>Ver todos los movimientos del mes</span>
+                <span id="recentTxCountBadge" class="badge-count">0</span>
+                <span>➔</span>
+              </button>
+            </div>
+
+            <!-- Quick Tools Hub (Minimalista y Compacto) -->
+            <div class="quick-tools-grid">
+              <button id="btnQuickConciliar" class="quick-tool-card" onclick="openReconcileModal()" title="Conciliar Saldo con Banco">
+                <div class="quick-tool-icon">⚖️</div>
+                <div class="quick-tool-info">
+                  <div class="quick-tool-title">
+                    <span>Conciliar Saldo</span>
+                    <span class="quick-tool-arrow">↗</span>
+                  </div>
+                  <div class="quick-tool-desc">Compara con tu banco y cuadra en 1 tap</div>
+                </div>
+              </button>
+              <button id="btnQuickSimulador" class="quick-tool-card" onclick="openInstallmentsSimulatorModal()" title="Simulador de Cuotas y Crédito">
+                <div class="quick-tool-icon">💳</div>
+                <div class="quick-tool-info">
+                  <div class="quick-tool-title">
+                    <span>Simulador de Cuotas</span>
+                    <span class="quick-tool-arrow">↗</span>
+                  </div>
+                  <div class="quick-tool-desc">Calcula y proyecta compras a plazos</div>
+                </div>
+              </button>
+              <button id="btnQuickHelp" class="quick-tool-card" onclick="openFeedbackModal()" title="¿Dudas o Sugerencias?">
+                <div class="quick-tool-icon">💬</div>
+                <div class="quick-tool-info">
+                  <div class="quick-tool-title">
+                    <span>¿Ayuda o Sugerencias?</span>
+                    <span class="quick-tool-arrow">↗</span>
+                  </div>
+                  <div class="quick-tool-desc">Soporte directo y reporte de ideas</div>
+                </div>
+              </button>
+            </div>
+
+            <!-- Special Windfall Banner (solo admin si aplica) -->
+            <div id="juntaBanner" class="compact-banner" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); color: white; display: none; margin-top: 10px;">
+              <div>
+                <strong>🎉 Junta 15 de Agosto (+S/ 4,500):</strong> S/ 1k Ropa/Viáticos + S/ 3.5k Pago de Deudas.
+              </div>
+              <button class="banner-close-btn" style="color: white;" onclick="closeBanner('juntaBanner')">✕</button>
+            </div>
+          </div>
         </div>
 
       </div>
@@ -810,10 +822,11 @@
           <span class="badge-pro-gold" style="font-size: 10px; padding: 2px 6px;">PRO 👑</span>
         </button>
 
-        <div style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-top: 6px; margin-bottom: 2px;">Soporte y Novedades</div>
-        <button type="button" class="btn btn-secondary" id="settingsWhatsNewBtn" onclick="openWhatsNewModal();" style="width: 100%; text-align: left; padding: 10px;">🚀 Novedades (v66.0)</button>
+        <div style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-top: 6px; margin-bottom: 2px;">Soporte & Legal</div>
+        <button type="button" class="btn btn-secondary" id="settingsWhatsNewBtn" onclick="openWhatsNewModal();" style="width: 100%; text-align: left; padding: 10px;">🚀 Novedades</button>
         <button type="button" class="btn btn-secondary" onclick="openFeedbackModal();" style="width: 100%; text-align: left; padding: 10px;">💬 Contacto y Soporte</button>
-        <button type="button" class="btn btn-secondary" onclick="openSecurityModal();" style="width: 100%; text-align: left; padding: 10px;">🛡️ Privacidad de Datos</button>
+        <button type="button" class="btn btn-secondary" onclick="openLegalModal('privacy');" style="width: 100%; text-align: left; padding: 10px;">🛡️ Políticas de Privacidad</button>
+        <button type="button" class="btn btn-secondary" onclick="openLegalModal('terms');" style="width: 100%; text-align: left; padding: 10px;">⚖️ Términos y Condiciones</button>
         
         <!-- Info de cuenta y versión -->
         <div style="border-top: 1px solid #f3f4f6; padding-top: 12px; margin-top: 4px;">
@@ -2035,14 +2048,14 @@
 
       <div class="pro-price-card" style="background: linear-gradient(135deg, rgba(79, 70, 229, 0.08), rgba(124, 58, 237, 0.09)); border: 1.5px solid rgba(124, 58, 237, 0.25); border-radius: 16px; padding: 14px; margin-bottom: 16px; text-align: center;">
         <div class="pro-price-amount" style="font-size: 24px; font-weight: 800; color: #4338ca;">
-          S/ 9.90 <span class="pro-price-period" style="font-size: 13px; color: #64748b; font-weight: 500;">/ mes</span>
+          S/ 4.90 <span class="pro-price-period" style="font-size: 13px; color: #64748b; font-weight: 500;">/ mes</span>
         </div>
         <div class="pro-price-note" style="font-size: 11.5px; color: #4f46e5; font-weight: 700; margin-top: 3px;">
-          O pago único vitalicio de S/ 59.90 • Cancela cuando quieras
+          O pago único de por vida de S/ 19.90 • Cancela cuando quieras
         </div>
       </div>
 
-      <a href="https://wa.me/51914688135?text=Hola%20C%C3%A9sar,%20quiero%20activar%20mi%20suscripci%C3%B3n%20AliviaFin%20Pro" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; text-align: center; padding: 13px; border-radius: 14px; background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; font-weight: 800; font-size: 14px; text-decoration: none; border: none; box-shadow: 0 4px 16px rgba(124, 58, 237, 0.4); margin-bottom: 10px; box-sizing: border-box;">
+      <a href="https://wa.me/51914688135?text=Hola%20C%C3%A9sar,%20quiero%20activar%20mi%20suscripci%C3%B3n%20AliviaFin%20Pro%20(S/%204.90%20mes%20o%20S/%2019.90%20vitalicio)" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; text-align: center; padding: 13px; border-radius: 14px; background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; font-weight: 800; font-size: 14px; text-decoration: none; border: none; box-shadow: 0 4px 16px rgba(124, 58, 237, 0.4); margin-bottom: 10px; box-sizing: border-box;">
         <span>✨ Comenzar AliviaFin Pro</span>
       </a>
 
@@ -2052,8 +2065,65 @@
     </div>
   </div>
 
+  <!-- MODAL: TÉRMINOS Y CONDICIONES & POLÍTICAS DE PRIVACIDAD (APPLE GRADE FROSTED) -->
+  <div class="glass-backdrop" id="legalModal" style="z-index: 10005;" onclick="if(event.target === this) closeModal('legalModal')">
+    <div class="legal-modal-container">
+      <div class="legal-modal-header">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 18px;">⚖️</span>
+          <span style="font-size: 15px; font-weight: 800; color: var(--text-main);">Legal & Privacidad</span>
+        </div>
+        <button type="button" onclick="closeModal('legalModal')" style="background: rgba(0,0,0,0.06); border: none; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 13px; cursor: pointer; color: #64748b;">✕</button>
+      </div>
+
+      <div class="legal-tabs-row">
+        <button type="button" class="legal-tab-btn active" id="btnTabLegalTerms" onclick="switchLegalTab('terms')">Términos del Servicio</button>
+        <button type="button" class="legal-tab-btn" id="btnTabLegalPrivacy" onclick="switchLegalTab('privacy')">Políticas de Privacidad</button>
+      </div>
+
+      <div class="legal-content-body">
+        <div class="legal-trust-badge">
+          <span>🔒</span>
+          <span>Zero-Knowledge: AliviaFin jamás solicita claves de banco ni números de tarjeta.</span>
+        </div>
+
+        <div id="legalSectionTerms">
+          <h4 style="margin: 0 0 6px 0; font-size: 13.5px; font-weight: 800; color: var(--text-main);">1. Aceptación del Servicio</h4>
+          <p style="margin: 0 0 10px 0; color: var(--text-muted);">Al utilizar AliviaFin, aceptas estos términos diseñados para garantizar una gestión financiera serena, privada y transparente. AliviaFin es un software de optimización presupuestaria personal y en pareja, no una entidad bancaria ni custodio de fondos.</p>
+
+          <h4 style="margin: 0 0 6px 0; font-size: 13.5px; font-weight: 800; color: var(--text-main);">2. Precios y Membresía AliviaFin PRO</h4>
+          <p style="margin: 0 0 10px 0; color: var(--text-muted);">El plan mensual se ofrece a <strong>S/ 4.90 / mes</strong> con cancelación sin penalidad en cualquier momento. El plan de por vida tiene una tarifa preferencial única de <strong>S/ 19.90</strong> con acceso vitalicio a todas las funciones premium presentes y futuras.</p>
+
+          <h4 style="margin: 0 0 6px 0; font-size: 13.5px; font-weight: 800; color: var(--text-main);">3. Propiedad Absoluta de tus Datos</h4>
+          <p style="margin: 0 0 10px 0; color: var(--text-muted);">Tus datos financieros te pertenecen al 100%. Puedes exportar tus reportes a PDF, Excel o CSV en cualquier momento, así como solicitar la eliminación definitiva de tu cuenta y registros asociados.</p>
+
+          <h4 style="margin: 0 0 6px 0; font-size: 13.5px; font-weight: 800; color: var(--text-main);">4. Uso Responsable</h4>
+          <p style="margin: 0 0 4px 0; color: var(--text-muted);">Las proyecciones de ahorro, simulaciones de cuotas y fechas de vencimiento son de carácter estimativo para facilitar tu planificación personal.</p>
+        </div>
+
+        <div id="legalSectionPrivacy" style="display: none;">
+          <h4 style="margin: 0 0 6px 0; font-size: 13.5px; font-weight: 800; color: var(--text-main);">1. Cero Conexión con Claves Bancarias</h4>
+          <p style="margin: 0 0 10px 0; color: var(--text-muted);">Nunca te pediremos tus accesos bancarios, tokens digitales ni números completos de tarjeta de crédito. La conciliación de saldos se realiza de forma autónoma y privada.</p>
+
+          <h4 style="margin: 0 0 6px 0; font-size: 13.5px; font-weight: 800; color: var(--text-main);">2. Seguridad a Nivel de Fila (RLS) y Cifrado</h4>
+          <p style="margin: 0 0 10px 0; color: var(--text-muted);">Nuestra base de datos en la nube está protegida por políticas estrictas de Row Level Security (RLS) y cifrado TLS 1.3 en tránsito. Ningún usuario externo puede visualizar ni editar tu información.</p>
+
+          <h4 style="margin: 0 0 6px 0; font-size: 13.5px; font-weight: 800; color: var(--text-main);">3. Cero Venta de Información</h4>
+          <p style="margin: 0 0 10px 0; color: var(--text-muted);">No comercializamos datos con agencias de publicidad, aseguradoras ni intermediarios de crédito. Tus finanzas no son un producto publicitario.</p>
+
+          <h4 style="margin: 0 0 6px 0; font-size: 13.5px; font-weight: 800; color: var(--text-main);">4. Arquitectura Offline-First</h4>
+          <p style="margin: 0 0 4px 0; color: var(--text-muted);">Tus datos se mantienen en tu dispositivo con soporte PWA completo para que operes con máxima velocidad incluso cuando no tengas conexión a internet.</p>
+        </div>
+      </div>
+
+      <div style="padding: 12px 20px; background: rgba(15, 23, 42, 0.02); border-top: 1px solid var(--border-light, #e2e8f0); text-align: right;">
+        <button type="button" class="btn btn-primary" onclick="closeModal('legalModal')" style="padding: 8px 18px; font-size: 12px; font-weight: 800; border-radius: 10px;">Entendido</button>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
-  <script src="js/app.js?v=67.2"></script>
+  <script src="js/app.js?v=67.5"></script>
 </body>
 </html>

@@ -77,7 +77,7 @@
     // ================================================================
     // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v67.0)
     // ================================================================
-    const APP_VERSION = 'v67.4';
+    const APP_VERSION = 'v67.5';
 
     const SUPPORTED_CURRENCIES = {
       'PEN': { code: 'PEN', symbol: 'S/', name: 'Soles peruanos', flag: '🇵🇪', locale: 'es-PE' },
@@ -2863,11 +2863,18 @@
 
       // Executive Balance Card
       const elSavingsLarge = document.getElementById('metricSavingsLarge');
-      if (elSavingsLarge) {
-        animateNumber(elSavingsLarge, currentBalance, 280, false);
-      }
       const elGlyph = document.getElementById('execBalanceCurrency');
-      if (elGlyph) elGlyph.textContent = sym;
+      if (currentBalance < -0.0001) {
+        if (elGlyph) elGlyph.textContent = `-${sym} `;
+        if (elSavingsLarge) {
+          animateNumber(elSavingsLarge, Math.abs(currentBalance), 280, false);
+        }
+      } else {
+        if (elGlyph) elGlyph.textContent = `${sym} `;
+        if (elSavingsLarge) {
+          animateNumber(elSavingsLarge, currentBalance, 280, false);
+        }
+      }
 
       const calMonth = getCurrentCalendarMonthName();
       const isCurrentRealMonth = (appState.currentMonth === calMonth);
@@ -5233,6 +5240,31 @@
       openModalById('securityModal');
     }
 
+    function openLegalModal(initialTab = 'terms') {
+      closeModal('settingsModal');
+      switchLegalTab(initialTab);
+      openModalById('legalModal');
+    }
+
+    function switchLegalTab(tab) {
+      const termsSection = document.getElementById('legalSectionTerms');
+      const privacySection = document.getElementById('legalSectionPrivacy');
+      const btnTerms = document.getElementById('btnTabLegalTerms');
+      const btnPrivacy = document.getElementById('btnTabLegalPrivacy');
+
+      if (tab === 'privacy') {
+        if (termsSection) termsSection.style.display = 'none';
+        if (privacySection) privacySection.style.display = 'block';
+        if (btnTerms) btnTerms.classList.remove('active');
+        if (btnPrivacy) btnPrivacy.classList.add('active');
+      } else {
+        if (termsSection) termsSection.style.display = 'block';
+        if (privacySection) privacySection.style.display = 'none';
+        if (btnTerms) btnTerms.classList.add('active');
+        if (btnPrivacy) btnPrivacy.classList.remove('active');
+      }
+    }
+
     function openFeedbackModal() {
       closeModal('settingsModal');
       const msgEl = document.getElementById('feedbackMessage');
@@ -5917,6 +5949,8 @@ window.dismissOnboardingWizard = dismissOnboardingWizard;
 window.openEditSalaryModal = openEditSalaryModal;
 window.handleSaveSalary = handleSaveSalary;
 window.openSecurityModal = openSecurityModal;
+window.openLegalModal = openLegalModal;
+window.switchLegalTab = switchLegalTab;
 window.openExplainSurplusModal = openExplainSurplusModal;
 window.renderUpcomingDueDates = renderUpcomingDueDates;
 window.promptPayBill = promptPayBill;
