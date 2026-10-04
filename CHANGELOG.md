@@ -3,6 +3,24 @@
 Todas las versiones notables de esta aplicación están documentadas aquí.
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
+## [v68.1] — 2026-10-04 — Corrección de Esquema Supabase en Panel Master, Nombres de Clientes y Deduplicación Inteligente
+
+### 🛠️ Corrección de Esquema Supabase en Cambio de Plan
+- **Blindaje de Payload PostgREST**: Se corrigió el error `Could not find the 'plan_type' column of 'user_subscriptions' in the schema cache` limitando la actualización a las columnas activas y validadas de Supabase (`user_id`, `email`, `status`).
+- **Sincronización Transaccional Completa**: Al cambiar a un usuario a `📅 Mensual (S/ 4.90)` o `👑 Vitalicio (S/ 19.90)`, se actualiza tanto por `user_id` como por `email`, desbloqueando el acceso PRO en todos los dispositivos de manera instantánea.
+
+### 👤 Visualización de Nombres de Usuario y Editor de Apodos (✏️)
+- **Formateo Inteligente de Nombres**: Los correos como `raic_rifer@hotmail.com` ahora se presentan automáticamente como nombres limpios y legibles: **Raic Rifer**, con avatar de iniciales ejecutivo.
+- **Editor de Apodos / Nombres Personalizados (✏️)**: Botón interactivo al lado del nombre que permite al administrador (César) asignar el nombre real del cliente (ej. *"Karla Márquez"*, *"Gaby"*), guardándose localmente para una gestión impecable de clientes.
+- **Búsqueda Expandida**: El buscador en tiempo real ahora filtra tanto por correo, por ID, como por el nombre limpio o apodo personalizado.
+
+### 🧹 Deduplicación Automática de Cuentas de Prueba
+- **Consolidación de Registros**: Si un usuario tiene múltiples registros de autenticación previos con el mismo correo, el dashboard los consolida en una sola fila limpia, preservando el estado más reciente y de mayor jerarquía PRO.
+- **Métricas SaaS Precisas**: El conteo de cuentas y cálculo de ingresos/MRR ahora reflejan suscriptores únicos reales sin duplicidades.
+- **Service Worker v111**: Actualización de caché para propagación inmediata.
+
+---
+
 ## [v68.0] — 2026-10-04 — Panel Master CEO & Fundador: Suscripciones en Tiempo Real, Métricas SaaS e Ingresos
 
 ### 👑 Panel Master CEO de Fundador (Exclusivo para César)

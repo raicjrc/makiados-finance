@@ -77,7 +77,7 @@
     // ================================================================
     // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v67.0)
     // ================================================================
-    const APP_VERSION = 'v68.0';
+    const APP_VERSION = 'v68.1';
 
     const SUPPORTED_CURRENCIES = {
       'PEN': { code: 'PEN', symbol: 'S/', name: 'Soles peruanos', flag: '🇵🇪', locale: 'es-PE' },
@@ -6230,16 +6230,92 @@ async function loadMasterDashboardData(force = false) {
   }
 }
 
+// Helpers para nombres de suscriptores y deduplicación inteligente
+function getStoredNicknames() {
+  try {
+    return JSON.parse(localStorage.getItem('aliviafin_user_nicknames') || '{}');
+  } catch (e) {
+    return {};
+  }
+}
+
+function setStoredNickname(email, name) {
+  if (!email) return;
+  const nicknames = getStoredNicknames();
+  nicknames[email.toLowerCase().trim()] = name.trim();
+  localStorage.setItem('aliviafin_user_nicknames', JSON.stringify(nicknames));
+}
+
+function formatCleanNameFromEmail(email) {
+  if (!email || !email.includes('@')) return email || 'Usuario';
+  const localPart = email.split('@')[0];
+  const clean = localPart.replace(/[._\-]+/g, ' ').replace(/\d+/g, '').trim();
+  if (!clean) return localPart;
+  return clean
+    .split(' ')
+    .filter(Boolean)
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(' ');
+}
+
+function getDisplayNameForEmail(email, item = {}) {
+  if (!email) return 'Usuario';
+  const cleanEmail = email.toLowerCase().trim();
+  const nicknames = getStoredNicknames();
+  if (nicknames[cleanEmail]) return nicknames[cleanEmail];
+  if (item.name && item.name.trim()) return item.name.trim();
+  if (item.full_name && item.full_name.trim()) return item.full_name.trim();
+  return formatCleanNameFromEmail(email);
+}
+
+function promptEditUserNickname(email) {
+  if (!isAdminCesar()) return;
+  const current = getDisplayNameForEmail(email);
+  const newName = prompt(`Ingresa el nombre o apodo para ${email}:`, current);
+  if (newName !== null && newName.trim() !== '') {
+    setStoredNickname(email, newName.trim());
+    renderMasterSubscribers();
+    showToast(`✅ Nombre guardado: "${newName.trim()}"`, 'success');
+  }
+}
+
+// Deduplicar suscriptores por correo (para agrupar registros de pruebas y reflejar clientes reales)
+function getDeduplicatedSubscribers(rawList) {
+  const map = new Map();
+  const sorted = [...rawList].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+
+  sorted.forEach(item => {
+    const key = (item.email || item.user_id || '').toLowerCase().trim();
+    if (!key) return;
+
+    if (!map.has(key)) {
+      map.set(key, { ...item });
+    } else {
+      const existing = map.get(key);
+      const isProItem = ['pro_lifetime', 'pro_monthly', 'premium'].includes(item.status);
+      const isProExisting = ['pro_lifetime', 'pro_monthly', 'premium'].includes(existing.status);
+
+      if (isProItem && !isProExisting) {
+        existing.status = item.status;
+        existing.user_id = item.user_id;
+      }
+    }
+  });
+
+  return Array.from(map.values());
+}
+
 function calculateMasterKPIs() {
   const sym = 'S/';
-  const totalUsers = masterSubscribersData.length;
+  const uniqueSubs = getDeduplicatedSubscribers(masterSubscribersData);
+  const totalUsers = uniqueSubs.length;
 
   // Mensuales activos: S/ 4.90 / mes
-  const monthlySubs = masterSubscribersData.filter(s => s.status === 'pro_monthly' || s.plan_type === 'monthly');
+  const monthlySubs = uniqueSubs.filter(s => s.status === 'pro_monthly');
   const mrr = monthlySubs.length * 4.90;
 
   // Vitalicios: S/ 19.90
-  const lifetimeSubs = masterSubscribersData.filter(s => s.status === 'pro_lifetime' || s.status === 'premium' || s.plan_type === 'lifetime');
+  const lifetimeSubs = uniqueSubs.filter(s => s.status === 'pro_lifetime' || s.status === 'premium');
   const lifetimeRevenue = lifetimeSubs.length * 19.90;
 
   // Total ingresos estimados
@@ -6295,13 +6371,16 @@ function renderMasterSubscribers() {
   if (!tbody) return;
 
   const q = (document.getElementById('masterSearchInput')?.value || '').toLowerCase().trim();
+  const uniqueSubs = getDeduplicatedSubscribers(masterSubscribersData);
 
-  let list = masterSubscribersData.filter(item => {
-    const matchesQuery = !q || (item.email && item.email.toLowerCase().includes(q)) || (item.user_id && item.user_id.toLowerCase().includes(q));
+  let list = uniqueSubs.filter(item => {
+    const email = (item.email || item.user_id || '').toLowerCase();
+    const cleanName = getDisplayNameForEmail(item.email || '', item).toLowerCase();
+    const matchesQuery = !q || email.includes(q) || cleanName.includes(q) || (item.user_id && item.user_id.toLowerCase().includes(q));
     if (!matchesQuery) return false;
 
-    const isLife = item.status === 'pro_lifetime' || item.status === 'premium' || item.plan_type === 'lifetime';
-    const isMonth = item.status === 'pro_monthly' || item.plan_type === 'monthly';
+    const isLife = item.status === 'pro_lifetime' || item.status === 'premium';
+    const isMonth = item.status === 'pro_monthly';
 
     if (masterCurrentFilter === 'pro_lifetime') return isLife;
     if (masterCurrentFilter === 'pro_monthly') return isMonth;
@@ -6323,8 +6402,9 @@ function renderMasterSubscribers() {
   let html = '';
   list.forEach(item => {
     const email = item.email || item.user_id || 'Sin correo';
-    const isLife = item.status === 'pro_lifetime' || item.status === 'premium' || item.plan_type === 'lifetime';
-    const isMonth = item.status === 'pro_monthly' || item.plan_type === 'monthly';
+    const cleanName = getDisplayNameForEmail(email, item);
+    const isLife = item.status === 'pro_lifetime' || item.status === 'premium';
+    const isMonth = item.status === 'pro_monthly';
 
     let planBadge = '<span class="master-user-badge-free">🆓 Gratuito</span>';
     let revenueEst = 'S/ 0.00';
@@ -6337,15 +6417,21 @@ function renderMasterSubscribers() {
     }
 
     const dateStr = item.created_at ? new Date(item.created_at).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Reciente';
+    const initial = cleanName.charAt(0).toUpperCase();
 
     html += `
       <tr>
         <td>
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <span style="font-size: 18px;">👤</span>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 34px; height: 34px; border-radius: 10px; background: linear-gradient(135deg, #e2e8f0, #cbd5e1); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; color: #334155; flex-shrink: 0;">
+              ${initial}
+            </div>
             <div>
-              <div style="font-weight: 800; color: var(--text-main); font-size: 13px;">${escapeHtml(email)}</div>
-              <div style="font-size: 10.5px; color: var(--text-muted);">Registrado el ${dateStr}</div>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="font-weight: 800; color: var(--text-main); font-size: 13.5px;">${escapeHtml(cleanName)}</span>
+                <button type="button" onclick="promptEditUserNickname('${escapeHtml(email)}')" title="Editar nombre o apodo" style="background: none; border: none; font-size: 11px; cursor: pointer; opacity: 0.6; padding: 2px;">✏️</button>
+              </div>
+              <div style="font-size: 11px; color: var(--text-muted); margin-top: 1px;">${escapeHtml(email)} · Registrado el ${dateStr}</div>
             </div>
           </div>
         </td>
@@ -6379,16 +6465,15 @@ async function setMasterUserPlan(userId, email, newPlan) {
   if (!ok) return;
 
   try {
+    // Solo enviamos columnas base compatibles con la tabla actual de Supabase
     const updatePayload = {
       user_id: userId,
-      email: email,
-      status: newPlan,
-      plan_type: newPlan === 'pro_lifetime' ? 'lifetime' : (newPlan === 'pro_monthly' ? 'monthly' : 'free'),
-      price: newPlan === 'pro_lifetime' ? 19.90 : (newPlan === 'pro_monthly' ? 4.90 : 0.00),
-      updated_at: new Date().toISOString()
+      status: newPlan
     };
+    if (email) updatePayload.email = email;
 
-    const { error } = await supabaseClient
+    // Actualizar por user_id en Supabase
+    let { error } = await supabaseClient
       .from('user_subscriptions')
       .upsert(updatePayload, { onConflict: 'user_id' });
 
@@ -6398,13 +6483,24 @@ async function setMasterUserPlan(userId, email, newPlan) {
       return;
     }
 
-    // Actualizar en memoria local
-    const idx = masterSubscribersData.findIndex(s => s.user_id === userId);
-    if (idx !== -1) {
-      masterSubscribersData[idx] = { ...masterSubscribersData[idx], ...updatePayload };
-    } else {
-      masterSubscribersData.unshift(updatePayload);
+    // Sincronizar también por correo si existen registros duplicados de pruebas
+    if (email && email.includes('@')) {
+      try {
+        await supabaseClient
+          .from('user_subscriptions')
+          .update({ status: newPlan })
+          .eq('email', email);
+      } catch (e) {
+        console.warn('Nota de sync duplicados:', e);
+      }
     }
+
+    // Actualizar en memoria local
+    masterSubscribersData.forEach(s => {
+      if ((s.email && s.email.toLowerCase() === email.toLowerCase()) || s.user_id === userId) {
+        s.status = newPlan;
+      }
+    });
 
     calculateMasterKPIs();
     renderMasterSubscribers();
@@ -6431,7 +6527,7 @@ async function handleMasterManualActivate() {
     return;
   }
 
-  // Buscar si el usuario ya está registrado
+  // Buscar si el usuario ya está registrado en la base de datos
   let existing = masterSubscribersData.find(s => s.email && s.email.toLowerCase() === email);
   const userId = existing ? existing.user_id : 'sub_' + Math.random().toString(36).substring(2, 12);
 
@@ -6494,5 +6590,6 @@ window.filterMasterSubscribers = filterMasterSubscribers;
 window.setMasterUserPlan = setMasterUserPlan;
 window.handleMasterManualActivate = handleMasterManualActivate;
 window.syncAdminUI = syncAdminUI;
+window.promptEditUserNickname = promptEditUserNickname;
 
 
