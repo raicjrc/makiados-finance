@@ -264,39 +264,34 @@
       <!-- TAB 1: INICIO (ZEN EXECUTIVE RESUMEN) -->
       <div id="tab-inicio" class="tab-content active">
         
-        <!-- Hero Card: Paz Mental - Dinero Libre Hoy (Double-Layer Glass Plate) -->
-        <div id="heroSafeToSpendCard" class="hero-zen-card">
-          <div class="hero-zen-glass-plate">
-            <div class="hero-zen-top">
-              <div class="hero-zen-badge" id="heroSafeBadge" onclick="openExplainSafeToSpendModal()" style="cursor: pointer;" title="Toca para ver la explicación detallada de tu dinero libre diario">
-                <span class="hero-zen-pulse" id="heroSafePulse"></span>
-                <span id="heroSafeBadgeText">DISPONIBLE HOY</span>
-                <span style="font-size: 10px; opacity: 0.85; margin-left: 2px;">ℹ️</span>
-              </div>
-              <span id="heroSafeStatusPill" class="hero-zen-pill-status" onclick="openExplainSafeToSpendModal()" style="cursor: pointer;" title="Toca para ver el diagnóstico de tu estado">🟢 Holgado</span>
+        <!-- EXECUTIVE APPLE CARD: BALANCE GENERAL EN VIVO (SERENE & CLUTTER-FREE) -->
+        <div id="executiveBalanceCard" class="executive-balance-card" onclick="openExplainSurplusModal()" style="cursor: pointer;" title="Toca para ver el desglose exacto de tu saldo bancario">
+          <div class="exec-card-header">
+            <div class="exec-card-title-group">
+              <span class="exec-card-badge-dot"></span>
+              <span class="exec-card-title">SALDO EN BANCO</span>
+              <span class="exec-card-info-icon" title="Ver desglose matemático">ℹ️</span>
             </div>
-
-            <div class="hero-zen-main">
-              <div class="hero-zen-number" id="heroSafeDailyAmount">
-                S/ 0.00 <span class="hero-zen-unit">/ día</span>
-              </div>
-              <div class="hero-zen-subtext" id="heroSafeMonthSubtitle">
-                S/ 0.00 libre proyectado este mes
-              </div>
+            <div id="balanceLiveBadge" class="exec-badge-live">
+              <span class="exec-pulse-dot" id="balancePulseDot"></span>
+              <span id="balanceLiveBadgeText">🟢 EN VIVO (HOY)</span>
             </div>
-
-            <div class="hero-zen-progress-wrap">
-              <div class="hero-zen-progress-bar">
-                <div id="heroSafeProgressBar" class="hero-zen-progress-fill" style="width: 0%;"></div>
-              </div>
-              <div class="hero-zen-progress-labels">
-                <span id="heroSafeDaysLeftLabel">Calculando días restantes...</span>
-                <span id="heroSafeSpendRateLabel">0% comprometido</span>
-              </div>
+          </div>
+          
+          <div class="exec-card-body">
+            <div class="exec-balance-amount" id="metricExecutiveBalance">
+              <span class="exec-currency-glyph" id="execBalanceCurrency">S/</span><span id="metricSavingsLarge" class="tabular-nums">0.00</span>
+              <span id="metricSavings" style="display: none;">S/ 0.00</span>
             </div>
+            <div class="exec-balance-context" id="balanceContextText">
+              <span id="balanceContextSource">Iniciado con cierre anterior</span> · <span id="balanceMonthFlow" class="text-muted">Calculando...</span>
+            </div>
+          </div>
 
-            <!-- Banner interactivo si se visualiza un mes histórico/cerrado -->
-            <div id="heroSafePastMonthBanner" style="display: none; margin-top: 10px; padding: 7px 12px; background: rgba(0,0,0,0.22); border: 1px solid rgba(255,255,255,0.25); border-radius: 10px; font-size: 11.5px; text-align: center; color: #ffffff; cursor: pointer; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);"></div>
+          <!-- Banner interactivo si se visualiza un mes histórico/cerrado -->
+          <div id="historicalMonthBanner" style="display: none;" class="exec-history-banner" onclick="event.stopPropagation(); returnToCurrentMonth();">
+            <span id="historicalMonthBannerText">📅 Viendo histórico cerrado.</span>
+            <strong class="exec-history-return">Volver a Hoy ➔</strong>
           </div>
         </div>
 
@@ -312,12 +307,12 @@
             <div class="stat-value text-danger" id="metricSpent" style="font-size: 17px;">S/ 0</div>
           </div>
 
-          <div class="stat-card stat-card-saldo" onclick="openExplainSurplusModal()" style="cursor: pointer;" title="Ver desglose del saldo bancario">
+          <div class="stat-card stat-card-pending" style="cursor: pointer;" onclick="switchTab('movimientos'); selectStatusFilter('Pendiente');" title="Ver gastos pendientes de pago">
             <div class="stat-label" style="display: flex; align-items: center; justify-content: space-between;">
-              <span>🏦 SALDO BANCO</span>
-              <span style="font-size: 10px; opacity: 0.7;">ℹ️</span>
+              <span>⏳ POR PAGAR</span>
+              <span style="font-size: 10px; opacity: 0.7;">↗</span>
             </div>
-            <div class="stat-value" id="metricSavings" style="font-size: 17px;">S/ 0</div>
+            <div class="stat-value text-warning" id="metricPending" style="font-size: 17px;">S/ 0</div>
           </div>
         </div>
 
@@ -866,17 +861,46 @@
     </div>
   </div>
 
-  <!-- MODAL: EXPLAIN SURPLUS -->
+  <!-- MODAL: EXPLAIN SURPLUS (DESGLOSE MATEMÁTICO TRANSPARENTE) -->
   <div class="modal-backdrop" id="explainSurplusModal" onclick="handleBackdropClick(event, 'explainSurplusModal')">
-    <div class="modal">
+    <div class="modal" style="max-width: 480px;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-        <div class="modal-title" style="margin: 0;">💡 ¿Qué es el Saldo en Cuenta?</div>
+        <div class="modal-title" style="margin: 0; display: flex; align-items: center; gap: 8px;">
+          <span>🏦</span> <span id="explainModalHeaderTitle">Desglose de Saldo en Cuenta</span>
+        </div>
         <button type="button" onclick="closeModal('explainSurplusModal')" aria-label="Cerrar" style="background: #f1f5f9; border: 1px solid #cbd5e1; width: 30px; height: 30px; border-radius: 50%; font-size: 15px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #475569;">✕</button>
       </div>
-      <div style="font-size: 12.5px; color: #334155; line-height: 1.6; margin-bottom: 14px;">
-        <p style="margin-bottom: 8px;">Representa el dinero real disponible en tu cuenta. Es la diferencia entre tus ingresos totales y <strong>únicamente los gastos que ya has marcado como "Pagado"</strong>.</p>
-        <p style="margin: 0; color: #b45309; font-weight: 600;">⚠️ A medida que vayas pagando y marcando tus gastos pendientes, este monto irá bajando automáticamente.</p>
+
+      <!-- Badge de Estado del Mes -->
+      <div id="explainMonthBadge" style="display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 20px; background: rgba(16, 185, 129, 0.12); color: #059669; margin-bottom: 12px;">
+        <span id="explainMonthBadgeDot" style="width: 7px; height: 7px; border-radius: 50%; background: #10b981;"></span>
+        <span id="explainMonthBadgeText">Mes en Curso · En Vivo</span>
       </div>
+
+      <!-- Desglose Matemático Transparente -->
+      <div style="background: var(--bg-hover, #f8fafc); border: 1px solid var(--border-light, #e2e8f0); border-radius: 14px; padding: 12px 14px; margin-bottom: 14px; font-size: 12.5px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <span style="color: var(--text-muted, #64748b);">Saldo de partida (<span id="explainPrevMonthLabel">Cierre anterior</span>):</span>
+          <span style="font-weight: 700; color: var(--text-main, #0f172a);" id="explainPrevAmount">S/ 0.00</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <span style="color: #059669;">+ Ingresos cobrados este mes:</span>
+          <span style="font-weight: 700; color: #059669;" id="explainIncomesAmount">+ S/ 0.00</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <span style="color: #dc2626;">− Gastos pagados este mes:</span>
+          <span style="font-weight: 700; color: #dc2626;" id="explainPaidAmount">− S/ 0.00</span>
+        </div>
+        <div style="border-top: 1px dashed var(--border-light, #cbd5e1); margin: 8px 0; padding-top: 8px; display: flex; justify-content: space-between; align-items: center;">
+          <strong style="color: var(--text-main, #0f172a); font-size: 13.5px;">= Saldo Disponible en Banco:</strong>
+          <strong style="font-size: 15px; color: var(--text-main, #0f172a);" id="explainFinalAmount">S/ 0.00</strong>
+        </div>
+      </div>
+
+      <div style="font-size: 11.5px; color: var(--text-muted, #64748b); line-height: 1.5; margin-bottom: 14px;" id="explainContextNote">
+        💡 <strong>¿Por qué cambia entre meses?</strong> En el mes actual ves tu saldo vivo de hoy tras descontar pagos ya hechos. Al revisar un mes anterior, ves la foto exacta de con cuánto dinero cerró ese mes.
+      </div>
+
       <div class="modal-actions" style="display: flex; flex-direction: column; gap: 8px;">
         <button type="button" class="btn btn-primary" onclick="closeModal('explainSurplusModal'); openReconcileModal();" style="width: 100%; background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);">
           ⚖️ Conciliar Saldo con mi Banco

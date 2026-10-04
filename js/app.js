@@ -77,7 +77,7 @@
     // ================================================================
     // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v67.0)
     // ================================================================
-    const APP_VERSION = 'v67.0';
+    const APP_VERSION = 'v67.4';
 
     const SUPPORTED_CURRENCIES = {
       'PEN': { code: 'PEN', symbol: 'S/', name: 'Soles peruanos', flag: '🇵🇪', locale: 'es-PE' },
@@ -826,6 +826,12 @@
         if (status === 'synced') {
           dot.className = 'sync-status-dot live';
           dot.style.background = '#10b981';
+          const execCard = document.getElementById('executiveBalanceCard');
+          if (execCard) {
+            execCard.classList.remove('synced-shimmer');
+            void execCard.offsetWidth;
+            execCard.classList.add('synced-shimmer');
+          }
         } else if (status === 'syncing') {
           dot.className = 'sync-status-dot syncing';
           dot.style.background = '#f59e0b';
@@ -1588,6 +1594,8 @@
     }
 
     function renderSafeToSpendCard() {
+      const heroCard = document.getElementById('heroSafeToSpendCard');
+      if (!heroCard) return;
       const data = calculateSafeToSpend();
       const sym = getCurrencySymbol();
       const loc = getActiveCurrency().locale;
@@ -1601,7 +1609,6 @@
       const elDays = document.getElementById('heroSafeDaysLeftLabel');
       const elRate = document.getElementById('heroSafeSpendRateLabel');
       const elStatus = document.getElementById('heroSafeStatusPill');
-      const heroCard = document.getElementById('heroSafeToSpendCard');
 
       if (data.isPastMonth) {
         if (elBadgeText) elBadgeText.textContent = `MES CERRADO · ${data.mName.toUpperCase()}`;
@@ -2686,12 +2693,116 @@
       return accumulatedBalance;
     }
 
+    function animateNumber(element, targetVal, duration = 280, isCurrency = false) {
+      if (!element) return;
+      const sym = getCurrencySymbol();
+      const loc = getActiveCurrency().locale;
+      const rawCurrent = parseFloat(element.getAttribute('data-numeric-val'));
+      const startVal = isNaN(rawCurrent) ? 0 : rawCurrent;
+      element.setAttribute('data-numeric-val', targetVal);
+      
+      const formattedFinal = targetVal.toLocaleString(loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      if (Math.abs(targetVal - startVal) < 0.01) {
+        element.textContent = isCurrency ? `${sym} ${formattedFinal}` : formattedFinal;
+        return;
+      }
+
+      const startTime = performance.now();
+      function step(now) {
+        const progress = Math.min((now - startTime) / duration, 1);
+        const ease = 1 - Math.pow(1 - progress, 3);
+        const current = startVal + (targetVal - startVal) * ease;
+        const formatted = current.toLocaleString(loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        element.textContent = isCurrency ? `${sym} ${formatted}` : formatted;
+        if (progress < 1) {
+          requestAnimationFrame(step);
+        } else {
+          element.textContent = isCurrency ? `${sym} ${formattedFinal}` : formattedFinal;
+        }
+      }
+      requestAnimationFrame(step);
+    }
+
+    function getBalanceBreakdown(targetMonth) {
+      const allMonthsOrder = getSortedMonths();
+      const targetIndex = allMonthsOrder.indexOf(targetMonth);
+      const prevMonth = (targetIndex > 0) ? allMonthsOrder[targetIndex - 1] : null;
+      const prevClosingBalance = prevMonth ? getAccumulatedBalance(prevMonth) : 0;
+      
+      const currentMonthTxs = appState.transactions[targetMonth] || [];
+      const totalPaid = currentMonthTxs.filter(t => (t.status || 'Pagado') === 'Pagado').reduce((sum, item) => sum + item.amount, 0);
+      
+      const monthIncomes = appState.incomes ? (appState.incomes[targetMonth] || []) : [];
+      const totalReceived = monthIncomes.filter(inc => (inc.status || 'Pendiente') === 'Recibido').reduce((s, inc) => s + inc.amount, 0);
+      
+      const currentMonthFlow = totalReceived - totalPaid;
+      const currentBalance = getAccumulatedBalance(targetMonth);
+
+      return {
+        targetMonth,
+        prevMonth,
+        prevClosingBalance,
+        totalReceived,
+        totalPaid,
+        currentMonthFlow,
+        currentBalance
+      };
+    }
+
+    function returnToCurrentMonth() {
+      const calMonth = getCurrentCalendarMonthName();
+      sessionStorage.removeItem('aliviafin_session_month');
+      changeMonth(calMonth);
+    }
+    window.returnToCurrentMonth = returnToCurrentMonth;
+
     function openExplainSurplusModal() {
+      const sym = getCurrencySymbol();
+      const loc = getActiveCurrency().locale;
+      const curMonth = appState.currentMonth || getCurrentCalendarMonthName();
+      const calMonth = getCurrentCalendarMonthName();
+      const isCurrentRealMonth = (curMonth === calMonth);
+      const breakdown = getBalanceBreakdown(curMonth);
+
+      const elBadgeText = document.getElementById('explainMonthBadgeText');
+      const elBadge = document.getElementById('explainMonthBadge');
+      if (elBadgeText) {
+        elBadgeText.textContent = isCurrentRealMonth ? `Mes en Curso · En Vivo (${curMonth})` : `Histórico Cerrado (${curMonth})`;
+      }
+      if (elBadge) {
+        elBadge.style.background = isCurrentRealMonth ? 'rgba(16, 185, 129, 0.12)' : 'rgba(100, 116, 139, 0.12)';
+        elBadge.style.color = isCurrentRealMonth ? '#059669' : '#475569';
+      }
+
+      const elPrevLabel = document.getElementById('explainPrevMonthLabel');
+      if (elPrevLabel) elPrevLabel.textContent = breakdown.prevMonth ? `Cierre de ${breakdown.prevMonth}` : 'Saldo anterior';
+
+      const elPrevAmt = document.getElementById('explainPrevAmount');
+      if (elPrevAmt) elPrevAmt.textContent = sym + ' ' + breakdown.prevClosingBalance.toLocaleString(loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+      const elIncomes = document.getElementById('explainIncomesAmount');
+      if (elIncomes) elIncomes.textContent = '+ ' + sym + ' ' + breakdown.totalReceived.toLocaleString(loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+      const elPaid = document.getElementById('explainPaidAmount');
+      if (elPaid) elPaid.textContent = '− ' + sym + ' ' + breakdown.totalPaid.toLocaleString(loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+      const elFinal = document.getElementById('explainFinalAmount');
+      if (elFinal) elFinal.textContent = sym + ' ' + breakdown.currentBalance.toLocaleString(loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+      const elNote = document.getElementById('explainContextNote');
+      if (elNote) {
+        if (isCurrentRealMonth) {
+          elNote.innerHTML = `💡 <strong>Octubre está 100% actualizado en vivo:</strong> Inicias con el saldo con el que cerró ${breakdown.prevMonth || 'el mes anterior'} (${sym} ${breakdown.prevClosingBalance.toFixed(2)}) y se descuentan los pagos que ya realizaste en este mes (${sym} ${breakdown.totalPaid.toFixed(2)}).`;
+        } else {
+          elNote.innerHTML = `💡 <strong>Histórico cerrado:</strong> Estás viendo la foto final con la que concluyó ${curMonth}. Para ver tu saldo vivo de hoy, vuelve al mes actual.`;
+        }
+      }
+
       openModalById('explainSurplusModal');
     }
 
     function openExplainSafeToSpendModal() {
-      openModalById('explainSafeToSpendModal');
+      openExplainSurplusModal();
     }
 
     function openAddExtraIncomeModal() {
@@ -2745,6 +2856,58 @@
       const elSpent = document.getElementById('metricSpent');
       if (elSpent) elSpent.textContent = sym + ' ' + totalSpent.toLocaleString(loc, {minimumFractionDigits: 2});
       
+      // Métrica de Por Pagar
+      const totalPending = totalSpent - totalPaid;
+      const elPending = document.getElementById('metricPending');
+      if (elPending) elPending.textContent = sym + ' ' + totalPending.toLocaleString(loc, {minimumFractionDigits: 2});
+
+      // Executive Balance Card
+      const elSavingsLarge = document.getElementById('metricSavingsLarge');
+      if (elSavingsLarge) {
+        animateNumber(elSavingsLarge, currentBalance, 280, false);
+      }
+      const elGlyph = document.getElementById('execBalanceCurrency');
+      if (elGlyph) elGlyph.textContent = sym;
+
+      const calMonth = getCurrentCalendarMonthName();
+      const isCurrentRealMonth = (appState.currentMonth === calMonth);
+      const breakdown = getBalanceBreakdown(appState.currentMonth);
+
+      const elBadge = document.getElementById('balanceLiveBadge');
+      const elBadgeText = document.getElementById('balanceLiveBadgeText');
+      const elPulse = document.getElementById('balancePulseDot');
+      const elContextSource = document.getElementById('balanceContextSource');
+      const elMonthFlow = document.getElementById('balanceMonthFlow');
+      const elHistoryBanner = document.getElementById('historicalMonthBanner');
+      const elHistoryText = document.getElementById('historicalMonthBannerText');
+
+      if (isCurrentRealMonth) {
+        if (elBadge) elBadge.className = 'exec-badge-live';
+        if (elBadgeText) elBadgeText.textContent = '🟢 EN VIVO (HOY)';
+        if (elPulse) elPulse.style.display = 'inline-block';
+        if (elContextSource) {
+          elContextSource.textContent = breakdown.prevMonth ? `Partida de ${breakdown.prevMonth.split(' ')[0]}: ${sym} ${breakdown.prevClosingBalance.toFixed(2)}` : 'Saldo inicial';
+        }
+        if (elMonthFlow) {
+          elMonthFlow.textContent = `Pagos hechos en ${appState.currentMonth.split(' ')[0]}: -${sym} ${breakdown.totalPaid.toFixed(2)}`;
+        }
+        if (elHistoryBanner) elHistoryBanner.style.display = 'none';
+      } else {
+        if (elBadge) elBadge.className = 'exec-badge-live is-historical';
+        if (elBadgeText) elBadgeText.textContent = '🔒 CIERRE HISTÓRICO';
+        if (elPulse) elPulse.style.display = 'none';
+        if (elContextSource) {
+          elContextSource.textContent = `Foto final de cierre de ${appState.currentMonth}`;
+        }
+        if (elMonthFlow) {
+          elMonthFlow.textContent = `Resultado: ${breakdown.currentMonthFlow >= 0 ? '+' : ''}${sym} ${breakdown.currentMonthFlow.toFixed(2)}`;
+        }
+        if (elHistoryBanner) {
+          elHistoryBanner.style.display = 'flex';
+          if (elHistoryText) elHistoryText.textContent = `📅 Viendo histórico de ${appState.currentMonth}.`;
+        }
+      }
+
       const elSavings = document.getElementById('metricSavings');
       if (elSavings) elSavings.textContent = sym + ' ' + currentBalance.toLocaleString(loc, {minimumFractionDigits: 2});
       
@@ -2759,7 +2922,6 @@
       }
 
       // Alerta de Liquidez (Opción D)
-      const totalPending = totalSpent - totalPaid;
       let liquidityAlert = document.getElementById('liquidityAlertMsg');
       if (!liquidityAlert && elSavings) {
         liquidityAlert = document.createElement('div');

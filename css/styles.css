@@ -2864,6 +2864,215 @@
        ZEN EXECUTIVE REDESIGN (FASE 1)
        ================================================================ */
 
+    /* ====== 0. EXECUTIVE BALANCE CARD & APPLE FINTECH SPRINGS (v67.4) ====== */
+    .executive-balance-card {
+      background: rgba(255, 255, 255, 0.82);
+      border-radius: 22px;
+      padding: 18px 20px;
+      margin-bottom: 14px;
+      border: 1px solid rgba(226, 232, 240, 0.85);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03), 0 10px 28px -4px rgba(15, 23, 42, 0.05);
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.22s var(--apple-spring), box-shadow 0.22s var(--apple-spring), border-color 0.22s ease;
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+    }
+    .executive-balance-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+      border-color: rgba(99, 102, 241, 0.35);
+    }
+    .executive-balance-card:active {
+      transform: scale(0.975);
+    }
+
+    .exec-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .exec-card-title-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .exec-card-badge-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #10b981;
+    }
+    .exec-card-title {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #64748b;
+    }
+    .exec-card-info-icon {
+      font-size: 11px;
+      opacity: 0.65;
+      transition: opacity 0.2s;
+    }
+    .exec-card-info-icon:hover {
+      opacity: 1;
+    }
+
+    .exec-badge-live {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      padding: 3.5px 9px;
+      border-radius: 9999px;
+      background: rgba(16, 185, 129, 0.12);
+      color: #059669;
+      border: 1px solid rgba(16, 185, 129, 0.28);
+      transition: all 0.25s ease;
+    }
+    .exec-badge-live.is-historical {
+      background: rgba(100, 116, 139, 0.12);
+      color: #475569;
+      border: 1px solid rgba(100, 116, 139, 0.25);
+    }
+
+    .exec-pulse-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #10b981;
+      display: inline-block;
+      animation: execPulse 2s infinite ease-in-out;
+    }
+    @keyframes execPulse {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6); }
+      70% { transform: scale(1.1); box-shadow: 0 0 0 5px rgba(16, 185, 129, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+
+    .exec-card-body {
+      margin-top: 2px;
+    }
+    .exec-balance-amount {
+      font-size: 34px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: #0f172a;
+      line-height: 1.15;
+      font-variant-numeric: tabular-nums;
+      display: flex;
+      align-items: baseline;
+      gap: 3px;
+    }
+    .exec-currency-glyph {
+      font-size: 21px;
+      font-weight: 700;
+      opacity: 0.75;
+    }
+    .exec-balance-context {
+      margin-top: 6px;
+      font-size: 11.5px;
+      color: #64748b;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+
+    .exec-history-banner {
+      margin-top: 10px;
+      padding: 7px 12px;
+      background: rgba(15, 23, 42, 0.04);
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      border-radius: 11px;
+      font-size: 11.5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #334155;
+    }
+    .exec-history-return {
+      color: #4f46e5;
+      font-weight: 800;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    /* Twilight Theme Adaptation for Executive Balance Card */
+    body.theme-twilight .executive-balance-card {
+      background: rgba(30, 41, 59, 0.72);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 12px 32px rgba(0, 0, 0, 0.35);
+    }
+    body.theme-twilight .executive-balance-card:hover {
+      border-color: rgba(99, 102, 241, 0.4);
+    }
+    body.theme-twilight .exec-card-title {
+      color: #94a3b8;
+    }
+    body.theme-twilight .exec-balance-amount {
+      color: #f8fafc;
+    }
+    body.theme-twilight .exec-balance-context {
+      color: #94a3b8;
+    }
+    body.theme-twilight .exec-history-banner {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #e2e8f0;
+    }
+    body.theme-twilight .exec-history-return {
+      color: #818cf8;
+    }
+
+    /* Tab entrance animation (cross-fade & micro-slide) */
+    @keyframes appleTabEntrance {
+      0% {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .tab-content.active {
+      animation: appleTabEntrance 0.2s var(--apple-spring) forwards;
+    }
+
+    /* Apple Spring Tactile Scale on Active Touch */
+    .action-pill, .stat-card, .quick-tool-card, .btn, .chip, .executive-balance-card, .badge-count {
+      transition: transform 0.18s var(--apple-spring), box-shadow 0.18s var(--apple-spring), background-color 0.18s ease;
+    }
+    .action-pill:active, .stat-card:active, .quick-tool-card:active, .btn:active, .chip:active, .executive-balance-card:active {
+      transform: scale(0.97) !important;
+    }
+
+    /* Tabular numeric alignment */
+    .tabular-nums {
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Liquid Shimmer Sync Effect */
+    @keyframes liquidSyncShimmer {
+      0% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5);
+      }
+      50% {
+        box-shadow: 0 0 20px 2px rgba(16, 185, 129, 0.3);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+      }
+    }
+    .executive-balance-card.synced-shimmer {
+      animation: liquidSyncShimmer 1.1s var(--apple-spring);
+    }
+
     /* ====== 1. HERO CARD: DISPONIBLE HOY (APPLE CARD SERENE) ====== */
     .hero-zen-card {
       background: linear-gradient(145deg, #124d3f 0%, #175e4d 50%, #1c6d5a 100%);

@@ -3,6 +3,26 @@
 Todas las versiones notables de esta aplicación están documentadas aquí.
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
+## [v67.4] — 2026-10-04 — Rediseño Apple Fintech Sereno: Tarjeta Ejecutiva de Balance, Desglose Matemático y Micro-interacciones Táctiles
+
+### 💎 Tarjeta Ejecutiva de Balance (Apple Card Serene)
+- **Retiro de la Tarjeta Hero Roja ("Disponible Hoy")**: Eliminación de la tarjeta con división artificial por día (`S/ 9.33 / día`) y badge alarmista (`🔴 Al Límite`) que generaba estrés innecesario.
+- **Nueva Tarjeta de Saldo en Banco Minimalista**: Centrada en la métrica vital de tu dinero en cuenta con badge dinámico `🟢 EN VIVO (HOY)` en el mes actual y `🔒 CIERRE HISTÓRICO` en meses pasados.
+- **Banner de Retorno Rápido**: Al explorar meses pasados, un banner discreto permite regresar al mes actual en 1 toque.
+- **Métrica "⏳ Por Pagar"**: Nueva tarjeta en el grid que indica exactamente cuántos gastos faltan abonar este mes con acceso directo a movimientos pendientes.
+
+### 🔍 Desglose Matemático y Claridad de Saldos (Modal Explicativo)
+- **Transparencia Total de Flujo de Caja**: Modal que desglosa cómo se forma el saldo: Saldo de partida del mes anterior + Ingresos cobrados − Gastos pagados = Saldo real disponible en cuenta hoy.
+
+### ✨ Micro-interacciones & Física Apple Spring
+- **Rolling Numbers (Contador Numérico Fluido)**: Animación elástica de 280ms al cambiar de mes o cargar saldos.
+- **Active Tactile Scale**: Botones y tarjetas interactivas reaccionan con una micro-compresión suave al 97% (`transform: scale(0.97)`) al tocarlos o hacer clic.
+- **Cross-Fade & Micro-Slide**: Transición sedosa de pestañas en 200ms sin cortes bruscos.
+- **Liquid Sync Shimmer**: Destello translúcido sutil sobre la tarjeta ejecutiva cada vez que se completa una sincronización en tiempo real con Supabase.
+- **Service Worker v108**: Purgado automático de caché para Safari iOS y PWA.
+
+---
+
 ## [v67.3] — 2026-10-01 — Transición Automática de Mes Calendario y Blindaje de Meses Cerrados
 
 ### 📅 Avance Automático de Calendario (Auto-Rollover)
