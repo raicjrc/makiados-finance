@@ -2229,6 +2229,7 @@
               <button type="button" class="master-filter-chip" id="mFilterLife" onclick="setMasterFilter('pro_lifetime')">👑 Vitalicios (<span id="countMLife">0</span>)</button>
               <button type="button" class="master-filter-chip" id="mFilterMonth" onclick="setMasterFilter('pro_monthly')">📅 Mensuales (<span id="countMMonth">0</span>)</button>
               <button type="button" class="master-filter-chip" id="mFilterFree" onclick="setMasterFilter('free')">🆓 Free (<span id="countMFree">0</span>)</button>
+              <button type="button" class="master-filter-chip" id="mFilterInactive" onclick="setMasterFilter('inactive')" style="border-color: rgba(239, 68, 68, 0.35); color: #ef4444;">⚠️ Inactivos +7d (<span id="countMInactive">0</span>)</button>
             </div>
           </div>
 
@@ -2238,11 +2239,11 @@
               <table class="master-table">
                 <thead>
                   <tr>
-                    <th>Usuario / Correo</th>
-                    <th>Plan Actual</th>
-                    <th>Estado</th>
-                    <th>Aporte Estimado</th>
-                    <th>Acciones de Activación Rápida (1-Tap)</th>
+                    <th style="min-width: 220px;">Usuario / Correo</th>
+                    <th style="min-width: 125px;">Plan Actual</th>
+                    <th style="min-width: 140px;">Última Conexión</th>
+                    <th style="min-width: 105px;">Aporte Total</th>
+                    <th style="min-width: 230px; text-align: right;">Acciones & Gestión</th>
                   </tr>
                 </thead>
                 <tbody id="masterSubscribersTableBody">
@@ -2308,6 +2309,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
-  <script src="js/app.js?v=68.1"></script>
+  <script src="js/app.js?v=68.2"></script>
 </body>
 </html>

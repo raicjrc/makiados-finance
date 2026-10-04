@@ -152,3 +152,80 @@ CREATE POLICY "Solo admin gestiona pagos" ON public.subscription_payments
 --   - "Enable email confirmations" → DESACTIVADO
 --   - "Secure email change" → según preferencia
 -- ================================================================
+
+-- ================================================================
+-- FUNCIONES RPC ADMINISTRATIVAS (v68.2 Panel Master CEO)
+-- Ejecutar en Supabase SQL Editor para enriquecer la telemetría:
+-- ================================================================
+
+-- 1. Obtener suscriptores con última conexión real desde auth.users
+CREATE OR REPLACE FUNCTION public.get_admin_subscribers()
+RETURNS TABLE (
+  user_id text,
+  email text,
+  status text,
+  created_at timestamptz,
+  last_sign_in_at timestamptz,
+  last_active_at timestamptz
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  IF auth.email() != 'cesar.risso.f@gmail.com' THEN
+    RAISE EXCEPTION 'Acceso denegado: solo para el fundador';
+  END IF;
+
+  RETURN QUERY
+  SELECT 
+    s.user_id,
+    s.email,
+    COALESCE(s.status, 'free') as status,
+    COALESCE(s.created_at, u.created_at) as created_at,
+    u.last_sign_in_at,
+    f.updated_at as last_active_at
+  FROM public.user_subscriptions s
+  LEFT JOIN auth.users u ON u.id::text = s.user_id
+  LEFT JOIN public.finanzas_state f ON f.id = ('state_' || s.user_id)
+  ORDER BY COALESCE(u.last_sign_in_at, f.updated_at, s.created_at) DESC NULLS LAST;
+END;
+$$;
+
+-- 2. Eliminación integral y permanente de usuarios de prueba
+CREATE OR REPLACE FUNCTION public.delete_user_by_admin(target_user_id text, target_email text)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  IF auth.email() != 'cesar.risso.f@gmail.com' THEN
+    RAISE EXCEPTION 'Acceso denegado: solo para el fundador';
+  END IF;
+
+  -- 1. Eliminar datos de estado financiero
+  IF target_user_id IS NOT NULL AND target_user_id != '' THEN
+    DELETE FROM public.finanzas_state WHERE id = ('state_' || target_user_id);
+    DELETE FROM public.finanzas_state WHERE id LIKE ('backup_' || left(target_user_id, 8) || '%');
+  END IF;
+
+  -- 2. Eliminar suscripción
+  IF target_user_id IS NOT NULL AND target_user_id != '' THEN
+    DELETE FROM public.user_subscriptions WHERE user_id = target_user_id;
+  END IF;
+  IF target_email IS NOT NULL AND target_email != '' THEN
+    DELETE FROM public.user_subscriptions WHERE email = target_email;
+  END IF;
+
+  -- 3. Eliminar feedback
+  IF target_user_id IS NOT NULL AND target_user_id != '' THEN
+    DELETE FROM public.app_feedback WHERE user_id = target_user_id;
+  END IF;
+
+  -- 4. Eliminar cuenta de auth.users si es un UUID válido
+  IF target_user_id IS NOT NULL AND target_user_id ~ '^[0-9a-fA-F-]{36}$' THEN
+    DELETE FROM auth.users WHERE id = target_user_id::uuid;
+  END IF;
+
+  RETURN true;
+END;
+$$;

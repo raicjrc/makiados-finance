@@ -3,6 +3,23 @@
 Todas las versiones notables de esta aplicación están documentadas aquí.
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
+## [v68.2] — 2026-10-04 — Eliminación Permanente de Usuarios, Telemetría de Conexión en Vivo y Blindaje de Cabecera Sticky
+
+### 🛡️ Blindaje Visual de Cabecera Sticky (Zero Overlap)
+- **Opacidad Sólida 100%**: Se corrigió el problema de solapamiento de texto al scrollear la tabla de suscriptores aplicando fondo sólido opaco (`#f8fafc` en modo claro y `#131d2e` en modo twilight) con `z-index: 10` y sombra sutil `box-shadow`. Las filas ahora se deslizan suavemente debajo de la cabecera sin traslucir ni sobreponer texto.
+
+### 🗑️ Eliminación Permanente de Usuarios (Base Limpia)
+- **Botón de Borrado Seguro**: Se integró un botón de papelera (`🗑️`) en cada fila de usuario con confirmación explícita previa para evitar borrados accidentales.
+- **Limpieza Transaccional Completa**: Borra de `user_subscriptions`, `finanzas_state` y `app_feedback`, además de registrar al usuario en la lista negra local para mantener el panel permanentemente limpio y ordenado sin cuentas de prueba residuales.
+
+### ⏱️ Telemetría de Última Conexión & Radar Anti-Churn
+- **Columna de Última Conexión**: Monitoreo en tiempo real del estado de actividad de cada usuario (`🟢 Hoy / Hace Xh`, `🟢 Activo (Hace 2d)`, `🟡 Hace 5d`, `🔴 Inactivo +7d / Churn Alert`, `⚪ Solo registro`).
+- **Filtro Rápido `⚠️ Inactivos +7d`**: Nuevo chip de filtro en la barra de herramientas que aísla de inmediato a los clientes en riesgo de abandono para acciones proactivas de re-engagement.
+- **Funciones RPC Administrativas**: Se agregaron en `supabase-schema.sql` las funciones `get_admin_subscribers()` y `delete_user_by_admin()` para lectura directa de `auth.users.last_sign_in_at` y eliminación en cascada.
+- **Service Worker v112**: Actualización de caché para propagación instantánea en producción.
+
+---
+
 ## [v68.1] — 2026-10-04 — Corrección de Esquema Supabase en Panel Master, Nombres de Clientes y Deduplicación Inteligente
 
 ### 🛠️ Corrección de Esquema Supabase en Cambio de Plan

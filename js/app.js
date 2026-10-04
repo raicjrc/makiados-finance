@@ -77,7 +77,7 @@
     // ================================================================
     // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v67.0)
     // ================================================================
-    const APP_VERSION = 'v68.1';
+    const APP_VERSION = 'v68.2';
 
     const SUPPORTED_CURRENCIES = {
       'PEN': { code: 'PEN', symbol: 'S/', name: 'Soles peruanos', flag: '🇵🇪', locale: 'es-PE' },
@@ -6196,14 +6196,27 @@ async function loadMasterDashboardData(force = false) {
   if (spinner) spinner.textContent = '⏳';
 
   try {
-    // 1. Cargar todas las suscripciones
-    const { data: subs, error: subsErr } = await supabaseClient
-      .from('user_subscriptions')
-      .select('*')
-      .order('created_at', { ascending: false });
+    // 1. Intentar cargar suscriptores enriquecidos (con login de auth.users y actividad)
+    let subsLoaded = false;
+    try {
+      const { data: rpcSubs, error: rpcErr } = await supabaseClient.rpc('get_admin_subscribers');
+      if (!rpcErr && Array.isArray(rpcSubs) && rpcSubs.length > 0) {
+        masterSubscribersData = rpcSubs;
+        subsLoaded = true;
+      }
+    } catch (e) {
+      // Si la RPC aún no está creada en Supabase, continúa con fallback estándar
+    }
 
-    if (!subsErr && subs) {
-      masterSubscribersData = subs;
+    if (!subsLoaded) {
+      const { data: subs, error: subsErr } = await supabaseClient
+        .from('user_subscriptions')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (!subsErr && subs) {
+        masterSubscribersData = subs;
+      }
     }
 
     // 2. Cargar feedback
@@ -6230,7 +6243,22 @@ async function loadMasterDashboardData(force = false) {
   }
 }
 
-// Helpers para nombres de suscriptores y deduplicación inteligente
+// Helpers para usuarios eliminados, nombres y deduplicación inteligente
+function getDeletedUsersList() {
+  try {
+    return JSON.parse(localStorage.getItem('aliviafin_deleted_users') || '[]');
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveDeletedUser(userId, email) {
+  const list = getDeletedUsersList();
+  if (userId && !list.includes(userId)) list.push(userId);
+  if (email && !list.includes(email.toLowerCase().trim())) list.push(email.toLowerCase().trim());
+  localStorage.setItem('aliviafin_deleted_users', JSON.stringify(list));
+}
+
 function getStoredNicknames() {
   try {
     return JSON.parse(localStorage.getItem('aliviafin_user_nicknames') || '{}');
@@ -6279,14 +6307,94 @@ function promptEditUserNickname(email) {
   }
 }
 
-// Deduplicar suscriptores por correo (para agrupar registros de pruebas y reflejar clientes reales)
+// Telemetría de Última Conexión y Detección de Riesgo de Churn
+function getUserLastConnectionInfo(item) {
+  const rawDate = item.last_sign_in_at || item.last_active_at || item.updated_at || item.created_at;
+  if (!rawDate) {
+    return {
+      diffDays: 999,
+      isInactive: true,
+      html: `
+        <span class="master-activity-badge neutral" title="Sin registros de conexión">
+          <span class="activity-dot dot-neutral"></span> Sin registro
+        </span>
+      `
+    };
+  }
+
+  const d = new Date(rawDate);
+  const now = new Date();
+  const diffMs = Math.max(0, now - d);
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const isConnectedLogin = Boolean(item.last_sign_in_at || item.last_active_at || (item.updated_at && item.updated_at !== item.created_at));
+
+  let html = '';
+  const dateFormatted = d.toLocaleDateString('es-PE', { day: '2-digit', month: 'short' });
+  const timeFormatted = d.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
+
+  if (diffHours < 24) {
+    const timeText = diffHours <= 0 ? 'Hace un momento' : `Hace ${diffHours}h`;
+    html = `
+      <div title="${dateFormatted} ${timeFormatted}">
+        <span class="master-activity-badge active">
+          <span class="activity-dot dot-active"></span> Hoy
+        </span>
+        <div style="font-size: 10px; color: #10b981; font-weight: 700; margin-top: 2px;">${timeText}</div>
+      </div>
+    `;
+  } else if (diffDays <= 3) {
+    html = `
+      <div title="${dateFormatted} ${timeFormatted}">
+        <span class="master-activity-badge active">
+          <span class="activity-dot dot-active"></span> Activo
+        </span>
+        <div style="font-size: 10px; color: var(--text-muted); margin-top: 2px;">Hace ${diffDays} día${diffDays > 1 ? 's' : ''}</div>
+      </div>
+    `;
+  } else if (diffDays <= 7) {
+    html = `
+      <div title="${dateFormatted} ${timeFormatted}">
+        <span class="master-activity-badge warning">
+          <span class="activity-dot dot-warning"></span> Hace ${diffDays}d
+        </span>
+        <div style="font-size: 10px; color: #b45309; font-weight: 600; margin-top: 2px;">Riesgo leve</div>
+      </div>
+    `;
+  } else {
+    const note = !isConnectedLogin ? 'Solo registro' : `Hace ${diffDays}d`;
+    html = `
+      <div title="${dateFormatted} ${timeFormatted} · Sin actividad reciente">
+        <span class="master-activity-badge inactive">
+          <span class="activity-dot dot-inactive"></span> Inactivo (+${diffDays}d)
+        </span>
+        <div style="font-size: 10px; color: #ef4444; font-weight: 700; margin-top: 2px;">⚠️ Churn Alert (${note})</div>
+      </div>
+    `;
+  }
+
+  return {
+    diffDays,
+    diffHours,
+    isInactive: diffDays > 7 || (!isConnectedLogin && diffDays >= 3),
+    html
+  };
+}
+
+// Deduplicar suscriptores por correo y filtrar eliminados
 function getDeduplicatedSubscribers(rawList) {
+  const deletedList = getDeletedUsersList();
   const map = new Map();
   const sorted = [...rawList].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
 
   sorted.forEach(item => {
     const key = (item.email || item.user_id || '').toLowerCase().trim();
     if (!key) return;
+
+    // Omitir usuarios marcados como eliminados permanentemente
+    if (deletedList.includes(key) || (item.user_id && deletedList.includes(item.user_id))) {
+      return;
+    }
 
     if (!map.has(key)) {
       map.set(key, { ...item });
@@ -6298,6 +6406,12 @@ function getDeduplicatedSubscribers(rawList) {
       if (isProItem && !isProExisting) {
         existing.status = item.status;
         existing.user_id = item.user_id;
+      }
+      if (item.last_sign_in_at && (!existing.last_sign_in_at || new Date(item.last_sign_in_at) > new Date(existing.last_sign_in_at))) {
+        existing.last_sign_in_at = item.last_sign_in_at;
+      }
+      if (item.last_active_at && (!existing.last_active_at || new Date(item.last_active_at) > new Date(existing.last_active_at))) {
+        existing.last_active_at = item.last_active_at;
       }
     }
   });
@@ -6323,6 +6437,12 @@ function calculateMasterKPIs() {
   const totalPro = monthlySubs.length + lifetimeSubs.length;
   const freeUsers = Math.max(0, totalUsers - totalPro);
   const convRate = totalUsers > 0 ? ((totalPro / totalUsers) * 100).toFixed(1) : 0;
+
+  // Detección de inactivos para alerta Churn
+  const inactiveSubs = uniqueSubs.filter(s => {
+    const info = getUserLastConnectionInfo(s);
+    return info.isInactive;
+  });
 
   // Render en UI
   const elMrr = document.getElementById('masterMrrVal');
@@ -6352,12 +6472,19 @@ function calculateMasterKPIs() {
   if (cMonth) cMonth.textContent = monthlySubs.length;
   const cFree = document.getElementById('countMFree');
   if (cFree) cFree.textContent = freeUsers;
+  const cInactive = document.getElementById('countMInactive');
+  if (cInactive) cInactive.textContent = inactiveSubs.length;
 }
 
 function setMasterFilter(filter) {
   masterCurrentFilter = filter;
   document.querySelectorAll('.master-filter-chip').forEach(c => c.classList.remove('active'));
-  const activeBtn = document.getElementById(filter === 'pro_lifetime' ? 'mFilterLife' : (filter === 'pro_monthly' ? 'mFilterMonth' : (filter === 'free' ? 'mFilterFree' : 'mFilterAll')));
+  const activeBtn = document.getElementById(
+    filter === 'pro_lifetime' ? 'mFilterLife' :
+    (filter === 'pro_monthly' ? 'mFilterMonth' :
+    (filter === 'free' ? 'mFilterFree' :
+    (filter === 'inactive' ? 'mFilterInactive' : 'mFilterAll')))
+  );
   if (activeBtn) activeBtn.classList.add('active');
   renderMasterSubscribers();
 }
@@ -6385,6 +6512,10 @@ function renderMasterSubscribers() {
     if (masterCurrentFilter === 'pro_lifetime') return isLife;
     if (masterCurrentFilter === 'pro_monthly') return isMonth;
     if (masterCurrentFilter === 'free') return !isLife && !isMonth;
+    if (masterCurrentFilter === 'inactive') {
+      const info = getUserLastConnectionInfo(item);
+      return info.isInactive;
+    }
     return true;
   });
 
@@ -6418,6 +6549,7 @@ function renderMasterSubscribers() {
 
     const dateStr = item.created_at ? new Date(item.created_at).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Reciente';
     const initial = cleanName.charAt(0).toUpperCase();
+    const actInfo = getUserLastConnectionInfo(item);
 
     html += `
       <tr>
@@ -6436,18 +6568,16 @@ function renderMasterSubscribers() {
           </div>
         </td>
         <td>${planBadge}</td>
-        <td>
-          <span style="font-weight: 700; color: #10b981; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;">
-            <span style="width: 7px; height: 7px; border-radius: 50%; background: #10b981;"></span>
-            Activo
-          </span>
-        </td>
+        <td>${actInfo.html}</td>
         <td style="font-weight: 800; color: var(--text-main);">${revenueEst}</td>
         <td>
-          <div style="display: flex; gap: 5px; flex-wrap: wrap;">
-            ${!isLife ? `<button type="button" class="master-action-btn-pill master-action-btn-life" onclick="setMasterUserPlan('${escapeHtml(item.user_id)}', '${escapeHtml(email)}', 'pro_lifetime')" title="Activar PRO Vitalicio S/ 19.90">👑 Vitalicio (S/ 19.90)</button>` : ''}
-            ${!isMonth ? `<button type="button" class="master-action-btn-pill master-action-btn-month" onclick="setMasterUserPlan('${escapeHtml(item.user_id)}', '${escapeHtml(email)}', 'pro_monthly')" title="Activar PRO Mensual S/ 4.90">📅 Mensual (S/ 4.90)</button>` : ''}
+          <div style="display: flex; gap: 5px; align-items: center; justify-content: flex-end; flex-wrap: wrap;">
+            ${!isLife ? `<button type="button" class="master-action-btn-pill master-action-btn-life" onclick="setMasterUserPlan('${escapeHtml(item.user_id)}', '${escapeHtml(email)}', 'pro_lifetime')" title="Activar PRO Vitalicio S/ 19.90">👑 Vitalicio</button>` : ''}
+            ${!isMonth ? `<button type="button" class="master-action-btn-pill master-action-btn-month" onclick="setMasterUserPlan('${escapeHtml(item.user_id)}', '${escapeHtml(email)}', 'pro_monthly')" title="Activar PRO Mensual S/ 4.90">📅 Mensual</button>` : ''}
             ${(isLife || isMonth) ? `<button type="button" class="master-action-btn-pill master-action-btn-free" onclick="setMasterUserPlan('${escapeHtml(item.user_id)}', '${escapeHtml(email)}', 'free')" title="Bajar a cuenta gratuita">⚪ Free</button>` : ''}
+            <button type="button" class="master-action-btn-delete" onclick="confirmDeleteMasterUser('${escapeHtml(item.user_id)}', '${escapeHtml(email)}', '${escapeHtml(cleanName)}')" title="Eliminar usuario permanentemente de la base de datos">
+              🗑️
+            </button>
           </div>
         </td>
       </tr>
@@ -6509,6 +6639,74 @@ async function setMasterUserPlan(userId, email, newPlan) {
   } catch (e) {
     console.error('Exception updating user plan:', e);
     showToast('Error de conexión', 'error');
+  }
+}
+
+async function confirmDeleteMasterUser(userId, email, displayName) {
+  if (!isAdminCesar()) return;
+
+  const cleanName = displayName || email || 'este usuario';
+  const msg = `⚠️ ¿ELIMINAR USUARIO PERMANENTEMENTE?\n\n` +
+              `Estás a punto de borrar por completo a:\n` +
+              `• Nombre: ${cleanName}\n` +
+              `• Correo: ${email}\n\n` +
+              `Esta acción eliminará al usuario de tu base de datos y limpiará tu panel para siempre.\n\n` +
+              `¿Deseas continuar?`;
+
+  if (!confirm(msg)) return;
+
+  await deleteMasterUser(userId, email, cleanName);
+}
+
+async function deleteMasterUser(userId, email, cleanName) {
+  if (!isAdminCesar()) return;
+
+  showToast(`Eliminando usuario ${cleanName}... ⏳`, 'info');
+
+  try {
+    // 1. Intentar borrado integral vía RPC de Supabase (si está configurada)
+    try {
+      await supabaseClient.rpc('delete_user_by_admin', {
+        target_user_id: userId,
+        target_email: email
+      });
+    } catch (e) {
+      console.warn('Nota: RPC delete_user_by_admin en evaluación:', e);
+    }
+
+    // 2. Borrado directo en user_subscriptions por user_id y email
+    if (userId) {
+      await supabaseClient
+        .from('user_subscriptions')
+        .delete()
+        .eq('user_id', userId);
+    }
+
+    if (email && email.includes('@')) {
+      await supabaseClient
+        .from('user_subscriptions')
+        .delete()
+        .eq('email', email);
+    }
+
+    // 3. Registrar en lista negra de eliminados localmente
+    saveDeletedUser(userId, email);
+
+    // 4. Remover de memoria local
+    masterSubscribersData = masterSubscribersData.filter(s => {
+      const matchId = userId && s.user_id === userId;
+      const matchEmail = email && s.email && s.email.toLowerCase() === email.toLowerCase();
+      return !matchId && !matchEmail;
+    });
+
+    calculateMasterKPIs();
+    renderMasterSubscribers();
+
+    if (navigator.vibrate) navigator.vibrate([40, 60, 40]);
+    showToast(`🗑️ Usuario ${cleanName} eliminado correctamente`, 'success');
+  } catch (err) {
+    console.error('Error al eliminar usuario:', err);
+    showToast('Error al eliminar usuario: ' + (err.message || err), 'error');
   }
 }
 
@@ -6591,5 +6789,6 @@ window.setMasterUserPlan = setMasterUserPlan;
 window.handleMasterManualActivate = handleMasterManualActivate;
 window.syncAdminUI = syncAdminUI;
 window.promptEditUserNickname = promptEditUserNickname;
+window.confirmDeleteMasterUser = confirmDeleteMasterUser;
 
 
