@@ -75,9 +75,9 @@
     let CATEGORIES = { ...GENERIC_CATEGORIES };
 
     // ================================================================
-    // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v69.6)
+    // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v69.7)
     // ================================================================
-    const APP_VERSION = 'v69.6';
+    const APP_VERSION = 'v69.7';
 
     const SUPPORTED_CURRENCIES = {
       'PEN': { code: 'PEN', symbol: 'S/', name: 'Soles peruanos', flag: '🇵🇪', locale: 'es-PE' },
@@ -209,9 +209,9 @@
       if (tab === 'login') {
         loginForm.style.display = 'block';
         registerForm.style.display = 'none';
-        loginBtn.style.background = '#4f46e5';
+        loginBtn.style.background = '#059669';
         loginBtn.style.color = 'white';
-        loginBtn.style.boxShadow = '0 2px 6px rgba(79,70,229,0.3)';
+        loginBtn.style.boxShadow = '0 2px 6px rgba(5,150,105,0.3)';
         registerBtn.style.background = 'transparent';
         registerBtn.style.color = '#6b7280';
         registerBtn.style.boxShadow = 'none';
@@ -5356,7 +5356,7 @@
     // ================================================================
     function syncVersionUI() {
       const loginVer = document.getElementById('loginFooterVersion');
-      if (loginVer) loginVer.textContent = 'AliviaFin ' + APP_VERSION + ' · Powered by Supabase';
+      if (loginVer) loginVer.textContent = 'AliviaFin ' + APP_VERSION + ' · Paz mental para tu dinero';
 
       const settVer = document.getElementById('settingsVersion');
       if (settVer) settVer.textContent = APP_VERSION;

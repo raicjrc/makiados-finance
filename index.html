@@ -17,116 +17,183 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <link rel="stylesheet" href="css/styles.css?v=69.5">
+  <link rel="stylesheet" href="css/styles.css?v=69.7">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
 </head>
 <body>
 
-  <!-- MANDATORY LOGIN/REGISTER SCREEN v50 -->
+  <!-- MANDATORY LOGIN/REGISTER SCREEN v69.7 -->
   <div id="loginModalScreen">
-    <div style="max-width: 400px; width: 100%; background: white; border-radius: 24px; padding: 32px 28px; box-shadow: 0 32px 80px rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.8); position: relative;">
+    <div class="login-layout-container">
       
-      <!-- Logo y Marca -->
-      <div style="text-align: center; margin-bottom: 24px;">
-        <img src="logo.png?v=66.0" alt="aliviafin" style="width: 68px; height: 68px; border-radius: 18px; margin-bottom: 12px; box-shadow: 0 4px 14px rgba(0,0,0,0.08);">
-        <h2 style="font-size: 24px; font-weight: 800; color: #0f172a; margin-bottom: 4px; letter-spacing: -0.5px;">aliviafin</h2>
-        <p style="font-size: 12px; color: #64748b; margin-bottom: 0;">Paz mental para tu dinero</p>
-      </div>
-
-      <!-- Tabs Login / Registro -->
-      <div id="authTabs" style="display: flex; border-radius: 12px; background: #f3f4f6; padding: 4px; margin-bottom: 22px; gap: 4px;">
-        <button id="tabLoginBtn" onclick="switchAuthTab('login')" style="flex: 1; padding: 8px; border: none; border-radius: 9px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; background: #4f46e5; color: white; box-shadow: 0 2px 6px rgba(79,70,229,0.3);">Iniciar Sesión</button>
-        <button id="tabRegisterBtn" onclick="switchAuthTab('register')" style="flex: 1; padding: 8px; border: none; border-radius: 9px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; background: transparent; color: #6b7280;">Crear Cuenta</button>
-      </div>
-
-      <!-- FORM LOGIN -->
-      <form id="loginForm" onsubmit="handleLoginSubmit(event)" style="display: block;">
-        <div style="margin-bottom: 14px;">
-          <label style="display: block; font-size: 11px; font-weight: 800; color: #374151; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">Correo Electrónico</label>
-          <input type="email" id="loginEmail" class="form-control" placeholder="tu@correo.com" required style="width: 100%;">
-        </div>
-        <div style="margin-bottom: 8px;">
-          <label style="display: block; font-size: 11px; font-weight: 800; color: #374151; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">Contraseña</label>
-          <div style="position: relative;">
-            <input type="password" id="loginPassword" class="form-control" placeholder="Tu contraseña" required style="width: 100%; padding-right: 44px;">
-            <button type="button" onclick="togglePasswordVisibility('loginPassword', 'togglePassBtnLogin')" id="togglePassBtnLogin" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 17px; cursor: pointer; color: #9ca3af;">👁️</button>
+      <!-- Panel Izquierdo: Marca & Confianza Zen (Visible en Desktop >= 900px) -->
+      <div class="login-showcase-pane">
+        <div class="login-brand-header">
+          <img src="logo.png?v=69.7" alt="aliviafin" class="login-brand-logo">
+          <div>
+            <h1 class="login-brand-title">aliviafin</h1>
+            <p class="login-brand-tagline">Paz mental para tu dinero</p>
           </div>
         </div>
-        <div style="display: flex; justify-content: flex-end; margin-bottom: 16px;">
-          <a href="javascript:void(0)" onclick="openForgotPasswordModal()" style="font-size: 11.5px; color: #4f46e5; font-weight: 700; text-decoration: none; cursor: pointer;">¿Olvidaste tu contraseña?</a>
-        </div>
-        <div id="loginErrorMsg" style="color: #dc2626; font-size: 12px; font-weight: 700; margin-bottom: 12px; display: none; padding: 8px 12px; background: #fff1f2; border-radius: 8px; border: 1px solid #fca5a5;"></div>
-        <p style="font-size: 11px; color: #64748b; text-align: center; margin-bottom: 12px; line-height: 1.4;">
-          Al iniciar sesión, aceptas nuestros <a href="javascript:void(0)" onclick="openLegalModal('terms')" style="color: #4f46e5; text-decoration: underline; font-weight: 600;">Términos</a> y <a href="javascript:void(0)" onclick="openLegalModal('privacy')" style="color: #4f46e5; text-decoration: underline; font-weight: 600;">Privacidad</a>.
-        </p>
-        <button type="submit" id="loginSubmitBtn" class="btn btn-primary" style="width: 100%; padding: 13px; font-size: 14px; font-weight: 800; background: linear-gradient(135deg, #4f46e5, #6366f1); border-radius: 12px; letter-spacing: 0.02em; box-shadow: 0 4px 16px rgba(79,70,229,0.35);">
-          🔓 Iniciar Sesión
-        </button>
-      </form>
 
-      <!-- FORM REGISTRO -->
-      <form id="registerForm" onsubmit="handleRegisterSubmit(event)" style="display: none;">
-        <div style="margin-bottom: 14px;">
-          <label style="display: block; font-size: 11px; font-weight: 800; color: #374151; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">Tu Nombre</label>
-          <input type="text" id="registerName" class="form-control" placeholder="Ej: Juan García" required style="width: 100%;">
-        </div>
-        <div style="margin-bottom: 14px;">
-          <label style="display: block; font-size: 11px; font-weight: 800; color: #374151; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">Correo Electrónico</label>
-          <input type="email" id="registerEmail" class="form-control" placeholder="tu@correo.com" required style="width: 100%;">
-        </div>
-        <div style="margin-bottom: 18px;">
-          <label style="display: block; font-size: 11px; font-weight: 800; color: #374151; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">Contraseña</label>
-          <div style="position: relative;">
-            <input type="password" id="registerPassword" class="form-control" placeholder="Mínimo 6 caracteres" required minlength="6" style="width: 100%; padding-right: 44px;">
-            <button type="button" onclick="togglePasswordVisibility('registerPassword', 'togglePassBtnReg')" id="togglePassBtnReg" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 17px; cursor: pointer; color: #9ca3af;">👁️</button>
+        <div class="login-hero-glass-card">
+          <div class="hero-card-header">
+            <span class="hero-card-pill">🛡️ 100% Privado & Seguro</span>
+            <span class="hero-card-status">Fintech Zen</span>
+          </div>
+
+          <div class="hero-card-metric">
+            <div class="hero-metric-label">Tu patrimonio en calma</div>
+            <div class="hero-metric-value">Control total sin estrés</div>
+          </div>
+
+          <div class="hero-card-badges">
+            <div class="hero-badge-item">
+              <span style="font-size: 18px; line-height: 1;">🔒</span>
+              <div>
+                <strong>Zero-Knowledge Cloud</strong>
+                <p>Tus finanzas cifradas y aisladas bajo tu propio usuario.</p>
+              </div>
+            </div>
+            <div class="hero-badge-item">
+              <span style="font-size: 18px; line-height: 1;">⚡</span>
+              <div>
+                <strong>Sincronización PWA Multi-dispositivo</strong>
+                <p>Usa la app de forma fluida en iPhone, Android y Mac con soporte offline.</p>
+              </div>
+            </div>
+            <div class="hero-badge-item">
+              <span style="font-size: 18px; line-height: 1;">💵</span>
+              <div>
+                <strong>Garantía Total de 7 Días</strong>
+                <p>Transparencia absoluta y reembolso sin preguntas.</p>
+              </div>
+            </div>
           </div>
         </div>
-        <div id="registerErrorMsg" style="color: #dc2626; font-size: 12px; font-weight: 700; margin-bottom: 12px; display: none; padding: 8px 12px; background: #fff1f2; border-radius: 8px; border: 1px solid #fca5a5;"></div>
-        <div id="registerSuccessMsg" style="color: #059669; font-size: 12px; font-weight: 700; margin-bottom: 12px; display: none; padding: 8px 12px; background: #ecfdf5; border-radius: 8px; border: 1px solid #a7f3d0;"></div>
-        <p style="font-size: 11px; color: #64748b; text-align: center; margin-bottom: 12px; line-height: 1.4;">
-          Al crear tu cuenta, aceptas nuestros <a href="javascript:void(0)" onclick="openLegalModal('terms')" style="color: #059669; text-decoration: underline; font-weight: 600;">Términos</a> y <a href="javascript:void(0)" onclick="openLegalModal('privacy')" style="color: #059669; text-decoration: underline; font-weight: 600;">Privacidad</a>.
-        </p>
-        <button type="submit" id="registerSubmitBtn" class="btn btn-primary" style="width: 100%; padding: 13px; font-size: 14px; font-weight: 800; background: linear-gradient(135deg, #059669, #10b981); border-radius: 12px; letter-spacing: 0.02em; box-shadow: 0 4px 16px rgba(5,150,105,0.35);">
-          🚀 Crear Mi Cuenta
-        </button>
-      </form>
 
-      <!-- Divisor elegante "o continúa con" -->
-      <div style="display: flex; align-items: center; margin: 18px 0 14px 0; gap: 10px;">
-        <div style="flex: 1; height: 1px; background: #e2e8f0;"></div>
-        <span style="font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: lowercase;">o continúa con</span>
-        <div style="flex: 1; height: 1px; background: #e2e8f0;"></div>
-      </div>
-
-      <!-- Botón OAuth Google (Full width ejecutivo) -->
-      <div class="oauth-buttons-container">
-        <button type="button" class="btn-oauth" onclick="handleOAuthLogin('google')" title="Continuar con Google">
-          <svg width="18" height="18" viewBox="0 0 24 24">
-            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-          </svg>
-          <span>Continuar con Google</span>
-        </button>
-      </div>
-
-      <!-- Footer versión y enlaces legales -->
-      <div style="text-align: center; margin-top: 18px; padding-top: 12px; border-top: 1px solid #f1f5f9;">
-        <div style="display: flex; justify-content: center; gap: 12px; font-size: 11px; margin-bottom: 8px;">
-          <a href="javascript:void(0)" onclick="openLegalModal('terms')" style="color: #64748b; text-decoration: none; font-weight: 600;">⚖️ Términos</a>
-          <span style="color: #cbd5e1;">•</span>
-          <a href="javascript:void(0)" onclick="openLegalModal('privacy')" style="color: #64748b; text-decoration: none; font-weight: 600;">🛡️ Privacidad</a>
-          <span style="color: #cbd5e1;">•</span>
-          <a href="javascript:void(0)" onclick="openLegalModal('refunds')" style="color: #64748b; text-decoration: none; font-weight: 600;">💵 Reembolsos</a>
+        <!-- Enlaces legales desktop (subtle & aligned) -->
+        <div class="desktop-only-footer">
+          <div class="login-legal-links">
+            <a href="javascript:void(0)" onclick="openLegalModal('terms')">⚖️ Términos</a>
+            <span class="legal-dot">•</span>
+            <a href="javascript:void(0)" onclick="openLegalModal('privacy')">🛡️ Privacidad</a>
+            <span class="legal-dot">•</span>
+            <a href="javascript:void(0)" onclick="openLegalModal('refunds')">💵 Reembolsos</a>
+            <span class="legal-dot">•</span>
+            <a href="javascript:void(0)" onclick="openReclamacionesModal()">📖 Libro de Reclamaciones</a>
+          </div>
+          <p class="login-version-tag">AliviaFin v69.7 · César Risso · Lima, Perú</p>
         </div>
-        <div style="margin-bottom: 8px;">
-          <a href="javascript:void(0)" onclick="openReclamacionesModal()" style="display: inline-flex; align-items: center; gap: 5px; color: #2563eb; text-decoration: none; font-weight: 700; font-size: 11px; background: rgba(37,99,235,0.06); padding: 5px 12px; border-radius: 20px; border: 1px solid rgba(37,99,235,0.18);">
-            <span>📖</span> <span>Libro de Reclamaciones Virtual (Indecopi)</span>
-          </a>
-        </div>
-        <p id="loginFooterVersion" style="font-size: 10px; color: #94a3b8; margin: 0;">AliviaFin v69.6 · Paz mental para tu dinero</p>
       </div>
+
+      <!-- Panel Derecho: Formulario de Acceso -->
+      <div class="login-auth-pane">
+        <div class="login-card">
+          
+          <!-- Logo y Marca (Solo Mobile) -->
+          <div class="login-mobile-brand" style="margin-bottom: 20px;">
+            <img src="logo.png?v=69.7" alt="aliviafin" style="width: 58px; height: 58px; border-radius: 16px; margin-bottom: 10px; box-shadow: 0 6px 18px rgba(5,150,105,0.25);">
+            <h2 style="font-size: 22px; font-weight: 800; color: #0f172a; margin-bottom: 2px; letter-spacing: -0.5px;">aliviafin</h2>
+            <p style="font-size: 12px; color: #64748b; margin-bottom: 0;">Paz mental para tu dinero</p>
+          </div>
+
+          <!-- Tabs Login / Registro -->
+          <div id="authTabs" style="display: flex; border-radius: 12px; background: #f3f4f6; padding: 4px; margin-bottom: 20px; gap: 4px;">
+            <button id="tabLoginBtn" type="button" onclick="switchAuthTab('login')" style="flex: 1; padding: 9px; border: none; border-radius: 9px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; background: #059669; color: white; box-shadow: 0 2px 6px rgba(5,150,105,0.3);">Iniciar Sesión</button>
+            <button id="tabRegisterBtn" type="button" onclick="switchAuthTab('register')" style="flex: 1; padding: 9px; border: none; border-radius: 9px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; background: transparent; color: #6b7280;">Crear Cuenta</button>
+          </div>
+
+          <!-- FORM LOGIN -->
+          <form id="loginForm" onsubmit="handleLoginSubmit(event)" style="display: block;">
+            <div style="margin-bottom: 14px;">
+              <label style="display: block; font-size: 11px; font-weight: 800; color: #374151; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">Correo Electrónico</label>
+              <input type="email" id="loginEmail" class="form-control" placeholder="tu@correo.com" required style="width: 100%;">
+            </div>
+            <div style="margin-bottom: 8px;">
+              <label style="display: block; font-size: 11px; font-weight: 800; color: #374151; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">Contraseña</label>
+              <div style="position: relative;">
+                <input type="password" id="loginPassword" class="form-control" placeholder="Tu contraseña" required style="width: 100%; padding-right: 44px;">
+                <button type="button" onclick="togglePasswordVisibility('loginPassword', 'togglePassBtnLogin')" id="togglePassBtnLogin" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 17px; cursor: pointer; color: #9ca3af;">👁️</button>
+              </div>
+            </div>
+            <div style="display: flex; justify-content: flex-end; margin-bottom: 16px;">
+              <a href="javascript:void(0)" onclick="openForgotPasswordModal()" style="font-size: 11.5px; color: #059669; font-weight: 700; text-decoration: none; cursor: pointer;">¿Olvidaste tu contraseña?</a>
+            </div>
+            <div id="loginErrorMsg" style="color: #dc2626; font-size: 12px; font-weight: 700; margin-bottom: 12px; display: none; padding: 8px 12px; background: #fff1f2; border-radius: 8px; border: 1px solid #fca5a5;"></div>
+            <p style="font-size: 11px; color: #64748b; text-align: center; margin-bottom: 12px; line-height: 1.4;">
+              Al iniciar sesión, aceptas nuestros <a href="javascript:void(0)" onclick="openLegalModal('terms')" style="color: #059669; text-decoration: underline; font-weight: 600;">Términos</a> y <a href="javascript:void(0)" onclick="openLegalModal('privacy')" style="color: #059669; text-decoration: underline; font-weight: 600;">Privacidad</a>.
+            </p>
+            <button type="submit" id="loginSubmitBtn" class="btn btn-primary" style="width: 100%; padding: 13px; font-size: 14px; font-weight: 800; background: linear-gradient(135deg, #059669, #10b981); border-radius: 12px; letter-spacing: 0.02em; box-shadow: 0 4px 16px rgba(5,150,105,0.35);">
+              🔓 Iniciar Sesión
+            </button>
+          </form>
+
+          <!-- FORM REGISTRO -->
+          <form id="registerForm" onsubmit="handleRegisterSubmit(event)" style="display: none;">
+            <div style="margin-bottom: 14px;">
+              <label style="display: block; font-size: 11px; font-weight: 800; color: #374151; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">Tu Nombre</label>
+              <input type="text" id="registerName" class="form-control" placeholder="Ej: Juan García" required style="width: 100%;">
+            </div>
+            <div style="margin-bottom: 14px;">
+              <label style="display: block; font-size: 11px; font-weight: 800; color: #374151; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">Correo Electrónico</label>
+              <input type="email" id="registerEmail" class="form-control" placeholder="tu@correo.com" required style="width: 100%;">
+            </div>
+            <div style="margin-bottom: 18px;">
+              <label style="display: block; font-size: 11px; font-weight: 800; color: #374151; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">Contraseña</label>
+              <div style="position: relative;">
+                <input type="password" id="registerPassword" class="form-control" placeholder="Mínimo 6 caracteres" required minlength="6" style="width: 100%; padding-right: 44px;">
+                <button type="button" onclick="togglePasswordVisibility('registerPassword', 'togglePassBtnReg')" id="togglePassBtnReg" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 17px; cursor: pointer; color: #9ca3af;">👁️</button>
+              </div>
+            </div>
+            <div id="registerErrorMsg" style="color: #dc2626; font-size: 12px; font-weight: 700; margin-bottom: 12px; display: none; padding: 8px 12px; background: #fff1f2; border-radius: 8px; border: 1px solid #fca5a5;"></div>
+            <div id="registerSuccessMsg" style="color: #059669; font-size: 12px; font-weight: 700; margin-bottom: 12px; display: none; padding: 8px 12px; background: #ecfdf5; border-radius: 8px; border: 1px solid #a7f3d0;"></div>
+            <p style="font-size: 11px; color: #64748b; text-align: center; margin-bottom: 12px; line-height: 1.4;">
+              Al crear tu cuenta, aceptas nuestros <a href="javascript:void(0)" onclick="openLegalModal('terms')" style="color: #059669; text-decoration: underline; font-weight: 600;">Términos</a> y <a href="javascript:void(0)" onclick="openLegalModal('privacy')" style="color: #059669; text-decoration: underline; font-weight: 600;">Privacidad</a>.
+            </p>
+            <button type="submit" id="registerSubmitBtn" class="btn btn-primary" style="width: 100%; padding: 13px; font-size: 14px; font-weight: 800; background: linear-gradient(135deg, #059669, #10b981); border-radius: 12px; letter-spacing: 0.02em; box-shadow: 0 4px 16px rgba(5,150,105,0.35);">
+              🚀 Crear Mi Cuenta
+            </button>
+          </form>
+
+          <!-- Divisor elegante "o continúa con" -->
+          <div style="display: flex; align-items: center; margin: 18px 0 14px 0; gap: 10px;">
+            <div style="flex: 1; height: 1px; background: #e2e8f0;"></div>
+            <span style="font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: lowercase;">o continúa con</span>
+            <div style="flex: 1; height: 1px; background: #e2e8f0;"></div>
+          </div>
+
+          <!-- Botón OAuth Google -->
+          <div class="oauth-buttons-container">
+            <button type="button" class="btn-oauth" onclick="handleOAuthLogin('google')" title="Continuar con Google">
+              <svg width="18" height="18" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+              </svg>
+              <span>Continuar con Google</span>
+            </button>
+          </div>
+
+        </div>
+
+        <!-- Footer legal móvil (discreto, unificado y elegante) -->
+        <div class="mobile-only-footer">
+          <div class="login-legal-links">
+            <a href="javascript:void(0)" onclick="openLegalModal('terms')">⚖️ Términos</a>
+            <span class="legal-dot">•</span>
+            <a href="javascript:void(0)" onclick="openLegalModal('privacy')">🛡️ Privacidad</a>
+            <span class="legal-dot">•</span>
+            <a href="javascript:void(0)" onclick="openLegalModal('refunds')">💵 Reembolsos</a>
+            <span class="legal-dot">•</span>
+            <a href="javascript:void(0)" onclick="openReclamacionesModal()">📖 Libro de Reclamaciones</a>
+          </div>
+          <p id="loginFooterVersion" class="login-version-tag">AliviaFin v69.7 · Paz mental para tu dinero</p>
+        </div>
+
+      </div>
+
     </div>
   </div>
 
@@ -1144,7 +1211,7 @@
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
               <span style="font-size: 11px; font-weight: 700; color: #374151;">📱 Versión</span>
-              <span style="font-size: 11px; color: #0d9488; font-weight: 800;" id="settingsVersion">v69.6</span>
+              <span style="font-size: 11px; color: #0d9488; font-weight: 800;" id="settingsVersion">v69.7</span>
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 5px; border-top: 1px dashed #e2e8f0;">
               <span style="font-size: 10.5px; font-weight: 700; color: #64748b;">🏢 Titular / Proveedor</span>
@@ -2708,6 +2775,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
-  <script src="js/app.js?v=69.6"></script>
+  <script src="js/app.js?v=69.7"></script>
 </body>
 </html>
