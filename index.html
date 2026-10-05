@@ -112,15 +112,20 @@
       </div>
 
       <!-- Footer versión y enlaces legales -->
-      <div style="text-align: center; margin-top: 18px;">
-        <p id="loginFooterVersion" style="font-size: 10.5px; color: #94a3b8; margin-bottom: 5px;">AliviaFin v69.6 · Paz mental para tu dinero</p>
-        <div style="display: flex; justify-content: center; gap: 8px; font-size: 10.5px;">
-          <a href="javascript:void(0)" onclick="openLegalModal('terms')" style="color: #64748b; text-decoration: none; font-weight: 600;">Términos</a>
+      <div style="text-align: center; margin-top: 18px; padding-top: 12px; border-top: 1px solid #f1f5f9;">
+        <div style="display: flex; justify-content: center; gap: 12px; font-size: 11px; margin-bottom: 8px;">
+          <a href="javascript:void(0)" onclick="openLegalModal('terms')" style="color: #64748b; text-decoration: none; font-weight: 600;">⚖️ Términos</a>
           <span style="color: #cbd5e1;">•</span>
-          <a href="javascript:void(0)" onclick="openLegalModal('privacy')" style="color: #64748b; text-decoration: none; font-weight: 600;">Privacidad</a>
+          <a href="javascript:void(0)" onclick="openLegalModal('privacy')" style="color: #64748b; text-decoration: none; font-weight: 600;">🛡️ Privacidad</a>
           <span style="color: #cbd5e1;">•</span>
-          <a href="javascript:void(0)" onclick="openReclamacionesModal()" style="color: #2563eb; text-decoration: none; font-weight: 700;">📖 Reclamaciones</a>
+          <a href="javascript:void(0)" onclick="openLegalModal('refunds')" style="color: #64748b; text-decoration: none; font-weight: 600;">💵 Reembolsos</a>
         </div>
+        <div style="margin-bottom: 8px;">
+          <a href="javascript:void(0)" onclick="openReclamacionesModal()" style="display: inline-flex; align-items: center; gap: 5px; color: #2563eb; text-decoration: none; font-weight: 700; font-size: 11px; background: rgba(37,99,235,0.06); padding: 5px 12px; border-radius: 20px; border: 1px solid rgba(37,99,235,0.18);">
+            <span>📖</span> <span>Libro de Reclamaciones Virtual (Indecopi)</span>
+          </a>
+        </div>
+        <p id="loginFooterVersion" style="font-size: 10px; color: #94a3b8; margin: 0;">AliviaFin v69.6 · Paz mental para tu dinero</p>
       </div>
     </div>
   </div>
@@ -241,6 +246,10 @@
         <button class="desktop-nav-item" id="deskNavLegalBtn" onclick="openLegalModal('terms')" style="margin-bottom: 6px;" title="Términos del Servicio y Políticas de Privacidad">
           <span class="desk-nav-icon">⚖️</span>
           <span>Legal & Privacidad</span>
+        </button>
+        <button class="desktop-nav-item" id="deskNavReclamosBtn" onclick="openReclamacionesModal()" style="margin-bottom: 6px;" title="Libro de Reclamaciones Virtual (Indecopi)">
+          <span class="desk-nav-icon">📖</span>
+          <span>Reclamaciones</span>
         </button>
         <div class="desktop-sidebar-user-card" onclick="handleLogout()" title="Cerrar sesión">
           <span style="font-size: 15px;">👤</span>
