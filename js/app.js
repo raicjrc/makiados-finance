@@ -75,9 +75,9 @@
     let CATEGORIES = { ...GENERIC_CATEGORIES };
 
     // ================================================================
-    // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v69.2)
+    // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v69.6)
     // ================================================================
-    const APP_VERSION = 'v69.2';
+    const APP_VERSION = 'v69.6';
 
     const SUPPORTED_CURRENCIES = {
       'PEN': { code: 'PEN', symbol: 'S/', name: 'Soles peruanos', flag: '🇵🇪', locale: 'es-PE' },
@@ -5426,19 +5426,211 @@
     function switchLegalTab(tab) {
       const termsSection = document.getElementById('legalSectionTerms');
       const privacySection = document.getElementById('legalSectionPrivacy');
+      const refundsSection = document.getElementById('legalSectionRefunds');
+      const providerSection = document.getElementById('legalSectionProvider');
+
       const btnTerms = document.getElementById('btnTabLegalTerms');
       const btnPrivacy = document.getElementById('btnTabLegalPrivacy');
+      const btnRefunds = document.getElementById('btnTabLegalRefunds');
+      const btnProvider = document.getElementById('btnTabLegalProvider');
 
-      if (tab === 'privacy') {
-        if (termsSection) termsSection.style.display = 'none';
-        if (privacySection) privacySection.style.display = 'block';
-        if (btnTerms) btnTerms.classList.remove('active');
-        if (btnPrivacy) btnPrivacy.classList.add('active');
+      const tabs = [
+        { id: 'terms', el: termsSection, btn: btnTerms },
+        { id: 'privacy', el: privacySection, btn: btnPrivacy },
+        { id: 'refunds', el: refundsSection, btn: btnRefunds },
+        { id: 'provider', el: providerSection, btn: btnProvider }
+      ];
+
+      tabs.forEach(t => {
+        if (t.el) t.el.style.display = (t.id === tab) ? 'block' : 'none';
+        if (t.btn) {
+          if (t.id === tab) t.btn.classList.add('active');
+          else t.btn.classList.remove('active');
+        }
+      });
+    }
+
+    // ================================================================
+    // LIBRO DE RECLAMACIONES VIRTUAL (LEY N° 29571 / D.S. 011-2011-PCM)
+    // ================================================================
+    let lastReclamacionVoucherData = null;
+
+    function openReclamacionesModal() {
+      closeModal('settingsModal');
+      closeModal('legalModal');
+      if (typeof closeGlassModal === 'function') closeGlassModal('finzenProModal');
+
+      const form = document.getElementById('reclamacionForm');
+      const voucher = document.getElementById('reclamacionVoucher');
+      if (form) {
+        form.style.display = 'block';
+        form.reset();
+        handleTipoReclamoChange('reclamo');
+
+        // Pre-llenar datos del usuario si está en sesión
+        if (currentUser && currentUser.email) {
+          const emailInput = document.getElementById('recEmail');
+          if (emailInput && !emailInput.value) emailInput.value = currentUser.email;
+        }
+        if (currentUser && currentUser.user_metadata) {
+          const nameInput = document.getElementById('recNombre');
+          const metaName = currentUser.user_metadata.full_name || currentUser.user_metadata.name;
+          if (nameInput && metaName && !nameInput.value) nameInput.value = metaName;
+        }
+      }
+      if (voucher) voucher.style.display = 'none';
+
+      openModalById('reclamacionesModal');
+    }
+
+    function handleTipoReclamoChange(tipo) {
+      const lblReclamo = document.getElementById('lblTipoReclamo');
+      const lblQueja = document.getElementById('lblTipoQueja');
+      if (tipo === 'queja') {
+        if (lblQueja) {
+          lblQueja.style.borderColor = '#2563eb';
+          lblQueja.style.background = '#eff6ff';
+        }
+        if (lblReclamo) {
+          lblReclamo.style.borderColor = '#cbd5e1';
+          lblReclamo.style.background = '#ffffff';
+        }
       } else {
-        if (termsSection) termsSection.style.display = 'block';
-        if (privacySection) privacySection.style.display = 'none';
-        if (btnTerms) btnTerms.classList.add('active');
-        if (btnPrivacy) btnPrivacy.classList.remove('active');
+        if (lblReclamo) {
+          lblReclamo.style.borderColor = '#2563eb';
+          lblReclamo.style.background = '#eff6ff';
+        }
+        if (lblQueja) {
+          lblQueja.style.borderColor = '#cbd5e1';
+          lblQueja.style.background = '#ffffff';
+        }
+      }
+    }
+
+    async function handleReclamacionSubmit(e) {
+      if (e) e.preventDefault();
+      const submitBtn = document.getElementById('btnSubmitReclamo');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Enviando...';
+      }
+
+      const nombre = (document.getElementById('recNombre')?.value || '').trim();
+      const tipoDoc = document.getElementById('recTipoDoc')?.value || 'DNI';
+      const numDoc = (document.getElementById('recNumDoc')?.value || '').trim();
+      const email = (document.getElementById('recEmail')?.value || '').trim();
+      const telefono = (document.getElementById('recTelefono')?.value || '').trim();
+      const servicio = document.getElementById('recServicio')?.value || 'AliviaFin PRO';
+      const monto = parseFloat(document.getElementById('recMonto')?.value || '0') || 0;
+      
+      const tipoRadio = document.querySelector('input[name="recTipo"]:checked');
+      const tipo = tipoRadio ? tipoRadio.value : 'reclamo';
+      
+      const detalle = (document.getElementById('recDetalle')?.value || '').trim();
+      const pedido = (document.getElementById('recPedido')?.value || '').trim();
+
+      const year = new Date().getFullYear();
+      const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+      const codigo = `ALV-REC-${year}-${randomSuffix}`;
+      const nowIso = new Date().toISOString();
+      const formattedDate = new Date().toLocaleString('es-PE', { dateStyle: 'long', timeStyle: 'short' });
+
+      const payload = {
+        codigo,
+        consumidor_nombre: nombre,
+        consumidor_tipo_doc: tipoDoc,
+        consumidor_num_doc: numDoc,
+        consumidor_email: email,
+        consumidor_telefono: telefono,
+        tipo_servicio: servicio,
+        monto_reclamado: monto,
+        tipo,
+        detalle,
+        pedido,
+        estado: 'pendiente',
+        created_at: nowIso
+      };
+
+      // 1. Guardar en Supabase (tabla app_reclamaciones con fallback resiliente a app_feedback)
+      try {
+        if (supabaseClient) {
+          const { error: recErr } = await supabaseClient
+            .from('app_reclamaciones')
+            .insert([payload]);
+
+          if (recErr) {
+            console.warn('Nota: app_reclamaciones aún no migrada, guardando en telemetría app_feedback:', recErr.message);
+            await supabaseClient.from('app_feedback').insert([{
+              user_id: currentUser ? currentUser.id : null,
+              user_email: email,
+              type: 'libro_reclamaciones',
+              message: `[${codigo}] ${tipo.toUpperCase()}: ${detalle} | Pedido: ${pedido}`,
+              metadata: payload,
+              created_at: nowIso
+            }]);
+          }
+        }
+      } catch (err) {
+        console.warn('Error enviando reclamación a cloud:', err);
+      }
+
+      // 2. Respaldo local inmutable de seguridad
+      try {
+        const localList = JSON.parse(localStorage.getItem('finanzas_reclamaciones_backup') || '[]');
+        localList.push(payload);
+        localStorage.setItem('finanzas_reclamaciones_backup', JSON.stringify(localList));
+      } catch (e) {}
+
+      // 3. Mostrar Voucher en pantalla
+      lastReclamacionVoucherData = { ...payload, formattedDate };
+      const form = document.getElementById('reclamacionForm');
+      const voucher = document.getElementById('reclamacionVoucher');
+
+      const elCod = document.getElementById('voucherCodigo');
+      const elFec = document.getElementById('voucherFecha');
+      const elCon = document.getElementById('voucherConsumidor');
+      const elEma = document.getElementById('voucherEmail');
+      const elTip = document.getElementById('voucherTipo');
+
+      if (elCod) elCod.textContent = codigo;
+      if (elFec) elFec.textContent = formattedDate;
+      if (elCon) elCon.textContent = `${nombre} (${tipoDoc}: ${numDoc})`;
+      if (elEma) elEma.textContent = email;
+      if (elTip) elTip.textContent = tipo.toUpperCase() + ' — ' + servicio;
+
+      if (form) form.style.display = 'none';
+      if (voucher) voucher.style.display = 'block';
+
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '📝 Enviar Reclamación';
+      }
+
+      showToast('✅ Reclamación registrada: ' + codigo, 'success');
+    }
+
+    function copyReclamacionVoucher() {
+      if (!lastReclamacionVoucherData) return;
+      const d = lastReclamacionVoucherData;
+      const text = `📖 HOJA DE RECLAMACIÓN VIRTUAL — ALIVIAFIN (D.S. 011-2011-PCM)
+Código de seguimiento: ${d.codigo}
+Fecha de registro: ${d.formattedDate}
+Consumidor: ${d.consumidor_nombre} (${d.consumidor_tipo_doc}: ${d.consumidor_num_doc})
+Email: ${d.consumidor_email} | Tel: ${d.consumidor_telefono}
+Servicio: ${d.tipo_servicio} (Monto: S/ ${d.monto_reclamado})
+Tipo: ${d.tipo.toUpperCase()}
+Detalle: ${d.detalle}
+Pedido concreto: ${d.pedido}
+Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+          showToast('📋 Constancia copiada al portapapeles', 'info');
+        }).catch(() => {
+          showToast('Código: ' + d.codigo, 'info');
+        });
+      } else {
+        showToast('Código: ' + d.codigo, 'info');
       }
     }
 
@@ -6128,6 +6320,10 @@ window.handleSaveSalary = handleSaveSalary;
 window.openSecurityModal = openSecurityModal;
 window.openLegalModal = openLegalModal;
 window.switchLegalTab = switchLegalTab;
+window.openReclamacionesModal = openReclamacionesModal;
+window.handleTipoReclamoChange = handleTipoReclamoChange;
+window.handleReclamacionSubmit = handleReclamacionSubmit;
+window.copyReclamacionVoucher = copyReclamacionVoucher;
 window.openExplainSurplusModal = openExplainSurplusModal;
 window.renderUpcomingDueDates = renderUpcomingDueDates;
 window.promptPayBill = promptPayBill;

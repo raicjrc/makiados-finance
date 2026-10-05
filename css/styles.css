@@ -4687,6 +4687,22 @@
       color: #e2e8f0;
     }
 
+    @media (max-width: 640px) {
+      #reclamacionesModal input,
+      #reclamacionesModal select,
+      #reclamacionesModal textarea {
+        font-size: 16px !important;
+      }
+      .legal-tabs-row {
+        padding: 8px 12px;
+        gap: 4px;
+      }
+      .legal-tab-btn {
+        padding: 7px 10px;
+        font-size: 11px;
+      }
+    }
+
     /* ====== MASTER ADMIN DASHBOARD (CEO / FOUNDER PANEL v68.0) ====== */
     .master-modal-container {
       max-width: 1040px;

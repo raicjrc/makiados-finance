@@ -256,3 +256,45 @@ CREATE INDEX IF NOT EXISTS idx_user_subs_created ON public.user_subscriptions(cr
 -- 3. Optimización para filtrado de pings y heartbeats en app_feedback
 CREATE INDEX IF NOT EXISTS idx_feedback_type_created ON public.app_feedback(type, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_feedback_user_email ON public.app_feedback(user_email);
+
+-- ================================================================
+-- TABLA LIBRO DE RECLAMACIONES VIRTUAL (Ley N° 29571 / D.S. 011-2011-PCM)
+-- ================================================================
+CREATE TABLE IF NOT EXISTS public.app_reclamaciones (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  codigo text NOT NULL UNIQUE,
+  consumidor_nombre text NOT NULL,
+  consumidor_tipo_doc text NOT NULL DEFAULT 'DNI', -- 'DNI', 'CE', 'Pasaporte'
+  consumidor_num_doc text NOT NULL,
+  consumidor_email text NOT NULL,
+  consumidor_telefono text,
+  consumidor_domicilio text,
+  tipo_servicio text NOT NULL DEFAULT 'Suscripción AliviaFin PRO',
+  monto_reclamado numeric(10,2) DEFAULT 0,
+  tipo text NOT NULL DEFAULT 'reclamo', -- 'reclamo' (producto/servicio) o 'queja' (atención)
+  detalle text NOT NULL,
+  pedido text NOT NULL,
+  estado text DEFAULT 'pendiente', -- 'pendiente', 'en_revision', 'atendido', 'archivado'
+  respuesta_proveedor text,
+  fecha_respuesta timestamp with time zone,
+  created_at timestamp with time zone DEFAULT now()
+);
+
+ALTER TABLE public.app_reclamaciones ENABLE ROW LEVEL SECURITY;
+
+-- Cualquier usuario (incluso anónimo o no logueado) puede registrar una reclamación conforme a Indecopi
+DROP POLICY IF EXISTS "Cualquiera puede registrar un reclamo" ON public.app_reclamaciones;
+CREATE POLICY "Cualquiera puede registrar un reclamo" ON public.app_reclamaciones
+  FOR INSERT
+  WITH CHECK (true);
+
+-- Solo el administrador/fundador puede ver y gestionar las reclamaciones
+DROP POLICY IF EXISTS "Solo admin puede ver y responder reclamos" ON public.app_reclamaciones;
+CREATE POLICY "Solo admin puede ver y responder reclamos" ON public.app_reclamaciones
+  FOR ALL
+  USING (auth.email() = 'cesar.risso.f@gmail.com')
+  WITH CHECK (auth.email() = 'cesar.risso.f@gmail.com');
+
+CREATE INDEX IF NOT EXISTS idx_reclamaciones_codigo ON public.app_reclamaciones(codigo);
+CREATE INDEX IF NOT EXISTS idx_reclamaciones_created ON public.app_reclamaciones(created_at DESC);
+

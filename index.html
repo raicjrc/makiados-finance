@@ -56,6 +56,9 @@
           <a href="javascript:void(0)" onclick="openForgotPasswordModal()" style="font-size: 11.5px; color: #4f46e5; font-weight: 700; text-decoration: none; cursor: pointer;">¿Olvidaste tu contraseña?</a>
         </div>
         <div id="loginErrorMsg" style="color: #dc2626; font-size: 12px; font-weight: 700; margin-bottom: 12px; display: none; padding: 8px 12px; background: #fff1f2; border-radius: 8px; border: 1px solid #fca5a5;"></div>
+        <p style="font-size: 11px; color: #64748b; text-align: center; margin-bottom: 12px; line-height: 1.4;">
+          Al iniciar sesión, aceptas nuestros <a href="javascript:void(0)" onclick="openLegalModal('terms')" style="color: #4f46e5; text-decoration: underline; font-weight: 600;">Términos</a> y <a href="javascript:void(0)" onclick="openLegalModal('privacy')" style="color: #4f46e5; text-decoration: underline; font-weight: 600;">Privacidad</a>.
+        </p>
         <button type="submit" id="loginSubmitBtn" class="btn btn-primary" style="width: 100%; padding: 13px; font-size: 14px; font-weight: 800; background: linear-gradient(135deg, #4f46e5, #6366f1); border-radius: 12px; letter-spacing: 0.02em; box-shadow: 0 4px 16px rgba(79,70,229,0.35);">
           🔓 Iniciar Sesión
         </button>
@@ -80,6 +83,9 @@
         </div>
         <div id="registerErrorMsg" style="color: #dc2626; font-size: 12px; font-weight: 700; margin-bottom: 12px; display: none; padding: 8px 12px; background: #fff1f2; border-radius: 8px; border: 1px solid #fca5a5;"></div>
         <div id="registerSuccessMsg" style="color: #059669; font-size: 12px; font-weight: 700; margin-bottom: 12px; display: none; padding: 8px 12px; background: #ecfdf5; border-radius: 8px; border: 1px solid #a7f3d0;"></div>
+        <p style="font-size: 11px; color: #64748b; text-align: center; margin-bottom: 12px; line-height: 1.4;">
+          Al crear tu cuenta, aceptas nuestros <a href="javascript:void(0)" onclick="openLegalModal('terms')" style="color: #059669; text-decoration: underline; font-weight: 600;">Términos</a> y <a href="javascript:void(0)" onclick="openLegalModal('privacy')" style="color: #059669; text-decoration: underline; font-weight: 600;">Privacidad</a>.
+        </p>
         <button type="submit" id="registerSubmitBtn" class="btn btn-primary" style="width: 100%; padding: 13px; font-size: 14px; font-weight: 800; background: linear-gradient(135deg, #059669, #10b981); border-radius: 12px; letter-spacing: 0.02em; box-shadow: 0 4px 16px rgba(5,150,105,0.35);">
           🚀 Crear Mi Cuenta
         </button>
@@ -105,8 +111,17 @@
         </button>
       </div>
 
-      <!-- Footer versión -->
-      <p id="loginFooterVersion" style="text-align: center; font-size: 10px; color: #94a3b8; margin-top: 20px; margin-bottom: 0;">AliviaFin v63.2 · Powered by Supabase</p>
+      <!-- Footer versión y enlaces legales -->
+      <div style="text-align: center; margin-top: 18px;">
+        <p id="loginFooterVersion" style="font-size: 10.5px; color: #94a3b8; margin-bottom: 5px;">AliviaFin v69.6 · Paz mental para tu dinero</p>
+        <div style="display: flex; justify-content: center; gap: 8px; font-size: 10.5px;">
+          <a href="javascript:void(0)" onclick="openLegalModal('terms')" style="color: #64748b; text-decoration: none; font-weight: 600;">Términos</a>
+          <span style="color: #cbd5e1;">•</span>
+          <a href="javascript:void(0)" onclick="openLegalModal('privacy')" style="color: #64748b; text-decoration: none; font-weight: 600;">Privacidad</a>
+          <span style="color: #cbd5e1;">•</span>
+          <a href="javascript:void(0)" onclick="openReclamacionesModal()" style="color: #2563eb; text-decoration: none; font-weight: 700;">📖 Reclamaciones</a>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1096,23 +1111,35 @@
         <div style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-top: 6px; margin-bottom: 2px;">Soporte & Legal</div>
         <button type="button" class="btn btn-secondary" id="settingsWhatsNewBtn" onclick="openWhatsNewModal();" style="width: 100%; text-align: left; padding: 10px;">🚀 Novedades</button>
         <button type="button" class="btn btn-secondary" onclick="openFeedbackModal();" style="width: 100%; text-align: left; padding: 10px;">💬 Contacto y Soporte</button>
+        <button type="button" class="btn btn-secondary" onclick="openLegalModal('refunds');" style="width: 100%; text-align: left; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
+          <span>💵 Garantía y Reembolsos (7 Días)</span>
+          <span style="font-size: 9.5px; font-weight: 800; background: rgba(16,185,129,0.1); color: #059669; padding: 2px 6px; border-radius: 6px;">100% Seguro</span>
+        </button>
         <button type="button" class="btn btn-secondary" onclick="openLegalModal('privacy');" style="width: 100%; text-align: left; padding: 10px;">🛡️ Políticas de Privacidad</button>
         <button type="button" class="btn btn-secondary" onclick="openLegalModal('terms');" style="width: 100%; text-align: left; padding: 10px;">⚖️ Términos y Condiciones</button>
+        <button type="button" class="btn btn-secondary" onclick="openReclamacionesModal();" style="width: 100%; text-align: left; padding: 10px; display: flex; justify-content: space-between; align-items: center;" title="Libro de Reclamaciones Virtual conforme a ley peruana">
+          <span>📖 Libro de Reclamaciones Virtual</span>
+          <span style="font-size: 9.5px; font-weight: 800; background: rgba(59,130,246,0.1); color: #2563eb; padding: 2px 6px; border-radius: 6px;">Indecopi</span>
+        </button>
         <button type="button" class="btn btn-secondary" onclick="promptUserAccountDeletion();" style="width: 100%; text-align: left; padding: 10px; color: #ef4444; display: flex; justify-content: space-between; align-items: center;" title="Derecho al Olvido y Supresión (Ley N° 29733 / GDPR)">
           <span>🗑️ Eliminar Mi Cuenta y Datos (Ley 29733)</span>
           <span style="font-size: 10px; font-weight: 800; background: rgba(239,68,68,0.1); color: #ef4444; padding: 2px 6px; border-radius: 6px;">ARCO</span>
         </button>
         
-        <!-- Info de cuenta y versión -->
+        <!-- Info de cuenta, titular y versión -->
         <div style="border-top: 1px solid #f3f4f6; padding-top: 12px; margin-top: 4px;">
           <div style="background: #f8fafc; border-radius: 12px; padding: 12px 14px; border: 1px solid #e5e7eb;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
               <span style="font-size: 11px; font-weight: 700; color: #374151;">👤 Cuenta</span>
               <span id="settingsUserEmail" style="font-size: 11px; color: #6b7280; font-weight: 600;"></span>
             </div>
-            <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
               <span style="font-size: 11px; font-weight: 700; color: #374151;">📱 Versión</span>
-              <span style="font-size: 11px; color: #0d9488; font-weight: 800;" id="settingsVersion">v66.0</span>
+              <span style="font-size: 11px; color: #0d9488; font-weight: 800;" id="settingsVersion">v69.6</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 5px; border-top: 1px dashed #e2e8f0;">
+              <span style="font-size: 10.5px; font-weight: 700; color: #64748b;">🏢 Titular / Proveedor</span>
+              <span style="font-size: 10.5px; color: #334155; font-weight: 700;">César Risso · Lima, Perú</span>
             </div>
           </div>
         </div>
@@ -2298,6 +2325,12 @@
         El acelerador para tu tranquilidad financiera
       </div>
 
+      <!-- Badge de Garantía de Satisfacción 7 Días -->
+      <div style="display: inline-flex; align-items: center; justify-content: center; gap: 6px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); color: #047857; padding: 5px 12px; border-radius: 20px; font-size: 11.5px; font-weight: 800; margin-bottom: 10px; max-width: 90%;">
+        <span>🛡️</span>
+        <span>Garantía de Satisfacción 7 Días · Reembolso 100%</span>
+      </div>
+
       <!-- Badge de Función Contextual Soft Paywall -->
       <div id="proModalContextBadge" style="display: none; background: rgba(245, 158, 11, 0.14); border: 1px solid rgba(245, 158, 11, 0.35); color: #d97706; padding: 4px 12px; border-radius: 20px; font-size: 11.5px; font-weight: 800; margin-bottom: 14px; align-items: center; justify-content: center; gap: 5px;">
         <span>⚡ Desbloquea:</span> <span id="proModalFeatureName" style="color: #b45309;">Función PRO</span>
@@ -2342,6 +2375,15 @@
       <button type="button" onclick="closeGlassModal('finzenProModal')" style="background: transparent; border: none; color: #94a3b8; font-size: 11.5px; font-weight: 600; cursor: pointer; padding: 6px;">
         Continuar con la versión gratuita
       </button>
+
+      <!-- Footer legal y Libro de Reclamaciones -->
+      <div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(15, 23, 42, 0.06); display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 11px;">
+        <a href="javascript:void(0)" onclick="closeGlassModal('finzenProModal'); openLegalModal('refunds');" style="color: #64748b; text-decoration: none; font-weight: 600;">🛡️ Reembolsos</a>
+        <span style="color: #cbd5e1;">•</span>
+        <a href="javascript:void(0)" onclick="closeGlassModal('finzenProModal'); openLegalModal('terms');" style="color: #64748b; text-decoration: none; font-weight: 600;">⚖️ Términos</a>
+        <span style="color: #cbd5e1;">•</span>
+        <a href="javascript:void(0)" onclick="closeGlassModal('finzenProModal'); openReclamacionesModal();" style="color: #2563eb; text-decoration: none; font-weight: 700;">📖 Reclamaciones</a>
+      </div>
     </div>
   </div>
 
@@ -2384,14 +2426,16 @@
       <div class="legal-modal-header">
         <div style="display: flex; align-items: center; gap: 8px;">
           <span style="font-size: 18px;">⚖️</span>
-          <span style="font-size: 15px; font-weight: 800; color: var(--text-main);">Legal & Privacidad</span>
+          <span style="font-size: 15px; font-weight: 800; color: var(--text-main);">Legal, Privacidad & Reembolsos</span>
         </div>
         <button type="button" onclick="closeModal('legalModal')" style="background: rgba(0,0,0,0.06); border: none; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 13px; cursor: pointer; color: #64748b;">✕</button>
       </div>
 
-      <div class="legal-tabs-row">
-        <button type="button" class="legal-tab-btn active" id="btnTabLegalTerms" onclick="switchLegalTab('terms')">Términos del Servicio</button>
-        <button type="button" class="legal-tab-btn" id="btnTabLegalPrivacy" onclick="switchLegalTab('privacy')">Políticas de Privacidad</button>
+      <div class="legal-tabs-row" style="overflow-x: auto; white-space: nowrap; scrollbar-width: none;">
+        <button type="button" class="legal-tab-btn active" id="btnTabLegalTerms" onclick="switchLegalTab('terms')">Términos</button>
+        <button type="button" class="legal-tab-btn" id="btnTabLegalPrivacy" onclick="switchLegalTab('privacy')">Privacidad</button>
+        <button type="button" class="legal-tab-btn" id="btnTabLegalRefunds" onclick="switchLegalTab('refunds')">Reembolsos & Garantía</button>
+        <button type="button" class="legal-tab-btn" id="btnTabLegalProvider" onclick="switchLegalTab('provider')">Titular</button>
       </div>
 
       <div class="legal-content-body">
@@ -2414,7 +2458,10 @@
           <p style="margin: 0 0 10px 0; color: var(--text-muted);">Tus datos financieros te pertenecen exclusivamente a ti. Puedes exportar tus reportes a PDF o Excel / CSV en cualquier momento, así como solicitar la eliminación definitiva de tu cuenta y registros asociados conforme a ley.</p>
 
           <h4 style="margin: 0 0 6px 0; font-size: 13.5px; font-weight: 800; color: var(--text-main);">5. Uso Responsable & Descargo de Responsabilidad</h4>
-          <p style="margin: 0 0 4px 0; color: var(--text-muted);">Las proyecciones de ahorro, simulaciones de cuotas y fechas de vencimiento son de carácter estimativo para facilitar tu planificación personal. El usuario es el único responsable de la exactitud de los montos ingresados.</p>
+          <p style="margin: 0 0 10px 0; color: var(--text-muted);">Las proyecciones de ahorro, simulaciones de cuotas y fechas de vencimiento son de carácter estimativo para facilitar tu planificación personal. El usuario es el único responsable de la exactitud de los montos ingresados.</p>
+
+          <h4 style="margin: 0 0 6px 0; font-size: 13.5px; font-weight: 800; color: var(--text-main);">6. Jurisdicción y Ley Aplicable</h4>
+          <p style="margin: 0 0 4px 0; color: var(--text-muted);">Los presentes Términos se rigen por las leyes de la República del Perú. Para cualquier controversia derivada del uso de la plataforma o de la contratación de planes de pago, las partes se someten a la competencia territorial de los jueces y tribunales del Distrito Judicial de Lima, sin perjuicio de los derechos de protección al consumidor amparados por el Código de Protección y Defensa del Consumidor (Ley N° 29571) ante Indecopi.</p>
         </div>
 
         <div id="legalSectionPrivacy" style="display: none;">
@@ -2442,10 +2489,207 @@
           <h4 style="margin: 0 0 6px 0; font-size: 13.5px; font-weight: 800; color: var(--text-main);">5. Cero Venta de Información Personal</h4>
           <p style="margin: 0 0 4px 0; color: var(--text-muted);">AliviaFin no comercializa, monetiza ni comparte tu historial financiero con centrales de riesgo, aseguradoras, anunciantes ni entidades crediticias. Tus datos te pertenecen al 100%.</p>
         </div>
+
+        <div id="legalSectionRefunds" style="display: none;">
+          <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 12px; padding: 12px; margin-bottom: 12px;">
+            <div style="font-weight: 800; color: #047857; font-size: 13px; margin-bottom: 4px;">🛡️ Garantía de Satisfacción 100% (7 Días)</div>
+            <p style="margin: 0; font-size: 12px; color: #065f46; line-height: 1.45;">Queremos que sientas total tranquilidad al usar AliviaFin PRO. Si dentro de los primeros 7 días naturales posteriores a tu activación consideras que la plataforma no cumple tus expectativas, te reembolsamos el 100% de tu dinero sin preguntas incómodas.</p>
+          </div>
+
+          <h4 style="margin: 0 0 6px 0; font-size: 13.5px; font-weight: 800; color: var(--text-main);">1. Cobertura del Reembolso</h4>
+          <p style="margin: 0 0 10px 0; color: var(--text-muted);">Aplica tanto para la suscripción mensual de <strong>S/ 4.90</strong> como para el plan de acceso vitalicio preferencial de <strong>S/ 19.90</strong> adquiridos directamente por nuestros canales oficiales.</p>
+
+          <h4 style="margin: 0 0 6px 0; font-size: 13.5px; font-weight: 800; color: var(--text-main);">2. Cómo Solicitar tu Devolución</h4>
+          <p style="margin: 0 0 10px 0; color: var(--text-muted);">
+            Para solicitar tu reembolso, únicamente debes contactarnos por cualquiera de nuestros canales:<br>
+            • <strong>WhatsApp Oficial:</strong> +51 914 688 135<br>
+            • <strong>Correo de Soporte:</strong> soporte@aliviafin.com<br>
+            Indicando tu correo de cuenta registrado en AliviaFin y la captura o constancia de tu operación por Yape, Plin o transferencia bancaria.
+          </p>
+
+          <h4 style="margin: 0 0 6px 0; font-size: 13.5px; font-weight: 800; color: var(--text-main);">3. Plazos de Acreditación del Dinero</h4>
+          <p style="margin: 0 0 10px 0; color: var(--text-muted);">Una vez recibido tu requerimiento y verificado el abono, la devolución se efectúa en un plazo máximo de <strong>24 a 48 horas hábiles</strong> a través del mismo número de Yape/Plin o cuenta bancaria de origen.</p>
+
+          <h4 style="margin: 0 0 6px 0; font-size: 13.5px; font-weight: 800; color: var(--text-main);">4. Cancelación del Plan Mensual</h4>
+          <p style="margin: 0 0 4px 0; color: var(--text-muted);">Si estás en el plan mensual de S/ 4.90, puedes solicitar la no renovación en cualquier momento sin penalidad alguna. Mantendrás tu acceso a las herramientas PRO hasta la finalización del mes ya pagado.</p>
+        </div>
+
+        <div id="legalSectionProvider" style="display: none;">
+          <h4 style="margin: 0 0 6px 0; font-size: 13.5px; font-weight: 800; color: var(--text-main);">Identificación del Titular del Negocio</h4>
+          <p style="margin: 0 0 10px 0; color: var(--text-muted);">En cumplimiento con los deberes de información al consumidor exigidos por la legislación peruana y los estándares de transparencia en comercio electrónico:</p>
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; font-size: 12px; line-height: 1.6; color: #334155; margin-bottom: 12px;">
+            <div><strong>• Titular / Responsable Legal:</strong> César Risso (Persona Natural con Negocio)</div>
+            <div><strong>• Denominación de la Plataforma:</strong> AliviaFin</div>
+            <div><strong>• Domicilio Legal:</strong> Lima, República del Perú</div>
+            <div><strong>• Correo Legal & Soporte:</strong> soporte@aliviafin.com / privacidad@aliviafin.com</div>
+            <div><strong>• Canal de Atención Directa:</strong> WhatsApp Oficial (+51 914 688 135)</div>
+            <div><strong>• Naturaleza del Software:</strong> Plataforma web y PWA para organización y optimización presupuestaria personal.</div>
+          </div>
+          <p style="margin: 0 0 4px 0; color: var(--text-muted); font-size: 11.5px;">Para requerimientos formales, consultas sobre el tratamiento de datos o ejercicio de derechos ARCO, puedes comunicarte directamente al correo antes indicado.</p>
+        </div>
       </div>
 
-      <div style="padding: 12px 20px; background: rgba(15, 23, 42, 0.02); border-top: 1px solid var(--border-light, #e2e8f0); text-align: right;">
+      <div style="padding: 12px 20px; background: rgba(15, 23, 42, 0.02); border-top: 1px solid var(--border-light, #e2e8f0); display: flex; justify-content: space-between; align-items: center;">
+        <button type="button" onclick="closeModal('legalModal'); openReclamacionesModal();" style="background: none; border: none; font-size: 11.5px; color: #2563eb; font-weight: 700; cursor: pointer; text-decoration: underline; padding: 0;">📖 Libro de Reclamaciones Virtual</button>
         <button type="button" class="btn btn-primary" onclick="closeModal('legalModal')" style="padding: 8px 18px; font-size: 12px; font-weight: 800; border-radius: 10px;">Entendido</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: LIBRO DE RECLAMACIONES VIRTUAL (LEY N° 29571 / D.S. 011-2011-PCM · INDECOPI) -->
+  <div class="glass-backdrop" id="reclamacionesModal" style="display: none; z-index: 10006;" onclick="if(event.target === this) closeModal('reclamacionesModal')">
+    <div class="legal-modal-container" style="max-width: 580px; max-height: 90vh;">
+      <div class="legal-modal-header">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 18px;">📖</span>
+          <div>
+            <div style="font-size: 15px; font-weight: 800; color: var(--text-main);">Libro de Reclamaciones Virtual</div>
+            <div style="font-size: 10.5px; color: #64748b;">Conforme a la Ley N° 29571 y D.S. 011-2011-PCM · Indecopi</div>
+          </div>
+        </div>
+        <button type="button" onclick="closeModal('reclamacionesModal')" style="background: rgba(0,0,0,0.06); border: none; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 13px; cursor: pointer; color: #64748b;">✕</button>
+      </div>
+
+      <div class="legal-content-body" style="padding: 16px 20px;">
+        <!-- Ficha Proveedor -->
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 12px; margin-bottom: 14px; font-size: 11px; line-height: 1.5; color: #475569;">
+          <div><strong>Razón Social / Proveedor:</strong> AliviaFin (César Risso - Titular)</div>
+          <div><strong>Domicilio:</strong> Lima, Perú · <strong>Contacto:</strong> soporte@aliviafin.com / +51 914 688 135</div>
+        </div>
+
+        <!-- FORMULARIO DE RECLAMACIÓN -->
+        <form id="reclamacionForm" onsubmit="handleReclamacionSubmit(event)">
+          <!-- Sección 1: Consumidor -->
+          <div style="font-size: 11px; font-weight: 800; color: #0f172a; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.03em;">
+            1. Identificación del Consumidor Reclamante
+          </div>
+          <div style="margin-bottom: 10px;">
+            <label style="display: block; font-size: 11px; font-weight: 700; color: #374151; margin-bottom: 4px;">Nombres y Apellidos *</label>
+            <input type="text" id="recNombre" class="form-control" placeholder="Ej: Juan Pérez Morales" required style="width: 100%;">
+          </div>
+
+          <div style="display: grid; grid-template-columns: 110px 1fr; gap: 8px; margin-bottom: 10px;">
+            <div>
+              <label style="display: block; font-size: 11px; font-weight: 700; color: #374151; margin-bottom: 4px;">Documento *</label>
+              <select id="recTipoDoc" class="form-control" style="width: 100%;">
+                <option value="DNI">DNI</option>
+                <option value="CE">C. Extranjería</option>
+                <option value="Pasaporte">Pasaporte</option>
+              </select>
+            </div>
+            <div>
+              <label style="display: block; font-size: 11px; font-weight: 700; color: #374151; margin-bottom: 4px;">Número de Documento *</label>
+              <input type="text" id="recNumDoc" class="form-control" placeholder="N° de Documento" required style="width: 100%;">
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px;">
+            <div>
+              <label style="display: block; font-size: 11px; font-weight: 700; color: #374151; margin-bottom: 4px;">Correo Electrónico *</label>
+              <input type="email" id="recEmail" class="form-control" placeholder="tu@correo.com" required style="width: 100%;">
+            </div>
+            <div>
+              <label style="display: block; font-size: 11px; font-weight: 700; color: #374151; margin-bottom: 4px;">Teléfono / WhatsApp *</label>
+              <input type="tel" id="recTelefono" class="form-control" placeholder="+51 9XX XXX XXX" required style="width: 100%;">
+            </div>
+          </div>
+
+          <!-- Sección 2: Bien o Servicio -->
+          <div style="font-size: 11px; font-weight: 800; color: #0f172a; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.03em;">
+            2. Identificación del Servicio Contratado
+          </div>
+          <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 8px; margin-bottom: 14px;">
+            <div>
+              <label style="display: block; font-size: 11px; font-weight: 700; color: #374151; margin-bottom: 4px;">Tipo de Servicio *</label>
+              <select id="recServicio" class="form-control" style="width: 100%;">
+                <option value="AliviaFin PRO Mensual (S/ 4.90)">AliviaFin PRO Mensual (S/ 4.90)</option>
+                <option value="AliviaFin PRO Vitalicio (S/ 19.90)">AliviaFin PRO Vitalicio (S/ 19.90)</option>
+                <option value="Plataforma Gratuita AliviaFin">Plataforma Gratuita AliviaFin</option>
+                <option value="Otro">Otro requerimiento</option>
+              </select>
+            </div>
+            <div>
+              <label style="display: block; font-size: 11px; font-weight: 700; color: #374151; margin-bottom: 4px;">Monto Reclamado (S/)</label>
+              <input type="number" id="recMonto" step="0.10" class="form-control" placeholder="0.00" style="width: 100%;">
+            </div>
+          </div>
+
+          <!-- Sección 3: Detalle de Reclamación -->
+          <div style="font-size: 11px; font-weight: 800; color: #0f172a; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.03em;">
+            3. Detalle de la Reclamación
+          </div>
+          
+          <!-- Selector Tipo: Reclamo vs Queja -->
+          <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+            <label style="flex: 1; display: flex; align-items: center; gap: 8px; padding: 10px 12px; border: 1.5px solid #2563eb; border-radius: 12px; cursor: pointer; background: #eff6ff;" id="lblTipoReclamo">
+              <input type="radio" name="recTipo" value="reclamo" checked onchange="handleTipoReclamoChange('reclamo')" style="accent-color: #2563eb;">
+              <div>
+                <div style="font-size: 12px; font-weight: 800; color: #0f172a;">Reclamo</div>
+                <div style="font-size: 10px; color: #64748b;">Disconformidad con el servicio adquirido</div>
+              </div>
+            </label>
+            <label style="flex: 1; display: flex; align-items: center; gap: 8px; padding: 10px 12px; border: 1.5px solid #cbd5e1; border-radius: 12px; cursor: pointer; background: #ffffff;" id="lblTipoQueja">
+              <input type="radio" name="recTipo" value="queja" onchange="handleTipoReclamoChange('queja')" style="accent-color: #2563eb;">
+              <div>
+                <div style="font-size: 12px; font-weight: 800; color: #0f172a;">Queja</div>
+                <div style="font-size: 10px; color: #64748b;">Malestar o descontento en la atención</div>
+              </div>
+            </label>
+          </div>
+
+          <div style="margin-bottom: 10px;">
+            <label style="display: block; font-size: 11px; font-weight: 700; color: #374151; margin-bottom: 4px;">Detalle de los hechos *</label>
+            <textarea id="recDetalle" rows="3" class="form-control" placeholder="Describe de forma clara lo sucedido..." required style="width: 100%; resize: vertical;"></textarea>
+          </div>
+
+          <div style="margin-bottom: 12px;">
+            <label style="display: block; font-size: 11px; font-weight: 700; color: #374151; margin-bottom: 4px;">Pedido concreto del consumidor *</label>
+            <textarea id="recPedido" rows="2" class="form-control" placeholder="Indica la solución esperada (ej: reembolso íntegro, asistencia técnica...)" required style="width: 100%; resize: vertical;"></textarea>
+          </div>
+
+          <!-- Declaración y Plazo Legal -->
+          <label style="display: flex; align-items: flex-start; gap: 8px; margin-bottom: 14px; font-size: 11.5px; color: #475569; cursor: pointer;">
+            <input type="checkbox" id="recCheckVeracidad" required style="margin-top: 2px; accent-color: #2563eb; width: 16px; height: 16px;">
+            <span>Declaro bajo juramento que los datos ingresados son verídicos. De conformidad con el D.S. 011-2011-PCM, el proveedor responderá en un plazo máximo de quince (15) días hábiles al correo electrónico indicado.</span>
+          </label>
+
+          <div style="display: flex; gap: 8px; justify-content: flex-end;">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('reclamacionesModal')" style="font-size: 12px;">Cancelar</button>
+            <button type="submit" id="btnSubmitReclamo" class="btn btn-primary" style="background: linear-gradient(135deg, #2563eb, #3b82f6); border: none; font-weight: 800; font-size: 12.5px; padding: 10px 18px; border-radius: 12px;">
+              📝 Enviar Reclamación
+            </button>
+          </div>
+        </form>
+
+        <!-- CONSTANCIA DE ENVÍO / VOUCHER INDECOPI -->
+        <div id="reclamacionVoucher" style="display: none; text-align: center; padding: 10px 0;">
+          <div style="font-size: 44px; margin-bottom: 8px;">✅</div>
+          <h3 style="font-size: 18px; font-weight: 800; color: #0f172a; margin: 0 0 4px 0;">¡Reclamación Registrada con Éxito!</h3>
+          <p style="font-size: 12px; color: #64748b; margin: 0 0 16px 0;">Conforme a la Ley N° 29571, tu reclamo ha quedado asentado formalmente.</p>
+
+          <div style="background: #f8fafc; border: 1.5px dashed #cbd5e1; border-radius: 16px; padding: 16px; text-align: left; margin-bottom: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <span style="font-size: 11px; font-weight: 700; color: #64748b;">CÓDIGO DE SEGUIMIENTO:</span>
+              <span id="voucherCodigo" style="font-size: 13.5px; font-weight: 900; color: #2563eb; background: #eff6ff; padding: 2px 8px; border-radius: 6px;">ALV-REC-2026-0001</span>
+            </div>
+            <div style="font-size: 11.5px; color: #334155; margin-bottom: 4px;"><strong>Fecha y Hora:</strong> <span id="voucherFecha"></span></div>
+            <div style="font-size: 11.5px; color: #334155; margin-bottom: 4px;"><strong>Consumidor:</strong> <span id="voucherConsumidor"></span></div>
+            <div style="font-size: 11.5px; color: #334155; margin-bottom: 4px;"><strong>Correo de Notificación:</strong> <span id="voucherEmail"></span></div>
+            <div style="font-size: 11.5px; color: #334155; margin-bottom: 8px;"><strong>Tipo de Requerimiento:</strong> <span id="voucherTipo"></span></div>
+            <div style="font-size: 11px; color: #059669; font-weight: 700; background: #ecfdf5; padding: 6px 10px; border-radius: 8px;">
+              ⏱️ Plazo legal de respuesta: Máximo quince (15) días hábiles improrrogables.
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 8px; justify-content: center; margin-bottom: 8px;">
+            <button type="button" class="btn btn-secondary" onclick="copyReclamacionVoucher()" style="font-size: 12px; font-weight: 700;">
+              📋 Copiar Constancia
+            </button>
+            <button type="button" class="btn btn-primary" onclick="closeModal('reclamacionesModal')" style="font-size: 12px; font-weight: 800;">
+              Entendido
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -2455,6 +2699,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
-  <script src="js/app.js?v=69.5"></script>
+  <script src="js/app.js?v=69.6"></script>
 </body>
 </html>
