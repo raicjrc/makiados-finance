@@ -5790,15 +5790,13 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
               title: '🎉 ¡Bienvenido a AliviaFin!',
               description: `
                 <div style="font-size: 13px; line-height: 1.5; color: #334155;">
-                  <p style="margin: 0 0 10px 0;">Recorreremos juntos en 1 minuto las herramientas esenciales para dominar tus finanzas con paz mental:</p>
+                  <p style="margin: 0 0 10px 0;">Recorreremos juntos en menos de 1 minuto lo esencial para dominar tus finanzas con paz mental:</p>
                   <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 12px; font-size: 12px; color: #475569; display: flex; flex-direction: column; gap: 6px;">
                     <div>💵 <b>Configurar sueldo y presupuestos</b></div>
                     <div>🔴 <b>Registrar gastos e ingresos extra</b></div>
                     <div>💳 <b>Simulador de compras en cuotas</b></div>
                     <div>💬 <b>Ayuda y soporte directo en 1 clic</b></div>
-                    <div>📥 <b>Descargar reporte mensual en PDF</b></div>
-                    <div>🌙 <b>Activar el Modo Noche Suave</b></div>
-                    <div>📊 <b>Conocer cada sección y pestaña</b></div>
+                    <div>📊 <b>Navegar por tus secciones clave</b></div>
                   </div>
                 </div>
               `
@@ -5861,33 +5859,11 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
           },
           // 7. Configurar Sueldo y Gastos Mensuales
           {
-            element: '#btnSettings',
+            element: getTarget('#btnSettings', '#deskNavTabSettings'),
             tabToSwitch: 'inicio',
             popover: {
               title: '⚙️ Configurar Sueldo y Gastos Mensuales',
               description: 'Desde este botón de Ajustes puedes cambiar tu sueldo en <b>"✏️ Editar mi Sueldo Inicial"</b>, ajustar presupuestos de gastos fijos en <b>"⚙️ Gestor de Categorías"</b>, o relanzar el asistente completo en <b>"🔧 Reconfigurar Ingresos y Gastos"</b>.',
-              side: 'bottom',
-              align: 'center'
-            }
-          },
-          // 8. Descargar Reporte en PDF
-          {
-            element: '#btnExportPDF',
-            tabToSwitch: 'inicio',
-            popover: {
-              title: '📥 Descargar Reporte Mensual en PDF',
-              description: 'Exporta en segundos un informe ejecutivo completo en PDF con tus gastos pagados, pendientes y balances netos del mes, listo para imprimir o archivar.',
-              side: 'bottom',
-              align: 'center'
-            }
-          },
-          // 9. Modo Oscuro
-          {
-            element: '#themeToggleBtn',
-            tabToSwitch: 'inicio',
-            popover: {
-              title: '🌙 Cambiar a Modo Oscuro / Claro',
-              description: 'Alterna con un solo clic entre el Modo Claro y el Modo Noche Suave, diseñado para proteger tu vista de noche y reducir el consumo de batería.',
               side: 'bottom',
               align: 'center'
             }
@@ -6531,6 +6507,9 @@ const SUPABASE_SQL_EDITOR_URL = 'https://supabase.com/dashboard/project/swwvbfem
 
 let masterSubscribersData = [];
 let masterFeedbackData = [];
+let masterReclamacionesData = [];
+let masterRefundsData = [];
+let masterChurnData = [];
 let masterHeartbeats = [];
 let masterDeletedMarkers = new Map();
 let masterRpcAvailable = false;
@@ -6719,7 +6698,8 @@ function switchMasterTab(tab) {
   const map = {
     overview: ['fhPaneOverview', 'fhTabOverview'],
     users: ['fhPaneUsers', 'fhTabUsers'],
-    feedback: ['fhPaneFeedback', 'fhTabFeedback']
+    feedback: ['fhPaneFeedback', 'fhTabFeedback'],
+    reclamos: ['fhPaneReclamos', 'fhTabReclamos']
   };
   if (tab === 'subs') tab = 'users';          // alias de versiones anteriores
   if (!map[tab]) tab = 'overview';
@@ -6731,6 +6711,7 @@ function switchMasterTab(tab) {
     if (btn) btn.classList.toggle('active', k === tab);
   });
   if (tab === 'overview') renderFounderCharts();   // los canvas necesitan estar visibles
+  if (tab === 'reclamos') renderMasterReclamos();
 }
 
 // ----------------------------------------------------------------
@@ -6827,7 +6808,85 @@ async function loadMasterDashboardData(force = false) {
         const k = (m.user_email || '').toLowerCase().trim();
         if (k && !masterDeletedMarkers.has(k)) masterDeletedMarkers.set(k, m.created_at);
       });
-      masterFeedbackData = fbData.filter(i => i.type !== 'user_deleted');
+      masterFeedbackData = fbData.filter(i => i.type !== 'user_deleted' && i.type !== 'libro_reclamaciones' && i.type !== 'solicitud_reembolso' && i.type !== 'account_deletion_churn');
+    }
+
+    // 5) Cargar Hojas de Reclamación formales (Libro Indecopi)
+    let reclamacionesList = [];
+    try {
+      const { data: recData, error: recErr } = await supabaseClient
+        .from('app_reclamaciones')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (!recErr && Array.isArray(recData)) {
+        reclamacionesList = recData;
+      }
+    } catch (e) {}
+
+    // Respaldo de reclamaciones desde app_feedback y localStorage
+    if (Array.isArray(fbData)) {
+      fbData.filter(i => i.type === 'libro_reclamaciones').forEach(item => {
+        const meta = item.metadata || {};
+        const cod = meta.codigo || (item.message && item.message.match(/\[(.*?)\]/) ? item.message.match(/\[(.*?)\]/)[1] : null);
+        if (cod && !reclamacionesList.some(r => r.codigo === cod)) {
+          reclamacionesList.push({
+            id: item.id,
+            codigo: cod,
+            consumidor_nombre: meta.consumidor_nombre || item.user_email || 'Consumidor',
+            consumidor_email: item.user_email,
+            consumidor_telefono: meta.consumidor_telefono || 'No indicado',
+            tipo: meta.tipo || 'reclamo',
+            tipo_servicio: meta.tipo_servicio || 'AliviaFin PRO',
+            detalle: meta.detalle || item.message,
+            pedido: meta.pedido || 'Solución del caso',
+            estado: meta.estado || 'pendiente',
+            created_at: item.created_at
+          });
+        }
+      });
+    }
+
+    try {
+      const localBackups = JSON.parse(localStorage.getItem('finanzas_reclamaciones_backup') || '[]');
+      localBackups.forEach(lb => {
+        if (lb.codigo && !reclamacionesList.some(r => r.codigo === lb.codigo)) {
+          reclamacionesList.push(lb);
+        }
+      });
+    } catch (e) {}
+
+    masterReclamacionesData = reclamacionesList;
+    masterRefundsData = (fbData || []).filter(i => i.type === 'solicitud_reembolso');
+    try {
+      const localRefs = JSON.parse(localStorage.getItem('finanzas_reembolsos_backup') || '[]');
+      localRefs.forEach(lr => {
+        if (lr.codigo && !masterRefundsData.some(r => (r.metadata && r.metadata.codigo === lr.codigo))) {
+          masterRefundsData.push({
+            id: lr.codigo,
+            user_email: lr.user_email,
+            created_at: lr.created_at,
+            metadata: lr
+          });
+        }
+      });
+    } catch (e) {}
+
+    masterChurnData = (fbData || []).filter(i => i.type === 'account_deletion_churn');
+
+    // Calcular alertas pendientes
+    const pendingClaims = masterReclamacionesData.filter(r => (r.estado || 'pendiente') === 'pendiente').length;
+    const pendingRefunds = masterRefundsData.filter(r => ((r.metadata && r.metadata.estado) || 'pendiente') === 'pendiente').length;
+    const totalPendingAlerts = pendingClaims + pendingRefunds;
+
+    // Actualizar Badges de Alerta Founder (sidebar y header)
+    const badgeDesk = document.getElementById('founderPendingAlertBadgeDesk');
+    const badgeMob = document.getElementById('founderPendingAlertBadgeMob');
+    if (badgeDesk) {
+      badgeDesk.textContent = totalPendingAlerts;
+      badgeDesk.style.display = totalPendingAlerts > 0 ? 'inline-block' : 'none';
+    }
+    if (badgeMob) {
+      badgeMob.style.display = totalPendingAlerts > 0 ? 'block' : 'none';
     }
 
     enrichMasterSubscribers(stateActivityRows);
@@ -7471,6 +7530,7 @@ function renderFounderModule() {
   calculateMasterKPIs();
   renderMasterSubscribers();
   renderMasterFeedback();
+  renderMasterReclamos();
   renderFounderInsights();
   renderFounderSetupBanner();
   updateFounderStamp();
@@ -7815,55 +7875,413 @@ function renderMasterFeedback() {
   container.innerHTML = html;
 }
 
-// Derecho al Olvido y Supresión Total de Datos (Ley N° 29733 / GDPR)
-async function promptUserAccountDeletion() {
-  if (!currentUser) return;
-  const email = currentUser.email || 'tu cuenta';
-  const msg = `⚠️ DERECHO AL OLVIDO Y SUPRESIÓN DE DATOS (LEY N° 29733 / GDPR)\n\n` +
-              `Estás a punto de solicitar la eliminación definitiva de tu cuenta (${email}) y de todos tus datos financieros de AliviaFin.\n\n` +
-              `• Se purgarán todas tus transacciones, presupuestos y saldos de banco.\n` +
-              `• Tu membresía o suscripción se cancelará de forma inmediata.\n` +
-              `• Esta acción es definitiva e irreversible.\n\n` +
-              `¿Deseas continuar con el proceso de eliminación?`;
+// ================================================================
+// RECLAMACIONES & DEVOLUCIONES (FOUNDER HUB v70.0)
+// ================================================================
+function renderMasterReclamos() {
+  const reclamos = masterReclamacionesData || [];
+  const refunds = masterRefundsData || [];
+  const churns = masterChurnData || [];
 
-  if (!confirm(msg)) return;
+  // 1. KPIs
+  const totalRec = reclamos.length;
+  const pendRec = reclamos.filter(r => (r.estado || 'pendiente') === 'pendiente').length;
+  const totalRef = refunds.length;
+  const totalCh = churns.length;
 
-  const doubleConfirm = prompt(`Para confirmar el borrado definitivo, escribe "ELIMINAR" en mayúsculas:`);
-  if (doubleConfirm !== 'ELIMINAR') {
-    showToast('Operación cancelada: confirmación no coincide', 'info');
+  masterSetText('kpiTotalReclamos', totalRec);
+  masterSetText('kpiPendientesReclamos', pendRec);
+  masterSetText('kpiTotalReembolsos', totalRef);
+  masterSetText('kpiTotalChurn', totalCh);
+
+  masterSetText('masterReclamosCount', totalRec + totalRef);
+  masterSetText('masterReclamosCountMobile', totalRec + totalRef);
+
+  // 2. Tabla Reclamaciones Indecopi
+  const claimsBody = document.getElementById('masterClaimsTableBody');
+  if (claimsBody) {
+    if (reclamos.length === 0) {
+      claimsBody.innerHTML = `
+        <tr>
+          <td colspan="6" style="text-align: center; padding: 24px; color: var(--text-muted);">
+            🎉 No hay reclamaciones registradas en el Libro Virtual.
+          </td>
+        </tr>`;
+    } else {
+      let h = '';
+      reclamos.forEach(r => {
+        const isPend = (r.estado || 'pendiente') === 'pendiente';
+        const dateObj = r.created_at ? new Date(r.created_at) : new Date();
+        const dateStr = dateObj.toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        
+        // Cálculo de días transcurridos
+        const daysElapsed = Math.floor((Date.now() - dateObj.getTime()) / (1000 * 60 * 60 * 24));
+        const daysLeft = Math.max(0, 15 - daysElapsed);
+        const deadlineBadge = isPend 
+          ? `<span style="font-size: 10px; font-weight: 800; color: ${daysLeft <= 3 ? '#ef4444' : '#f59e0b'}; background: rgba(245,158,11,0.1); padding: 1px 6px; border-radius: 4px; display: inline-block; margin-top: 2px;">Quedan ${daysLeft} días hábiles</span>`
+          : `<span style="font-size: 10px; font-weight: 700; color: #10b981; background: rgba(16,185,129,0.1); padding: 1px 6px; border-radius: 4px;">Atendido</span>`;
+
+        const tipoBadge = r.tipo === 'queja'
+          ? `<span style="font-size: 10.5px; font-weight: 800; color: #d97706; background: rgba(245,158,11,0.12); padding: 2px 6px; border-radius: 6px;">QUEJA</span>`
+          : `<span style="font-size: 10.5px; font-weight: 800; color: #dc2626; background: rgba(220,38,38,0.12); padding: 2px 6px; border-radius: 6px;">RECLAMO</span>`;
+
+        h += `
+          <tr>
+            <td>
+              <div style="font-weight: 800; font-size: 12px; color: #2563eb;">${escapeHtml(r.codigo || 'REC')}</div>
+              <div style="font-size: 10px; color: var(--text-muted);">${dateStr}</div>
+              ${deadlineBadge}
+            </td>
+            <td>
+              <div style="font-weight: 700; font-size: 12px; color: var(--text-main);">${escapeHtml(r.consumidor_nombre || 'Consumidor')}</div>
+              <div style="font-size: 10.5px; color: var(--text-muted);">${escapeHtml(r.consumidor_email || '')}</div>
+              <div style="font-size: 10px; color: var(--text-muted);">Tel: ${escapeHtml(r.consumidor_telefono || 'No indicado')}</div>
+            </td>
+            <td>${tipoBadge}</td>
+            <td style="max-width: 280px;">
+              <div style="font-size: 11.5px; color: var(--text-main); line-height: 1.4; margin-bottom: 4px;"><b>Hechos:</b> ${escapeHtml(r.detalle || '')}</div>
+              <div style="font-size: 11px; color: var(--text-muted); line-height: 1.3;"><b>Pedido:</b> ${escapeHtml(r.pedido || '')}</div>
+            </td>
+            <td>
+              ${isPend 
+                ? '<span style="font-size: 10.5px; font-weight: 800; color: #ef4444; background: rgba(239,68,68,0.1); padding: 2px 8px; border-radius: 6px;">🟡 PENDIENTE</span>' 
+                : '<span style="font-size: 10.5px; font-weight: 800; color: #059669; background: rgba(16,185,129,0.1); padding: 2px 8px; border-radius: 6px;">🟢 ATENDIDO</span>'}
+            </td>
+            <td style="text-align: right;">
+              <div style="display: flex; gap: 4px; justify-content: flex-end; flex-wrap: wrap;">
+                ${r.consumidor_email ? `
+                  <a href="mailto:${escapeHtml(r.consumidor_email)}?subject=${encodeURIComponent('Respuesta a tu Reclamación ' + (r.codigo || ''))}" class="btn btn-secondary" style="padding: 4px 8px; font-size: 11px; font-weight: 700; text-decoration: none;" title="Responder al email">
+                    ✉️
+                  </a>` : ''}
+                ${isPend ? `
+                  <button type="button" class="btn btn-secondary" onclick="markClaimAttended('${escapeHtml(r.codigo || '')}')" style="padding: 4px 8px; font-size: 11px; font-weight: 700; color: #059669;" title="Marcar como atendido">
+                    ✅ Listo
+                  </button>` : ''}
+              </div>
+            </td>
+          </tr>`;
+      });
+      claimsBody.innerHTML = h;
+    }
+  }
+
+  // 3. Tabla Solicitudes de Devolución
+  const refundsBody = document.getElementById('masterRefundsTableBody');
+  if (refundsBody) {
+    if (refunds.length === 0) {
+      refundsBody.innerHTML = `
+        <tr>
+          <td colspan="6" style="text-align: center; padding: 24px; color: var(--text-muted);">
+            🎉 No hay solicitudes de devolución registradas.
+          </td>
+        </tr>`;
+    } else {
+      let h = '';
+      refunds.forEach(ref => {
+        const meta = ref.metadata || {};
+        const cod = meta.codigo || (ref.message && ref.message.match(/\[(.*?)\]/) ? ref.message.match(/\[(.*?)\]/)[1] : 'REF');
+        const email = ref.user_email || meta.user_email || 'Usuario';
+        const tel = meta.telefono || 'No indicado';
+        const plan = meta.plan || 'PRO';
+        const motivo = meta.motivo || ref.message || '';
+        const estado = meta.estado || 'pendiente';
+        const isPend = estado === 'pendiente';
+        const dateStr = ref.created_at ? new Date(ref.created_at).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+
+        h += `
+          <tr>
+            <td>
+              <div style="font-weight: 800; font-size: 12px; color: #059669;">${escapeHtml(cod)}</div>
+              <div style="font-size: 10px; color: var(--text-muted);">${dateStr}</div>
+            </td>
+            <td>
+              <div style="font-weight: 700; font-size: 12px; color: var(--text-main);">${escapeHtml(email)}</div>
+              <div style="font-size: 10.5px; color: var(--text-muted);">Tel: ${escapeHtml(tel)}</div>
+            </td>
+            <td>
+              <span style="font-size: 11px; font-weight: 700; color: #475569;">${plan === 'pro_lifetime' ? '👑 Vitalicio (S/ 19.90)' : '📅 Mensual (S/ 4.90)'}</span>
+            </td>
+            <td style="max-width: 260px;">
+              <div style="font-size: 11.5px; color: var(--text-main); line-height: 1.4;">${escapeHtml(motivo)}</div>
+            </td>
+            <td>
+              ${isPend
+                ? '<span style="font-size: 10.5px; font-weight: 800; color: #f59e0b; background: rgba(245,158,11,0.1); padding: 2px 8px; border-radius: 6px;">🟡 PENDIENTE</span>'
+                : '<span style="font-size: 10.5px; font-weight: 800; color: #059669; background: rgba(16,185,129,0.1); padding: 2px 8px; border-radius: 6px;">🟢 DEVUELTO</span>'}
+            </td>
+            <td style="text-align: right;">
+              <div style="display: flex; gap: 4px; justify-content: flex-end;">
+                ${tel && tel !== 'No indicado' ? `
+                  <a href="https://wa.me/51${tel.replace(/\D/g, '')}?text=${encodeURIComponent('Hola! Te escribe César de AliviaFin sobre tu solicitud de devolución ' + cod)}" target="_blank" class="btn btn-secondary" style="padding: 4px 8px; font-size: 11px; text-decoration: none;" title="Abrir WhatsApp">
+                    💬
+                  </a>` : ''}
+                ${isPend ? `
+                  <button type="button" class="btn btn-secondary" onclick="markRefundProcessed('${escapeHtml(ref.id || cod)}')" style="padding: 4px 8px; font-size: 11px; font-weight: 700; color: #059669;" title="Marcar como procesado">
+                    ✅ Listo
+                  </button>` : ''}
+              </div>
+            </td>
+          </tr>`;
+      });
+      refundsBody.innerHTML = h;
+    }
+  }
+
+  // 4. Tabla Bajas de Cuenta (Churn Feedback)
+  const churnBody = document.getElementById('masterChurnTableBody');
+  if (churnBody) {
+    if (churns.length === 0) {
+      churnBody.innerHTML = `
+        <tr>
+          <td colspan="4" style="text-align: center; padding: 24px; color: var(--text-muted);">
+            🎉 No se han registrado bajas de cuenta con encuesta.
+          </td>
+        </tr>`;
+    } else {
+      let h = '';
+      churns.forEach(ch => {
+        const meta = ch.metadata || {};
+        const dateStr = ch.created_at ? new Date(ch.created_at).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' }) : '';
+        const reasonLabels = {
+          dificil_uso: '📱 Difícil de usar / poco intuitiva',
+          ya_no_necesito: '📉 Ya no necesita registrar gastos',
+          faltan_funciones: '🧩 Faltan funciones requeridas',
+          precio_pago: '💸 Precio o métodos de pago',
+          problemas_tecnicos: '🐛 Problemas técnicos o lentitud',
+          otro: '💬 Otro motivo'
+        };
+        const reasonText = reasonLabels[meta.motivo] || meta.motivo || 'No especificado';
+        const comment = meta.comentario || ch.message || 'Sin comentario';
+
+        h += `
+          <tr>
+            <td style="font-size: 11px; color: var(--text-muted);">${dateStr}</td>
+            <td style="font-weight: 700; font-size: 11.5px; color: var(--text-main);">${escapeHtml(ch.user_email || 'Anónimo')}</td>
+            <td style="font-size: 11.5px; font-weight: 600; color: #dc2626;">${escapeHtml(reasonText)}</td>
+            <td style="font-size: 11.5px; color: var(--text-main); line-height: 1.4;">${escapeHtml(comment)}</td>
+          </tr>`;
+      });
+      churnBody.innerHTML = h;
+    }
+  }
+}
+
+async function markClaimAttended(codigo) {
+  if (!codigo) return;
+  const item = (masterReclamacionesData || []).find(r => r.codigo === codigo);
+  if (item) item.estado = 'atendido';
+  try {
+    if (supabaseClient) {
+      await supabaseClient.from('app_reclamaciones').update({ estado: 'atendido' }).eq('codigo', codigo).catch(() => {});
+    }
+    const localList = JSON.parse(localStorage.getItem('finanzas_reclamaciones_backup') || '[]');
+    const localItem = localList.find(r => r.codigo === codigo);
+    if (localItem) {
+      localItem.estado = 'atendido';
+      localStorage.setItem('finanzas_reclamaciones_backup', JSON.stringify(localList));
+    }
+  } catch (e) {}
+  showToast('Reclamación ' + codigo + ' marcada como atendida ✅', 'success');
+  renderMasterReclamos();
+}
+
+async function markRefundProcessed(idOrCod) {
+  if (!idOrCod) return;
+  const item = (masterRefundsData || []).find(r => (r.id === idOrCod || (r.metadata && r.metadata.codigo === idOrCod)));
+  if (item && item.metadata) item.metadata.estado = 'procesado';
+  try {
+    if (supabaseClient && typeof idOrCod === 'string' && idOrCod.length > 20) {
+      await supabaseClient.from('app_feedback').update({
+        metadata: { ...(item ? item.metadata : {}), estado: 'procesado' }
+      }).eq('id', idOrCod).catch(() => {});
+    }
+  } catch (e) {}
+  showToast('Reembolso marcado como procesado ✅', 'success');
+  renderMasterReclamos();
+}
+
+// ================================================================
+// DERECHO AL OLVIDO Y ENCUESTA DE RETENCIÓN (LEY 29733 / v70.0)
+// ================================================================
+function openDeleteAccountModal() {
+  if (typeof closeModal === 'function') closeModal('settingsModal');
+  const modal = document.getElementById('deleteAccountFeedbackModal');
+  if (modal) modal.style.display = 'flex';
+  const inp = document.getElementById('confirmDeleteInput');
+  if (inp) inp.value = '';
+}
+
+function closeDeleteAccountModal() {
+  const modal = document.getElementById('deleteAccountFeedbackModal');
+  if (modal) modal.style.display = 'none';
+}
+
+async function handleConfirmDeleteAccountSubmit(event) {
+  event.preventDefault();
+  const inp = document.getElementById('confirmDeleteInput');
+  if (!inp || inp.value.trim() !== 'ELIMINAR') {
+    showToast('Debes escribir exactamente "ELIMINAR" en mayúsculas para continuar', 'error');
     return;
   }
 
-  showToast('Eliminando tu cuenta y datos permanentemente... ⏳', 'info');
+  const reasonEl = document.querySelector('input[name="churnReason"]:checked');
+  const churnReason = reasonEl ? reasonEl.value : 'no_especificado';
+  const churnFeedback = document.getElementById('churnFeedbackText')?.value || '';
+  const email = (currentUser && currentUser.email) || 'usuario';
+
+  const btn = document.getElementById('btnConfirmDeleteAccount');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Purgando datos... ⏳';
+  }
+
   try {
-    // 1. Borrar datos financieros en finanzas_state
-    if (currentUser.id) {
+    // 1. Guardar feedback de salida (churn analytics) en telemetría para el Founder
+    if (supabaseClient) {
+      await supabaseClient.from('app_feedback').insert([{
+        user_id: currentUser ? currentUser.id : null,
+        user_email: email,
+        type: 'account_deletion_churn',
+        message: `BAJA: Motivo: [${churnReason}] | Feedback: ${churnFeedback}`,
+        metadata: {
+          motivo: churnReason,
+          comentario: churnFeedback,
+          fecha: new Date().toISOString()
+        },
+        created_at: new Date().toISOString()
+      }]).catch(() => {});
+    }
+
+    // 2. Borrar datos financieros en finanzas_state
+    if (currentUser && currentUser.id) {
       await supabaseClient
         .from('finanzas_state')
         .delete()
-        .eq('id', 'state_' + currentUser.id);
+        .eq('id', 'state_' + currentUser.id)
+        .catch(() => {});
     }
 
-    // 2. Borrar suscripción en user_subscriptions
-    if (currentUser.id) {
+    // 3. Borrar suscripción en user_subscriptions
+    if (currentUser && currentUser.id) {
       await supabaseClient
         .from('user_subscriptions')
         .delete()
-        .eq('user_id', currentUser.id);
+        .eq('user_id', currentUser.id)
+        .catch(() => {});
     }
 
-    // 3. Limpiar almacenamiento local
+    // 4. Limpiar almacenamiento local
     localStorage.clear();
 
-    // 4. Cerrar sesión
-    await supabaseClient.auth.signOut();
-    alert('✅ Tus datos personales y financieros han sido eliminados de acuerdo con la Ley N° 29733.');
+    // 5. Cerrar sesión
+    if (supabaseClient) {
+      await supabaseClient.auth.signOut().catch(() => {});
+    }
+
+    alert('✅ Tu cuenta y datos personales han sido purgados conforme a la Ley N° 29733. Gracias por habernos probado.');
     window.location.reload();
   } catch (err) {
     console.error('Error al suprimir datos:', err);
-    showToast('Error al procesar la solicitud: ' + (err.message || err), 'error');
+    showToast('Error al procesar: ' + (err.message || err), 'error');
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = '🗑️ Confirmar Eliminación Irreversible (Ley 29733)';
+    }
   }
 }
+
+// ================================================================
+// SOLICITUD DE DEVOLUCIÓN (GARANTÍA 7 DÍAS v70.0)
+// ================================================================
+function openSolicitarReembolsoModal() {
+  const modal = document.getElementById('solicitarReembolsoModal');
+  if (modal) {
+    modal.style.display = 'flex';
+    const emailInp = document.getElementById('reembolsoEmail');
+    if (emailInp && currentUser && currentUser.email) {
+      emailInp.value = currentUser.email;
+    }
+  }
+}
+
+function closeSolicitarReembolsoModal() {
+  const modal = document.getElementById('solicitarReembolsoModal');
+  if (modal) modal.style.display = 'none';
+}
+
+async function handleSolicitudReembolsoSubmit(event) {
+  event.preventDefault();
+  const email = document.getElementById('reembolsoEmail')?.value?.trim();
+  const tel = document.getElementById('reembolsoTelefono')?.value?.trim();
+  const plan = document.getElementById('reembolsoPlan')?.value;
+  const motivo = document.getElementById('reembolsoMotivo')?.value?.trim();
+
+  if (!email || !tel || !motivo) {
+    showToast('Por favor completa todos los campos requeridos', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('btnSubmitReembolso');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Enviando solicitud... ⏳';
+  }
+
+  const cod = 'REF-' + Date.now().toString(36).toUpperCase();
+  const nowIso = new Date().toISOString();
+  const refundPayload = {
+    codigo: cod,
+    user_id: currentUser ? currentUser.id : null,
+    user_email: email,
+    telefono: tel,
+    plan: plan,
+    motivo: motivo,
+    estado: 'pendiente',
+    created_at: nowIso
+  };
+
+  try {
+    if (supabaseClient) {
+      await supabaseClient.from('app_feedback').insert([{
+        user_id: currentUser ? currentUser.id : null,
+        user_email: email,
+        type: 'solicitud_reembolso',
+        message: `[${cod}] SOLICITUD DE DEVOLUCIÓN: Plan ${plan} | Tel: ${tel} | Motivo: ${motivo}`,
+        metadata: refundPayload,
+        created_at: nowIso
+      }]);
+    }
+
+    // Respaldo local
+    try {
+      const localRefunds = JSON.parse(localStorage.getItem('finanzas_reembolsos_backup') || '[]');
+      localRefunds.push(refundPayload);
+      localStorage.setItem('finanzas_reembolsos_backup', JSON.stringify(localRefunds));
+    } catch (e) {}
+
+    closeSolicitarReembolsoModal();
+    showToast(`✅ Solicitud ${cod} recibida. Te contactaremos en menos de 24h.`, 'success');
+  } catch (err) {
+    console.error('Error registrando solicitud de reembolso:', err);
+    showToast('Error al enviar la solicitud: ' + (err.message || err), 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = '✉️ Enviar Solicitud de Devolución';
+    }
+  }
+}
+
+window.renderMasterReclamos = renderMasterReclamos;
+window.markClaimAttended = markClaimAttended;
+window.markRefundProcessed = markRefundProcessed;
+window.openDeleteAccountModal = openDeleteAccountModal;
+window.closeDeleteAccountModal = closeDeleteAccountModal;
+window.handleConfirmDeleteAccountSubmit = handleConfirmDeleteAccountSubmit;
+window.openSolicitarReembolsoModal = openSolicitarReembolsoModal;
+window.closeSolicitarReembolsoModal = closeSolicitarReembolsoModal;
+window.handleSolicitudReembolsoSubmit = handleSolicitudReembolsoSubmit;
+window.promptUserAccountDeletion = openDeleteAccountModal;
 
 // ================================================================
 // CAMPAÑAS WIN-BACK ANTI-CHURN (MASTER ADMIN v69.5)

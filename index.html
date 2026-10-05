@@ -17,7 +17,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <link rel="stylesheet" href="css/styles.css?v=69.9">
+  <link rel="stylesheet" href="css/styles.css?v=70.0">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
 
   <style>
@@ -25,14 +25,14 @@
     #loginModalScreen {
       position: fixed;
       inset: 0;
-      background: radial-gradient(circle at 18% 28%, rgba(16, 185, 129, 0.15) 0%, transparent 45%),
-                  radial-gradient(circle at 82% 78%, rgba(5, 150, 105, 0.10) 0%, transparent 50%),
-                  #080c14;
+      background: radial-gradient(ellipse at 50% 15%, rgba(16, 185, 129, 0.15) 0%, transparent 65%),
+                  radial-gradient(circle at 85% 85%, rgba(5, 150, 105, 0.08) 0%, transparent 55%),
+                  #0f172a;
       display: flex;
       align-items: center;
       justify-content: center;
       z-index: 99999;
-      padding: 16px;
+      padding: max(20px, env(safe-area-inset-top)) 16px max(20px, env(safe-area-inset-bottom)) 16px;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
       box-sizing: border-box;
@@ -41,176 +41,100 @@
 </head>
 <body>
 
-  <!-- MANDATORY LOGIN/REGISTER SCREEN v69.8 -->
-  <div id="loginModalScreen" style="position: fixed; inset: 0; background: #080c14; z-index: 99999; display: flex; align-items: center; justify-content: center; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 16px; box-sizing: border-box;">
+  <!-- MANDATORY LOGIN/REGISTER SCREEN v70.0 (CLEAN & CENTERED) -->
+  <div id="loginModalScreen">
     <div class="login-layout-container">
       
-      <!-- Panel Izquierdo: Marca & Confianza Zen (Visible en Desktop >= 900px) -->
-      <div class="login-showcase-pane">
-        <div class="login-brand-header">
-          <img src="logo.png?v=69.7" alt="aliviafin" class="login-brand-logo">
-          <div>
-            <h1 class="login-brand-title">aliviafin</h1>
-            <p class="login-brand-tagline">Paz mental para tu dinero</p>
-          </div>
+      <!-- Tarjeta Centrada de Acceso -->
+      <div class="login-card">
+        
+        <!-- Logo y Marca Centrados -->
+        <div class="login-brand-header-center">
+          <img src="logo.png?v=70.0" alt="aliviafin" style="width: 54px; height: 54px; border-radius: 16px; margin-bottom: 8px; box-shadow: 0 8px 22px rgba(5,150,105,0.28);">
+          <h2 style="font-size: 24px; font-weight: 800; color: #0f172a; margin-bottom: 2px; letter-spacing: -0.5px;">aliviafin</h2>
+          <p style="font-size: 13px; color: #64748b; margin-bottom: 0;">Paz mental para tu dinero</p>
         </div>
 
-        <div class="login-hero-glass-card">
-          <div class="hero-card-header">
-            <span class="hero-card-pill">🛡️ 100% Privado & Seguro</span>
-            <span class="hero-card-status">Fintech Zen</span>
-          </div>
-
-          <div class="hero-card-metric">
-            <div class="hero-metric-label">Tu patrimonio en calma</div>
-            <div class="hero-metric-value">Control total sin estrés</div>
-          </div>
-
-          <div class="hero-card-badges">
-            <div class="hero-badge-item">
-              <span style="font-size: 18px; line-height: 1;">🔒</span>
-              <div>
-                <strong>Zero-Knowledge Cloud</strong>
-                <p>Tus finanzas cifradas y aisladas bajo tu propio usuario.</p>
-              </div>
-            </div>
-            <div class="hero-badge-item">
-              <span style="font-size: 18px; line-height: 1;">⚡</span>
-              <div>
-                <strong>Sincronización PWA Multi-dispositivo</strong>
-                <p>Usa la app de forma fluida en iPhone, Android y Mac con soporte offline.</p>
-              </div>
-            </div>
-            <div class="hero-badge-item">
-              <span style="font-size: 18px; line-height: 1;">💵</span>
-              <div>
-                <strong>Garantía Total de 7 Días</strong>
-                <p>Transparencia absoluta y reembolso sin preguntas.</p>
-              </div>
-            </div>
-          </div>
+        <!-- Tabs Login / Registro -->
+        <div id="authTabs" style="display: flex; border-radius: 12px; background: #f3f4f6; padding: 4px; margin-bottom: 20px; gap: 4px;">
+          <button id="tabLoginBtn" type="button" onclick="switchAuthTab('login')" style="flex: 1; padding: 9px; border: none; border-radius: 9px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; background: #059669; color: white; box-shadow: 0 2px 6px rgba(5,150,105,0.3);">Iniciar Sesión</button>
+          <button id="tabRegisterBtn" type="button" onclick="switchAuthTab('register')" style="flex: 1; padding: 9px; border: none; border-radius: 9px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; background: transparent; color: #6b7280;">Crear Cuenta</button>
         </div>
 
-        <!-- Enlaces legales desktop (subtle & aligned) -->
-        <div class="desktop-only-footer">
-          <div class="login-legal-links">
-            <a href="javascript:void(0)" onclick="openLegalModal('terms')">⚖️ Términos</a>
-            <span class="legal-dot">•</span>
-            <a href="javascript:void(0)" onclick="openLegalModal('privacy')">🛡️ Privacidad</a>
-            <span class="legal-dot">•</span>
-            <a href="javascript:void(0)" onclick="openLegalModal('refunds')">💵 Reembolsos</a>
-            <span class="legal-dot">•</span>
-            <a href="javascript:void(0)" onclick="openReclamacionesModal()">📖 Libro de Reclamaciones</a>
+        <!-- FORM LOGIN -->
+        <form id="loginForm" onsubmit="handleLoginSubmit(event)" style="display: block;">
+          <div style="margin-bottom: 14px;">
+            <label style="display: block; font-size: 11px; font-weight: 800; color: #374151; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">Correo Electrónico</label>
+            <input type="email" id="loginEmail" class="form-control" placeholder="tu@correo.com" required style="width: 100%;">
           </div>
-          <p class="login-version-tag">AliviaFin v69.9 · Paz mental para tu dinero</p>
+          <div style="margin-bottom: 8px;">
+            <label style="display: block; font-size: 11px; font-weight: 800; color: #374151; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">Contraseña</label>
+            <div style="position: relative;">
+              <input type="password" id="loginPassword" class="form-control" placeholder="Tu contraseña" required style="width: 100%; padding-right: 44px;">
+              <button type="button" onclick="togglePasswordVisibility('loginPassword', 'togglePassBtnLogin')" id="togglePassBtnLogin" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 17px; cursor: pointer; color: #9ca3af;">👁️</button>
+            </div>
+          </div>
+          <div style="display: flex; justify-content: flex-end; margin-bottom: 16px;">
+            <a href="javascript:void(0)" onclick="openForgotPasswordModal()" style="font-size: 11.5px; color: #059669; font-weight: 700; text-decoration: none; cursor: pointer;">¿Olvidaste tu contraseña?</a>
+          </div>
+          <div id="loginErrorMsg" style="color: #dc2626; font-size: 12px; font-weight: 700; margin-bottom: 12px; display: none; padding: 8px 12px; background: #fff1f2; border-radius: 8px; border: 1px solid #fca5a5;"></div>
+          <button type="submit" id="loginSubmitBtn" class="btn btn-primary" style="width: 100%; padding: 13px; font-size: 14px; font-weight: 800; background: linear-gradient(135deg, #059669, #10b981); border-radius: 12px; letter-spacing: 0.02em; box-shadow: 0 4px 16px rgba(5,150,105,0.35);">
+            🔓 Iniciar Sesión
+          </button>
+        </form>
+
+        <!-- FORM REGISTRO -->
+        <form id="registerForm" onsubmit="handleRegisterSubmit(event)" style="display: none;">
+          <div style="margin-bottom: 14px;">
+            <label style="display: block; font-size: 11px; font-weight: 800; color: #374151; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">Tu Nombre</label>
+            <input type="text" id="registerName" class="form-control" placeholder="Ej: Juan García" required style="width: 100%;">
+          </div>
+          <div style="margin-bottom: 14px;">
+            <label style="display: block; font-size: 11px; font-weight: 800; color: #374151; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">Correo Electrónico</label>
+            <input type="email" id="registerEmail" class="form-control" placeholder="tu@correo.com" required style="width: 100%;">
+          </div>
+          <div style="margin-bottom: 18px;">
+            <label style="display: block; font-size: 11px; font-weight: 800; color: #374151; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">Contraseña</label>
+            <div style="position: relative;">
+              <input type="password" id="registerPassword" class="form-control" placeholder="Mínimo 6 caracteres" required minlength="6" style="width: 100%; padding-right: 44px;">
+              <button type="button" onclick="togglePasswordVisibility('registerPassword', 'togglePassBtnReg')" id="togglePassBtnReg" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 17px; cursor: pointer; color: #9ca3af;">👁️</button>
+            </div>
+          </div>
+          <div id="registerErrorMsg" style="color: #dc2626; font-size: 12px; font-weight: 700; margin-bottom: 12px; display: none; padding: 8px 12px; background: #fff1f2; border-radius: 8px; border: 1px solid #fca5a5;"></div>
+          <div id="registerSuccessMsg" style="color: #059669; font-size: 12px; font-weight: 700; margin-bottom: 12px; display: none; padding: 8px 12px; background: #ecfdf5; border-radius: 8px; border: 1px solid #a7f3d0;"></div>
+          <button type="submit" id="registerSubmitBtn" class="btn btn-primary" style="width: 100%; padding: 13px; font-size: 14px; font-weight: 800; background: linear-gradient(135deg, #059669, #10b981); border-radius: 12px; letter-spacing: 0.02em; box-shadow: 0 4px 16px rgba(5,150,105,0.35);">
+            🚀 Crear Mi Cuenta
+          </button>
+        </form>
+
+        <!-- Divisor elegante "o continúa con" -->
+        <div style="display: flex; align-items: center; margin: 18px 0 14px 0; gap: 10px;">
+          <div style="flex: 1; height: 1px; background: #e2e8f0;"></div>
+          <span style="font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: lowercase;">o continúa con</span>
+          <div style="flex: 1; height: 1px; background: #e2e8f0;"></div>
         </div>
+
+        <!-- Botón OAuth Google -->
+        <div class="oauth-buttons-container">
+          <button type="button" class="btn-oauth" onclick="handleOAuthLogin('google')" title="Continuar con Google">
+            <svg width="18" height="18" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+            </svg>
+            <span>Continuar con Google</span>
+          </button>
+        </div>
+
       </div>
 
-      <!-- Panel Derecho: Formulario de Acceso -->
-      <div class="login-auth-pane">
-        <div class="login-card">
-          
-          <!-- Logo y Marca (Solo Mobile) -->
-          <div class="login-mobile-brand" style="margin-bottom: 20px;">
-            <img src="logo.png?v=69.7" alt="aliviafin" style="width: 58px; height: 58px; border-radius: 16px; margin-bottom: 10px; box-shadow: 0 6px 18px rgba(5,150,105,0.25);">
-            <h2 style="font-size: 22px; font-weight: 800; color: #0f172a; margin-bottom: 2px; letter-spacing: -0.5px;">aliviafin</h2>
-            <p style="font-size: 12px; color: #64748b; margin-bottom: 0;">Paz mental para tu dinero</p>
-          </div>
-
-          <!-- Tabs Login / Registro -->
-          <div id="authTabs" style="display: flex; border-radius: 12px; background: #f3f4f6; padding: 4px; margin-bottom: 20px; gap: 4px;">
-            <button id="tabLoginBtn" type="button" onclick="switchAuthTab('login')" style="flex: 1; padding: 9px; border: none; border-radius: 9px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; background: #059669; color: white; box-shadow: 0 2px 6px rgba(5,150,105,0.3);">Iniciar Sesión</button>
-            <button id="tabRegisterBtn" type="button" onclick="switchAuthTab('register')" style="flex: 1; padding: 9px; border: none; border-radius: 9px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; background: transparent; color: #6b7280;">Crear Cuenta</button>
-          </div>
-
-          <!-- FORM LOGIN -->
-          <form id="loginForm" onsubmit="handleLoginSubmit(event)" style="display: block;">
-            <div style="margin-bottom: 14px;">
-              <label style="display: block; font-size: 11px; font-weight: 800; color: #374151; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">Correo Electrónico</label>
-              <input type="email" id="loginEmail" class="form-control" placeholder="tu@correo.com" required style="width: 100%;">
-            </div>
-            <div style="margin-bottom: 8px;">
-              <label style="display: block; font-size: 11px; font-weight: 800; color: #374151; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">Contraseña</label>
-              <div style="position: relative;">
-                <input type="password" id="loginPassword" class="form-control" placeholder="Tu contraseña" required style="width: 100%; padding-right: 44px;">
-                <button type="button" onclick="togglePasswordVisibility('loginPassword', 'togglePassBtnLogin')" id="togglePassBtnLogin" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 17px; cursor: pointer; color: #9ca3af;">👁️</button>
-              </div>
-            </div>
-            <div style="display: flex; justify-content: flex-end; margin-bottom: 16px;">
-              <a href="javascript:void(0)" onclick="openForgotPasswordModal()" style="font-size: 11.5px; color: #059669; font-weight: 700; text-decoration: none; cursor: pointer;">¿Olvidaste tu contraseña?</a>
-            </div>
-            <div id="loginErrorMsg" style="color: #dc2626; font-size: 12px; font-weight: 700; margin-bottom: 12px; display: none; padding: 8px 12px; background: #fff1f2; border-radius: 8px; border: 1px solid #fca5a5;"></div>
-            <p style="font-size: 11px; color: #64748b; text-align: center; margin-bottom: 12px; line-height: 1.4;">
-              Al iniciar sesión, aceptas nuestros <a href="javascript:void(0)" onclick="openLegalModal('terms')" style="color: #059669; text-decoration: underline; font-weight: 600;">Términos</a> y <a href="javascript:void(0)" onclick="openLegalModal('privacy')" style="color: #059669; text-decoration: underline; font-weight: 600;">Privacidad</a>.
-            </p>
-            <button type="submit" id="loginSubmitBtn" class="btn btn-primary" style="width: 100%; padding: 13px; font-size: 14px; font-weight: 800; background: linear-gradient(135deg, #059669, #10b981); border-radius: 12px; letter-spacing: 0.02em; box-shadow: 0 4px 16px rgba(5,150,105,0.35);">
-              🔓 Iniciar Sesión
-            </button>
-          </form>
-
-          <!-- FORM REGISTRO -->
-          <form id="registerForm" onsubmit="handleRegisterSubmit(event)" style="display: none;">
-            <div style="margin-bottom: 14px;">
-              <label style="display: block; font-size: 11px; font-weight: 800; color: #374151; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">Tu Nombre</label>
-              <input type="text" id="registerName" class="form-control" placeholder="Ej: Juan García" required style="width: 100%;">
-            </div>
-            <div style="margin-bottom: 14px;">
-              <label style="display: block; font-size: 11px; font-weight: 800; color: #374151; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">Correo Electrónico</label>
-              <input type="email" id="registerEmail" class="form-control" placeholder="tu@correo.com" required style="width: 100%;">
-            </div>
-            <div style="margin-bottom: 18px;">
-              <label style="display: block; font-size: 11px; font-weight: 800; color: #374151; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">Contraseña</label>
-              <div style="position: relative;">
-                <input type="password" id="registerPassword" class="form-control" placeholder="Mínimo 6 caracteres" required minlength="6" style="width: 100%; padding-right: 44px;">
-                <button type="button" onclick="togglePasswordVisibility('registerPassword', 'togglePassBtnReg')" id="togglePassBtnReg" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 17px; cursor: pointer; color: #9ca3af;">👁️</button>
-              </div>
-            </div>
-            <div id="registerErrorMsg" style="color: #dc2626; font-size: 12px; font-weight: 700; margin-bottom: 12px; display: none; padding: 8px 12px; background: #fff1f2; border-radius: 8px; border: 1px solid #fca5a5;"></div>
-            <div id="registerSuccessMsg" style="color: #059669; font-size: 12px; font-weight: 700; margin-bottom: 12px; display: none; padding: 8px 12px; background: #ecfdf5; border-radius: 8px; border: 1px solid #a7f3d0;"></div>
-            <p style="font-size: 11px; color: #64748b; text-align: center; margin-bottom: 12px; line-height: 1.4;">
-              Al crear tu cuenta, aceptas nuestros <a href="javascript:void(0)" onclick="openLegalModal('terms')" style="color: #059669; text-decoration: underline; font-weight: 600;">Términos</a> y <a href="javascript:void(0)" onclick="openLegalModal('privacy')" style="color: #059669; text-decoration: underline; font-weight: 600;">Privacidad</a>.
-            </p>
-            <button type="submit" id="registerSubmitBtn" class="btn btn-primary" style="width: 100%; padding: 13px; font-size: 14px; font-weight: 800; background: linear-gradient(135deg, #059669, #10b981); border-radius: 12px; letter-spacing: 0.02em; box-shadow: 0 4px 16px rgba(5,150,105,0.35);">
-              🚀 Crear Mi Cuenta
-            </button>
-          </form>
-
-          <!-- Divisor elegante "o continúa con" -->
-          <div style="display: flex; align-items: center; margin: 18px 0 14px 0; gap: 10px;">
-            <div style="flex: 1; height: 1px; background: #e2e8f0;"></div>
-            <span style="font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: lowercase;">o continúa con</span>
-            <div style="flex: 1; height: 1px; background: #e2e8f0;"></div>
-          </div>
-
-          <!-- Botón OAuth Google -->
-          <div class="oauth-buttons-container">
-            <button type="button" class="btn-oauth" onclick="handleOAuthLogin('google')" title="Continuar con Google">
-              <svg width="18" height="18" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-              </svg>
-              <span>Continuar con Google</span>
-            </button>
-          </div>
-
-        </div>
-
-        <!-- Footer legal móvil (discreto, unificado y elegante) -->
-        <div class="mobile-only-footer">
-          <div class="login-legal-links">
-            <a href="javascript:void(0)" onclick="openLegalModal('terms')">⚖️ Términos</a>
-            <span class="legal-dot">•</span>
-            <a href="javascript:void(0)" onclick="openLegalModal('privacy')">🛡️ Privacidad</a>
-            <span class="legal-dot">•</span>
-            <a href="javascript:void(0)" onclick="openLegalModal('refunds')">💵 Reembolsos</a>
-            <span class="legal-dot">•</span>
-            <a href="javascript:void(0)" onclick="openReclamacionesModal()">📖 Libro de Reclamaciones</a>
-          </div>
-          <p id="loginFooterVersion" class="login-version-tag">AliviaFin v69.9 · Paz mental para tu dinero</p>
-        </div>
-
+      <!-- Footer legal unificado y discreto -->
+      <div style="text-align: center; margin-top: 4px;">
+        <a href="javascript:void(0)" onclick="openLegalModal('terms')" class="login-unified-legal-link">
+          <span>⚖️ Centro Legal, Garantías & Reclamaciones</span>
+        </a>
+        <p id="loginFooterVersion" class="login-version-tag">AliviaFin v70.0 · Paz mental para tu dinero</p>
       </div>
 
     </div>
@@ -325,17 +249,10 @@
           <span class="desk-nav-icon">⚙️</span>
           <span>Ajustes</span>
         </button>
-        <button class="desktop-nav-item master-admin-only" id="deskNavMasterBtn" onclick="switchTab('founder')" style="display: none; background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(217, 119, 6, 0.16)); border: 1.5px solid rgba(245, 158, 11, 0.4); color: #d97706; font-weight: 800; margin-bottom: 6px;" title="Hub de Fundador CEO (Métricas SaaS & Suscriptores)">
+        <button class="desktop-nav-item master-admin-only" id="deskNavMasterBtn" onclick="switchTab('founder')" style="display: none; background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(217, 119, 6, 0.16)); border: 1.5px solid rgba(245, 158, 11, 0.4); color: #d97706; font-weight: 800; margin-bottom: 6px; display: flex; align-items: center;" title="Hub de Fundador CEO (Métricas SaaS & Suscriptores)">
           <span class="desk-nav-icon">👑</span>
-          <span>Hub Fundador CEO</span>
-        </button>
-        <button class="desktop-nav-item" id="deskNavLegalBtn" onclick="openLegalModal('terms')" style="margin-bottom: 6px;" title="Términos del Servicio y Políticas de Privacidad">
-          <span class="desk-nav-icon">⚖️</span>
-          <span>Legal & Privacidad</span>
-        </button>
-        <button class="desktop-nav-item" id="deskNavReclamosBtn" onclick="openReclamacionesModal()" style="margin-bottom: 6px;" title="Libro de Reclamaciones Virtual (Indecopi)">
-          <span class="desk-nav-icon">📖</span>
-          <span>Reclamaciones</span>
+          <span style="flex: 1; text-align: left;">Hub Fundador CEO</span>
+          <span id="founderPendingAlertBadgeDesk" class="badge-pill-alert" style="display: none; margin-left: 6px; background: #ef4444; color: white; border-radius: 10px; font-size: 10px; font-weight: 800; padding: 1px 7px;">0</span>
         </button>
         <div class="desktop-sidebar-user-card" onclick="handleLogout()" title="Cerrar sesión">
           <span style="font-size: 15px;">👤</span>
@@ -353,7 +270,7 @@
     <div class="top-navbar">
       <div class="top-navbar-inner">
         <div class="brand-group">
-          <img src="logo.png?v=66.0" alt="aliviafin" class="brand-avatar" style="width: 38px; height: 38px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); background: transparent; display: block; border: none; padding: 0;">
+          <img src="logo.png?v=70.0" alt="aliviafin" class="brand-avatar" style="width: 38px; height: 38px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); background: transparent; display: block; border: none; padding: 0;">
           <div class="brand-title">
             <h1 style="display:flex; align-items:center; gap:6px; font-size:17px; font-weight:800; letter-spacing:-0.02em;">aliviafin <span id="proBadge" style="display:none;" class="badge-pro-gold">PRO</span></h1>
             <p><span class="sync-status-dot" id="syncDot"></span> <span id="syncText">🟢 Sincronizado</span></p>
@@ -371,8 +288,11 @@
           </div>
           <button class="privacy-toggle-btn desktop-only-header-btn" id="privacyToggleBtn" onclick="togglePrivacyMode()" title="Ocultar o mostrar montos (Modo Privacidad)">👁️</button>
           <button class="theme-toggle-btn desktop-only-header-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Cambiar a Modo Noche Suave">🌙</button>
-          <button id="btnFounderHeader" class="settings-popover-btn master-admin-only" onclick="switchTab('founder')" title="Hub de Fundador CEO (Métricas & Suscriptores)" style="display: none; background: linear-gradient(135deg, rgba(245, 158, 11, 0.18), rgba(217, 119, 6, 0.28)); border: 1.5px solid rgba(245, 158, 11, 0.5); color: #d97706; font-size: 15px; margin-right: 2px;">👑</button>
-          <button id="btnSettings" class="settings-popover-btn" onclick="openSettingsModal()" title="Ajustes y Opciones">⚙️</button>
+          <button id="btnFounderHeader" class="settings-popover-btn master-admin-only" onclick="switchTab('founder')" title="Hub de Fundador CEO (Métricas & Suscriptores)" style="display: none; background: linear-gradient(135deg, rgba(245, 158, 11, 0.18), rgba(217, 119, 6, 0.28)); border: 1.5px solid rgba(245, 158, 11, 0.5); color: #d97706; font-size: 15px; margin-right: 2px; position: relative;">
+            👑
+            <span id="founderPendingAlertBadgeMob" style="position: absolute; top: 2px; right: 2px; width: 8px; height: 8px; background: #ef4444; border-radius: 50%; display: none; border: 1.5px solid #ffffff;"></span>
+          </button>
+          <button id="btnSettings" class="settings-popover-btn hide-on-desktop" onclick="openSettingsModal()" title="Ajustes y Opciones">⚙️</button>
         </div>
       </div>
     </div>
@@ -886,6 +806,10 @@
             <span class="fh-tab-text-full">💬 Buzón de Feedback (<span id="masterFeedbackCount">0</span>)</span>
             <span class="fh-tab-text-short">💬 Feedback (<span id="masterFeedbackCountMobile">0</span>)</span>
           </button>
+          <button type="button" class="fh-nav-btn" id="fhTabReclamos" onclick="switchMasterTab('reclamos')">
+            <span class="fh-tab-text-full">⚖️ Reclamaciones & Devoluciones (<span id="masterReclamosCount">0</span>)</span>
+            <span class="fh-tab-text-short">⚖️ Reclamos (<span id="masterReclamosCountMobile">0</span>)</span>
+          </button>
         </div>
 
         <!-- PANE 1: VISIÓN GENERAL (SaaS KPIs, Gráficos & Insights) -->
@@ -1080,6 +1004,134 @@
           </div>
         </div>
 
+        <!-- PANE 4: RECLAMACIONES & DEVOLUCIONES (LIBRO INDECOPI & REEMBOLSOS) -->
+        <div id="fhPaneReclamos" style="display: none;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
+            <div>
+              <h3 style="margin: 0; font-size: 15px; font-weight: 800; color: var(--text-main);">⚖️ Reclamaciones Indecopi & Solicitudes de Reembolso</h3>
+              <div style="font-size: 11.5px; color: var(--text-muted);">Fiscalización legal D.S. 011-2011-PCM (Plazo máximo 15 días hábiles) y devoluciones de 7 días</div>
+            </div>
+          </div>
+
+          <!-- Métricas Resumen Reclamos/Devoluciones -->
+          <div class="master-kpi-grid" style="margin-bottom: 20px;">
+            <div class="master-kpi-card">
+              <div class="master-kpi-top">
+                <span class="master-kpi-label">Reclamaciones Totales</span>
+                <span class="master-kpi-badge" style="background: rgba(59,130,246,0.1); color: #2563eb;">Indecopi</span>
+              </div>
+              <div class="master-kpi-val" id="kpiTotalReclamos">0</div>
+              <div class="master-kpi-sub">Hojas virtuales generadas</div>
+            </div>
+            <div class="master-kpi-card">
+              <div class="master-kpi-top">
+                <span class="master-kpi-label">Pendientes de Atención</span>
+                <span class="master-kpi-badge" style="background: rgba(239,68,68,0.1); color: #ef4444;">15 días máx.</span>
+              </div>
+              <div class="master-kpi-val" id="kpiPendientesReclamos" style="color: #ef4444;">0</div>
+              <div class="master-kpi-sub" id="kpiPendientesSub">Requieren respuesta formal</div>
+            </div>
+            <div class="master-kpi-card">
+              <div class="master-kpi-top">
+                <span class="master-kpi-label">Solicitudes de Reembolso</span>
+                <span class="master-kpi-badge" style="background: rgba(16,185,129,0.1); color: #059669;">7 Días</span>
+              </div>
+              <div class="master-kpi-val" id="kpiTotalReembolsos" style="color: #059669;">0</div>
+              <div class="master-kpi-sub">Garantías solicitadas</div>
+            </div>
+            <div class="master-kpi-card">
+              <div class="master-kpi-top">
+                <span class="master-kpi-label">Bajas de Cuenta (Churn)</span>
+                <span class="master-kpi-badge" style="background: rgba(245,158,11,0.1); color: #d97706;">Retención</span>
+              </div>
+              <div class="master-kpi-val" id="kpiTotalChurn" style="color: #d97706;">0</div>
+              <div class="master-kpi-sub">Encuestas de salida analizadas</div>
+            </div>
+          </div>
+
+          <!-- Sección 1: Hojas de Reclamación (Indecopi) -->
+          <div style="font-size: 13px; font-weight: 800; color: var(--text-main); margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+            <span>📖 Hojas de Reclamación Virtual (D.S. 011-2011-PCM)</span>
+          </div>
+          <div class="master-table-card" style="margin-bottom: 24px;">
+            <div class="master-table-responsive">
+              <table class="master-table">
+                <thead>
+                  <tr>
+                    <th style="min-width: 140px;">Código / Fecha</th>
+                    <th style="min-width: 200px;">Consumidor</th>
+                    <th style="min-width: 100px;">Tipo</th>
+                    <th style="min-width: 250px;">Detalle & Pedido</th>
+                    <th style="min-width: 110px;">Estado</th>
+                    <th style="min-width: 130px; text-align: right;">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="masterClaimsTableBody">
+                  <tr>
+                    <td colspan="6" style="text-align: center; padding: 24px; color: var(--text-muted);">
+                      No hay reclamaciones registradas.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Sección 2: Solicitudes de Devolución & Reembolso -->
+          <div style="font-size: 13px; font-weight: 800; color: var(--text-main); margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+            <span>💵 Solicitudes de Devolución (Garantía 7 Días)</span>
+          </div>
+          <div class="master-table-card" style="margin-bottom: 24px;">
+            <div class="master-table-responsive">
+              <table class="master-table">
+                <thead>
+                  <tr>
+                    <th style="min-width: 130px;">Fecha</th>
+                    <th style="min-width: 200px;">Usuario / Contacto</th>
+                    <th style="min-width: 140px;">Método Abono</th>
+                    <th style="min-width: 250px;">Motivo Solicitud</th>
+                    <th style="min-width: 110px;">Estado</th>
+                    <th style="min-width: 130px; text-align: right;">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="masterRefundsTableBody">
+                  <tr>
+                    <td colspan="6" style="text-align: center; padding: 24px; color: var(--text-muted);">
+                      No hay solicitudes de reembolso pendientes.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Sección 3: Encuestas de Salida y Feedback de Bajas (Churn) -->
+          <div style="font-size: 13px; font-weight: 800; color: var(--text-main); margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+            <span>📉 Razones de Eliminación de Cuenta (Feedback de Salida)</span>
+          </div>
+          <div class="master-table-card">
+            <div class="master-table-responsive">
+              <table class="master-table">
+                <thead>
+                  <tr>
+                    <th style="min-width: 130px;">Fecha</th>
+                    <th style="min-width: 180px;">Usuario</th>
+                    <th style="min-width: 180px;">Motivo Principal</th>
+                    <th style="min-width: 280px;">Sugerencia / Comentario</th>
+                  </tr>
+                </thead>
+                <tbody id="masterChurnTableBody">
+                  <tr>
+                    <td colspan="4" style="text-align: center; padding: 24px; color: var(--text-muted);">
+                      No se han registrado bajas de cuenta con encuesta.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
       </div>
 
     </div> <!-- End container -->
@@ -1205,18 +1257,17 @@
 
         <div style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-top: 6px; margin-bottom: 2px;">Soporte & Legal</div>
         <button type="button" class="btn btn-secondary" id="settingsWhatsNewBtn" onclick="openWhatsNewModal();" style="width: 100%; text-align: left; padding: 10px;">🚀 Novedades</button>
-        <button type="button" class="btn btn-secondary" onclick="openFeedbackModal();" style="width: 100%; text-align: left; padding: 10px;">💬 Contacto y Soporte</button>
-        <button type="button" class="btn btn-secondary" onclick="openLegalModal('refunds');" style="width: 100%; text-align: left; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
-          <span>💵 Garantía y Reembolsos (7 Días)</span>
-          <span style="font-size: 9.5px; font-weight: 800; background: rgba(16,185,129,0.1); color: #059669; padding: 2px 6px; border-radius: 6px;">100% Seguro</span>
+        <button type="button" class="btn btn-secondary" onclick="openLegalModal('terms');" style="width: 100%; text-align: left; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; border-radius: 12px; margin-bottom: 6px;" title="Términos, Privacidad, Garantía de 7 días y Libro de Reclamaciones">
+          <div>
+            <div style="font-size: 12.5px; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 6px;">
+              <span>⚖️ Centro Legal & Reclamaciones</span>
+              <span style="font-size: 9.5px; font-weight: 800; background: rgba(16,185,129,0.1); color: #059669; padding: 1px 6px; border-radius: 6px;">Indecopi · 7 Días</span>
+            </div>
+            <div style="font-size: 10.5px; color: var(--text-muted); margin-top: 2px;">Términos · Privacidad · Garantía & Reembolsos · Libro Virtual</div>
+          </div>
+          <span style="font-size: 16px; color: var(--text-muted);">›</span>
         </button>
-        <button type="button" class="btn btn-secondary" onclick="openLegalModal('privacy');" style="width: 100%; text-align: left; padding: 10px;">🛡️ Políticas de Privacidad</button>
-        <button type="button" class="btn btn-secondary" onclick="openLegalModal('terms');" style="width: 100%; text-align: left; padding: 10px;">⚖️ Términos y Condiciones</button>
-        <button type="button" class="btn btn-secondary" onclick="openReclamacionesModal();" style="width: 100%; text-align: left; padding: 10px; display: flex; justify-content: space-between; align-items: center;" title="Libro de Reclamaciones Virtual conforme a ley peruana">
-          <span>📖 Libro de Reclamaciones Virtual</span>
-          <span style="font-size: 9.5px; font-weight: 800; background: rgba(59,130,246,0.1); color: #2563eb; padding: 2px 6px; border-radius: 6px;">Indecopi</span>
-        </button>
-        <button type="button" class="btn btn-secondary" onclick="promptUserAccountDeletion();" style="width: 100%; text-align: left; padding: 10px; color: #ef4444; display: flex; justify-content: space-between; align-items: center;" title="Derecho al Olvido y Supresión (Ley N° 29733 / GDPR)">
+        <button type="button" class="btn btn-secondary" onclick="openDeleteAccountModal();" style="width: 100%; text-align: left; padding: 10px; color: #ef4444; display: flex; justify-content: space-between; align-items: center;" title="Derecho al Olvido y Supresión (Ley N° 29733 / GDPR)">
           <span>🗑️ Eliminar Mi Cuenta y Datos (Ley 29733)</span>
           <span style="font-size: 10px; font-weight: 800; background: rgba(239,68,68,0.1); color: #ef4444; padding: 2px 6px; border-radius: 6px;">ARCO</span>
         </button>
@@ -1230,7 +1281,7 @@
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
               <span style="font-size: 11px; font-weight: 700; color: #374151;">📱 Versión</span>
-              <span style="font-size: 11px; color: #0d9488; font-weight: 800;" id="settingsVersion">v69.9</span>
+              <span style="font-size: 11px; color: #0d9488; font-weight: 800;" id="settingsVersion">v70.0</span>
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 5px; border-top: 1px dashed #e2e8f0;">
               <span style="font-size: 10.5px; font-weight: 700; color: #64748b;">🏢 Plataforma</span>
@@ -2606,7 +2657,13 @@
           <p style="margin: 0 0 10px 0; color: var(--text-muted);">Una vez recibido tu requerimiento y verificado el abono, la devolución se efectúa en un plazo máximo de <strong>24 a 48 horas hábiles</strong> a través del mismo número de Yape/Plin o cuenta bancaria de origen.</p>
 
           <h4 style="margin: 0 0 6px 0; font-size: 13.5px; font-weight: 800; color: var(--text-main);">4. Cancelación del Plan Mensual</h4>
-          <p style="margin: 0 0 4px 0; color: var(--text-muted);">Si estás en el plan mensual de S/ 4.90, puedes solicitar la no renovación en cualquier momento sin penalidad alguna. Mantendrás tu acceso a las herramientas PRO hasta la finalización del mes ya pagado.</p>
+          <p style="margin: 0 0 12px 0; color: var(--text-muted);">Si estás en el plan mensual de S/ 4.90, puedes solicitar la no renovación en cualquier momento sin penalidad alguna. Mantendrás tu acceso a las herramientas PRO hasta la finalización del mes ya pagado.</p>
+          
+          <div style="margin: 14px 0 6px 0;">
+            <button type="button" class="btn btn-primary" onclick="closeModal('legalModal'); openSolicitarReembolsoModal();" style="width: 100%; padding: 11px; font-size: 13px; font-weight: 800; background: linear-gradient(135deg, #059669, #10b981); border-radius: 12px; box-shadow: 0 4px 14px rgba(5,150,105,0.25);">
+              💵 Solicitar Devolución en Línea (1 Clic)
+            </button>
+          </div>
         </div>
 
         <div id="legalSectionProvider" style="display: none;">
@@ -2788,11 +2845,126 @@
     </div>
   </div>
 
+  <!-- MODAL: ENCUESTA DE RETENCIÓN ANTES DE ELIMINAR CUENTA (v70.0) -->
+  <div class="glass-backdrop" id="deleteAccountFeedbackModal" style="z-index: 100020; display: none;" onclick="if(event.target === this) closeDeleteAccountModal()">
+    <div class="glass-modal" style="max-width: 440px; width: 92%; border-radius: 24px; padding: 26px 22px; background: #ffffff; box-shadow: 0 24px 60px rgba(0,0,0,0.25); border: 1px solid rgba(0,0,0,0.08); margin: auto;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 22px;">💔</span>
+          <h3 style="font-size: 17px; font-weight: 800; color: #0f172a; margin: 0;">Lamentamos verte partir</h3>
+        </div>
+        <button type="button" onclick="closeDeleteAccountModal()" style="background: rgba(0,0,0,0.06); border: none; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 13px; cursor: pointer; color: #64748b;">✕</button>
+      </div>
+
+      <p style="font-size: 12.5px; color: #64748b; margin: 0 0 16px 0; line-height: 1.5;">
+        Tu opinión es muy importante para nosotros. ¿Nos podrías contar la razón principal de tu decisión?
+      </p>
+
+      <form id="deleteAccountForm" onsubmit="handleConfirmDeleteAccountSubmit(event)">
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px;">
+          <label style="display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; font-size: 12px; font-weight: 600; color: #334155; cursor: pointer;">
+            <input type="radio" name="churnReason" value="dificil_uso" required style="accent-color: #ef4444;">
+            <span>📱 La app me pareció difícil de usar o poco intuitiva</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; font-size: 12px; font-weight: 600; color: #334155; cursor: pointer;">
+            <input type="radio" name="churnReason" value="ya_no_necesito" style="accent-color: #ef4444;">
+            <span>📉 Ya no necesito registrar mis gastos</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; font-size: 12px; font-weight: 600; color: #334155; cursor: pointer;">
+            <input type="radio" name="churnReason" value="faltan_funciones" style="accent-color: #ef4444;">
+            <span>🧩 Faltan funciones que necesito (ej: bancos, etc.)</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; font-size: 12px; font-weight: 600; color: #334155; cursor: pointer;">
+            <input type="radio" name="churnReason" value="precio_pago" style="accent-color: #ef4444;">
+            <span>💸 Inconformidad con precio o métodos de pago</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; font-size: 12px; font-weight: 600; color: #334155; cursor: pointer;">
+            <input type="radio" name="churnReason" value="problemas_tecnicos" style="accent-color: #ef4444;">
+            <span>🐛 Problemas técnicos o lentitud</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; font-size: 12px; font-weight: 600; color: #334155; cursor: pointer;">
+            <input type="radio" name="churnReason" value="otro" style="accent-color: #ef4444;">
+            <span>💬 Otro motivo</span>
+          </label>
+        </div>
+
+        <div style="margin-bottom: 14px;">
+          <label style="display: block; font-size: 11px; font-weight: 700; color: #475569; margin-bottom: 5px;">¿Qué podríamos haber hecho diferente? (Opcional)</label>
+          <textarea id="churnFeedbackText" rows="2" class="form-control" placeholder="Escribe aquí tu sugerencia o detalle..." style="width: 100%; font-size: 12px; resize: vertical;"></textarea>
+        </div>
+
+        <!-- Tarjeta de retención amigable -->
+        <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 14px; padding: 12px; margin-bottom: 16px;">
+          <div style="font-size: 11.5px; font-weight: 800; color: #059669; margin-bottom: 3px;">¿Tienes alguna traba técnica o duda?</div>
+          <div style="font-size: 11px; color: #047857; line-height: 1.4; margin-bottom: 8px;">
+            Podemos ayudarte a resolver cualquier inconveniente para que no pierdas tu historial ni tus presupuestos configurados.
+          </div>
+          <button type="button" class="btn btn-secondary" onclick="closeDeleteAccountModal(); openFeedbackModal();" style="width: 100%; padding: 7px; font-size: 11.5px; font-weight: 700;">
+            💬 Conversar con Soporte antes de irme
+          </button>
+        </div>
+
+        <!-- Confirmación de seguridad -->
+        <div style="border-top: 1px solid #f1f5f9; padding-top: 14px;">
+          <label style="display: block; font-size: 11px; font-weight: 800; color: #ef4444; margin-bottom: 6px;">
+            Escribe "ELIMINAR" para confirmar el borrado definitivo de tus datos:
+          </label>
+          <input type="text" id="confirmDeleteInput" class="form-control" placeholder="ELIMINAR" required style="width: 100%; margin-bottom: 12px; font-weight: 700; border-color: #fca5a5;">
+          <button type="submit" id="btnConfirmDeleteAccount" class="btn btn-pill danger" style="width: 100%; padding: 12px; font-size: 13px; font-weight: 800;">
+            🗑️ Confirmar Eliminación Irreversible (Ley 29733)
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: SOLICITUD DE REEMBOLSO (GARANTÍA 7 DÍAS v70.0) -->
+  <div class="glass-backdrop" id="solicitarReembolsoModal" style="z-index: 100015; display: none;" onclick="if(event.target === this) closeSolicitarReembolsoModal()">
+    <div class="glass-modal" style="max-width: 440px; width: 92%; border-radius: 24px; padding: 26px 22px; background: #ffffff; box-shadow: 0 24px 60px rgba(0,0,0,0.22); border: 1px solid rgba(0,0,0,0.08); margin: auto;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 22px;">💵</span>
+          <h3 style="font-size: 17px; font-weight: 800; color: #0f172a; margin: 0;">Solicitar Devolución (7 Días)</h3>
+        </div>
+        <button type="button" onclick="closeSolicitarReembolsoModal()" style="background: rgba(0,0,0,0.06); border: none; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 13px; cursor: pointer; color: #64748b;">✕</button>
+      </div>
+
+      <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 12px; padding: 10px 12px; font-size: 11.5px; color: #065f46; line-height: 1.45; margin-bottom: 14px;">
+        🛡️ <strong>Garantía de Satisfacción Total:</strong> Si estás dentro de los primeros 7 días posteriores a tu pago, procesamos tu devolución en 24 a 48 horas hábiles vía Yape, Plin o cuenta bancaria.
+      </div>
+
+      <form onsubmit="handleSolicitudReembolsoSubmit(event)">
+        <div style="margin-bottom: 12px;">
+          <label style="display: block; font-size: 11px; font-weight: 800; color: #374151; margin-bottom: 5px;">Tu Correo de Cuenta en AliviaFin</label>
+          <input type="email" id="reembolsoEmail" class="form-control" placeholder="tu@correo.com" required style="width: 100%;">
+        </div>
+        <div style="margin-bottom: 12px;">
+          <label style="display: block; font-size: 11px; font-weight: 800; color: #374151; margin-bottom: 5px;">Número de Celular para Abono (Yape / Plin)</label>
+          <input type="tel" id="reembolsoTelefono" class="form-control" placeholder="Ej: 999 888 777" required style="width: 100%;">
+        </div>
+        <div style="margin-bottom: 12px;">
+          <label style="display: block; font-size: 11px; font-weight: 800; color: #374151; margin-bottom: 5px;">Plan Pagado</label>
+          <select id="reembolsoPlan" class="form-control" style="width: 100%;">
+            <option value="pro_lifetime">PRO Vitalicio (S/ 19.90)</option>
+            <option value="pro_monthly">PRO Mensual (S/ 4.90)</option>
+          </select>
+        </div>
+        <div style="margin-bottom: 16px;">
+          <label style="display: block; font-size: 11px; font-weight: 800; color: #374151; margin-bottom: 5px;">Motivo de la Solicitud</label>
+          <textarea id="reembolsoMotivo" rows="2" class="form-control" placeholder="Cuéntanos brevemente qué faltó o por qué solicitas la devolución..." required style="width: 100%; resize: vertical;"></textarea>
+        </div>
+        <button type="submit" id="btnSubmitReembolso" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 13.5px; font-weight: 800; background: linear-gradient(135deg, #059669, #10b981); border-radius: 12px;">
+          ✉️ Enviar Solicitud de Devolución
+        </button>
+      </form>
+    </div>
+  </div>
+
   <!-- COMPATIBILIDAD MODAL MASTER: Ahora reemplazado por el Módulo Full-Screen tab-founder -->
   <div id="masterDashboardModal" style="display: none;"></div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
-  <script src="js/app.js?v=69.9"></script>
+  <script src="js/app.js?v=70.0"></script>
 </body>
 </html>

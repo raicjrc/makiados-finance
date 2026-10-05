@@ -1,6 +1,6 @@
-// Service Worker v69.9 - NETWORK FIRST para sincronización en tiempo real
+// Service Worker v70.0 - NETWORK FIRST para sincronización en tiempo real
 // Este SW NUNCA sirve datos de caché - siempre va a la red primero
-const CACHE_NAME = 'aliviafin-v124';
+const CACHE_NAME = 'aliviafin-v125';
 
 // Solo cachear assets estáticos (fonts, chart.js CDN)
 const STATIC_ASSETS = [
