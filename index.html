@@ -842,6 +842,10 @@
         <button type="button" class="btn btn-secondary" onclick="openFeedbackModal();" style="width: 100%; text-align: left; padding: 10px;">💬 Contacto y Soporte</button>
         <button type="button" class="btn btn-secondary" onclick="openLegalModal('privacy');" style="width: 100%; text-align: left; padding: 10px;">🛡️ Políticas de Privacidad</button>
         <button type="button" class="btn btn-secondary" onclick="openLegalModal('terms');" style="width: 100%; text-align: left; padding: 10px;">⚖️ Términos y Condiciones</button>
+        <button type="button" class="btn btn-secondary" onclick="promptUserAccountDeletion();" style="width: 100%; text-align: left; padding: 10px; color: #ef4444; display: flex; justify-content: space-between; align-items: center;" title="Derecho al Olvido y Supresión (Ley N° 29733 / GDPR)">
+          <span>🗑️ Eliminar Mi Cuenta y Datos (Ley 29733)</span>
+          <span style="font-size: 10px; font-weight: 800; background: rgba(239,68,68,0.1); color: #ef4444; padding: 2px 6px; border-radius: 6px;">ARCO</span>
+        </button>
         
         <!-- Info de cuenta y versión -->
         <div style="border-top: 1px solid #f3f4f6; padding-top: 12px; margin-top: 4px;">
@@ -2103,31 +2107,46 @@
         </div>
 
         <div id="legalSectionTerms">
-          <h4 style="margin: 0 0 6px 0; font-size: 13.5px; font-weight: 800; color: var(--text-main);">1. Aceptación del Servicio</h4>
-          <p style="margin: 0 0 10px 0; color: var(--text-muted);">Al utilizar AliviaFin, aceptas estos términos diseñados para garantizar una gestión financiera serena, privada y transparente. AliviaFin es un software de optimización presupuestaria personal y en pareja, no una entidad bancaria ni custodio de fondos.</p>
+          <h4 style="margin: 0 0 6px 0; font-size: 13.5px; font-weight: 800; color: var(--text-main);">1. Aceptación del Servicio & Naturaleza de la Plataforma</h4>
+          <p style="margin: 0 0 10px 0; color: var(--text-muted);">Al utilizar AliviaFin, aceptas estos términos diseñados para garantizar una gestión financiera serena, privada y transparente. AliviaFin es un software de optimización presupuestaria personal y en pareja, <strong>no es una entidad bancaria, casa de cambio, administradora de fondos ni asesor financiero supervisado por la SBS</strong> (Superintendencia de Banca, Seguros y AFP). No custodiamos dinero ni ejecutamos débitos bancarios automáticos.</p>
 
           <h4 style="margin: 0 0 6px 0; font-size: 13.5px; font-weight: 800; color: var(--text-main);">2. Precios y Membresía AliviaFin PRO</h4>
-          <p style="margin: 0 0 10px 0; color: var(--text-muted);">El plan mensual se ofrece a <strong>S/ 4.90 / mes</strong> con cancelación sin penalidad en cualquier momento. El plan de por vida tiene una tarifa preferencial única de <strong>S/ 19.90</strong> con acceso vitalicio a todas las funciones premium presentes y futuras.</p>
+          <p style="margin: 0 0 10px 0; color: var(--text-muted);">El plan mensual se ofrece a <strong>S/ 4.90 / mes</strong> con cancelación libre sin penalidad en cualquier momento. El plan de por vida tiene una tarifa preferencial única de <strong>S/ 19.90</strong> con acceso vitalicio a todas las funciones premium presentes y futuras. Las activaciones se procesan de forma verificada vía transferencias y billeteras digitales (Yape / Plin).</p>
 
-          <h4 style="margin: 0 0 6px 0; font-size: 13.5px; font-weight: 800; color: var(--text-main);">3. Propiedad Absoluta de tus Datos</h4>
-          <p style="margin: 0 0 10px 0; color: var(--text-muted);">Tus datos financieros te pertenecen al 100%. Puedes exportar tus reportes a PDF, Excel o CSV en cualquier momento, así como solicitar la eliminación definitiva de tu cuenta y registros asociados.</p>
+          <h4 style="margin: 0 0 6px 0; font-size: 13.5px; font-weight: 800; color: var(--text-main);">3. Veracidad de Testimonios y Transparencia Publicitaria</h4>
+          <p style="margin: 0 0 10px 0; color: var(--text-muted);">En estricto cumplimiento con las normas de protección al consumidor (Indecopi y directrices internacionales de la FTC), AliviaFin <strong>no emplea testimonios falsos, opiniones patrocinadas ni reseñas manipuladas</strong>. Todo testimonio expuesto proviene de la experiencia voluntaria de usuarios reales.</p>
 
-          <h4 style="margin: 0 0 6px 0; font-size: 13.5px; font-weight: 800; color: var(--text-main);">4. Uso Responsable</h4>
-          <p style="margin: 0 0 4px 0; color: var(--text-muted);">Las proyecciones de ahorro, simulaciones de cuotas y fechas de vencimiento son de carácter estimativo para facilitar tu planificación personal.</p>
+          <h4 style="margin: 0 0 6px 0; font-size: 13.5px; font-weight: 800; color: var(--text-main);">4. Propiedad Absoluta de tus Datos y Portabilidad</h4>
+          <p style="margin: 0 0 10px 0; color: var(--text-muted);">Tus datos financieros te pertenecen exclusivamente a ti. Puedes exportar tus reportes a PDF o Excel / CSV en cualquier momento, así como solicitar la eliminación definitiva de tu cuenta y registros asociados conforme a ley.</p>
+
+          <h4 style="margin: 0 0 6px 0; font-size: 13.5px; font-weight: 800; color: var(--text-main);">5. Uso Responsable & Descargo de Responsabilidad</h4>
+          <p style="margin: 0 0 4px 0; color: var(--text-muted);">Las proyecciones de ahorro, simulaciones de cuotas y fechas de vencimiento son de carácter estimativo para facilitar tu planificación personal. El usuario es el único responsable de la exactitud de los montos ingresados.</p>
         </div>
 
         <div id="legalSectionPrivacy" style="display: none;">
-          <h4 style="margin: 0 0 6px 0; font-size: 13.5px; font-weight: 800; color: var(--text-main);">1. Cero Conexión con Claves Bancarias</h4>
-          <p style="margin: 0 0 10px 0; color: var(--text-muted);">Nunca te pediremos tus accesos bancarios, tokens digitales ni números completos de tarjeta de crédito. La conciliación de saldos se realiza de forma autónoma y privada.</p>
+          <h4 style="margin: 0 0 6px 0; font-size: 13.5px; font-weight: 800; color: var(--text-main);">1. Declaración de Datos Recopilados vs. Datos NUNCA Solicitados</h4>
+          <p style="margin: 0 0 10px 0; color: var(--text-muted);">
+            • <strong>Datos recopilados:</strong> Correo electrónico para autenticación segura, nombre o alias opcional, y los movimientos de ingresos, gastos, categorías y saldos que registres voluntariamente.<br>
+            • <strong>Datos que NUNCA solicitamos:</strong> Bajo arquitectura <em>Zero-Knowledge</em>, AliviaFin <strong>jamás</strong> solicita contraseñas bancarias, números completos de tarjeta de crédito/débito, tokens digitales ni códigos CVV/CVC.
+          </p>
 
-          <h4 style="margin: 0 0 6px 0; font-size: 13.5px; font-weight: 800; color: var(--text-main);">2. Seguridad a Nivel de Fila (RLS) y Cifrado</h4>
-          <p style="margin: 0 0 10px 0; color: var(--text-muted);">Nuestra base de datos en la nube está protegida por políticas estrictas de Row Level Security (RLS) y cifrado TLS 1.3 en tránsito. Ningún usuario externo puede visualizar ni editar tu información.</p>
+          <h4 style="margin: 0 0 6px 0; font-size: 13.5px; font-weight: 800; color: var(--text-main);">2. Tratamiento de Inteligencia Artificial (IA) y Privacidad</h4>
+          <p style="margin: 0 0 10px 0; color: var(--text-muted);">AliviaFin opera mediante motores matemáticos deterministas y algoritmos financieros locales. Los datos personales y financieros de los usuarios <strong>NO son transferidos a modelos públicos de IA de terceros ni utilizados para re-entrenar sistemas de inteligencia artificial</strong>.</p>
 
-          <h4 style="margin: 0 0 6px 0; font-size: 13.5px; font-weight: 800; color: var(--text-main);">3. Cero Venta de Información</h4>
-          <p style="margin: 0 0 10px 0; color: var(--text-muted);">No comercializamos datos con agencias de publicidad, aseguradoras ni intermediarios de crédito. Tus finanzas no son un producto publicitario.</p>
+          <h4 style="margin: 0 0 6px 0; font-size: 13.5px; font-weight: 800; color: var(--text-main);">3. Proveedores y Procesadores Terceros (Sub-encargados)</h4>
+          <p style="margin: 0 0 10px 0; color: var(--text-muted);">
+            Para garantizar la más alta disponibilidad y seguridad, empleamos procesadores de infraestructura certificados:<br>
+            • <strong>Supabase Inc.</strong>: Base de datos PostgreSQL en la nube y autenticación con cifrado en reposo (AES-256) y en tránsito (TLS 1.3).<br>
+            • <strong>Vercel Inc.</strong>: Red de distribución y alojamiento web seguro.<br>
+            • <strong>CDNs seguras (jsDelivr / Cloudflare)</strong>: Entrega de librerías estáticas de interfaz (Chart.js).<br>
+            • <strong>Procesamiento de pagos:</strong> Las transacciones se realizan directamente por las billeteras y bancos del usuario (Yape/Plin/Transferencias). AliviaFin no almacena datos de cuentas bancarias de origen.
+          </p>
 
-          <h4 style="margin: 0 0 6px 0; font-size: 13.5px; font-weight: 800; color: var(--text-main);">4. Arquitectura Offline-First</h4>
-          <p style="margin: 0 0 4px 0; color: var(--text-muted);">Tus datos se mantienen en tu dispositivo con soporte PWA completo para que operes con máxima velocidad incluso cuando no tengas conexión a internet.</p>
+          <h4 style="margin: 0 0 6px 0; font-size: 13.5px; font-weight: 800; color: var(--text-main);">4. Derecho al Olvido y Supresión Definitiva (Ley N° 29733 & GDPR)</h4>
+          <p style="margin: 0 0 10px 0; color: var(--text-muted);">Conforme a la Ley N° 29733 de Protección de Datos Personales del Perú y estándares GDPR, garantizamos tus Derechos ARCO (Acceso, Rectificación, Cancelación y Oposición). Puedes solicitar la eliminación definitiva e inmediata de tu cuenta y todos tus datos financieros desde el botón de Ajustes > <em>"Eliminar Mi Cuenta y Datos"</em> o enviando un correo a <strong>privacidad@aliviafin.com</strong>. La purga de datos se procesa de forma irrevocable en menos de 48 horas.</p>
+
+          <h4 style="margin: 0 0 6px 0; font-size: 13.5px; font-weight: 800; color: var(--text-main);">5. Cero Venta de Información Personal</h4>
+          <p style="margin: 0 0 4px 0; color: var(--text-muted);">AliviaFin no comercializa, monetiza ni comparte tu historial financiero con centrales de riesgo, aseguradoras, anunciantes ni entidades crediticias. Tus datos te pertenecen al 100%.</p>
         </div>
       </div>
 
@@ -2309,6 +2328,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
-  <script src="js/app.js?v=68.2"></script>
+  <script src="js/app.js?v=68.3"></script>
 </body>
 </html>

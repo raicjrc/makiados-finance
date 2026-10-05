@@ -77,7 +77,7 @@
     // ================================================================
     // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v67.0)
     // ================================================================
-    const APP_VERSION = 'v68.2';
+    const APP_VERSION = 'v68.3';
 
     const SUPPORTED_CURRENCIES = {
       'PEN': { code: 'PEN', symbol: 'S/', name: 'Soles peruanos', flag: '🇵🇪', locale: 'es-PE' },
@@ -366,6 +366,27 @@
       openModalById('finzenProModal');
     }
 
+    async function recordUserHeartbeat(user) {
+      if (!user || !user.id) return;
+      try {
+        const nowIso = new Date().toISOString();
+        localStorage.setItem('aliviafin_last_active_' + user.id, nowIso);
+        if (isAdminCesar(user)) {
+          supabaseClient
+            .from('user_subscriptions')
+            .upsert({
+              user_id: user.id,
+              email: user.email,
+              status: 'pro_lifetime'
+            }, { onConflict: 'user_id' })
+            .then(() => console.log('Admin subscription status synced: pro_lifetime'))
+            .catch(() => {});
+        }
+      } catch (e) {
+        console.warn('Heartbeat note:', e);
+      }
+    }
+
     async function verifySubscription(user) {
       window._currentUserSubscriptionStatus = 'free';
 
@@ -375,6 +396,7 @@
         const pb = document.getElementById('proBadge');
         if (pb) pb.style.display = 'inline-flex';
         syncAdminUI();
+        recordUserHeartbeat(user);
         setTimeout(() => checkOnboardingAndVersionAnnouncements(), 400);
         return;
       }
@@ -398,6 +420,7 @@
               status: 'free'
             }]);
         }
+        recordUserHeartbeat(user);
       } catch (err) {
         console.warn('Nota de suscripción:', err);
       }
@@ -6309,6 +6332,28 @@ function promptEditUserNickname(email) {
 
 // Telemetría de Última Conexión y Detección de Riesgo de Churn
 function getUserLastConnectionInfo(item) {
+  const isCesar = (item.email && item.email.toLowerCase() === 'cesar.risso.f@gmail.com');
+  const isCurrentActiveSession = isCesar || (currentUser && (
+    (item.email && currentUser.email && item.email.toLowerCase() === currentUser.email.toLowerCase()) ||
+    (item.user_id && item.user_id === currentUser.id)
+  ));
+
+  if (isCurrentActiveSession) {
+    return {
+      diffDays: 0,
+      diffHours: 0,
+      isInactive: false,
+      html: `
+        <div title="Sesión activa en este momento">
+          <span class="master-activity-badge active">
+            <span class="activity-dot dot-active"></span> Hoy
+          </span>
+          <div style="font-size: 10px; color: #10b981; font-weight: 700; margin-top: 2px;">En línea ahora ⚡</div>
+        </div>
+      `
+    };
+  }
+
   const rawDate = item.last_sign_in_at || item.last_active_at || item.updated_at || item.created_at;
   if (!rawDate) {
     return {
@@ -6534,12 +6579,16 @@ function renderMasterSubscribers() {
   list.forEach(item => {
     const email = item.email || item.user_id || 'Sin correo';
     const cleanName = getDisplayNameForEmail(email, item);
-    const isLife = item.status === 'pro_lifetime' || item.status === 'premium';
-    const isMonth = item.status === 'pro_monthly';
+    const isCesar = (item.email && item.email.toLowerCase() === 'cesar.risso.f@gmail.com');
+    const isLife = isCesar || item.status === 'pro_lifetime' || item.status === 'premium';
+    const isMonth = !isLife && item.status === 'pro_monthly';
 
     let planBadge = '<span class="master-user-badge-free">🆓 Gratuito</span>';
     let revenueEst = 'S/ 0.00';
-    if (isLife) {
+    if (isCesar) {
+      planBadge = '<span class="master-user-badge-pro-life" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(217, 119, 6, 0.35)); border-color: #f59e0b; font-weight: 800;">👑 PRO Vitalicio (Fundador)</span>';
+      revenueEst = 'Fundador CEO';
+    } else if (isLife) {
       planBadge = '<span class="master-user-badge-pro-life">👑 PRO Vitalicio</span>';
       revenueEst = 'S/ 19.90';
     } else if (isMonth) {
@@ -6573,11 +6622,13 @@ function renderMasterSubscribers() {
         <td>
           <div style="display: flex; gap: 5px; align-items: center; justify-content: flex-end; flex-wrap: wrap;">
             ${!isLife ? `<button type="button" class="master-action-btn-pill master-action-btn-life" onclick="setMasterUserPlan('${escapeHtml(item.user_id)}', '${escapeHtml(email)}', 'pro_lifetime')" title="Activar PRO Vitalicio S/ 19.90">👑 Vitalicio</button>` : ''}
-            ${!isMonth ? `<button type="button" class="master-action-btn-pill master-action-btn-month" onclick="setMasterUserPlan('${escapeHtml(item.user_id)}', '${escapeHtml(email)}', 'pro_monthly')" title="Activar PRO Mensual S/ 4.90">📅 Mensual</button>` : ''}
-            ${(isLife || isMonth) ? `<button type="button" class="master-action-btn-pill master-action-btn-free" onclick="setMasterUserPlan('${escapeHtml(item.user_id)}', '${escapeHtml(email)}', 'free')" title="Bajar a cuenta gratuita">⚪ Free</button>` : ''}
-            <button type="button" class="master-action-btn-delete" onclick="confirmDeleteMasterUser('${escapeHtml(item.user_id)}', '${escapeHtml(email)}', '${escapeHtml(cleanName)}')" title="Eliminar usuario permanentemente de la base de datos">
-              🗑️
-            </button>
+            ${!isMonth && !isCesar ? `<button type="button" class="master-action-btn-pill master-action-btn-month" onclick="setMasterUserPlan('${escapeHtml(item.user_id)}', '${escapeHtml(email)}', 'pro_monthly')" title="Activar PRO Mensual S/ 4.90">📅 Mensual</button>` : ''}
+            ${(isLife || isMonth) && !isCesar ? `<button type="button" class="master-action-btn-pill master-action-btn-free" onclick="setMasterUserPlan('${escapeHtml(item.user_id)}', '${escapeHtml(email)}', 'free')" title="Bajar a cuenta gratuita">⚪ Free</button>` : ''}
+            ${!isCesar ? `
+              <button type="button" class="master-action-btn-delete" onclick="confirmDeleteMasterUser('${escapeHtml(item.user_id)}', '${escapeHtml(email)}', '${escapeHtml(cleanName)}')" title="Eliminar usuario permanentemente de la base de datos">
+                🗑️
+              </button>
+            ` : ''}
           </div>
         </td>
       </tr>
@@ -6779,6 +6830,56 @@ function renderMasterFeedback() {
   container.innerHTML = html;
 }
 
+// Derecho al Olvido y Supresión Total de Datos (Ley N° 29733 / GDPR)
+async function promptUserAccountDeletion() {
+  if (!currentUser) return;
+  const email = currentUser.email || 'tu cuenta';
+  const msg = `⚠️ DERECHO AL OLVIDO Y SUPRESIÓN DE DATOS (LEY N° 29733 / GDPR)\n\n` +
+              `Estás a punto de solicitar la eliminación definitiva de tu cuenta (${email}) y de todos tus datos financieros de AliviaFin.\n\n` +
+              `• Se purgarán todas tus transacciones, presupuestos y saldos de banco.\n` +
+              `• Tu membresía o suscripción se cancelará de forma inmediata.\n` +
+              `• Esta acción es definitiva e irreversible.\n\n` +
+              `¿Deseas continuar con el proceso de eliminación?`;
+
+  if (!confirm(msg)) return;
+
+  const doubleConfirm = prompt(`Para confirmar el borrado definitivo, escribe "ELIMINAR" en mayúsculas:`);
+  if (doubleConfirm !== 'ELIMINAR') {
+    showToast('Operación cancelada: confirmación no coincide', 'info');
+    return;
+  }
+
+  showToast('Eliminando tu cuenta y datos permanentemente... ⏳', 'info');
+  try {
+    // 1. Borrar datos financieros en finanzas_state
+    if (currentUser.id) {
+      await supabaseClient
+        .from('finanzas_state')
+        .delete()
+        .eq('id', 'state_' + currentUser.id);
+    }
+
+    // 2. Borrar suscripción en user_subscriptions
+    if (currentUser.id) {
+      await supabaseClient
+        .from('user_subscriptions')
+        .delete()
+        .eq('user_id', currentUser.id);
+    }
+
+    // 3. Limpiar almacenamiento local
+    localStorage.clear();
+
+    // 4. Cerrar sesión
+    await supabaseClient.auth.signOut();
+    alert('✅ Tus datos personales y financieros han sido eliminados de acuerdo con la Ley N° 29733.');
+    window.location.reload();
+  } catch (err) {
+    console.error('Error al suprimir datos:', err);
+    showToast('Error al procesar la solicitud: ' + (err.message || err), 'error');
+  }
+}
+
 // Master Dashboard Window Exports
 window.openMasterDashboardModal = openMasterDashboardModal;
 window.switchMasterTab = switchMasterTab;
@@ -6790,5 +6891,6 @@ window.handleMasterManualActivate = handleMasterManualActivate;
 window.syncAdminUI = syncAdminUI;
 window.promptEditUserNickname = promptEditUserNickname;
 window.confirmDeleteMasterUser = confirmDeleteMasterUser;
+window.promptUserAccountDeletion = promptUserAccountDeletion;
 
 

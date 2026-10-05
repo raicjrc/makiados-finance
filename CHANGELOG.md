@@ -3,6 +3,23 @@
 Todas las versiones notables de esta aplicación están documentadas aquí.
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
+## [v68.3] — 2026-10-04 — Telemetría Activa en Vivo, Badge Fundador CEO y Blindaje Legal & Privacidad Integral (Ley 29733 / GDPR)
+
+### 🟢 Telemetría de Actividad en Tiempo Real & Distinción Fundador CEO
+- **Detección Automática de Sesión Activa**: César y cualquier usuario con sesión abierta ahora se marcan inmediatamente como `🟢 Hoy (En línea ahora ⚡)` en la telemetría, eliminando falsos positivos de inactividad.
+- **Badge Exclusivo Fundador**: La fila de César (`cesar.risso.f@gmail.com`) se identifica de forma destacada como `👑 PRO Vitalicio (Fundador)` con aporte `Fundador CEO`, protegida contra eliminaciones accidentales.
+- **Heartbeat de Conexión**: Cada inicio de sesión y sincronización registra actividad en la base de datos para mantener métricas vivas y actualizadas de los suscriptores.
+
+### ⚖️ Blindaje Legal & Políticas de Privacidad Integrales (Prevención de Demandas)
+- **Declaración Exhaustiva de Datos (Zero-Knowledge)**: Se detalla con total transparencia qué datos se almacenan (presupuestos, categorías, saldos ingresados por el usuario) y se deja constancia legal de que AliviaFin jamás solicita claves de banco, números de tarjeta ni tokens de seguridad.
+- **Cláusula de Inteligencia Artificial (IA)**: Declaración explícita de que los registros financieros no se envían a modelos de IA públicos ni se usan para entrenar algoritmos de terceros.
+- **Sub-encargados de Infraestructura Declarados**: Supabase Inc. (PostgreSQL / Cifrado AES-256 y TLS 1.3), Vercel Inc. (Cloud Hosting) y CDNs autorizadas.
+- **Derecho al Olvido & Supresión Total (Ley N° 29733 & GDPR)**: Implementación de la opción interactiva *"🗑️ Eliminar Mi Cuenta y Datos (Ley 29733)"* en Ajustes (⚙️) para permitir a cualquier cliente ejercer sus Derechos ARCO y purgar su información de forma inmediata.
+- **Transparencia en Reseñas & Descargo SBS**: Compromiso de cero testimonios ficticios y advertencia clara de que AliviaFin es un software de productividad financiera, no una entidad regulada por la SBS.
+- **Service Worker v113**: Actualización de caché para propagación instantánea.
+
+---
+
 ## [v68.2] — 2026-10-04 — Eliminación Permanente de Usuarios, Telemetría de Conexión en Vivo y Blindaje de Cabecera Sticky
 
 ### 🛡️ Blindaje Visual de Cabecera Sticky (Zero Overlap)
