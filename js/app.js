@@ -75,9 +75,9 @@
     let CATEGORIES = { ...GENERIC_CATEGORIES };
 
     // ================================================================
-    // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v69.1)
+    // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v69.2)
     // ================================================================
-    const APP_VERSION = 'v69.1';
+    const APP_VERSION = 'v69.2';
 
     const SUPPORTED_CURRENCIES = {
       'PEN': { code: 'PEN', symbol: 'S/', name: 'Soles peruanos', flag: '🇵🇪', locale: 'es-PE' },
@@ -2299,6 +2299,13 @@
 
       const targetTab = document.getElementById('tab-' + tabId);
       if (targetTab) targetTab.classList.add('active');
+
+      // Scroll a tope de inmediato para no arrastrar posición de scroll previa entre pestañas
+      try {
+        window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      } catch (e) {
+        window.scrollTo(0, 0);
+      }
       
       const tabIndices = { 'inicio': 0, 'movimientos': 1, 'plan': 2, 'metas': 3, 'consejos': 4 };
       if (tabIndices[tabId] !== undefined) {

@@ -3971,6 +3971,7 @@
       background: rgba(248, 250, 252, 0.85);
       border: 1px solid rgba(226, 232, 240, 0.6);
       transition: transform 0.15s ease, background 0.15s ease;
+      gap: 10px;
     }
     body.theme-twilight .upcoming-bill-row {
       background: rgba(30, 41, 59, 0.5);
@@ -4004,6 +4005,7 @@
     }
     .upcoming-bill-texts {
       min-width: 0;
+      flex: 1;
     }
     .upcoming-bill-name {
       font-size: 13px;
@@ -4020,15 +4022,18 @@
       display: flex;
       align-items: center;
       gap: 6px;
-      margin-top: 1px;
+      margin-top: 2px;
+      flex-wrap: wrap;
     }
     .upcoming-due-pill {
       font-size: 9.5px;
       font-weight: 800;
-      padding: 1px 6px;
+      padding: 2px 6px;
       border-radius: 6px;
       text-transform: uppercase;
       letter-spacing: 0.02em;
+      white-space: nowrap;
+      display: inline-block;
     }
     .due-pill-urgent {
       background: #fee2e2;
@@ -4057,14 +4062,19 @@
     .upcoming-bill-action {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       flex-shrink: 0;
+      white-space: nowrap;
+      text-align: right;
     }
     .upcoming-bill-amount {
       font-size: 13.5px;
       font-weight: 800;
       color: var(--text-main);
       letter-spacing: -0.01em;
+      white-space: nowrap;
+      min-width: 65px;
+      text-align: right;
     }
     .btn-pay-quick {
       background: linear-gradient(135deg, #10b981 0%, #059669 100%);
@@ -5235,4 +5245,92 @@
     body.theme-twilight .fh-setup-banner {
       background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(217, 119, 6, 0.18));
       border-color: rgba(245, 158, 11, 0.4);
+    }
+
+    /* ================================================================
+       REGLAS MÓVILES EXCLUSIVAS (IPHONE / PWA / SAFARI)
+       ================================================================ */
+    @media (max-width: 768px) {
+      .desktop-only-header-btn {
+        display: none !important;
+      }
+      .fh-header-card {
+        padding: 14px 16px;
+        border-radius: 16px;
+        margin-bottom: 14px;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+      }
+      .fh-header-main {
+        gap: 10px;
+      }
+      .fh-crown-badge {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+        border-radius: 12px;
+      }
+      .fh-title {
+        font-size: 16.5px;
+      }
+      .fh-subtitle {
+        font-size: 11.5px;
+      }
+      .fh-header-actions {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+      .fh-header-actions .fh-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 8px 10px;
+        font-size: 11.5px;
+        min-height: 38px;
+      }
+      .master-kpi-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10px !important;
+      }
+      .master-kpi-card {
+        padding: 12px 14px !important;
+        border-radius: 14px !important;
+      }
+      .master-kpi-val {
+        font-size: 20px !important;
+      }
+      .master-kpi-label {
+        font-size: 9.5px !important;
+      }
+      .master-kpi-sub {
+        font-size: 10px !important;
+      }
+      .fh-charts-grid {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .bottom-nav {
+        height: calc(56px + env(safe-area-inset-bottom, 8px));
+        padding-bottom: env(safe-area-inset-bottom, 8px);
+        padding-left: 2px;
+        padding-right: 2px;
+      }
+      .nav-item {
+        padding: 4px 1px;
+        font-size: 9.5px;
+        gap: 1px;
+      }
+      .nav-item span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .nav-item .nav-icon {
+        font-size: 17px;
+      }
     }

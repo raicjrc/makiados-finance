@@ -259,10 +259,9 @@
           <div class="month-selector">
             <select id="monthSelect" onchange="changeMonth(this.value)"></select>
           </div>
-          <button class="privacy-toggle-btn" id="privacyToggleBtn" onclick="togglePrivacyMode()" title="Ocultar o mostrar montos (Modo Privacidad)">👁️</button>
-          <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Cambiar a Modo Noche Suave">🌙</button>
-          <button id="btnFounderHeader" class="settings-popover-btn master-admin-only" onclick="switchTab('founder')" title="Hub de Fundador CEO (Métricas & Suscriptores)" style="display: none; background: linear-gradient(135deg, rgba(245, 158, 11, 0.18), rgba(217, 119, 6, 0.28)); border: 1.5px solid rgba(245, 158, 11, 0.5); color: #d97706; font-size: 15px; margin-right: 4px;">👑</button>
-          <button id="btnExportPDF" class="settings-popover-btn" onclick="generatePDFReport()" title="Exportar Reporte Mensual a PDF" style="background: linear-gradient(135deg, #10b981, #059669); color: white; margin-right: 4px; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);">📥</button>
+          <button class="privacy-toggle-btn desktop-only-header-btn" id="privacyToggleBtn" onclick="togglePrivacyMode()" title="Ocultar o mostrar montos (Modo Privacidad)">👁️</button>
+          <button class="theme-toggle-btn desktop-only-header-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Cambiar a Modo Noche Suave">🌙</button>
+          <button id="btnFounderHeader" class="settings-popover-btn master-admin-only" onclick="switchTab('founder')" title="Hub de Fundador CEO (Métricas & Suscriptores)" style="display: none; background: linear-gradient(135deg, rgba(245, 158, 11, 0.18), rgba(217, 119, 6, 0.28)); border: 1.5px solid rgba(245, 158, 11, 0.5); color: #d97706; font-size: 15px; margin-right: 2px;">👑</button>
           <button id="btnSettings" class="settings-popover-btn" onclick="openSettingsModal()" title="Ajustes y Opciones">⚙️</button>
         </div>
       </div>
@@ -1027,6 +1026,17 @@
         </div>
 
         <div style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 2px;">Mi Perfil & App</div>
+
+        <!-- Modo Noche y Modo Privacidad Quick Toggles -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 6px;">
+          <button type="button" class="btn btn-secondary" onclick="toggleTheme()" style="padding: 10px 12px; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 6px;">
+            <span>🌙</span> <span>Modo Noche</span>
+          </button>
+          <button type="button" class="btn btn-secondary" onclick="togglePrivacyMode()" style="padding: 10px 12px; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 6px;">
+            <span>👁️</span> <span>Privacidad</span>
+          </button>
+        </div>
+
         <!-- Nombre de Usuario / Apodo Personalizado -->
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 12px; margin-bottom: 4px;">
           <label for="settingsUserNameInput" style="display: block; font-size: 11px; font-weight: 700; color: var(--text-secondary); margin-bottom: 6px;">👤 Nombre o Apodo en la App:</label>
