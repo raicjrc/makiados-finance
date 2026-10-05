@@ -77,7 +77,7 @@
     // ================================================================
     // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v67.0)
     // ================================================================
-    const APP_VERSION = 'v68.3';
+    const APP_VERSION = 'v68.4';
 
     const SUPPORTED_CURRENCIES = {
       'PEN': { code: 'PEN', symbol: 'S/', name: 'Soles peruanos', flag: '🇵🇪', locale: 'es-PE' },
@@ -367,10 +367,13 @@
     }
 
     async function recordUserHeartbeat(user) {
-      if (!user || !user.id) return;
+      if (!user || (!user.id && !user.email)) return;
       try {
         const nowIso = new Date().toISOString();
-        localStorage.setItem('aliviafin_last_active_' + user.id, nowIso);
+        const userEmail = (user.email || '').toLowerCase().trim();
+        const displayName = (currentUser && currentUser.name) || (user.user_metadata && user.user_metadata.full_name) || userEmail.split('@')[0];
+        localStorage.setItem('aliviafin_last_active_' + (user.id || userEmail), nowIso);
+
         if (isAdminCesar(user)) {
           supabaseClient
             .from('user_subscriptions')
@@ -381,6 +384,25 @@
             }, { onConflict: 'user_id' })
             .then(() => console.log('Admin subscription status synced: pro_lifetime'))
             .catch(() => {});
+        }
+
+        // Registrar heartbeat en Supabase (app_feedback tiene permiso de INSERT para todos los usuarios)
+        // Throttle de 3 minutos por sesión
+        const lastPing = sessionStorage.getItem('aliviafin_last_ping_ts');
+        if (!lastPing || Date.now() - parseInt(lastPing, 10) > 3 * 60 * 1000) {
+          sessionStorage.setItem('aliviafin_last_ping_ts', Date.now().toString());
+
+          supabaseClient
+            .from('app_feedback')
+            .insert([{
+              user_id: user.id || null,
+              user_email: userEmail,
+              type: 'heartbeat',
+              message: displayName,
+              app_version: APP_VERSION
+            }])
+            .then(() => console.log('⚡ Heartbeat de usuario registrado en Supabase'))
+            .catch(e => console.warn('Heartbeat note:', e));
         }
       } catch (e) {
         console.warn('Heartbeat note:', e);
@@ -1142,6 +1164,7 @@
                                     appState.salary +
                                     JSON.stringify(appState.recurringDueDates);
           updateSyncIndicator('synced', '🟢 En Vivo');
+          if (currentUser) recordUserHeartbeat(currentUser);
         } else {
           updateSyncIndicator('syncing', '⚠️ Reintentando...');
         }
@@ -6242,16 +6265,77 @@ async function loadMasterDashboardData(force = false) {
       }
     }
 
-    // 2. Cargar feedback
-    const { data: feedback, error: fbErr } = await supabaseClient
+    // 2. Cargar feedback y telemetría de presencia (heartbeats)
+    const { data: feedbackAll, error: fbErr } = await supabaseClient
       .from('app_feedback')
       .select('*')
       .order('created_at', { ascending: false });
 
-    if (!fbErr && feedback) {
-      masterFeedbackData = feedback;
+    const latestActivityMap = new Map();
+    const latestNameMap = new Map();
+
+    if (!fbErr && Array.isArray(feedbackAll)) {
+      const realFeedback = [];
+      for (const item of feedbackAll) {
+        if (item.type === 'heartbeat') {
+          const email = (item.user_email || '').toLowerCase().trim();
+          const uid = item.user_id;
+          const ts = item.created_at;
+          if (email && (!latestActivityMap.has(email) || new Date(ts) > new Date(latestActivityMap.get(email)))) {
+            latestActivityMap.set(email, ts);
+          }
+          if (uid && (!latestActivityMap.has(uid) || new Date(ts) > new Date(latestActivityMap.get(uid)))) {
+            latestActivityMap.set(uid, ts);
+          }
+          if (item.message && item.message !== 'heartbeat') {
+            if (email && !latestNameMap.has(email)) latestNameMap.set(email, item.message);
+            if (uid && !latestNameMap.has(uid)) latestNameMap.set(uid, item.message);
+          }
+        } else {
+          realFeedback.push(item);
+        }
+      }
+      masterFeedbackData = realFeedback;
       const fbCountEl = document.getElementById('masterFeedbackCount');
-      if (fbCountEl) fbCountEl.textContent = feedback.length;
+      if (fbCountEl) fbCountEl.textContent = realFeedback.length;
+    }
+
+    // 3. Enriquecer los suscriptores con la actividad real más reciente y nombres
+    if (Array.isArray(masterSubscribersData)) {
+      masterSubscribersData.forEach(sub => {
+        const email = (sub.email || '').toLowerCase().trim();
+        const uid = sub.user_id;
+        const hbTs = (email && latestActivityMap.get(email)) || (uid && latestActivityMap.get(uid));
+        if (hbTs) {
+          if (!sub.last_active_at || new Date(hbTs) > new Date(sub.last_active_at)) {
+            sub.last_active_at = hbTs;
+          }
+        }
+        const hbName = (email && latestNameMap.get(email)) || (uid && latestNameMap.get(uid));
+        if (hbName && (!sub.user_name || sub.user_name === sub.email || sub.user_name === 'Usuario')) {
+          sub.user_name = hbName;
+        }
+      });
+
+      // Auto-incorporar usuarios que se han conectado pero no estaban en user_subscriptions
+      const deletedList = getDeletedUsersList();
+      for (const [email, ts] of latestActivityMap.entries()) {
+        if (!email || !email.includes('@')) continue;
+        if (deletedList.includes(email)) continue;
+        const exists = masterSubscribersData.some(s => (s.email && s.email.toLowerCase() === email));
+        if (!exists) {
+          masterSubscribersData.push({
+            user_id: null,
+            email: email,
+            user_name: latestNameMap.get(email) || formatCleanNameFromEmail(email),
+            status: 'free',
+            plan_type: 'free',
+            price: 0,
+            created_at: ts,
+            last_active_at: ts
+          });
+        }
+      }
     }
 
     calculateMasterKPIs();
@@ -6316,6 +6400,7 @@ function getDisplayNameForEmail(email, item = {}) {
   if (nicknames[cleanEmail]) return nicknames[cleanEmail];
   if (item.name && item.name.trim()) return item.name.trim();
   if (item.full_name && item.full_name.trim()) return item.full_name.trim();
+  if (item.user_name && item.user_name.trim()) return item.user_name.trim();
   return formatCleanNameFromEmail(email);
 }
 
@@ -6379,7 +6464,8 @@ function getUserLastConnectionInfo(item) {
   const timeFormatted = d.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
 
   if (diffHours < 24) {
-    const timeText = diffHours <= 0 ? 'Hace un momento' : `Hace ${diffHours}h`;
+    const isLiveOnline = (diffMs < 10 * 60 * 1000);
+    const timeText = isLiveOnline ? 'En línea ahora ⚡' : (diffHours <= 0 ? 'Hace un momento' : `Hace ${diffHours}h`);
     html = `
       <div title="${dateFormatted} ${timeFormatted}">
         <span class="master-activity-badge active">
@@ -6457,6 +6543,9 @@ function getDeduplicatedSubscribers(rawList) {
       }
       if (item.last_active_at && (!existing.last_active_at || new Date(item.last_active_at) > new Date(existing.last_active_at))) {
         existing.last_active_at = item.last_active_at;
+      }
+      if (item.user_name && !existing.user_name) {
+        existing.user_name = item.user_name;
       }
     }
   });
@@ -6738,6 +6827,19 @@ async function deleteMasterUser(userId, email, cleanName) {
         .from('user_subscriptions')
         .delete()
         .eq('email', email);
+
+      // Borrado de telemetría y feedback asociados
+      await supabaseClient
+        .from('app_feedback')
+        .delete()
+        .eq('user_email', email);
+    }
+
+    if (userId) {
+      await supabaseClient
+        .from('app_feedback')
+        .delete()
+        .eq('user_id', userId);
     }
 
     // 3. Registrar en lista negra de eliminados localmente

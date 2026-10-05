@@ -3,6 +3,18 @@
 Todas las versiones notables de esta aplicación están documentadas aquí.
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
+## [v68.4] — 2026-10-04 — Telemetría Centralizada en Vivo (Heartbeats en Nube), Presencia Multi-Dispositivo y Purgado Integral
+
+### 📡 Telemetría Centralizada en Tiempo Real (Heartbeat en Nube)
+- **Canal de Presencia Inmune a Restricciones RLS**: Los usuarios que inician sesión (como `Prueba04` / `raic_rifer@hotmail.com`) ahora emiten pings de actividad autenticados directamente a la nube central (`app_feedback` con `type: 'heartbeat'`).
+- **Monitoreo Real de Conexiones en Founder Hub**: El panel extrae la telemetría viva de todos los usuarios en cada sincronización. Los usuarios activos hoy se marcan de inmediato como `🟢 Hoy · En línea ahora ⚡` o `Hace un momento`, eliminando falsas alertas de churn.
+- **Detección Automática de Nombres Reales**: El ping de presencia transporta el nombre configurado por el usuario (`Prueba04`) para que el panel del fundador muestre su nombre real y su avatar correcto.
+- **Auto-incorporación de Usuarios Activos**: Si un usuario tiene sesión e interactúa pero aún no figuraba en `user_subscriptions`, el panel lo incorpora automáticamente con su estado y fecha de última actividad.
+- **Limpieza Transaccional Integral de Usuario**: Al presionar `🗑️` en el panel de fundador, se eliminan en cascada sus suscripciones, feedback y registros de telemetría.
+- **Service Worker v114**: Actualización de caché para propagación instantánea a navegadores y PWA iOS/Mac.
+
+---
+
 ## [v68.3] — 2026-10-04 — Telemetría Activa en Vivo, Badge Fundador CEO y Blindaje Legal & Privacidad Integral (Ley 29733 / GDPR)
 
 ### 🟢 Telemetría de Actividad en Tiempo Real & Distinción Fundador CEO
