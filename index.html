@@ -17,13 +17,43 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <link rel="stylesheet" href="css/styles.css?v=69.7">
+  <link rel="stylesheet" href="css/styles.css?v=69.8">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
+  <script>
+    // Cero parpadeo en móvil: Si el usuario ya inició sesión en este dispositivo,
+    // ocultar de inmediato el modal de login antes del render para evitar pantallas rotas
+    try {
+      var isAuth = Object.keys(localStorage).some(function(k) {
+        return k.indexOf('sb-') === 0 && k.indexOf('-auth-token') !== -1;
+      });
+      if (isAuth) {
+        document.write('<style id="pre-auth-hide">#loginModalScreen{display:none !important;}#appMainWrapper{display:block !important;}</style>');
+      }
+    } catch(e) {}
+  </script>
+  <style>
+    /* Estilos Críticos Inmediatos: Garantizan que el login nunca se rompa aun con caché lenta */
+    #loginModalScreen {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at 18% 28%, rgba(16, 185, 129, 0.15) 0%, transparent 45%),
+                  radial-gradient(circle at 82% 78%, rgba(5, 150, 105, 0.10) 0%, transparent 50%),
+                  #080c14;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 99999;
+      padding: 16px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      box-sizing: border-box;
+    }
+  </style>
 </head>
 <body>
 
-  <!-- MANDATORY LOGIN/REGISTER SCREEN v69.7 -->
-  <div id="loginModalScreen">
+  <!-- MANDATORY LOGIN/REGISTER SCREEN v69.8 -->
+  <div id="loginModalScreen" style="position: fixed; inset: 0; background: #080c14; z-index: 99999; display: flex; align-items: center; justify-content: center; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 16px; box-sizing: border-box;">
     <div class="login-layout-container">
       
       <!-- Panel Izquierdo: Marca & Confianza Zen (Visible en Desktop >= 900px) -->
@@ -83,7 +113,7 @@
             <span class="legal-dot">•</span>
             <a href="javascript:void(0)" onclick="openReclamacionesModal()">📖 Libro de Reclamaciones</a>
           </div>
-          <p class="login-version-tag">AliviaFin v69.7 · César Risso · Lima, Perú</p>
+          <p class="login-version-tag">AliviaFin v69.8 · Paz mental para tu dinero</p>
         </div>
       </div>
 
@@ -189,7 +219,7 @@
             <span class="legal-dot">•</span>
             <a href="javascript:void(0)" onclick="openReclamacionesModal()">📖 Libro de Reclamaciones</a>
           </div>
-          <p id="loginFooterVersion" class="login-version-tag">AliviaFin v69.7 · Paz mental para tu dinero</p>
+          <p id="loginFooterVersion" class="login-version-tag">AliviaFin v69.8 · Paz mental para tu dinero</p>
         </div>
 
       </div>
@@ -1211,11 +1241,11 @@
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
               <span style="font-size: 11px; font-weight: 700; color: #374151;">📱 Versión</span>
-              <span style="font-size: 11px; color: #0d9488; font-weight: 800;" id="settingsVersion">v69.7</span>
+              <span style="font-size: 11px; color: #0d9488; font-weight: 800;" id="settingsVersion">v69.8</span>
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 5px; border-top: 1px dashed #e2e8f0;">
-              <span style="font-size: 10.5px; font-weight: 700; color: #64748b;">🏢 Titular / Proveedor</span>
-              <span style="font-size: 10.5px; color: #334155; font-weight: 700;">César Risso · Lima, Perú</span>
+              <span style="font-size: 10.5px; font-weight: 700; color: #64748b;">🏢 Plataforma</span>
+              <span style="font-size: 10.5px; color: #334155; font-weight: 700;">AliviaFin · Lima, Perú</span>
             </div>
           </div>
         </div>
@@ -2578,8 +2608,8 @@
           <h4 style="margin: 0 0 6px 0; font-size: 13.5px; font-weight: 800; color: var(--text-main);">2. Cómo Solicitar tu Devolución</h4>
           <p style="margin: 0 0 10px 0; color: var(--text-muted);">
             Para solicitar tu reembolso, únicamente debes contactarnos por cualquiera de nuestros canales:<br>
-            • <strong>WhatsApp Oficial:</strong> +51 914 688 135<br>
             • <strong>Correo de Soporte:</strong> soporte@aliviafin.com<br>
+            • <strong>Canal de Atención:</strong> WhatsApp de soporte oficial en la plataforma<br>
             Indicando tu correo de cuenta registrado en AliviaFin y la captura o constancia de tu operación por Yape, Plin o transferencia bancaria.
           </p>
 
@@ -2591,17 +2621,16 @@
         </div>
 
         <div id="legalSectionProvider" style="display: none;">
-          <h4 style="margin: 0 0 6px 0; font-size: 13.5px; font-weight: 800; color: var(--text-main);">Identificación del Titular del Negocio</h4>
-          <p style="margin: 0 0 10px 0; color: var(--text-muted);">En cumplimiento con los deberes de información al consumidor exigidos por la legislación peruana y los estándares de transparencia en comercio electrónico:</p>
+          <h4 style="margin: 0 0 6px 0; font-size: 13.5px; font-weight: 800; color: var(--text-main);">Identificación del Servicio</h4>
+          <p style="margin: 0 0 10px 0; color: var(--text-muted);">En cumplimiento con los deberes de transparencia e información al usuario:</p>
           <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; font-size: 12px; line-height: 1.6; color: #334155; margin-bottom: 12px;">
-            <div><strong>• Titular / Responsable Legal:</strong> César Risso (Persona Natural con Negocio)</div>
             <div><strong>• Denominación de la Plataforma:</strong> AliviaFin</div>
-            <div><strong>• Domicilio Legal:</strong> Lima, República del Perú</div>
-            <div><strong>• Correo Legal & Soporte:</strong> soporte@aliviafin.com / privacidad@aliviafin.com</div>
-            <div><strong>• Canal de Atención Directa:</strong> WhatsApp Oficial (+51 914 688 135)</div>
             <div><strong>• Naturaleza del Software:</strong> Plataforma web y PWA para organización y optimización presupuestaria personal.</div>
+            <div><strong>• Domicilio Operativo:</strong> Lima, República del Perú</div>
+            <div><strong>• Correo de Soporte & Legal:</strong> soporte@aliviafin.com</div>
+            <div><strong>• Privacidad de Datos:</strong> Zero-Knowledge Cloud con cifrado por usuario.</div>
           </div>
-          <p style="margin: 0 0 4px 0; color: var(--text-muted); font-size: 11.5px;">Para requerimientos formales, consultas sobre el tratamiento de datos o ejercicio de derechos ARCO, puedes comunicarte directamente al correo antes indicado.</p>
+          <p style="margin: 0 0 4px 0; color: var(--text-muted); font-size: 11.5px;">Para requerimientos, consultas sobre el tratamiento de datos o ejercicio de derechos ARCO, puedes comunicarte directamente al correo antes indicado.</p>
         </div>
       </div>
 
@@ -2629,8 +2658,8 @@
       <div class="legal-content-body" style="padding: 16px 20px;">
         <!-- Ficha Proveedor -->
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 12px; margin-bottom: 14px; font-size: 11px; line-height: 1.5; color: #475569;">
-          <div><strong>Razón Social / Proveedor:</strong> AliviaFin (César Risso - Titular)</div>
-          <div><strong>Domicilio:</strong> Lima, Perú · <strong>Contacto:</strong> soporte@aliviafin.com / +51 914 688 135</div>
+          <div><strong>Proveedor:</strong> AliviaFin — Plataforma de Gestión Financiera Personal</div>
+          <div><strong>Sede:</strong> Lima, Perú · <strong>Canal de Atención:</strong> soporte@aliviafin.com</div>
         </div>
 
         <!-- FORMULARIO DE RECLAMACIÓN -->
@@ -2775,6 +2804,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
-  <script src="js/app.js?v=69.7"></script>
+  <script src="js/app.js?v=69.8"></script>
 </body>
 </html>
