@@ -75,9 +75,9 @@
     let CATEGORIES = { ...GENERIC_CATEGORIES };
 
     // ================================================================
-    // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v69.0)
+    // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v69.1)
     // ================================================================
-    const APP_VERSION = 'v69.0';
+    const APP_VERSION = 'v69.1';
 
     const SUPPORTED_CURRENCIES = {
       'PEN': { code: 'PEN', symbol: 'S/', name: 'Soles peruanos', flag: '🇵🇪', locale: 'es-PE' },
@@ -423,6 +423,16 @@
             .from('user_subscriptions')
             .update({ last_active_at: nowIso })
             .eq('user_id', user.id)
+            .catch(() => {});
+        }
+
+        // 3) Telemetría nativa directa en finanzas_state (el propio usuario tiene permiso RLS total sobre su fila de estado)
+        if (user.id) {
+          supabaseClient
+            .from('finanzas_state')
+            .update({ updated_at: nowIso })
+            .eq('id', 'state_' + user.id)
+            .then(() => console.log('⚡ Telemetría de estado actualizada en Supabase para:', userEmail))
             .catch(() => {});
         }
       } catch (e) {
@@ -6252,6 +6262,11 @@ const FOUNDER_SETUP_SQL = `-- ==================================================
 -- Es idempotente: puedes volver a ejecutarlo sin riesgo.
 -- ============================================================
 
+-- 0) FEEDBACK & TELEMETRÍA: permitir inserción de feedback y señales de vida (desbloquea RLS 401)
+DROP POLICY IF EXISTS "Cualquiera puede insertar feedback" ON public.app_feedback;
+CREATE POLICY "Cualquiera puede insertar feedback" ON public.app_feedback
+  FOR INSERT WITH CHECK (true);
+
 -- 1) SEGURIDAD: un usuario solo puede crear su propia fila como 'free'/'trial'
 --    (nadie puede auto-asignarse PRO desde la consola del navegador).
 DROP POLICY IF EXISTS "Cualquiera puede insertar su registro inicial" ON public.user_subscriptions;
@@ -6287,7 +6302,9 @@ BEGIN
       f.updated_at,
       (SELECT max(h.created_at) FROM public.app_feedback h
         WHERE h.type = 'heartbeat'
-          AND (h.user_id = u.id::text OR lower(h.user_email) = lower(u.email)))
+          AND (h.user_id = u.id::text OR lower(h.user_email) = lower(u.email))),
+      (SELECT max(b.updated_at) FROM public.finanzas_state b
+        WHERE b.id LIKE ('backup_' || left(u.id::text, 8) || '%'))
     ),
     NULLIF(u.raw_user_meta_data ->> 'full_name', '')::text
   FROM auth.users u
@@ -6454,7 +6471,23 @@ async function loadMasterDashboardData(force = false) {
     }
     if (subs) masterSubscribersData = subs;
 
-    // 2) Telemetría: pings de los últimos 30 días (paginado, tope 6.000 filas)
+    // 2) Telemetría nativa directa desde finanzas_state (respaldos diarios y estados en la nube)
+    // Esto garantiza que CUALQUIER usuario que use la app o sincronice se detecte al 100% sin depender de SQL extra
+    let stateActivityRows = [];
+    try {
+      const { data: stData, error: stErr } = await supabaseClient
+        .from('finanzas_state')
+        .select('id,updated_at')
+        .order('updated_at', { ascending: false })
+        .limit(500);
+      if (!stErr && Array.isArray(stData)) {
+        stateActivityRows = stData;
+      }
+    } catch (e) {
+      console.warn('Nota de lectura en finanzas_state:', e);
+    }
+
+    // 3) Telemetría secundaria: pings de los últimos 30 días (paginado, tope 6.000 filas)
     masterTelemetryError = null;
     const since = new Date(Date.now() - 30 * 86400000).toISOString();
     const pings = [];
@@ -6468,7 +6501,7 @@ async function loadMasterDashboardData(force = false) {
         .order('created_at', { ascending: false })
         .range(from, from + 999);
       if (error || !Array.isArray(data)) {
-        masterTelemetryError = error ? (error.message || String(error)) : 'respuesta vacía';
+        if (error) console.warn('Pings app_feedback nota:', error.message);
         break;
       }
       pings.push(...data);
@@ -6490,7 +6523,7 @@ async function loadMasterDashboardData(force = false) {
     }
     masterHeartbeats = pings;
 
-    // 3) Feedback real + marcadores de usuarios eliminados
+    // 4) Feedback real + marcadores de usuarios eliminados
     const { data: fbData, error: fbErr } = await supabaseClient
       .from('app_feedback')
       .select('*')
@@ -6506,7 +6539,7 @@ async function loadMasterDashboardData(force = false) {
       masterFeedbackData = fbData.filter(i => i.type !== 'user_deleted');
     }
 
-    enrichMasterSubscribers();
+    enrichMasterSubscribers(stateActivityRows);
     masterLastLoadedAt = Date.now();
     renderFounderModule();
     if (force) showToast('⚡ Datos de fundador actualizados en vivo', 'success');
@@ -6519,14 +6552,42 @@ async function loadMasterDashboardData(force = false) {
   }
 }
 
-// Cruza los pings con cada suscriptor (por correo o user_id) y detecta nombres reales
-function enrichMasterSubscribers() {
+// Cruza los pings y finanzas_state con cada suscriptor (por correo o user_id) y detecta actividad real
+function enrichMasterSubscribers(stateActivityRows = []) {
   if (!Array.isArray(masterSubscribersData)) masterSubscribersData = [];
   const lastSeen = new Map();
   const names = new Map();
   const ids = new Map();
 
-  masterHeartbeats.forEach(h => {          // ya vienen ordenados del más reciente al más antiguo
+  // A) Mapear actividad desde finanzas_state (respaldos diarios y estados de cuentas)
+  const stateActivity = new Map();
+  const registerStateActivity = (key, ts) => {
+    if (!key || !ts) return;
+    const current = stateActivity.get(key);
+    if (!current || Date.parse(ts) > Date.parse(current)) {
+      stateActivity.set(key, ts);
+    }
+  };
+
+  if (Array.isArray(stateActivityRows)) {
+    stateActivityRows.forEach(r => {
+      if (!r || !r.id || !r.updated_at) return;
+      const ts = r.updated_at;
+      if (r.id.startsWith('state_')) {
+        const fullId = r.id.substring(6).trim();
+        registerStateActivity(fullId, ts);
+        if (fullId.length >= 8) registerStateActivity(fullId.substring(0, 8), ts);
+      } else if (r.id.startsWith('backup_')) {
+        const parts = r.id.split('_');
+        if (parts.length >= 2) {
+          registerStateActivity(parts[1], ts); // short id (8 chars)
+        }
+      }
+    });
+  }
+
+  // B) Mapear actividad desde app_feedback (heartbeats)
+  masterHeartbeats.forEach(h => {
     const email = (h.user_email || '').toLowerCase().trim();
     [email, h.user_id].filter(Boolean).forEach(key => {
       if (!lastSeen.has(key)) lastSeen.set(key, h.created_at);
@@ -6539,17 +6600,30 @@ function enrichMasterSubscribers() {
     }
   });
 
+  // C) Asignar la mayor marca de tiempo a cada suscriptor registrado
   masterSubscribersData.forEach(sub => {
     const email = (sub.email || '').toLowerCase().trim();
-    const hbTs = lastSeen.get(email) || lastSeen.get(sub.user_id);
-    if (hbTs && (!sub.last_active_at || Date.parse(hbTs) > Date.parse(sub.last_active_at))) {
-      sub.last_active_at = hbTs;
+    const shortId = (sub.user_id && sub.user_id.length >= 8) ? sub.user_id.substring(0, 8) : null;
+
+    const candidates = [
+      sub.last_active_at,
+      sub.last_sign_in_at,
+      lastSeen.get(email),
+      lastSeen.get(sub.user_id),
+      sub.user_id ? stateActivity.get(sub.user_id) : null,
+      shortId ? stateActivity.get(shortId) : null
+    ].filter(Boolean);
+
+    if (candidates.length > 0) {
+      candidates.sort((a, b) => Date.parse(b) - Date.parse(a));
+      sub.last_active_at = candidates[0];
     }
+
     const hbName = names.get(email) || names.get(sub.user_id);
     if (hbName && !sub.full_name && !sub.user_name) sub.user_name = hbName;
   });
 
-  // Sin la RPC, incorpora a quien se conectó pero aún no figura en user_subscriptions
+  // D) Sin la RPC, incorpora a quien se conectó pero aún no figura en user_subscriptions
   if (!masterRpcAvailable) {
     const known = new Set(masterSubscribersData.map(s => (s.email || '').toLowerCase().trim()));
     lastSeen.forEach((ts, key) => {

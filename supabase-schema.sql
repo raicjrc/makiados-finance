@@ -166,13 +166,15 @@ RETURNS TABLE (
   status text,
   created_at timestamptz,
   last_sign_in_at timestamptz,
-  last_active_at timestamptz
+  last_active_at timestamptz,
+  full_name text
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public, auth
 AS $$
 BEGIN
-  IF auth.email() != 'cesar.risso.f@gmail.com' THEN
+  IF (auth.jwt() ->> 'email') IS DISTINCT FROM 'cesar.risso.f@gmail.com' THEN
     RAISE EXCEPTION 'Acceso denegado: solo para el fundador';
   END IF;
 
@@ -180,10 +182,18 @@ BEGIN
   SELECT 
     s.user_id,
     s.email,
-    COALESCE(s.status, 'free') as status,
+    COALESCE(s.status, 'free')::text as status,
     COALESCE(s.created_at, u.created_at) as created_at,
     u.last_sign_in_at,
-    f.updated_at as last_active_at
+    GREATEST(
+      f.updated_at,
+      (SELECT max(h.created_at) FROM public.app_feedback h
+        WHERE h.type = 'heartbeat'
+          AND (h.user_id = u.id::text OR lower(h.user_email) = lower(u.email))),
+      (SELECT max(b.updated_at) FROM public.finanzas_state b
+        WHERE b.id LIKE ('backup_' || left(u.id::text, 8) || '%'))
+    ) as last_active_at,
+    NULLIF(u.raw_user_meta_data ->> 'full_name', '')::text as full_name
   FROM public.user_subscriptions s
   LEFT JOIN auth.users u ON u.id::text = s.user_id
   LEFT JOIN public.finanzas_state f ON f.id = ('state_' || s.user_id)
