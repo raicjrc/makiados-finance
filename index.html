@@ -17,7 +17,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <link rel="stylesheet" href="css/styles.css?v=69.4">
+  <link rel="stylesheet" href="css/styles.css?v=69.5">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
 </head>
 <body>
@@ -1070,6 +1070,16 @@
           <label style="display: flex; align-items: center; justify-content: space-between; font-size: 11.5px; font-weight: 700; color: #374151; cursor: pointer; margin: 0;">
             <span>🧭 Mostrar tour guiado al iniciar</span>
             <input type="checkbox" id="settingsTourToggle" onchange="toggleTourPreference(this.checked)" style="width: 16px; height: 16px; accent-color: #0d9488; cursor: pointer;">
+          </label>
+        </div>
+
+        <!-- Toggle: Recordatorios PWA de Cierre de Mes -->
+        <div style="padding: 10px 12px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; margin-top: 2px;">
+          <label style="display: flex; align-items: center; justify-content: space-between; font-size: 11.5px; font-weight: 700; color: #374151; cursor: pointer; margin: 0;">
+            <span style="display: flex; align-items: center; gap: 6px;">
+              <span>🔔</span> <span>Recordatorio Cierre de Mes (PWA)</span>
+            </span>
+            <input type="checkbox" id="settingsNotifToggle" onchange="toggleMonthEndNotification(this.checked)" style="width: 16px; height: 16px; accent-color: #0d9488; cursor: pointer;">
           </label>
         </div>
 
@@ -2284,11 +2294,16 @@
       <div class="pro-modal-title" style="font-size: 24px; font-weight: 800; color: #0f172a; margin-bottom: 4px; letter-spacing: -0.5px;">
         AliviaFin <span style="background: linear-gradient(135deg, #fbbf24, #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">PRO</span>
       </div>
-      <div class="pro-modal-subtitle" style="font-size: 12.5px; color: #64748b; margin-top: 2px; font-weight: 600; margin-bottom: 16px;">
+      <div class="pro-modal-subtitle" id="proModalSubtitle" style="font-size: 12.5px; color: #64748b; margin-top: 2px; font-weight: 600; margin-bottom: 12px;">
         El acelerador para tu tranquilidad financiera
       </div>
 
-      <div class="pro-modal-features" style="margin: 16px 0; background: rgba(15, 23, 42, 0.035); border: 1px solid rgba(15, 23, 42, 0.08); border-radius: 16px; padding: 14px 16px; text-align: left; display: flex; flex-direction: column; gap: 10px;">
+      <!-- Badge de Función Contextual Soft Paywall -->
+      <div id="proModalContextBadge" style="display: none; background: rgba(245, 158, 11, 0.14); border: 1px solid rgba(245, 158, 11, 0.35); color: #d97706; padding: 4px 12px; border-radius: 20px; font-size: 11.5px; font-weight: 800; margin-bottom: 14px; align-items: center; justify-content: center; gap: 5px;">
+        <span>⚡ Desbloquea:</span> <span id="proModalFeatureName" style="color: #b45309;">Función PRO</span>
+      </div>
+
+      <div class="pro-modal-features" style="margin: 14px 0; background: rgba(15, 23, 42, 0.035); border: 1px solid rgba(15, 23, 42, 0.08); border-radius: 16px; padding: 14px 16px; text-align: left; display: flex; flex-direction: column; gap: 10px;">
         <div class="pro-feature-item" style="display: flex; align-items: flex-start; gap: 10px; font-size: 12.5px; color: #1e293b; font-weight: 700; line-height: 1.4; text-align: left;">
           <span style="color: #10b981; font-size: 15px; font-weight: 900; line-height: 1; flex-shrink: 0; margin-top: 1px;">✓</span>
           <span>Inyección automática de compras en cuotas</span>
@@ -2320,12 +2335,45 @@
         </div>
       </div>
 
-      <a href="https://wa.me/51914688135?text=Hola%20C%C3%A9sar,%20quiero%20activar%20mi%20suscripci%C3%B3n%20AliviaFin%20Pro%20(S/%204.90%20mes%20o%20S/%2019.90%20vitalicio)" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; text-align: center; padding: 13px; border-radius: 14px; background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; font-weight: 800; font-size: 14px; text-decoration: none; border: none; box-shadow: 0 4px 16px rgba(124, 58, 237, 0.4); margin-bottom: 10px; box-sizing: border-box;">
+      <a id="proModalWaLink" href="https://wa.me/51914688135?text=Hola%20C%C3%A9sar,%20quiero%20activar%20mi%20suscripci%C3%B3n%20AliviaFin%20Pro%20(S/%204.90%20mes%20o%20S/%2019.90%20vitalicio)" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; text-align: center; padding: 13px; border-radius: 14px; background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; font-weight: 800; font-size: 14px; text-decoration: none; border: none; box-shadow: 0 4px 16px rgba(124, 58, 237, 0.4); margin-bottom: 10px; box-sizing: border-box;">
         <span>✨ Comenzar AliviaFin Pro</span>
       </a>
 
       <button type="button" onclick="closeGlassModal('finzenProModal')" style="background: transparent; border: none; color: #94a3b8; font-size: 11.5px; font-weight: 600; cursor: pointer; padding: 6px;">
         Continuar con la versión gratuita
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL: MENSAJE WIN-BACK ANTI-CHURN (MASTER ADMIN) -->
+  <div class="glass-backdrop" id="winBackModal" style="display: none; z-index: 10006;" onclick="if(event.target === this) closeModal('winBackModal')">
+    <div class="glass-modal-container" style="max-width: 460px; width: 92%; padding: 22px 20px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid rgba(0,0,0,0.06);">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 20px;">💬</span>
+          <span style="font-size: 15px; font-weight: 800; color: var(--text-main);">Mensaje Win-Back (Anti-Churn)</span>
+        </div>
+        <button type="button" onclick="closeModal('winBackModal')" style="background: rgba(0,0,0,0.06); border: none; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 13px; cursor: pointer; color: #64748b;">✕</button>
+      </div>
+
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 12px; margin-bottom: 12px;">
+        <div style="font-size: 10.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Destinatario:</div>
+        <div id="winBackRecipient" style="font-size: 13px; font-weight: 800; color: #0f172a; margin-top: 2px;">Usuario (correo@ejemplo.com)</div>
+      </div>
+
+      <label for="winBackTextarea" style="display: block; font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px;">MENSAJE DE REACTIVACIÓN PERSONALIZADO:</label>
+      <textarea id="winBackTextarea" rows="6" style="width: 100%; border: 1.5px solid #cbd5e1; border-radius: 12px; padding: 10px 12px; font-size: 12px; line-height: 1.45; font-family: inherit; resize: vertical; box-sizing: border-box; color: #0f172a; margin-bottom: 14px; background: #ffffff;"></textarea>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+        <button type="button" class="btn btn-primary" onclick="sendWinBackViaWhatsApp()" style="background: #25d366; border-color: #22c55e; font-weight: 800; font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px; border-radius: 10px;">
+          <span>📱</span> <span>Abrir WhatsApp</span>
+        </button>
+        <button type="button" class="btn btn-secondary" onclick="copyWinBackMessage()" style="font-weight: 800; font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px; border-radius: 10px;">
+          <span>📋</span> <span>Copiar Texto</span>
+        </button>
+      </div>
+      <button type="button" class="btn btn-secondary" onclick="sendWinBackViaEmail()" style="width: 100%; font-weight: 700; font-size: 11.5px; padding: 9px; display: flex; align-items: center; justify-content: center; gap: 6px; border-radius: 10px;">
+        <span>✉️</span> <span>Enviar por Correo Electrónico</span>
       </button>
     </div>
   </div>
@@ -2407,6 +2455,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
-  <script src="js/app.js?v=69.4"></script>
+  <script src="js/app.js?v=69.5"></script>
 </body>
 </html>

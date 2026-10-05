@@ -239,3 +239,20 @@ BEGIN
   RETURN true;
 END;
 $$;
+
+-- ================================================================
+-- ÍNDICES DE ESCALABILIDAD (Anti-Cuellos de Botella v69.5)
+-- Previenen Full Table Scans en Supabase al filtrar o consultar en vivo
+-- ================================================================
+
+-- 1. Optimización para telemetría y última sincronización
+CREATE INDEX IF NOT EXISTS idx_finanzas_state_updated ON public.finanzas_state(updated_at DESC);
+
+-- 2. Optimización para consultas de suscripciones por email, plan y estado
+CREATE INDEX IF NOT EXISTS idx_user_subs_email ON public.user_subscriptions(email);
+CREATE INDEX IF NOT EXISTS idx_user_subs_status ON public.user_subscriptions(status);
+CREATE INDEX IF NOT EXISTS idx_user_subs_created ON public.user_subscriptions(created_at DESC);
+
+-- 3. Optimización para filtrado de pings y heartbeats en app_feedback
+CREATE INDEX IF NOT EXISTS idx_feedback_type_created ON public.app_feedback(type, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_feedback_user_email ON public.app_feedback(user_email);

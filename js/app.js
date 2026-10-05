@@ -335,6 +335,7 @@
       // Verificar suscripción de Paywall
       await verifySubscription(user);
       syncAdminUI();
+      checkMonthEndNotification();
     }
 
     // Helper para pruebas y preview local
@@ -367,6 +368,27 @@
     };
 
     function openFinZenProModal(featureName) {
+      const badge = document.getElementById('proModalContextBadge');
+      const featText = document.getElementById('proModalFeatureName');
+      const waLink = document.getElementById('proModalWaLink');
+      const sub = document.getElementById('proModalSubtitle');
+
+      if (featureName && badge && featText) {
+        badge.style.display = 'inline-flex';
+        featText.textContent = featureName;
+        if (sub) sub.textContent = `Desbloquea ${featureName} y todas las ventajas exclusivas`;
+        if (waLink) {
+          const msg = `Hola César, quiero activar mi suscripción AliviaFin Pro para usar ${featureName} (S/ 4.90 mes o S/ 19.90 vitalicio)`;
+          waLink.href = 'https://wa.me/51914688135?text=' + encodeURIComponent(msg);
+        }
+      } else {
+        if (badge) badge.style.display = 'none';
+        if (sub) sub.textContent = 'El acelerador para tu tranquilidad financiera';
+        if (waLink) {
+          const msg = 'Hola César, quiero activar mi suscripción AliviaFin Pro (S/ 4.90 mes o S/ 19.90 vitalicio)';
+          waLink.href = 'https://wa.me/51914688135?text=' + encodeURIComponent(msg);
+        }
+      }
       openModalById('finzenProModal');
     }
 
@@ -765,6 +787,12 @@
         tourTgl.checked = !isDismissed;
       }
 
+      // Estado del toggle de notificaciones PWA
+      const notifTgl = document.getElementById('settingsNotifToggle');
+      if (notifTgl) {
+        notifTgl.checked = (localStorage.getItem('aliviafin_notif_enabled') === 'true');
+      }
+
       if (typeof syncVersionUI === 'function') syncVersionUI();
       openModalById('settingsModal');
     }
@@ -890,12 +918,12 @@
       }
     });
 
-    // Registrar Service Worker v69.4 (Network-First, sin caché de datos)
+    // Registrar Service Worker v69.5 (Network-First, sin caché de datos)
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=69.4')
+        navigator.serviceWorker.register('./sw.js?v=69.5')
           .then(reg => {
-            console.log('SW v69.4 registrado:', reg.scope);
+            console.log('SW v69.5 registrado:', reg.scope);
             // Forzar actualización inmediata del SW en todos los dispositivos
             reg.update();
             if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
@@ -7358,6 +7386,7 @@ function renderMasterSubscribers() {
             ${!isLife ? `<button type="button" class="master-action-btn-pill master-action-btn-life" onclick="setMasterUserPlan('${uid}', '${em}', 'pro_lifetime')" title="Activar PRO Vitalicio S/ 19.90">👑 Vitalicio</button>` : ''}
             ${!isMonth && !isCesar ? `<button type="button" class="master-action-btn-pill master-action-btn-month" onclick="setMasterUserPlan('${uid}', '${em}', 'pro_monthly')" title="Activar PRO Mensual S/ 4.90">📅 Mensual</button>` : ''}
             ${(isLife || isMonth) && !isCesar ? `<button type="button" class="master-action-btn-pill master-action-btn-free" onclick="setMasterUserPlan('${uid}', '${em}', 'free')" title="Bajar a cuenta gratuita">⚪ Free</button>` : ''}
+            ${!isCesar ? `<button type="button" class="master-action-btn-winback" onclick="openWinBackModal('${em}', '${escapeHtml(cleanName)}', ${actInfo.daysInactive || 0})" title="Campaña Win-Back WhatsApp / Correo" style="background: rgba(37, 211, 102, 0.12); color: #16a34a; border: 1.5px solid rgba(37, 211, 102, 0.4); font-weight: 800; font-size: 11px; padding: 4px 8px; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">💬 Win-Back</button>` : ''}
             ${!isCesar ? `<button type="button" class="master-action-btn-delete" onclick="confirmDeleteMasterUser('${uid}', '${em}', '${escapeHtml(cleanName)}')" title="Eliminar usuario permanentemente" aria-label="Eliminar usuario">🗑️</button>` : ''}
           </div>
         </td>
@@ -7634,6 +7663,118 @@ async function promptUserAccountDeletion() {
   }
 }
 
+// ================================================================
+// CAMPAÑAS WIN-BACK ANTI-CHURN (MASTER ADMIN v69.5)
+// ================================================================
+let currentWinBackEmail = '';
+let currentWinBackName = '';
+
+function openWinBackModal(email, name, daysInactive) {
+  currentWinBackEmail = email || '';
+  currentWinBackName = name || 'amigo';
+  const cleanFirst = currentWinBackName.split(' ')[0];
+  const curMonth = (appState && appState.currentMonth) || 'este mes';
+  const timeText = daysInactive > 1 ? `hace ${daysInactive} días` : 'hace unos días';
+
+  const defaultMsg = `¡Hola ${cleanFirst}! 👋 Te escribe César de AliviaFin.\n\nNotamos que no ingresas a la app ${timeText} y queremos que tus finanzas de ${curMonth} queden 100% al día y sin estrés.\n\n¿Tuviste alguna duda con tus gastos o te gustaría probar alguna función en especial? ¡Aquí estoy para apoyarte directamente! 🚀\n\n👉 Accede directo a: https://aliviafin.vercel.app`;
+
+  const recipEl = document.getElementById('winBackRecipient');
+  const txtEl = document.getElementById('winBackTextarea');
+  if (recipEl) recipEl.textContent = `${currentWinBackName} (${email})`;
+  if (txtEl) txtEl.value = defaultMsg;
+
+  openModalById('winBackModal');
+}
+
+function sendWinBackViaWhatsApp() {
+  const txt = document.getElementById('winBackTextarea')?.value || '';
+  const url = 'https://wa.me/?text=' + encodeURIComponent(txt);
+  window.open(url, '_blank');
+}
+
+function copyWinBackMessage() {
+  const txt = document.getElementById('winBackTextarea')?.value || '';
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(txt).then(() => {
+      showToast('📋 Mensaje Win-Back copiado al portapapeles', 'success');
+    }).catch(() => {
+      fallbackCopyText(txt);
+    });
+  } else {
+    fallbackCopyText(txt);
+  }
+}
+
+function fallbackCopyText(txt) {
+  const ta = document.createElement('textarea');
+  ta.value = txt;
+  document.body.appendChild(ta);
+  ta.select();
+  document.execCommand('copy');
+  document.body.removeChild(ta);
+  showToast('📋 Mensaje copiado al portapapeles', 'success');
+}
+
+function sendWinBackViaEmail() {
+  const txt = document.getElementById('winBackTextarea')?.value || '';
+  const subj = '¿Cómo van tus finanzas este mes? - AliviaFin';
+  const url = `mailto:${encodeURIComponent(currentWinBackEmail)}?subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(txt)}`;
+  window.location.href = url;
+}
+
+// ================================================================
+// NOTIFICACIONES PWA / RECORDATORIO DE CIERRE DE MES (v69.5)
+// ================================================================
+function toggleMonthEndNotification(enabled) {
+  try {
+    localStorage.setItem('aliviafin_notif_enabled', enabled ? 'true' : 'false');
+    if (enabled && 'Notification' in window) {
+      Notification.requestPermission().then(permission => {
+        if (permission === 'granted') {
+          showToast('🔔 Recordatorios de cierre de mes activados', 'success');
+          try {
+            new Notification('AliviaFin 🔔', {
+              body: '¡Listo! Te avisaremos al final de cada mes para que tus finanzas queden al día.',
+              icon: 'logo.png'
+            });
+          } catch (e) {}
+        } else {
+          showToast('Permiso de notificaciones no otorgado en el navegador', 'warning');
+          const toggle = document.getElementById('settingsNotifToggle');
+          if (toggle) toggle.checked = false;
+          localStorage.setItem('aliviafin_notif_enabled', 'false');
+        }
+      });
+    } else {
+      showToast('Recordatorios de cierre de mes desactivados', 'info');
+    }
+  } catch (e) {
+    console.warn('Error configurando notificaciones:', e);
+  }
+}
+
+function checkMonthEndNotification() {
+  try {
+    const isEnabled = localStorage.getItem('aliviafin_notif_enabled') === 'true';
+    if (!isEnabled || !('Notification' in window) || Notification.permission !== 'granted') return;
+
+    const today = new Date();
+    const day = today.getDate();
+    // Activar entre los días 26 y 31
+    if (day < 26) return;
+
+    const curMonthKey = today.getFullYear() + '-' + (today.getMonth() + 1);
+    const lastNotif = localStorage.getItem('aliviafin_last_month_end_notif');
+    if (lastNotif === curMonthKey) return; // ya notificado este mes
+
+    new Notification('AliviaFin · Cierre de Mes 📅', {
+      body: 'Recuerda registrar tus últimos gastos y conciliar tus cuentas para cerrar el mes tranquilo.',
+      icon: 'logo.png'
+    });
+    localStorage.setItem('aliviafin_last_month_end_notif', curMonthKey);
+  } catch (e) {}
+}
+
 // Master Dashboard Window Exports
 window.openMasterDashboardModal = openMasterDashboardModal;
 window.switchMasterTab = switchMasterTab;
@@ -7649,3 +7790,9 @@ window.promptUserAccountDeletion = promptUserAccountDeletion;
 window.copyFounderSetupSQL = copyFounderSetupSQL;
 window.openSupabaseSQLEditor = openSupabaseSQLEditor;
 window.dismissFounderSetup = dismissFounderSetup;
+window.openWinBackModal = openWinBackModal;
+window.sendWinBackViaWhatsApp = sendWinBackViaWhatsApp;
+window.copyWinBackMessage = copyWinBackMessage;
+window.sendWinBackViaEmail = sendWinBackViaEmail;
+window.toggleMonthEndNotification = toggleMonthEndNotification;
+window.checkMonthEndNotification = checkMonthEndNotification;

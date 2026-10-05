@@ -8,6 +8,7 @@
 
 # Backups locales (no van al repo)
 backups/
+backups_pre_phase3/
 database.json
 database_user_immutable_backup.json
 parsed_data.json
