@@ -3,6 +3,30 @@
 Todas las versiones notables de esta aplicación están documentadas aquí.
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
+## [v69.0] — 2026-10-04 — Hub de Fundador CEO a Pantalla Completa, Gráficos SaaS Chart.js, Telemetría Viva sin Throttling en Login y Auditoría Total
+
+### 👑 Hub de Fundador CEO a Pantalla Completa (Módulo Nativo)
+- **Transformación de Modal a Módulo Completo**: Se sustituye el modal flotante por un módulo a pantalla completa (`tab-founder`) con ancho total, mejor jerarquía visual y estética Apple Fintech.
+- **Acceso Directo Multi-Plataforma**: Acceso en 1 clic desde el menú lateral en Desktop ("👑 Hub Fundador CEO"), desde el botón 👑 en el Navbar superior (móvil y desktop) y desde Ajustes.
+- **Botón de Retorno Rápido**: Botón *"← Volver a Mis Finanzas"* para alternar instantáneamente entre la vista de fundador y el dashboard financiero personal.
+
+### 📊 4 Gráficos Interactivos con Chart.js
+- **📈 Crecimiento Acumulado de Usuarios**: Curva de evolución en los últimos 30 días para evaluar la adquisición de clientes.
+- **🟢 Actividad Diaria (DAU)**: Gráfico de barras de usuarios activos por día en los últimos 14 días.
+- **🍩 Distribución de Planes**: Donut interactivo con desglose de usuarios Gratuitos vs PRO Mensual vs PRO Vitalicio.
+- **⏱️ Retención y Recencia de Conexión**: Gráfico horizontal con segmentación en tiempo real (En línea, Hoy, 1-3d, 4-7d, +7d Churn Alert, Sin registro).
+
+### ⚡ Telemetría de Última Conexión Inmune a Falsos Inactivos
+- **Heartbeat Inmediato sin Throttling en Login**: El inicio de sesión (`handleLoginSubmit`, `onLoginSuccess`, `checkLoginStatus`) emite el ping de presencia inmediatamente con `force = true`, sin depender de verificaciones de suscripción ni cargas previas.
+- **Throttling Aislado por Usuario**: La clave de throttling en `sessionStorage` se aísla por correo (`aliviafin_last_ping_{email}`), impidiendo que cambiar de cuenta de prueba en el mismo navegador bloquee los pings.
+- **Purga de Sesión en Logout**: `handleLogout` limpia `sessionStorage` completamente para garantizar pruebas limpias entre distintas cuentas.
+- **Query de Respaldo Resiliente**: Si el filtro temporal de telemetría no retorna datos, el Hub consulta automáticamente los pings recientes de `app_feedback` sin condiciones restrictivas de zona horaria.
+
+### 🗑️ Borrado Definitivo y Gestión de Cuentas
+- **Borrado en Cascada Mejorado**: Eliminación de suscripción, registros en `finanzas_state`, marcadores y telemetría al eliminar usuarios de prueba.
+
+---
+
 ## [v68.4] — 2026-10-04 — Telemetría Centralizada en Vivo (Heartbeats en Nube), Presencia Multi-Dispositivo y Purgado Integral
 
 ### 📡 Telemetría Centralizada en Tiempo Real (Heartbeat en Nube)

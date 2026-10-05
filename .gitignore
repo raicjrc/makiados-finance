@@ -7,6 +7,7 @@
 .vercel/
 
 # Backups locales (no van al repo)
+backups/
 database.json
 database_user_immutable_backup.json
 parsed_data.json

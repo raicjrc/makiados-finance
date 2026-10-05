@@ -219,9 +219,9 @@
           <span class="desk-nav-icon">⚙️</span>
           <span>Ajustes</span>
         </button>
-        <button class="desktop-nav-item master-admin-only" id="deskNavMasterBtn" onclick="openMasterDashboardModal()" style="display: none; background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(217, 119, 6, 0.16)); border: 1.5px solid rgba(245, 158, 11, 0.4); color: #d97706; font-weight: 800; margin-bottom: 6px;" title="Panel Maestro de Fundador (Suscripciones & Métricas)">
+        <button class="desktop-nav-item master-admin-only" id="deskNavMasterBtn" onclick="switchTab('founder')" style="display: none; background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(217, 119, 6, 0.16)); border: 1.5px solid rgba(245, 158, 11, 0.4); color: #d97706; font-weight: 800; margin-bottom: 6px;" title="Hub de Fundador CEO (Métricas SaaS & Suscriptores)">
           <span class="desk-nav-icon">👑</span>
-          <span>Panel Master CEO</span>
+          <span>Hub Fundador CEO</span>
         </button>
         <button class="desktop-nav-item" id="deskNavLegalBtn" onclick="openLegalModal('terms')" style="margin-bottom: 6px;" title="Términos del Servicio y Políticas de Privacidad">
           <span class="desk-nav-icon">⚖️</span>
@@ -261,6 +261,7 @@
           </div>
           <button class="privacy-toggle-btn" id="privacyToggleBtn" onclick="togglePrivacyMode()" title="Ocultar o mostrar montos (Modo Privacidad)">👁️</button>
           <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Cambiar a Modo Noche Suave">🌙</button>
+          <button id="btnFounderHeader" class="settings-popover-btn master-admin-only" onclick="switchTab('founder')" title="Hub de Fundador CEO (Métricas & Suscriptores)" style="display: none; background: linear-gradient(135deg, rgba(245, 158, 11, 0.18), rgba(217, 119, 6, 0.28)); border: 1.5px solid rgba(245, 158, 11, 0.5); color: #d97706; font-size: 15px; margin-right: 4px;">👑</button>
           <button id="btnExportPDF" class="settings-popover-btn" onclick="generatePDFReport()" title="Exportar Reporte Mensual a PDF" style="background: linear-gradient(135deg, #10b981, #059669); color: white; margin-right: 4px; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);">📥</button>
           <button id="btnSettings" class="settings-popover-btn" onclick="openSettingsModal()" title="Ajustes y Opciones">⚙️</button>
         </div>
@@ -737,6 +738,265 @@
       <!-- Tab contenedor de compatibilidad para auditoria (oculto) -->
       <div id="tab-auditoria" class="tab-content" style="display: none;"></div>
 
+      <!-- TAB 6: HUB DE FUNDADOR CEO (MÓDULO COMPLETO FULL-SCREEN v69.0) -->
+      <div id="tab-founder" class="tab-content">
+        
+        <!-- Header Principal de Control Ejecutivo -->
+        <div class="fh-header-card">
+          <div class="fh-header-main">
+            <div class="fh-crown-badge">👑</div>
+            <div>
+              <div class="fh-title-row">
+                <h2 class="fh-title">Hub de Fundador CEO</h2>
+                <span class="fh-pill-tag">MASTER ADMIN</span>
+                <span class="fh-pill-live" id="fhLiveStatus">
+                  <span class="activity-dot dot-active"></span>
+                  <span id="fhUpdatedAt">Cargando datos…</span>
+                </span>
+              </div>
+              <p class="fh-subtitle">Métricas SaaS en vivo · MRR · Retención · Telemetría de Clientes</p>
+            </div>
+          </div>
+          <div class="fh-header-actions">
+            <button type="button" class="btn btn-secondary fh-btn" onclick="loadMasterDashboardData(true)" title="Recargar métricas desde Supabase en vivo">
+              <span id="masterRefreshSpinner">🔄</span>
+              <span>Sincronizar</span>
+            </button>
+            <button type="button" class="btn btn-primary fh-btn" onclick="switchTab('inicio')" title="Volver a tu panel personal de finanzas">
+              <span>← Volver a Mis Finanzas</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Banner de Activación SQL Supabase (1-clic) -->
+        <div id="fhSetupBanner" class="fh-setup-banner" style="display: none;">
+          <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 260px;">
+            <div style="font-size: 24px;">⚡</div>
+            <div>
+              <div style="font-size: 13px; font-weight: 800; color: #b45309;">Activar Telemetría Nativa y Borrado Total en Supabase</div>
+              <div id="fhTelemetryNote" style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">
+                Con 1 pegado en Supabase obtienes la última conexión exacta de cada cuenta, el borrado total de usuarios y el blindaje del paywall.
+              </div>
+            </div>
+          </div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button type="button" class="btn btn-secondary" onclick="copyFounderSetupSQL()" style="font-size: 11.5px; font-weight: 800; padding: 6px 12px; border-radius: 8px;">
+              📋 Copiar SQL
+            </button>
+            <button type="button" class="btn btn-primary" onclick="openSupabaseSQLEditor()" style="font-size: 11.5px; font-weight: 800; padding: 6px 12px; border-radius: 8px; background: #d97706; border-color: #d97706;">
+              ↗️ Abrir SQL Editor
+            </button>
+            <button type="button" onclick="dismissFounderSetup()" style="background: none; border: none; font-size: 16px; cursor: pointer; color: var(--text-muted); padding: 0 4px;" title="Ocultar aviso">✕</button>
+          </div>
+        </div>
+
+        <!-- Subpestañas del Módulo -->
+        <div class="fh-nav-tabs">
+          <button type="button" class="fh-nav-btn active" id="fhTabOverview" onclick="switchMasterTab('overview')">
+            <span>📊 Visión General (SaaS & Gráficos)</span>
+          </button>
+          <button type="button" class="fh-nav-btn" id="fhTabUsers" onclick="switchMasterTab('users')">
+            <span>👥 Directorio de Usuarios</span>
+          </button>
+          <button type="button" class="fh-nav-btn" id="fhTabFeedback" onclick="switchMasterTab('feedback')">
+            <span>💬 Buzón de Feedback (<span id="masterFeedbackCount">0</span>)</span>
+          </button>
+        </div>
+
+        <!-- PANE 1: VISIÓN GENERAL (SaaS KPIs, Gráficos & Insights) -->
+        <div id="fhPaneOverview">
+          <!-- Grid 4 KPIs Principales -->
+          <div class="master-kpi-grid">
+            <div class="master-kpi-card">
+              <div class="master-kpi-top">
+                <span class="master-kpi-label">MRR (Ingreso Mensual Recurrente)</span>
+                <span class="master-kpi-badge" style="background: rgba(99, 102, 241, 0.12); color: #6366f1;">S/ 4.90 / mes</span>
+              </div>
+              <div class="master-kpi-val" id="masterMrrVal">S/ 0.00</div>
+              <div class="master-kpi-sub" id="masterMrrSub">0 suscriptores mensuales activos</div>
+            </div>
+
+            <div class="master-kpi-card">
+              <div class="master-kpi-top">
+                <span class="master-kpi-label">Ingresos Totales Cobrados</span>
+                <span class="master-kpi-badge" style="background: rgba(16, 185, 129, 0.12); color: #059669;">Suscripciones</span>
+              </div>
+              <div class="master-kpi-val" id="masterTotalRevenueVal" style="color: #059669;">S/ 0.00</div>
+              <div class="master-kpi-sub" id="masterLifetimeSalesSub">0 membresías vitalicias vendidas</div>
+            </div>
+
+            <div class="master-kpi-card">
+              <div class="master-kpi-top">
+                <span class="master-kpi-label">Total Usuarios Registrados</span>
+                <span class="master-kpi-badge" style="background: rgba(15, 23, 42, 0.08); color: var(--text-main);">Cuentas</span>
+              </div>
+              <div class="master-kpi-val" id="masterTotalUsersVal">0</div>
+              <div class="master-kpi-sub" id="masterUsersBreakdownSub">0 PRO · 0 Gratuitos</div>
+            </div>
+
+            <div class="master-kpi-card">
+              <div class="master-kpi-top">
+                <span class="master-kpi-label">Conversión Free ➔ PRO</span>
+                <span class="master-kpi-badge" style="background: rgba(245, 158, 11, 0.12); color: #d97706;">Efectividad</span>
+              </div>
+              <div class="master-kpi-val" id="masterConversionVal" style="color: #d97706;">0%</div>
+              <div class="master-kpi-sub" id="masterConversionSub">Efectividad de cierre en ventas</div>
+            </div>
+          </div>
+
+          <!-- Grid 4 Gráficos Interactivos -->
+          <div class="fh-charts-grid">
+            <!-- Gráfico 1: Crecimiento acumulado de usuarios -->
+            <div class="fh-chart-card">
+              <div class="fh-chart-header">
+                <div>
+                  <div class="fh-chart-title">📈 Crecimiento de Usuarios Registrados</div>
+                  <div class="fh-chart-subtitle">Evolución acumulada en los últimos 30 días</div>
+                </div>
+                <span class="fh-chart-stat" id="fhGrowthNote">+0 en 30 días</span>
+              </div>
+              <div class="fh-chart-canvas-wrap">
+                <canvas id="fhChartGrowth"></canvas>
+              </div>
+            </div>
+
+            <!-- Gráfico 2: Actividad diaria DAU -->
+            <div class="fh-chart-card">
+              <div class="fh-chart-header">
+                <div>
+                  <div class="fh-chart-title">🟢 Actividad Diaria (DAU)</div>
+                  <div class="fh-chart-subtitle">Cuentas únicas que abrieron la app (últimos 14 días)</div>
+                </div>
+                <span class="fh-chart-stat" id="fhActivityNote">Sin actividad reciente</span>
+              </div>
+              <div class="fh-chart-canvas-wrap">
+                <canvas id="fhChartActivity"></canvas>
+              </div>
+            </div>
+
+            <!-- Gráfico 3: Mezcla de planes -->
+            <div class="fh-chart-card">
+              <div class="fh-chart-header">
+                <div>
+                  <div class="fh-chart-title">🍩 Distribución de Planes</div>
+                  <div class="fh-chart-subtitle">Proporción de monetización actual</div>
+                </div>
+              </div>
+              <div class="fh-chart-canvas-wrap">
+                <canvas id="fhChartPlans"></canvas>
+              </div>
+            </div>
+
+            <!-- Gráfico 4: Recencia de conexión -->
+            <div class="fh-chart-card">
+              <div class="fh-chart-header">
+                <div>
+                  <div class="fh-chart-title">⏱️ Retención y Salud de Conexión</div>
+                  <div class="fh-chart-subtitle">Segmentación por días desde la última visita</div>
+                </div>
+              </div>
+              <div class="fh-chart-canvas-wrap">
+                <canvas id="fhChartRecency"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Radar de Oportunidades & Anti-Churn Inteligente -->
+          <div style="margin-top: 24px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+              <h3 style="margin: 0; font-size: 15px; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
+                <span>🎯 Radar de Oportunidades & Acciones Anti-Churn</span>
+              </h3>
+              <span style="font-size: 11.5px; color: var(--text-muted);">Sugerencias automáticas para convertir usuarios a PRO y evitar que abandonen la app</span>
+            </div>
+            <div id="fhInsights" class="fh-insights-grid">
+              <div class="fh-insight">
+                <div class="fh-insight-icon">✨</div>
+                <div class="fh-insight-body">
+                  <div class="fh-insight-title">Cargando recomendaciones…</div>
+                  <div class="fh-insight-text">Analizando actividad reciente de los suscriptores.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PANE 2: DIRECTORIO DE USUARIOS & SUSCRIPCIONES -->
+        <div id="fhPaneUsers" style="display: none;">
+          <!-- Toolbar de Filtros y Búsqueda -->
+          <div class="master-toolbar-row">
+            <input type="text" id="masterSearchInput" class="master-search-input" placeholder="🔍 Buscar por correo o nombre de usuario..." oninput="filterMasterSubscribers()">
+            <div class="master-filter-group">
+              <button type="button" class="master-filter-chip active" id="mFilterAll" onclick="setMasterFilter('all')">Todos (<span id="countMAll">0</span>)</button>
+              <button type="button" class="master-filter-chip" id="mFilterLife" onclick="setMasterFilter('pro_lifetime')">👑 Vitalicios (<span id="countMLife">0</span>)</button>
+              <button type="button" class="master-filter-chip" id="mFilterMonth" onclick="setMasterFilter('pro_monthly')">📅 Mensuales (<span id="countMMonth">0</span>)</button>
+              <button type="button" class="master-filter-chip" id="mFilterFree" onclick="setMasterFilter('free')">🆓 Free (<span id="countMFree">0</span>)</button>
+              <button type="button" class="master-filter-chip" id="mFilterInactive" onclick="setMasterFilter('inactive')" style="border-color: rgba(239, 68, 68, 0.35); color: #ef4444;">⚠️ Inactivos +7d (<span id="countMInactive">0</span>)</button>
+            </div>
+          </div>
+
+          <!-- Subscribers Interactive Table Card -->
+          <div class="master-table-card">
+            <div class="master-table-responsive">
+              <table class="master-table">
+                <thead>
+                  <tr>
+                    <th style="min-width: 220px;">Usuario / Correo</th>
+                    <th style="min-width: 135px;">Plan Actual</th>
+                    <th style="min-width: 150px;">Última Conexión</th>
+                    <th style="min-width: 110px;">Aporte Total</th>
+                    <th style="min-width: 230px; text-align: right;">Acciones & Gestión</th>
+                  </tr>
+                </thead>
+                <tbody id="masterSubscribersTableBody">
+                  <tr>
+                    <td colspan="5" style="text-align: center; padding: 32px; color: var(--text-muted);">
+                      Cargando suscriptores desde Supabase... ⏳
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Box de Activación Manual por Correo -->
+          <div class="master-manual-add-box">
+            <div style="font-size: 22px;">⚡</div>
+            <div style="flex: 1; min-width: 200px;">
+              <div style="font-size: 13px; font-weight: 800; color: var(--text-main);">Activar Suscripción Manual (Yape / Plin / Transferencia)</div>
+              <div style="font-size: 11.5px; color: var(--text-muted);">Ingresa el correo del cliente que te transfirió para activarle PRO en 1 clic.</div>
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; width: 100%; max-width: 540px;">
+              <input type="email" id="masterManualEmail" placeholder="correo@ejemplo.com" style="flex: 1; min-width: 180px; padding: 8px 12px; border-radius: 10px; border: 1.5px solid var(--border-color, #cbd5e1); font-size: 12px; font-weight: 700;">
+              <select id="masterManualPlan" style="padding: 8px 10px; border-radius: 10px; border: 1.5px solid var(--border-color, #cbd5e1); font-size: 12px; font-weight: 700; background: var(--card-bg, #ffffff); color: var(--text-main);">
+                <option value="pro_lifetime">👑 PRO Vitalicio (S/ 19.90)</option>
+                <option value="pro_monthly">📅 PRO Mensual (S/ 4.90)</option>
+                <option value="free">🆓 Gratuito (Free)</option>
+              </select>
+              <button type="button" class="btn btn-primary" onclick="handleMasterManualActivate()" style="padding: 8px 16px; font-size: 12px; font-weight: 800; border-radius: 10px; white-space: nowrap;">
+                Guardar
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- PANE 3: BUZÓN DE FEEDBACK & SUGERENCIAS -->
+        <div id="fhPaneFeedback" style="display: none;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
+            <div>
+              <h3 style="margin: 0; font-size: 15px; font-weight: 800; color: var(--text-main);">Buzón de Sugerencias & Soporte de Clientes</h3>
+              <div style="font-size: 11.5px; color: var(--text-muted);">Mensajes y reportes enviados desde la app (tabla app_feedback)</div>
+            </div>
+          </div>
+          <div id="masterFeedbackList" style="display: flex; flex-direction: column; gap: 10px;">
+            <div style="text-align: center; padding: 30px; color: var(--text-muted); background: var(--card-bg, #ffffff); border-radius: 16px; border: 1px solid var(--border-color, #e2e8f0);">
+              Cargando mensajes del buzón... ⏳
+            </div>
+          </div>
+        </div>
+
+      </div>
+
     </div> <!-- End container -->
     </div> <!-- End desktop-main-pane -->
 
@@ -777,10 +1037,10 @@
         
         <!-- Acceso Exclusivo al Panel Master (Solo para César) -->
         <div id="settingsMasterAdminRow" style="display: none; margin-bottom: 6px;">
-          <button type="button" class="btn" onclick="closeModal('settingsModal'); openMasterDashboardModal();" style="width: 100%; padding: 12px 14px; background: linear-gradient(135deg, #0f172a, #1e293b); color: #fbbf24; border: 1.5px solid rgba(251, 191, 36, 0.45); border-radius: 14px; font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 16px rgba(0,0,0,0.18); cursor: pointer;">
+          <button type="button" class="btn" onclick="closeModal('settingsModal'); switchTab('founder');" style="width: 100%; padding: 12px 14px; background: linear-gradient(135deg, #0f172a, #1e293b); color: #fbbf24; border: 1.5px solid rgba(251, 191, 36, 0.45); border-radius: 14px; font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 16px rgba(0,0,0,0.18); cursor: pointer;">
             <span style="display: flex; align-items: center; gap: 8px;">
               <span style="font-size: 17px;">👑</span>
-              <span>Panel Master CEO & Suscripciones</span>
+              <span>Hub de Fundador CEO & Suscripciones</span>
             </span>
             <span style="font-size: 10px; background: rgba(251, 191, 36, 0.25); color: #fbbf24; padding: 3px 8px; border-radius: 100px; font-weight: 800; letter-spacing: 0.5px;">ADMIN</span>
           </button>
@@ -2156,178 +2416,11 @@
     </div>
   </div>
 
-  <!-- MODAL: MASTER ADMIN DASHBOARD (CEO / FOUNDER PANEL v68.0) -->
-  <div class="glass-backdrop" id="masterDashboardModal" style="z-index: 10010;" onclick="if(event.target === this) closeModal('masterDashboardModal')">
-    <div class="master-modal-container">
-      <!-- Master Header -->
-      <div class="master-modal-header">
-        <div class="master-header-left">
-          <div class="master-crown-icon">👑</div>
-          <div>
-            <h3 class="master-header-title">
-              <span>AliviaFin Founder Hub</span>
-              <span style="font-size: 10px; background: rgba(245, 158, 11, 0.25); color: #fbbf24; padding: 2px 8px; border-radius: 999px; font-weight: 800;">MASTER CEO</span>
-            </h3>
-            <div class="master-header-subtitle">Monitoreo ejecutivo de suscripciones, ingresos en tiempo real y clientes</div>
-          </div>
-        </div>
-        <div class="master-header-actions">
-          <button type="button" class="master-refresh-btn" onclick="loadMasterDashboardData(true)" title="Recargar datos de Supabase en vivo">
-            <span id="masterRefreshSpinner">🔄</span>
-            <span>Sincronizar</span>
-          </button>
-          <button type="button" onclick="closeModal('masterDashboardModal')" style="background: rgba(255,255,255,0.12); border: none; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer; color: #ffffff;">✕</button>
-        </div>
-      </div>
-
-      <!-- Master Tabs -->
-      <div style="background: var(--card-bg, #ffffff); padding: 12px 24px 0 24px; border-bottom: 1px solid var(--border-color, #e2e8f0);">
-        <div class="master-sub-tabs" style="margin-bottom: 0;">
-          <button type="button" class="master-sub-tab-btn active" id="btnMasterTabSubs" onclick="switchMasterTab('subs')">
-            <span>💎 Suscripciones & Ingresos (SaaS)</span>
-          </button>
-          <button type="button" class="master-sub-tab-btn" id="btnMasterTabFeedback" onclick="switchMasterTab('feedback')">
-            <span>💬 Buzón de Feedback (<span id="masterFeedbackCount">0</span>)</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Master Body -->
-      <div class="master-modal-body">
-        
-        <!-- PESTAÑA 1: SUSCRIPCIONES Y CRECIMIENTO SAAS -->
-        <div id="masterSectionSubs">
-          <!-- KPI Cards Grid -->
-          <div class="master-kpi-grid">
-            <!-- KPI 1: MRR -->
-            <div class="master-kpi-card">
-              <div class="master-kpi-top">
-                <span class="master-kpi-label">MRR (Mensual)</span>
-                <span class="master-kpi-badge" style="background: rgba(99, 102, 241, 0.12); color: #6366f1;">S/ 4.90 / mes</span>
-              </div>
-              <div class="master-kpi-val" id="masterMrrVal">S/ 0.00</div>
-              <div class="master-kpi-sub" id="masterMrrSub">0 suscriptores mensuales activos</div>
-            </div>
-
-            <!-- KPI 2: Total Pro Revenue -->
-            <div class="master-kpi-card">
-              <div class="master-kpi-top">
-                <span class="master-kpi-label">Ingresos Totales</span>
-                <span class="master-kpi-badge" style="background: rgba(16, 185, 129, 0.12); color: #059669;">Suscripciones</span>
-              </div>
-              <div class="master-kpi-val" id="masterTotalRevenueVal" style="color: #059669;">S/ 0.00</div>
-              <div class="master-kpi-sub" id="masterLifetimeSalesSub">0 membresías vitalicias vendidas</div>
-            </div>
-
-            <!-- KPI 3: Total Users -->
-            <div class="master-kpi-card">
-              <div class="master-kpi-top">
-                <span class="master-kpi-label">Usuarios Registrados</span>
-                <span class="master-kpi-badge" style="background: rgba(15, 23, 42, 0.08); color: var(--text-main);">Cuentas</span>
-              </div>
-              <div class="master-kpi-val" id="masterTotalUsersVal">0</div>
-              <div class="master-kpi-sub" id="masterUsersBreakdownSub">0 PRO · 0 Gratuitos</div>
-            </div>
-
-            <!-- KPI 4: Conversion Rate -->
-            <div class="master-kpi-card">
-              <div class="master-kpi-top">
-                <span class="master-kpi-label">Conversión Free ➔ PRO</span>
-                <span class="master-kpi-badge" style="background: rgba(245, 158, 11, 0.12); color: #d97706;">Monetización</span>
-              </div>
-              <div class="master-kpi-val" id="masterConversionVal" style="color: #d97706;">0%</div>
-              <div class="master-kpi-sub" id="masterConversionSub">Efectividad de cierre en ventas</div>
-            </div>
-          </div>
-
-          <!-- Controls Toolbar -->
-          <div class="master-toolbar-row">
-            <input type="text" id="masterSearchInput" class="master-search-input" placeholder="🔍 Buscar por correo o nombre de usuario..." oninput="filterMasterSubscribers()">
-            <div class="master-filter-group">
-              <button type="button" class="master-filter-chip active" id="mFilterAll" onclick="setMasterFilter('all')">Todos (<span id="countMAll">0</span>)</button>
-              <button type="button" class="master-filter-chip" id="mFilterLife" onclick="setMasterFilter('pro_lifetime')">👑 Vitalicios (<span id="countMLife">0</span>)</button>
-              <button type="button" class="master-filter-chip" id="mFilterMonth" onclick="setMasterFilter('pro_monthly')">📅 Mensuales (<span id="countMMonth">0</span>)</button>
-              <button type="button" class="master-filter-chip" id="mFilterFree" onclick="setMasterFilter('free')">🆓 Free (<span id="countMFree">0</span>)</button>
-              <button type="button" class="master-filter-chip" id="mFilterInactive" onclick="setMasterFilter('inactive')" style="border-color: rgba(239, 68, 68, 0.35); color: #ef4444;">⚠️ Inactivos +7d (<span id="countMInactive">0</span>)</button>
-            </div>
-          </div>
-
-          <!-- Subscribers Interactive Table Card -->
-          <div class="master-table-card">
-            <div class="master-table-responsive">
-              <table class="master-table">
-                <thead>
-                  <tr>
-                    <th style="min-width: 220px;">Usuario / Correo</th>
-                    <th style="min-width: 125px;">Plan Actual</th>
-                    <th style="min-width: 140px;">Última Conexión</th>
-                    <th style="min-width: 105px;">Aporte Total</th>
-                    <th style="min-width: 230px; text-align: right;">Acciones & Gestión</th>
-                  </tr>
-                </thead>
-                <tbody id="masterSubscribersTableBody">
-                  <tr>
-                    <td colspan="5" style="text-align: center; padding: 30px; color: var(--text-muted);">
-                      Cargando suscriptores desde Supabase... ⏳
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- Box de Activación Manual por Correo -->
-          <div class="master-manual-add-box">
-            <div style="font-size: 20px;">⚡</div>
-            <div style="flex: 1; min-width: 200px;">
-              <div style="font-size: 12.5px; font-weight: 800; color: var(--text-main);">Activar Suscripción Manual (Yape / Plin / Transferencia)</div>
-              <div style="font-size: 11px; color: var(--text-muted);">Ingresa el correo del cliente que te escribió por WhatsApp para activarle PRO en 1 tap.</div>
-            </div>
-            <div style="display: flex; gap: 8px; flex-wrap: wrap; width: 100%; max-width: 520px;">
-              <input type="email" id="masterManualEmail" placeholder="correo@ejemplo.com" style="flex: 1; min-width: 180px; padding: 8px 12px; border-radius: 10px; border: 1.5px solid var(--border-color, #cbd5e1); font-size: 12px; font-weight: 700;">
-              <select id="masterManualPlan" style="padding: 8px 10px; border-radius: 10px; border: 1.5px solid var(--border-color, #cbd5e1); font-size: 12px; font-weight: 700; background: var(--card-bg, #ffffff); color: var(--text-main);">
-                <option value="pro_lifetime">👑 PRO Vitalicio (S/ 19.90)</option>
-                <option value="pro_monthly">📅 PRO Mensual (S/ 4.90)</option>
-                <option value="free">🆓 Gratuito (Free)</option>
-              </select>
-              <button type="button" class="btn btn-primary" onclick="handleMasterManualActivate()" style="padding: 8px 14px; font-size: 12px; font-weight: 800; border-radius: 10px; white-space: nowrap;">
-                Guardar
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- PESTAÑA 2: BUZÓN DE FEEDBACK & SUGERENCIAS -->
-        <div id="masterSectionFeedback" style="display: none;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-            <div>
-              <h4 style="margin: 0; font-size: 14px; font-weight: 800; color: var(--text-main);">Buzón de Sugerencias & Soporte de Clientes</h4>
-              <div style="font-size: 11.5px; color: var(--text-muted);">Mensajes y reportes enviados desde la app (tabla app_feedback)</div>
-            </div>
-          </div>
-          <div id="masterFeedbackList" style="display: flex; flex-direction: column; gap: 10px;">
-            <div style="text-align: center; padding: 30px; color: var(--text-muted); background: var(--card-bg, #ffffff); border-radius: 16px; border: 1px solid var(--border-color, #e2e8f0);">
-              Cargando mensajes del buzón... ⏳
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- Master Footer -->
-      <div style="padding: 12px 24px; background: var(--card-bg, #ffffff); border-top: 1px solid var(--border-color, #e2e8f0); display: flex; justify-content: space-between; align-items: center;">
-        <div style="font-size: 11px; color: var(--text-muted); font-weight: 600;">
-          🔒 Acceso restringido exclusivamente a <strong style="color: var(--text-main);">cesar.risso.f@gmail.com</strong>
-        </div>
-        <button type="button" class="btn btn-secondary" onclick="closeModal('masterDashboardModal')" style="padding: 7px 18px; font-size: 12px; font-weight: 800; border-radius: 10px;">
-          Cerrar
-        </button>
-      </div>
-    </div>
-  </div>
+  <!-- COMPATIBILIDAD MODAL MASTER: Ahora reemplazado por el Módulo Full-Screen tab-founder -->
+  <div id="masterDashboardModal" style="display: none;"></div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
-  <script src="js/app.js?v=68.4"></script>
+  <script src="js/app.js?v=69.0"></script>
 </body>
 </html>

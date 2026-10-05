@@ -4967,3 +4967,272 @@
       color: #0f172a;
       border-color: #38bdf8;
     }
+
+    /* ================================================================
+       HUB DE FUNDADOR CEO — ESTILOS FULL-SCREEN v69.0
+       ================================================================ */
+    .fh-header-card {
+      background: var(--card-bg, #ffffff);
+      border: 1px solid var(--border-color, #e2e8f0);
+      border-radius: 20px;
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+      margin-bottom: 18px;
+    }
+    .fh-header-main {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .fh-crown-badge {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+      flex-shrink: 0;
+    }
+    .fh-title-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .fh-title {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--text-main, #0f172a);
+    }
+    .fh-pill-tag {
+      font-size: 9.5px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: rgba(245, 158, 11, 0.15);
+      color: #d97706;
+      letter-spacing: 0.04em;
+    }
+    .fh-pill-live {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      background: rgba(0, 0, 0, 0.04);
+      padding: 3px 10px;
+      border-radius: 999px;
+    }
+    .fh-subtitle {
+      margin: 4px 0 0 0;
+      font-size: 12.5px;
+      color: var(--text-muted, #64748b);
+    }
+    .fh-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .fh-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 9px 16px;
+      font-size: 12px;
+      font-weight: 700;
+      border-radius: 12px;
+      min-height: 40px;
+    }
+    .fh-setup-banner {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(217, 119, 6, 0.12));
+      border: 1.5px solid rgba(245, 158, 11, 0.35);
+      border-radius: 16px;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+    .fh-nav-tabs {
+      display: flex;
+      gap: 8px;
+      padding: 6px;
+      background: rgba(0, 0, 0, 0.04);
+      border-radius: 14px;
+      margin-bottom: 20px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .fh-nav-btn {
+      background: transparent;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-muted);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+      min-height: 40px;
+    }
+    .fh-nav-btn.active {
+      background: var(--card-bg, #ffffff);
+      color: var(--text-main);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+    .fh-charts-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-top: 18px;
+    }
+    @media (max-width: 900px) {
+      .fh-charts-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .fh-chart-card {
+      background: var(--card-bg, #ffffff);
+      border: 1px solid var(--border-color, #e2e8f0);
+      border-radius: 18px;
+      padding: 18px 20px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+      display: flex;
+      flex-direction: column;
+    }
+    .fh-chart-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .fh-chart-title {
+      font-size: 13.5px;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+    .fh-chart-subtitle {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .fh-chart-stat {
+      font-size: 11.5px;
+      font-weight: 800;
+      color: #6366f1;
+      background: rgba(99, 102, 241, 0.1);
+      padding: 3px 8px;
+      border-radius: 6px;
+      white-space: nowrap;
+    }
+    .fh-chart-canvas-wrap {
+      position: relative;
+      height: 220px;
+      width: 100%;
+    }
+    .fh-insights-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .fh-insight {
+      display: flex;
+      gap: 14px;
+      padding: 16px 18px;
+      border-radius: 16px;
+      background: var(--card-bg, #ffffff);
+      border: 1px solid var(--border-color, #e2e8f0);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+    }
+    .fh-insight-icon {
+      font-size: 24px;
+      flex-shrink: 0;
+      padding-top: 2px;
+    }
+    .fh-insight-body {
+      flex: 1;
+    }
+    .fh-insight-title {
+      font-size: 13.5px;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-bottom: 4px;
+    }
+    .fh-insight-text {
+      font-size: 12px;
+      color: var(--text-secondary, #64748b);
+      line-height: 1.5;
+    }
+    .fh-chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
+    }
+    .fh-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 8px;
+      background: rgba(99, 102, 241, 0.08);
+      color: #4f46e5;
+      font-size: 11px;
+      font-weight: 700;
+      text-decoration: none;
+      border: 1px solid rgba(99, 102, 241, 0.2);
+      transition: all 0.15s ease;
+    }
+    .fh-chip:hover {
+      background: rgba(99, 102, 241, 0.16);
+      transform: translateY(-1px);
+    }
+    .fh-chip-more {
+      font-size: 11px;
+      color: var(--text-muted);
+      padding: 4px 6px;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    /* Modo oscuro suave (Twilight) para componentes de Fundador */
+    body.theme-twilight .fh-header-card,
+    body.theme-twilight .fh-chart-card,
+    body.theme-twilight .fh-insight {
+      background: #131d2e;
+      border-color: rgba(255, 255, 255, 0.08);
+    }
+    body.theme-twilight .fh-title {
+      color: #f8fafc;
+    }
+    body.theme-twilight .fh-nav-tabs {
+      background: rgba(255, 255, 255, 0.05);
+    }
+    body.theme-twilight .fh-nav-btn.active {
+      background: #1e293b;
+      color: #38bdf8;
+    }
+    body.theme-twilight .fh-pill-live {
+      background: rgba(255, 255, 255, 0.06);
+      color: #94a3b8;
+    }
+    body.theme-twilight .fh-setup-banner {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(217, 119, 6, 0.18));
+      border-color: rgba(245, 158, 11, 0.4);
+    }

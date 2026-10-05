@@ -75,9 +75,9 @@
     let CATEGORIES = { ...GENERIC_CATEGORIES };
 
     // ================================================================
-    // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v67.0)
+    // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v69.0)
     // ================================================================
-    const APP_VERSION = 'v68.4';
+    const APP_VERSION = 'v69.0';
 
     const SUPPORTED_CURRENCIES = {
       'PEN': { code: 'PEN', symbol: 'S/', name: 'Soles peruanos', flag: '🇵🇪', locale: 'es-PE' },
@@ -272,6 +272,7 @@
 
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (session && session.user) {
+        recordUserHeartbeat(session.user, true);
         await onLoginSuccess(session.user);
       } else {
         document.getElementById('loginModalScreen').style.display = 'flex';
@@ -307,6 +308,9 @@
         email: user.email,
         name: displayName
       };
+
+      // Disparar telemetría de conexión activa inmediatamente (sin depender de esperas de red)
+      recordUserHeartbeat(user, true);
 
       const badge = document.getElementById('userBadgeText');
       if (badge) badge.textContent = displayName;
@@ -366,13 +370,19 @@
       openModalById('finzenProModal');
     }
 
-    async function recordUserHeartbeat(user) {
+    async function recordUserHeartbeat(user, force = false) {
       if (!user || (!user.id && !user.email)) return;
       try {
         const nowIso = new Date().toISOString();
         const userEmail = (user.email || '').toLowerCase().trim();
-        const displayName = (currentUser && currentUser.name) || (user.user_metadata && user.user_metadata.full_name) || userEmail.split('@')[0];
-        localStorage.setItem('aliviafin_last_active_' + (user.id || userEmail), nowIso);
+        const displayName = (currentUser && currentUser.name)
+                         || (user.user_metadata && user.user_metadata.full_name)
+                         || (userEmail ? userEmail.split('@')[0] : 'Usuario');
+
+        try {
+          if (user.id) localStorage.setItem('aliviafin_last_active_' + user.id, nowIso);
+          if (userEmail) localStorage.setItem('aliviafin_last_active_' + userEmail, nowIso);
+        } catch (e) {}
 
         if (isAdminCesar(user)) {
           supabaseClient
@@ -382,27 +392,38 @@
               email: user.email,
               status: 'pro_lifetime'
             }, { onConflict: 'user_id' })
-            .then(() => console.log('Admin subscription status synced: pro_lifetime'))
             .catch(() => {});
         }
 
-        // Registrar heartbeat en Supabase (app_feedback tiene permiso de INSERT para todos los usuarios)
-        // Throttle de 3 minutos por sesión
-        const lastPing = sessionStorage.getItem('aliviafin_last_ping_ts');
-        if (!lastPing || Date.now() - parseInt(lastPing, 10) > 3 * 60 * 1000) {
-          sessionStorage.setItem('aliviafin_last_ping_ts', Date.now().toString());
+        // Throttle por usuario individual: solo para pings pasivos de fondo
+        const throttleKey = 'aliviafin_last_ping_' + (userEmail || user.id);
+        const lastPing = sessionStorage.getItem(throttleKey);
+        const nowMs = Date.now();
+        if (!force && lastPing && (nowMs - parseInt(lastPing, 10)) < 3 * 60 * 1000) {
+          return;
+        }
+        try { sessionStorage.setItem(throttleKey, nowMs.toString()); } catch(e) {}
 
+        // 1) Telemetría a app_feedback (RLS público para INSERT con WITH CHECK (true))
+        supabaseClient
+          .from('app_feedback')
+          .insert([{
+            user_id: user.id || null,
+            user_email: userEmail,
+            type: 'heartbeat',
+            message: displayName,
+            app_version: APP_VERSION
+          }])
+          .then(() => console.log('⚡ Heartbeat de conexión registrado en Supabase:', userEmail))
+          .catch(e => console.warn('Heartbeat insert note:', e));
+
+        // 2) Actualizar last_active_at en user_subscriptions si la tabla lo permite
+        if (user.id) {
           supabaseClient
-            .from('app_feedback')
-            .insert([{
-              user_id: user.id || null,
-              user_email: userEmail,
-              type: 'heartbeat',
-              message: displayName,
-              app_version: APP_VERSION
-            }])
-            .then(() => console.log('⚡ Heartbeat de usuario registrado en Supabase'))
-            .catch(e => console.warn('Heartbeat note:', e));
+            .from('user_subscriptions')
+            .update({ last_active_at: nowIso })
+            .eq('user_id', user.id)
+            .catch(() => {});
         }
       } catch (e) {
         console.warn('Heartbeat note:', e);
@@ -418,7 +439,7 @@
         const pb = document.getElementById('proBadge');
         if (pb) pb.style.display = 'inline-flex';
         syncAdminUI();
-        recordUserHeartbeat(user);
+        recordUserHeartbeat(user, true);
         setTimeout(() => checkOnboardingAndVersionAnnouncements(), 400);
         return;
       }
@@ -442,11 +463,11 @@
               status: 'free'
             }]);
         }
-        recordUserHeartbeat(user);
       } catch (err) {
         console.warn('Nota de suscripción:', err);
       }
 
+      recordUserHeartbeat(user, false);
       syncAdminUI();
 
       // Actualizar badge Pro en cabecera
@@ -484,6 +505,7 @@
         errEl.style.display = 'block';
       } else {
         errEl.style.display = 'none';
+        recordUserHeartbeat(data.user, true);
         await onLoginSuccess(data.user);
       }
     }
@@ -519,6 +541,7 @@
         // Login automático exitoso (sin confirmación de correo)
         okEl.textContent = '✅ ¡Cuenta creada! Iniciando tu espacio...';
         okEl.style.display = 'block';
+        recordUserHeartbeat(data.user, true);
         setTimeout(async () => { await onLoginSuccess(data.user); }, 800);
       } else if (data.user && !data.session) {
         // Confirmación requerida activada por César en Supabase
@@ -689,6 +712,7 @@
     // LOGOUT
     async function handleLogout() {
       if (!confirm('¿Deseas cerrar tu sesión?')) return;
+      try { sessionStorage.clear(); } catch(e) {}
       await supabaseClient.auth.signOut();
       currentUser = null;
       appState = getCleanUserState();
@@ -2280,11 +2304,18 @@
         'movimientos': 'deskNavTabMovimientos',
         'plan': 'deskNavTabPlan',
         'metas': 'deskNavTabMetas',
-        'consejos': 'deskNavTabConsejos'
+        'consejos': 'deskNavTabConsejos',
+        'founder': 'deskNavMasterBtn'
       };
       if (deskNavMap[tabId]) {
         const dBtn = document.getElementById(deskNavMap[tabId]);
         if (dBtn) dBtn.classList.add('active');
+      }
+
+      if (tabId === 'founder') {
+        enterFounderModule();
+      } else {
+        stopFounderTicker();
       }
 
       if (tabId === 'inicio') {
@@ -6194,11 +6225,146 @@ window.changeCurrency = changeCurrency;
 window.updateCurrencyDOMElements = updateCurrencyDOMElements;
 
 // ================================================================
-// MASTER ADMIN / FOUNDER DASHBOARD (CEO PANEL v68.0)
+// FOUNDER HUB v69.0 — MÓDULO MASTER CEO (pantalla completa + analítica en vivo)
 // ================================================================
+const FOUNDER_EMAIL = 'cesar.risso.f@gmail.com';
+const MASTER_ONLINE_WINDOW_MS = 12 * 60 * 1000;   // "En línea ahora" = ping en los últimos 12 min
+const MASTER_PRICE_LIFETIME_CENTS = 1990;          // S/ 19.90
+const MASTER_PRICE_MONTHLY_CENTS = 490;            // S/ 4.90
+const SUPABASE_SQL_EDITOR_URL = 'https://supabase.com/dashboard/project/swwvbfemxookbqoqotre/sql/new';
+
 let masterSubscribersData = [];
 let masterFeedbackData = [];
+let masterHeartbeats = [];
+let masterDeletedMarkers = new Map();
+let masterRpcAvailable = false;
+let masterTelemetryError = null;
 let masterCurrentFilter = 'all';
+let masterCurrentPane = 'overview';
+let masterLastLoadedAt = 0;
+let masterLoading = false;
+let masterTickTimer = null;
+let masterCharts = {};
+
+// SQL de activación (idempotente). Se copia con 1 tap desde el Hub y se pega en Supabase > SQL Editor.
+const FOUNDER_SETUP_SQL = `-- ============================================================
+-- AliviaFin v69 · Activación total del Founder Hub (ejecutar 1 sola vez)
+-- Es idempotente: puedes volver a ejecutarlo sin riesgo.
+-- ============================================================
+
+-- 1) SEGURIDAD: un usuario solo puede crear su propia fila como 'free'/'trial'
+--    (nadie puede auto-asignarse PRO desde la consola del navegador).
+DROP POLICY IF EXISTS "Cualquiera puede insertar su registro inicial" ON public.user_subscriptions;
+DROP POLICY IF EXISTS "Usuario crea su fila free" ON public.user_subscriptions;
+CREATE POLICY "Usuario crea su fila free" ON public.user_subscriptions
+  FOR INSERT WITH CHECK (user_id = auth.uid()::text AND status IN ('free','trial'));
+
+-- 2) César puede limpiar telemetría y mensajes
+DROP POLICY IF EXISTS "Admin elimina feedback" ON public.app_feedback;
+CREATE POLICY "Admin elimina feedback" ON public.app_feedback
+  FOR DELETE USING ((auth.jwt() ->> 'email') = 'cesar.risso.f@gmail.com');
+
+-- 3) Lista maestra REAL de cuentas (auth.users) con última conexión exacta
+DROP FUNCTION IF EXISTS public.get_admin_subscribers();
+CREATE FUNCTION public.get_admin_subscribers()
+RETURNS TABLE (
+  user_id text, email text, status text, created_at timestamptz,
+  last_sign_in_at timestamptz, last_active_at timestamptz, full_name text
+)
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, auth AS $$
+BEGIN
+  IF (auth.jwt() ->> 'email') IS DISTINCT FROM 'cesar.risso.f@gmail.com' THEN
+    RAISE EXCEPTION 'Acceso denegado: solo para el fundador';
+  END IF;
+  RETURN QUERY
+  SELECT
+    u.id::text,
+    u.email::text,
+    COALESCE(s.status, 'free')::text,
+    COALESCE(s.created_at, u.created_at),
+    u.last_sign_in_at,
+    GREATEST(
+      f.updated_at,
+      (SELECT max(h.created_at) FROM public.app_feedback h
+        WHERE h.type = 'heartbeat'
+          AND (h.user_id = u.id::text OR lower(h.user_email) = lower(u.email)))
+    ),
+    NULLIF(u.raw_user_meta_data ->> 'full_name', '')::text
+  FROM auth.users u
+  LEFT JOIN public.user_subscriptions s ON s.user_id = u.id::text
+  LEFT JOIN public.finanzas_state f ON f.id = ('state_' || u.id::text)
+  ORDER BY COALESCE(u.last_sign_in_at, f.updated_at, u.created_at) DESC NULLS LAST;
+END;
+$$;
+
+-- 4) Eliminación TOTAL de un usuario (login + datos + telemetría)
+CREATE OR REPLACE FUNCTION public.delete_user_by_admin(target_user_id text, target_email text)
+RETURNS boolean
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, auth AS $$
+BEGIN
+  IF (auth.jwt() ->> 'email') IS DISTINCT FROM 'cesar.risso.f@gmail.com' THEN
+    RAISE EXCEPTION 'Acceso denegado: solo para el fundador';
+  END IF;
+  IF lower(coalesce(target_email, '')) = 'cesar.risso.f@gmail.com' THEN
+    RAISE EXCEPTION 'La cuenta fundadora está protegida';
+  END IF;
+
+  IF coalesce(target_user_id, '') <> '' THEN
+    DELETE FROM public.finanzas_state WHERE id = ('state_' || target_user_id);
+    DELETE FROM public.finanzas_state WHERE id LIKE ('backup_' || left(target_user_id, 8) || '%');
+    DELETE FROM public.user_subscriptions WHERE user_id = target_user_id;
+    DELETE FROM public.app_feedback WHERE user_id = target_user_id AND type <> 'user_deleted';
+  END IF;
+  IF coalesce(target_email, '') <> '' THEN
+    DELETE FROM public.user_subscriptions WHERE lower(email) = lower(target_email);
+    DELETE FROM public.app_feedback WHERE lower(user_email) = lower(target_email) AND type <> 'user_deleted';
+  END IF;
+  IF target_user_id ~ '^[0-9a-fA-F-]{36}$' THEN
+    DELETE FROM auth.users WHERE id = target_user_id::uuid;
+  END IF;
+  RETURN true;
+END;
+$$;
+
+-- 5) Derecho al olvido real: el propio usuario borra su cuenta y todos sus datos (Ley 29733 / GDPR)
+CREATE OR REPLACE FUNCTION public.delete_my_account()
+RETURNS boolean
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, auth AS $$
+DECLARE
+  uid uuid := auth.uid();
+  uemail text := lower(coalesce(auth.jwt() ->> 'email', ''));
+BEGIN
+  IF uid IS NULL THEN RAISE EXCEPTION 'No autenticado'; END IF;
+  IF uemail = 'cesar.risso.f@gmail.com' THEN
+    RAISE EXCEPTION 'La cuenta fundadora no se elimina desde la app';
+  END IF;
+  DELETE FROM public.finanzas_state WHERE id = ('state_' || uid::text) OR id LIKE ('backup_' || left(uid::text, 8) || '%');
+  DELETE FROM public.user_subscriptions WHERE user_id = uid::text;
+  DELETE FROM public.app_feedback WHERE user_id = uid::text;
+  DELETE FROM auth.users WHERE id = uid;
+  RETURN true;
+END;
+$$;
+
+-- 6) (Opcional) Limpieza de pings antiguos (+60 días). Ejecútalo cuando quieras:
+-- DELETE FROM public.app_feedback WHERE type = 'heartbeat' AND created_at < now() - interval '60 days';
+`;
+
+// ----------------------------------------------------------------
+// Utilidades base
+// ----------------------------------------------------------------
+function isFounderEmail(email) {
+  return (email || '').trim().toLowerCase() === FOUNDER_EMAIL;
+}
+
+function masterSetText(id, text) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = text;
+}
+
+function masterMoney(cents) {
+  return 'S/ ' + (Math.round(cents) / 100).toFixed(2);
+}
 
 function syncAdminUI() {
   const isCesar = isAdminCesar();
@@ -6206,164 +6372,210 @@ function syncAdminUI() {
   if (deskMasterBtn) deskMasterBtn.style.display = isCesar ? 'flex' : 'none';
   const settMasterRow = document.getElementById('settingsMasterAdminRow');
   if (settMasterRow) settMasterRow.style.display = isCesar ? 'block' : 'none';
+  const btnFounderHeader = document.getElementById('btnFounderHeader');
+  if (btnFounderHeader) btnFounderHeader.style.display = isCesar ? 'inline-flex' : 'none';
 }
 
-async function openMasterDashboardModal() {
+// Compatibilidad: antes abría un modal; ahora abre el módulo de pantalla completa.
+function openMasterDashboardModal() {
   if (!isAdminCesar()) {
     showToast('Acceso restringido únicamente al fundador de AliviaFin', 'error');
     return;
   }
-  openModalById('masterDashboardModal');
-  await loadMasterDashboardData();
+  switchTab('founder');
+}
+
+function enterFounderModule() {
+  if (!isAdminCesar()) return;
+  switchMasterTab(masterCurrentPane);
+  renderFounderModule();            // pinta de inmediato lo que ya hay en memoria
+  loadMasterDashboardData();        // y refresca en vivo
+  stopFounderTicker();
+  let ticks = 0;
+  masterTickTimer = setInterval(() => {
+    if (document.hidden) return;
+    ticks++;
+    updateFounderStamp();
+    if (ticks % 4 === 0) loadMasterDashboardData();   // auto-refresh cada 60 s
+  }, 15000);
+}
+
+function stopFounderTicker() {
+  if (masterTickTimer) {
+    clearInterval(masterTickTimer);
+    masterTickTimer = null;
+  }
 }
 
 function switchMasterTab(tab) {
-  const secSubs = document.getElementById('masterSectionSubs');
-  const secFb = document.getElementById('masterSectionFeedback');
-  const btnSubs = document.getElementById('btnMasterTabSubs');
-  const btnFb = document.getElementById('btnMasterTabFeedback');
-
-  if (tab === 'feedback') {
-    if (secSubs) secSubs.style.display = 'none';
-    if (secFb) secFb.style.display = 'block';
-    if (btnSubs) btnSubs.classList.remove('active');
-    if (btnFb) btnFb.classList.add('active');
-  } else {
-    if (secSubs) secSubs.style.display = 'block';
-    if (secFb) secFb.style.display = 'none';
-    if (btnSubs) btnSubs.classList.add('active');
-    if (btnFb) btnFb.classList.remove('active');
-  }
+  const map = {
+    overview: ['fhPaneOverview', 'fhTabOverview'],
+    users: ['fhPaneUsers', 'fhTabUsers'],
+    feedback: ['fhPaneFeedback', 'fhTabFeedback']
+  };
+  if (tab === 'subs') tab = 'users';          // alias de versiones anteriores
+  if (!map[tab]) tab = 'overview';
+  masterCurrentPane = tab;
+  Object.keys(map).forEach(k => {
+    const pane = document.getElementById(map[k][0]);
+    if (pane) pane.style.display = (k === tab) ? 'block' : 'none';
+    const btn = document.getElementById(map[k][1]);
+    if (btn) btn.classList.toggle('active', k === tab);
+  });
+  if (tab === 'overview') renderFounderCharts();   // los canvas necesitan estar visibles
 }
 
+// ----------------------------------------------------------------
+// Carga de datos (suscriptores + telemetría + feedback)
+// ----------------------------------------------------------------
 async function loadMasterDashboardData(force = false) {
-  if (!isAdminCesar()) return;
-  const spinner = document.getElementById('masterRefreshSpinner');
-  if (spinner) spinner.textContent = '⏳';
+  if (!isAdminCesar() || masterLoading) return;
+  masterLoading = true;
+  masterSetText('masterRefreshSpinner', '⏳');
 
   try {
-    // 1. Intentar cargar suscriptores enriquecidos (con login de auth.users y actividad)
-    let subsLoaded = false;
+    // 1) Suscriptores: RPC enriquecida (auth.users) o tabla estándar como respaldo
+    let subs = null;
+    masterRpcAvailable = false;
     try {
-      const { data: rpcSubs, error: rpcErr } = await supabaseClient.rpc('get_admin_subscribers');
-      if (!rpcErr && Array.isArray(rpcSubs) && rpcSubs.length > 0) {
-        masterSubscribersData = rpcSubs;
-        subsLoaded = true;
+      const { data, error } = await supabaseClient.rpc('get_admin_subscribers');
+      if (!error && Array.isArray(data)) {
+        subs = data;
+        masterRpcAvailable = true;
       }
-    } catch (e) {
-      // Si la RPC aún no está creada en Supabase, continúa con fallback estándar
-    }
+    } catch (e) { /* RPC aún no instalada: se usa el respaldo */ }
 
-    if (!subsLoaded) {
-      const { data: subs, error: subsErr } = await supabaseClient
+    if (!subs) {
+      const { data, error } = await supabaseClient
         .from('user_subscriptions')
         .select('*')
         .order('created_at', { ascending: false });
-
-      if (!subsErr && subs) {
-        masterSubscribersData = subs;
-      }
+      if (!error && Array.isArray(data)) subs = data;
     }
+    if (subs) masterSubscribersData = subs;
 
-    // 2. Cargar feedback y telemetría de presencia (heartbeats)
-    const { data: feedbackAll, error: fbErr } = await supabaseClient
+    // 2) Telemetría: pings de los últimos 30 días (paginado, tope 6.000 filas)
+    masterTelemetryError = null;
+    const since = new Date(Date.now() - 30 * 86400000).toISOString();
+    const pings = [];
+    for (let page = 0; page < 6; page++) {
+      const from = page * 1000;
+      const { data, error } = await supabaseClient
+        .from('app_feedback')
+        .select('user_id,user_email,message,created_at')
+        .eq('type', 'heartbeat')
+        .gte('created_at', since)
+        .order('created_at', { ascending: false })
+        .range(from, from + 999);
+      if (error || !Array.isArray(data)) {
+        masterTelemetryError = error ? (error.message || String(error)) : 'respuesta vacía';
+        break;
+      }
+      pings.push(...data);
+      if (data.length < 1000) break;
+    }
+    if (pings.length === 0) {
+      try {
+        const { data: fbAll, error: fbErr2 } = await supabaseClient
+          .from('app_feedback')
+          .select('user_id,user_email,message,created_at')
+          .eq('type', 'heartbeat')
+          .order('created_at', { ascending: false })
+          .limit(1000);
+        if (!fbErr2 && Array.isArray(fbAll) && fbAll.length > 0) {
+          pings.push(...fbAll);
+          masterTelemetryError = null;
+        }
+      } catch (e) {}
+    }
+    masterHeartbeats = pings;
+
+    // 3) Feedback real + marcadores de usuarios eliminados
+    const { data: fbData, error: fbErr } = await supabaseClient
       .from('app_feedback')
       .select('*')
-      .order('created_at', { ascending: false });
-
-    const latestActivityMap = new Map();
-    const latestNameMap = new Map();
-
-    if (!fbErr && Array.isArray(feedbackAll)) {
-      const realFeedback = [];
-      for (const item of feedbackAll) {
-        if (item.type === 'heartbeat') {
-          const email = (item.user_email || '').toLowerCase().trim();
-          const uid = item.user_id;
-          const ts = item.created_at;
-          if (email && (!latestActivityMap.has(email) || new Date(ts) > new Date(latestActivityMap.get(email)))) {
-            latestActivityMap.set(email, ts);
-          }
-          if (uid && (!latestActivityMap.has(uid) || new Date(ts) > new Date(latestActivityMap.get(uid)))) {
-            latestActivityMap.set(uid, ts);
-          }
-          if (item.message && item.message !== 'heartbeat') {
-            if (email && !latestNameMap.has(email)) latestNameMap.set(email, item.message);
-            if (uid && !latestNameMap.has(uid)) latestNameMap.set(uid, item.message);
-          }
-        } else {
-          realFeedback.push(item);
-        }
-      }
-      masterFeedbackData = realFeedback;
-      const fbCountEl = document.getElementById('masterFeedbackCount');
-      if (fbCountEl) fbCountEl.textContent = realFeedback.length;
-    }
-
-    // 3. Enriquecer los suscriptores con la actividad real más reciente y nombres
-    if (Array.isArray(masterSubscribersData)) {
-      masterSubscribersData.forEach(sub => {
-        const email = (sub.email || '').toLowerCase().trim();
-        const uid = sub.user_id;
-        const hbTs = (email && latestActivityMap.get(email)) || (uid && latestActivityMap.get(uid));
-        if (hbTs) {
-          if (!sub.last_active_at || new Date(hbTs) > new Date(sub.last_active_at)) {
-            sub.last_active_at = hbTs;
-          }
-        }
-        const hbName = (email && latestNameMap.get(email)) || (uid && latestNameMap.get(uid));
-        if (hbName && (!sub.user_name || sub.user_name === sub.email || sub.user_name === 'Usuario')) {
-          sub.user_name = hbName;
-        }
+      .neq('type', 'heartbeat')
+      .order('created_at', { ascending: false })
+      .limit(500);
+    if (!fbErr && Array.isArray(fbData)) {
+      masterDeletedMarkers = new Map();
+      fbData.filter(i => i.type === 'user_deleted').forEach(m => {
+        const k = (m.user_email || '').toLowerCase().trim();
+        if (k && !masterDeletedMarkers.has(k)) masterDeletedMarkers.set(k, m.created_at);
       });
-
-      // Auto-incorporar usuarios que se han conectado pero no estaban en user_subscriptions
-      const deletedList = getDeletedUsersList();
-      for (const [email, ts] of latestActivityMap.entries()) {
-        if (!email || !email.includes('@')) continue;
-        if (deletedList.includes(email)) continue;
-        const exists = masterSubscribersData.some(s => (s.email && s.email.toLowerCase() === email));
-        if (!exists) {
-          masterSubscribersData.push({
-            user_id: null,
-            email: email,
-            user_name: latestNameMap.get(email) || formatCleanNameFromEmail(email),
-            status: 'free',
-            plan_type: 'free',
-            price: 0,
-            created_at: ts,
-            last_active_at: ts
-          });
-        }
-      }
+      masterFeedbackData = fbData.filter(i => i.type !== 'user_deleted');
     }
 
-    calculateMasterKPIs();
-    renderMasterSubscribers();
-    renderMasterFeedback();
-
+    enrichMasterSubscribers();
+    masterLastLoadedAt = Date.now();
+    renderFounderModule();
     if (force) showToast('⚡ Datos de fundador actualizados en vivo', 'success');
   } catch (err) {
     console.error('Error cargando master data:', err);
+    if (force) showToast('No se pudo actualizar el panel. Revisa tu conexión.', 'error');
   } finally {
-    if (spinner) spinner.textContent = '🔄';
+    masterLoading = false;
+    masterSetText('masterRefreshSpinner', '🔄');
   }
 }
 
-// Helpers para usuarios eliminados, nombres y deduplicación inteligente
+// Cruza los pings con cada suscriptor (por correo o user_id) y detecta nombres reales
+function enrichMasterSubscribers() {
+  if (!Array.isArray(masterSubscribersData)) masterSubscribersData = [];
+  const lastSeen = new Map();
+  const names = new Map();
+  const ids = new Map();
+
+  masterHeartbeats.forEach(h => {          // ya vienen ordenados del más reciente al más antiguo
+    const email = (h.user_email || '').toLowerCase().trim();
+    [email, h.user_id].filter(Boolean).forEach(key => {
+      if (!lastSeen.has(key)) lastSeen.set(key, h.created_at);
+    });
+    if (email && h.user_id && !ids.has(email)) ids.set(email, h.user_id);
+    if (h.message && h.message !== 'heartbeat') {
+      [email, h.user_id].filter(Boolean).forEach(key => {
+        if (!names.has(key)) names.set(key, h.message);
+      });
+    }
+  });
+
+  masterSubscribersData.forEach(sub => {
+    const email = (sub.email || '').toLowerCase().trim();
+    const hbTs = lastSeen.get(email) || lastSeen.get(sub.user_id);
+    if (hbTs && (!sub.last_active_at || Date.parse(hbTs) > Date.parse(sub.last_active_at))) {
+      sub.last_active_at = hbTs;
+    }
+    const hbName = names.get(email) || names.get(sub.user_id);
+    if (hbName && !sub.full_name && !sub.user_name) sub.user_name = hbName;
+  });
+
+  // Sin la RPC, incorpora a quien se conectó pero aún no figura en user_subscriptions
+  if (!masterRpcAvailable) {
+    const known = new Set(masterSubscribersData.map(s => (s.email || '').toLowerCase().trim()));
+    lastSeen.forEach((ts, key) => {
+      if (!key.includes('@') || known.has(key)) return;
+      known.add(key);
+      masterSubscribersData.push({
+        user_id: ids.get(key) || null,
+        email: key,
+        user_name: names.get(key) || formatCleanNameFromEmail(key),
+        status: 'free',
+        created_at: ts,
+        last_active_at: ts
+      });
+    });
+  }
+}
+
+// ----------------------------------------------------------------
+// Nombres, borrados y deduplicación
+// ----------------------------------------------------------------
 function getDeletedUsersList() {
   try {
     return JSON.parse(localStorage.getItem('aliviafin_deleted_users') || '[]');
   } catch (e) {
     return [];
   }
-}
-
-function saveDeletedUser(userId, email) {
-  const list = getDeletedUsersList();
-  if (userId && !list.includes(userId)) list.push(userId);
-  if (email && !list.includes(email.toLowerCase().trim())) list.push(email.toLowerCase().trim());
-  localStorage.setItem('aliviafin_deleted_users', JSON.stringify(list));
 }
 
 function getStoredNicknames() {
@@ -6415,201 +6627,493 @@ function promptEditUserNickname(email) {
   }
 }
 
-// Telemetría de Última Conexión y Detección de Riesgo de Churn
-function getUserLastConnectionInfo(item) {
-  const isCesar = (item.email && item.email.toLowerCase() === 'cesar.risso.f@gmail.com');
-  const isCurrentActiveSession = isCesar || (currentUser && (
-    (item.email && currentUser.email && item.email.toLowerCase() === currentUser.email.toLowerCase()) ||
-    (item.user_id && item.user_id === currentUser.id)
-  ));
-
-  if (isCurrentActiveSession) {
-    return {
-      diffDays: 0,
-      diffHours: 0,
-      isInactive: false,
-      html: `
-        <div title="Sesión activa en este momento">
-          <span class="master-activity-badge active">
-            <span class="activity-dot dot-active"></span> Hoy
-          </span>
-          <div style="font-size: 10px; color: #10b981; font-weight: 700; margin-top: 2px;">En línea ahora ⚡</div>
-        </div>
-      `
-    };
+// Un usuario eliminado queda oculto hasta que vuelva a conectarse (marcador en la nube + lista local heredada)
+function isMasterUserHidden(item) {
+  const email = (item.email || '').toLowerCase().trim();
+  const legacy = getDeletedUsersList();
+  if ((email && legacy.includes(email)) || (item.user_id && legacy.includes(item.user_id))) return true;
+  const markerTs = masterDeletedMarkers.get(email);
+  if (markerTs) {
+    const latest = Math.max(
+      Date.parse(item.last_active_at) || 0,
+      Date.parse(item.last_sign_in_at) || 0,
+      Date.parse(item.created_at) || 0
+    );
+    if ((Date.parse(markerTs) || 0) >= latest) return true;
   }
-
-  const rawDate = item.last_sign_in_at || item.last_active_at || item.updated_at || item.created_at;
-  if (!rawDate) {
-    return {
-      diffDays: 999,
-      isInactive: true,
-      html: `
-        <span class="master-activity-badge neutral" title="Sin registros de conexión">
-          <span class="activity-dot dot-neutral"></span> Sin registro
-        </span>
-      `
-    };
-  }
-
-  const d = new Date(rawDate);
-  const now = new Date();
-  const diffMs = Math.max(0, now - d);
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  const isConnectedLogin = Boolean(item.last_sign_in_at || item.last_active_at || (item.updated_at && item.updated_at !== item.created_at));
-
-  let html = '';
-  const dateFormatted = d.toLocaleDateString('es-PE', { day: '2-digit', month: 'short' });
-  const timeFormatted = d.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
-
-  if (diffHours < 24) {
-    const isLiveOnline = (diffMs < 10 * 60 * 1000);
-    const timeText = isLiveOnline ? 'En línea ahora ⚡' : (diffHours <= 0 ? 'Hace un momento' : `Hace ${diffHours}h`);
-    html = `
-      <div title="${dateFormatted} ${timeFormatted}">
-        <span class="master-activity-badge active">
-          <span class="activity-dot dot-active"></span> Hoy
-        </span>
-        <div style="font-size: 10px; color: #10b981; font-weight: 700; margin-top: 2px;">${timeText}</div>
-      </div>
-    `;
-  } else if (diffDays <= 3) {
-    html = `
-      <div title="${dateFormatted} ${timeFormatted}">
-        <span class="master-activity-badge active">
-          <span class="activity-dot dot-active"></span> Activo
-        </span>
-        <div style="font-size: 10px; color: var(--text-muted); margin-top: 2px;">Hace ${diffDays} día${diffDays > 1 ? 's' : ''}</div>
-      </div>
-    `;
-  } else if (diffDays <= 7) {
-    html = `
-      <div title="${dateFormatted} ${timeFormatted}">
-        <span class="master-activity-badge warning">
-          <span class="activity-dot dot-warning"></span> Hace ${diffDays}d
-        </span>
-        <div style="font-size: 10px; color: #b45309; font-weight: 600; margin-top: 2px;">Riesgo leve</div>
-      </div>
-    `;
-  } else {
-    const note = !isConnectedLogin ? 'Solo registro' : `Hace ${diffDays}d`;
-    html = `
-      <div title="${dateFormatted} ${timeFormatted} · Sin actividad reciente">
-        <span class="master-activity-badge inactive">
-          <span class="activity-dot dot-inactive"></span> Inactivo (+${diffDays}d)
-        </span>
-        <div style="font-size: 10px; color: #ef4444; font-weight: 700; margin-top: 2px;">⚠️ Churn Alert (${note})</div>
-      </div>
-    `;
-  }
-
-  return {
-    diffDays,
-    diffHours,
-    isInactive: diffDays > 7 || (!isConnectedLogin && diffDays >= 3),
-    html
-  };
+  return false;
 }
 
-// Deduplicar suscriptores por correo y filtrar eliminados
 function getDeduplicatedSubscribers(rawList) {
-  const deletedList = getDeletedUsersList();
   const map = new Map();
-  const sorted = [...rawList].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+  const sorted = [...(rawList || [])].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+  const newer = (a, b) => (Date.parse(a) || 0) > (Date.parse(b) || 0);
 
   sorted.forEach(item => {
     const key = (item.email || item.user_id || '').toLowerCase().trim();
     if (!key) return;
-
-    // Omitir usuarios marcados como eliminados permanentemente
-    if (deletedList.includes(key) || (item.user_id && deletedList.includes(item.user_id))) {
-      return;
-    }
+    if (isMasterUserHidden(item)) return;
 
     if (!map.has(key)) {
       map.set(key, { ...item });
-    } else {
-      const existing = map.get(key);
-      const isProItem = ['pro_lifetime', 'pro_monthly', 'premium'].includes(item.status);
-      const isProExisting = ['pro_lifetime', 'pro_monthly', 'premium'].includes(existing.status);
-
-      if (isProItem && !isProExisting) {
-        existing.status = item.status;
-        existing.user_id = item.user_id;
-      }
-      if (item.last_sign_in_at && (!existing.last_sign_in_at || new Date(item.last_sign_in_at) > new Date(existing.last_sign_in_at))) {
-        existing.last_sign_in_at = item.last_sign_in_at;
-      }
-      if (item.last_active_at && (!existing.last_active_at || new Date(item.last_active_at) > new Date(existing.last_active_at))) {
-        existing.last_active_at = item.last_active_at;
-      }
-      if (item.user_name && !existing.user_name) {
-        existing.user_name = item.user_name;
-      }
+      return;
     }
+    const existing = map.get(key);
+    const isProItem = ['pro_lifetime', 'pro_monthly', 'premium'].includes(item.status);
+    const isProExisting = ['pro_lifetime', 'pro_monthly', 'premium'].includes(existing.status);
+    if (isProItem && !isProExisting) {
+      existing.status = item.status;
+      existing.user_id = item.user_id;
+    }
+    if (item.last_sign_in_at && (!existing.last_sign_in_at || newer(item.last_sign_in_at, existing.last_sign_in_at))) {
+      existing.last_sign_in_at = item.last_sign_in_at;
+    }
+    if (item.last_active_at && (!existing.last_active_at || newer(item.last_active_at, existing.last_active_at))) {
+      existing.last_active_at = item.last_active_at;
+    }
+    if (item.user_name && !existing.user_name) existing.user_name = item.user_name;
+    if (item.full_name && !existing.full_name) existing.full_name = item.full_name;
   });
 
   return Array.from(map.values());
 }
 
-function calculateMasterKPIs() {
-  const sym = 'S/';
-  const uniqueSubs = getDeduplicatedSubscribers(masterSubscribersData);
-  const totalUsers = uniqueSubs.length;
-
-  // Mensuales activos: S/ 4.90 / mes
-  const monthlySubs = uniqueSubs.filter(s => s.status === 'pro_monthly');
-  const mrr = monthlySubs.length * 4.90;
-
-  // Vitalicios: S/ 19.90
-  const lifetimeSubs = uniqueSubs.filter(s => s.status === 'pro_lifetime' || s.status === 'premium');
-  const lifetimeRevenue = lifetimeSubs.length * 19.90;
-
-  // Total ingresos estimados
-  const totalRevenue = lifetimeRevenue + mrr;
-  const totalPro = monthlySubs.length + lifetimeSubs.length;
-  const freeUsers = Math.max(0, totalUsers - totalPro);
-  const convRate = totalUsers > 0 ? ((totalPro / totalUsers) * 100).toFixed(1) : 0;
-
-  // Detección de inactivos para alerta Churn
-  const inactiveSubs = uniqueSubs.filter(s => {
-    const info = getUserLastConnectionInfo(s);
-    return info.isInactive;
-  });
-
-  // Render en UI
-  const elMrr = document.getElementById('masterMrrVal');
-  if (elMrr) elMrr.textContent = `${sym} ${mrr.toFixed(2)}`;
-  const elMrrSub = document.getElementById('masterMrrSub');
-  if (elMrrSub) elMrrSub.textContent = `${monthlySubs.length} suscriptores mensuales activos`;
-
-  const elTotalRev = document.getElementById('masterTotalRevenueVal');
-  if (elTotalRev) elTotalRev.textContent = `${sym} ${totalRevenue.toFixed(2)}`;
-  const elLifeSub = document.getElementById('masterLifetimeSalesSub');
-  if (elLifeSub) elLifeSub.textContent = `${lifetimeSubs.length} membresías vitalicias vendidas`;
-
-  const elTotalUsers = document.getElementById('masterTotalUsersVal');
-  if (elTotalUsers) elTotalUsers.textContent = `${totalUsers} Cuentas`;
-  const elUsersBreakdown = document.getElementById('masterUsersBreakdownSub');
-  if (elUsersBreakdown) elUsersBreakdown.textContent = `${totalPro} PRO (${lifetimeSubs.length} Vit. / ${monthlySubs.length} Men.) · ${freeUsers} Free`;
-
-  const elConv = document.getElementById('masterConversionVal');
-  if (elConv) elConv.textContent = `${convRate}%`;
-
-  // Contadores en chips
-  const cAll = document.getElementById('countMAll');
-  if (cAll) cAll.textContent = totalUsers;
-  const cLife = document.getElementById('countMLife');
-  if (cLife) cLife.textContent = lifetimeSubs.length;
-  const cMonth = document.getElementById('countMMonth');
-  if (cMonth) cMonth.textContent = monthlySubs.length;
-  const cFree = document.getElementById('countMFree');
-  if (cFree) cFree.textContent = freeUsers;
-  const cInactive = document.getElementById('countMInactive');
-  if (cInactive) cInactive.textContent = inactiveSubs.length;
+// Clientes reales (excluye la cuenta fundadora para no inflar ingresos ni conversión)
+function getMasterCustomers() {
+  return getDeduplicatedSubscribers(masterSubscribersData).filter(s => !isFounderEmail(s.email));
 }
 
+function getMasterPlanKey(item) {
+  if (isFounderEmail(item.email)) return 'founder';
+  if (item.status === 'pro_lifetime' || item.status === 'premium') return 'life';
+  if (item.status === 'pro_monthly') return 'month';
+  return 'free';
+}
+
+// ----------------------------------------------------------------
+// Telemetría de última conexión (usa la señal más reciente disponible)
+// ----------------------------------------------------------------
+function getUserLastConnectionInfo(item) {
+  const now = Date.now();
+  const isCurrentSession = !!(currentUser && (
+    (item.email && currentUser.email && item.email.toLowerCase() === currentUser.email.toLowerCase()) ||
+    (item.user_id && item.user_id === currentUser.id)
+  ));
+
+  const lastMs = isCurrentSession
+    ? now
+    : Math.max(Date.parse(item.last_active_at) || 0, Date.parse(item.last_sign_in_at) || 0);
+  const regMs = Date.parse(item.created_at) || 0;
+
+  // Sin ninguna señal de conexión
+  if (!lastMs) {
+    const regDays = regMs ? Math.floor((now - regMs) / 86400000) : 999;
+    const isNew = regDays < 3;
+    return {
+      lastSeenMs: 0,
+      diffDays: regDays,
+      isInactive: !isNew,
+      bucket: 'never',
+      html: isNew
+        ? `<div><span class="master-activity-badge neutral"><span class="activity-dot dot-neutral"></span> Nuevo</span>
+             <div style="font-size: 10px; color: var(--text-muted); margin-top: 2px;">Aún sin actividad</div></div>`
+        : `<div><span class="master-activity-badge inactive"><span class="activity-dot dot-inactive"></span> Sin conexión registrada</span>
+             <div style="font-size: 10px; color: #ef4444; font-weight: 700; margin-top: 2px;">⚠️ Churn Alert (solo registro · hace ${regDays}d)</div></div>`
+    };
+  }
+
+  const diffMs = Math.max(0, now - lastMs);
+  const diffMin = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+  const d = new Date(lastMs);
+  const stamp = `${d.toLocaleDateString('es-PE', { day: '2-digit', month: 'short' })} ${d.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })}`;
+
+  let bucket, html;
+  if (diffMs <= MASTER_ONLINE_WINDOW_MS) {
+    bucket = 'online';
+    html = `<div title="${stamp}"><span class="master-activity-badge active"><span class="activity-dot dot-active"></span> Hoy</span>
+              <div style="font-size: 10px; color: #10b981; font-weight: 700; margin-top: 2px;">En línea ahora ⚡</div></div>`;
+  } else if (diffHours < 24) {
+    bucket = 'today';
+    const ago = diffMin < 60 ? `Hace ${diffMin} min` : `Hace ${diffHours}h`;
+    html = `<div title="${stamp}"><span class="master-activity-badge active"><span class="activity-dot dot-active"></span> Hoy</span>
+              <div style="font-size: 10px; color: #10b981; font-weight: 700; margin-top: 2px;">${ago}</div></div>`;
+  } else if (diffDays <= 3) {
+    bucket = 'd3';
+    html = `<div title="${stamp}"><span class="master-activity-badge active"><span class="activity-dot dot-active"></span> Activo</span>
+              <div style="font-size: 10px; color: var(--text-muted); margin-top: 2px;">Hace ${diffDays} día${diffDays > 1 ? 's' : ''}</div></div>`;
+  } else if (diffDays <= 7) {
+    bucket = 'd7';
+    html = `<div title="${stamp}"><span class="master-activity-badge warning"><span class="activity-dot dot-warning"></span> Hace ${diffDays}d</span>
+              <div style="font-size: 10px; color: #b45309; font-weight: 600; margin-top: 2px;">Riesgo leve</div></div>`;
+  } else {
+    bucket = 'old';
+    html = `<div title="${stamp} · Sin actividad reciente"><span class="master-activity-badge inactive"><span class="activity-dot dot-inactive"></span> Inactivo (+${diffDays}d)</span>
+              <div style="font-size: 10px; color: #ef4444; font-weight: 700; margin-top: 2px;">⚠️ Churn Alert (última vez hace ${diffDays}d)</div></div>`;
+  }
+
+  return { lastSeenMs: lastMs, diffDays, diffHours, isInactive: diffDays > 7, bucket, html };
+}
+
+// ----------------------------------------------------------------
+// KPIs
+// ----------------------------------------------------------------
+function calculateMasterKPIs() {
+  const customers = getMasterCustomers();
+  const total = customers.length;
+  const now = Date.now();
+  let life = 0, month = 0, active24 = 0, active7 = 0, risk = 0, new7 = 0;
+
+  customers.forEach(s => {
+    const plan = getMasterPlanKey(s);
+    if (plan === 'life') life++;
+    else if (plan === 'month') month++;
+    const info = getUserLastConnectionInfo(s);
+    if (info.lastSeenMs && now - info.lastSeenMs <= 86400000) active24++;
+    if (info.lastSeenMs && now - info.lastSeenMs <= 7 * 86400000) active7++;
+    if (info.isInactive) risk++;
+    if (s.created_at && now - Date.parse(s.created_at) <= 7 * 86400000) new7++;
+  });
+
+  const paid = life + month;
+  const free = Math.max(0, total - paid);
+  const mrrCents = month * MASTER_PRICE_MONTHLY_CENTS;
+  const lifeCents = life * MASTER_PRICE_LIFETIME_CENTS;
+  const conv = total > 0 ? ((paid / total) * 100).toFixed(1) : '0.0';
+  const activePct = total > 0 ? Math.round((active7 / total) * 100) : 0;
+
+  masterSetText('masterMrrVal', masterMoney(mrrCents));
+  masterSetText('masterMrrSub', `${month} suscriptor${month === 1 ? '' : 'es'} mensual${month === 1 ? '' : 'es'} activo${month === 1 ? '' : 's'}`);
+  masterSetText('masterTotalRevenueVal', masterMoney(mrrCents + lifeCents));
+  masterSetText('masterLifetimeSalesSub', `${life} membresía${life === 1 ? '' : 's'} vitalicia${life === 1 ? '' : 's'} · estimado por plan activo`);
+  masterSetText('masterTotalUsersVal', `${total} Cuenta${total === 1 ? '' : 's'}`);
+  masterSetText('masterUsersBreakdownSub', `${paid} PRO (${life} Vit. / ${month} Men.) · ${free} Free · +${new7} esta semana`);
+  masterSetText('masterConversionVal', `${conv}%`);
+  masterSetText('masterConversionSub', `${paid} de ${total} cuentas pagan`);
+  masterSetText('masterActiveVal', `${active24}`);
+  masterSetText('masterActiveSub', `${active7} activas en 7 días (${activePct}%)`);
+  masterSetText('masterRiskVal', `${risk}`);
+  masterSetText('masterRiskSub', risk === 0 ? 'Sin cuentas en riesgo 🎉' : `${total > 0 ? Math.round((risk / total) * 100) : 0}% sin conexión +7 días`);
+
+  masterSetText('countMAll', total);
+  masterSetText('countMLife', life);
+  masterSetText('countMMonth', month);
+  masterSetText('countMFree', free);
+  masterSetText('countMInactive', risk);
+}
+
+// ----------------------------------------------------------------
+// Gráficos (Chart.js, ya cargado en la app)
+// ----------------------------------------------------------------
+function founderChartTheme() {
+  const dark = document.body.classList.contains('theme-twilight');
+  return {
+    text: dark ? '#94a3b8' : '#64748b',
+    grid: dark ? 'rgba(255, 255, 255, 0.07)' : 'rgba(15, 23, 42, 0.06)'
+  };
+}
+
+function mkFounderChart(id, config) {
+  const el = document.getElementById(id);
+  if (!el || typeof Chart === 'undefined') return;
+  if (masterCharts[id]) masterCharts[id].destroy();
+  masterCharts[id] = new Chart(el.getContext('2d'), config);
+}
+
+function renderFounderCharts() {
+  if (masterCurrentPane !== 'overview') return;
+  if (typeof Chart === 'undefined') return;
+
+  const customers = getMasterCustomers();
+  const th = founderChartTheme();
+  const font = { family: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Plus Jakarta Sans", sans-serif', size: 11, weight: '600' };
+  const tooltip = { backgroundColor: '#0f172a', titleFont: font, bodyFont: font, padding: 10, cornerRadius: 10, displayColors: false };
+  const scales = {
+    x: { grid: { display: false }, border: { display: false }, ticks: { color: th.text, font, maxRotation: 0, autoSkip: true } },
+    y: { beginAtZero: true, border: { display: false }, grid: { color: th.grid }, ticks: { color: th.text, font, precision: 0 } }
+  };
+
+  // 1) Crecimiento acumulado de cuentas (30 días)
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const growthLabels = [];
+  const dayStarts = [];
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    dayStarts.push(d.getTime());
+    growthLabels.push(d.toLocaleDateString('es-PE', { day: '2-digit', month: 'short' }));
+  }
+  const regTimes = customers.map(c => Date.parse(c.created_at) || 0).filter(Boolean);
+  const cumulative = dayStarts.map(ds => regTimes.filter(t => t < ds + 86400000).length);
+  const gained = cumulative[cumulative.length - 1] - cumulative[0];
+  masterSetText('fhGrowthNote', `+${gained} en 30 días`);
+  mkFounderChart('fhChartGrowth', {
+    type: 'line',
+    data: {
+      labels: growthLabels,
+      datasets: [{
+        data: cumulative,
+        borderColor: '#6366f1',
+        backgroundColor: 'rgba(99, 102, 241, 0.12)',
+        fill: true,
+        tension: 0.35,
+        pointRadius: 0,
+        pointHoverRadius: 5,
+        borderWidth: 2.5
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { display: false }, tooltip: { ...tooltip, callbacks: { label: c => ` ${c.parsed.y} cuentas` } } },
+      scales
+    }
+  });
+
+  // 2) Usuarios activos por día (14 días) a partir de los pings
+  const actLabels = [];
+  const actStarts = [];
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    actStarts.push(d.getTime());
+    actLabels.push(d.toLocaleDateString('es-PE', { day: '2-digit', month: 'short' }));
+  }
+  const perDay = new Map();
+  masterHeartbeats.forEach(h => {
+    const email = (h.user_email || '').toLowerCase().trim();
+    if (isFounderEmail(email)) return;
+    const d = new Date(h.created_at);
+    d.setHours(0, 0, 0, 0);
+    const k = d.getTime();
+    if (!perDay.has(k)) perDay.set(k, new Set());
+    perDay.get(k).add(email || h.user_id);
+  });
+  const actCounts = actStarts.map(s => (perDay.get(s) ? perDay.get(s).size : 0));
+  const hasPings = actCounts.some(n => n > 0);
+  masterSetText('fhActivityNote', hasPings
+    ? `Pico: ${Math.max(...actCounts)} usuarios/día`
+    : 'Los pings se acumulan cuando cada usuario abre la versión nueva');
+  mkFounderChart('fhChartActivity', {
+    type: 'bar',
+    data: {
+      labels: actLabels,
+      datasets: [{ data: actCounts, backgroundColor: 'rgba(16, 185, 129, 0.75)', hoverBackgroundColor: '#10b981', borderRadius: 8, borderSkipped: false, maxBarThickness: 28 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { ...tooltip, callbacks: { label: c => ` ${c.parsed.y} usuario${c.parsed.y === 1 ? '' : 's'} activo${c.parsed.y === 1 ? '' : 's'}` } } },
+      scales
+    }
+  });
+
+  // 3) Mezcla de planes
+  let free = 0, month = 0, life = 0;
+  customers.forEach(c => {
+    const p = getMasterPlanKey(c);
+    if (p === 'life') life++;
+    else if (p === 'month') month++;
+    else free++;
+  });
+  mkFounderChart('fhChartPlans', {
+    type: 'doughnut',
+    data: {
+      labels: ['Gratuitos', 'PRO Mensual', 'PRO Vitalicio'],
+      datasets: [{ data: [free, month, life], backgroundColor: ['#cbd5e1', '#6366f1', '#f59e0b'], borderWidth: 0, hoverOffset: 6 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '68%',
+      plugins: {
+        legend: { position: 'bottom', labels: { color: th.text, font, usePointStyle: true, pointStyle: 'circle', boxWidth: 8, padding: 14 } },
+        tooltip
+      }
+    }
+  });
+
+  // 4) Recencia de conexión (salud de retención)
+  const buckets = { online: 0, today: 0, d3: 0, d7: 0, old: 0, never: 0 };
+  customers.forEach(c => { buckets[getUserLastConnectionInfo(c).bucket]++; });
+  mkFounderChart('fhChartRecency', {
+    type: 'bar',
+    data: {
+      labels: ['En línea', 'Hoy', '1–3 días', '4–7 días', '+7 días', 'Sin registro'],
+      datasets: [{
+        data: [buckets.online, buckets.today, buckets.d3, buckets.d7, buckets.old, buckets.never],
+        backgroundColor: ['#10b981', '#34d399', '#6ee7b7', '#fbbf24', '#ef4444', '#94a3b8'],
+        borderRadius: 8, borderSkipped: false, maxBarThickness: 22
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { ...tooltip, callbacks: { label: c => ` ${c.parsed.x} cuenta${c.parsed.x === 1 ? '' : 's'}` } } },
+      scales: {
+        x: { beginAtZero: true, border: { display: false }, grid: { color: th.grid }, ticks: { color: th.text, font, precision: 0 } },
+        y: { grid: { display: false }, border: { display: false }, ticks: { color: th.text, font } }
+      }
+    }
+  });
+}
+
+// ----------------------------------------------------------------
+// Insights accionables (anti-churn y conversión)
+// ----------------------------------------------------------------
+function founderMailto(email, name, kind) {
+  const subject = kind === 'upgrade'
+    ? 'Tu plan PRO de AliviaFin'
+    : '¿Cómo te va con AliviaFin?';
+  const body = kind === 'upgrade'
+    ? `Hola ${name}, soy César de AliviaFin. Vi que estás usando la app con frecuencia y quería contarte del plan PRO Vitalicio (S/ 19.90, pago único). ¿Te interesa?`
+    : `Hola ${name}, soy César de AliviaFin. Noté que hace unos días no entras y quiero ayudarte a sacarle provecho. ¿Hay algo que no te haya gustado o te haya costado usar? Tu opinión me ayuda muchísimo.`;
+  return `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+
+function renderFounderInsights() {
+  const box = document.getElementById('fhInsights');
+  if (!box) return;
+
+  const customers = getMasterCustomers();
+  if (customers.length === 0) {
+    box.innerHTML = '<div class="fh-insight"><div class="fh-insight-icon">✨</div><div class="fh-insight-body"><div class="fh-insight-title">Aún no hay clientes</div><div class="fh-insight-text">Cuando se registren tus primeros usuarios aquí verás recomendaciones accionables.</div></div></div>';
+    return;
+  }
+
+  const now = Date.now();
+  const rows = customers.map(c => ({
+    c,
+    plan: getMasterPlanKey(c),
+    info: getUserLastConnectionInfo(c),
+    name: getDisplayNameForEmail(c.email || '', c)
+  }));
+
+  const chips = (list, kind) => list.slice(0, 6).map(x =>
+    `<a class="fh-chip" href="${escapeHtml(founderMailto(x.c.email, x.name, kind))}" title="Escribirle a ${escapeHtml(x.c.email)}">${escapeHtml(x.name)} ✉️</a>`
+  ).join('') + (list.length > 6 ? `<span class="fh-chip fh-chip-more">+${list.length - 6}</span>` : '');
+
+  const hot = rows
+    .filter(x => x.plan === 'free' && x.info.lastSeenMs && now - x.info.lastSeenMs <= 3 * 86400000)
+    .sort((a, b) => b.info.lastSeenMs - a.info.lastSeenMs);
+  const atRisk = rows
+    .filter(x => x.info.isInactive)
+    .sort((a, b) => (b.plan !== 'free') - (a.plan !== 'free') || (a.info.lastSeenMs || 0) - (b.info.lastSeenMs || 0));
+  const fresh = rows.filter(x => x.c.created_at && now - Date.parse(x.c.created_at) <= 7 * 86400000);
+  const returned = fresh.filter(x => x.info.lastSeenMs && x.info.lastSeenMs - Date.parse(x.c.created_at) > 86400000);
+  const paidCount = rows.filter(x => x.plan === 'life' || x.plan === 'month').length;
+  const active7 = rows.filter(x => x.info.lastSeenMs && now - x.info.lastSeenMs <= 7 * 86400000).length;
+
+  const items = [];
+  items.push({
+    icon: '🔥',
+    title: `Listos para PRO (${hot.length})`,
+    text: hot.length
+      ? 'Usuarios gratuitos que usaron la app en los últimos 3 días. Son tu mejor oportunidad: ofréceles el Vitalicio (S/ 19.90) por correo o WhatsApp.'
+      : 'Aún no hay usuarios gratuitos muy activos. Invita a probar el Simulador de Cuotas y la Bola de Nieve para aumentar el enganche.',
+    chips: hot.length ? chips(hot, 'upgrade') : ''
+  });
+  items.push({
+    icon: atRisk.length ? '⚠️' : '✅',
+    title: `En riesgo de abandono (${atRisk.length})`,
+    text: atRisk.length
+      ? 'Más de 7 días sin conectarse (los PRO aparecen primero). Un mensaje personal en las primeras 72 h recupera a muchos: pregunta qué les frenó.'
+      : 'Todas las cuentas se conectaron en los últimos 7 días. ¡Excelente retención!',
+    chips: atRisk.length ? chips(atRisk, 'winback') : ''
+  });
+  items.push({
+    icon: '🌱',
+    title: `Nuevos esta semana: ${fresh.length}`,
+    text: fresh.length
+      ? `${returned.length} de ${fresh.length} volvieron después del primer día. ${returned.length < fresh.length ? 'Escríbeles a los que no volvieron: el onboarding es donde más se pierde gente.' : 'Muy buena activación.'}`
+      : 'No hubo registros nuevos en 7 días. Comparte tu enlace con 3 contactos cercanos esta semana.',
+    chips: ''
+  });
+  items.push({
+    icon: '📊',
+    title: 'Salud del negocio',
+    text: `${active7} de ${rows.length} cuentas activas en 7 días · ${paidCount} pagan (${rows.length ? ((paidCount / rows.length) * 100).toFixed(1) : '0.0'}% conversión). Meta sugerida: 5–10% de conversión y 60%+ de activas semanales.`,
+    chips: ''
+  });
+
+  box.innerHTML = items.map(i => `
+    <div class="fh-insight">
+      <div class="fh-insight-icon">${i.icon}</div>
+      <div class="fh-insight-body">
+        <div class="fh-insight-title">${i.title}</div>
+        <div class="fh-insight-text">${i.text}</div>
+        ${i.chips ? `<div class="fh-chip-row">${i.chips}</div>` : ''}
+      </div>
+    </div>`).join('');
+}
+
+// ----------------------------------------------------------------
+// Banner de activación SQL + sello de actualización
+// ----------------------------------------------------------------
+function renderFounderSetupBanner() {
+  const el = document.getElementById('fhSetupBanner');
+  if (!el) return;
+  const dismissedAt = parseInt(localStorage.getItem('aliviafin_fh_setup_dismissed') || '0', 10);
+  const hide = masterRpcAvailable || (Date.now() - dismissedAt < 24 * 3600 * 1000);
+  el.style.display = hide ? 'none' : 'flex';
+  const note = document.getElementById('fhTelemetryNote');
+  if (note) {
+    note.textContent = masterTelemetryError
+      ? `No pude leer los pings de actividad (${masterTelemetryError}).`
+      : 'Con 1 pegado en Supabase obtienes la última conexión exacta de cada cuenta, el borrado total de usuarios y el blindaje del paywall.';
+  }
+}
+
+function dismissFounderSetup() {
+  localStorage.setItem('aliviafin_fh_setup_dismissed', String(Date.now()));
+  renderFounderSetupBanner();
+}
+
+async function copyFounderSetupSQL() {
+  try {
+    await navigator.clipboard.writeText(FOUNDER_SETUP_SQL);
+    showToast('📋 SQL copiado. Pégalo en Supabase → SQL Editor y pulsa Run', 'success');
+  } catch (e) {
+    const ta = document.createElement('textarea');
+    ta.value = FOUNDER_SETUP_SQL;
+    ta.style.cssText = 'position:fixed;opacity:0;top:0;left:0;';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch (err) {}
+    ta.remove();
+    showToast(ok ? '📋 SQL copiado. Pégalo en Supabase → SQL Editor y pulsa Run' : 'No se pudo copiar automáticamente', ok ? 'success' : 'error');
+  }
+}
+
+function openSupabaseSQLEditor() {
+  window.open(SUPABASE_SQL_EDITOR_URL, '_blank', 'noopener');
+}
+
+function updateFounderStamp() {
+  const el = document.getElementById('fhUpdatedAt');
+  if (!el) return;
+  if (!masterLastLoadedAt) {
+    el.textContent = 'Cargando datos…';
+    return;
+  }
+  const secs = Math.max(0, Math.floor((Date.now() - masterLastLoadedAt) / 1000));
+  el.textContent = secs < 5 ? 'Actualizado ahora' : (secs < 60 ? `Actualizado hace ${secs}s` : `Actualizado hace ${Math.floor(secs / 60)} min`);
+}
+
+function renderFounderModule() {
+  calculateMasterKPIs();
+  renderMasterSubscribers();
+  renderMasterFeedback();
+  renderFounderInsights();
+  renderFounderSetupBanner();
+  updateFounderStamp();
+  if (masterCurrentPane === 'overview') renderFounderCharts();
+}
+
+// ----------------------------------------------------------------
+// Tabla de usuarios, filtros y acciones
+// ----------------------------------------------------------------
 function setMasterFilter(filter) {
   masterCurrentFilter = filter;
   document.querySelectorAll('.master-filter-chip').forEach(c => c.classList.remove('active'));
@@ -6634,22 +7138,17 @@ function renderMasterSubscribers() {
   const q = (document.getElementById('masterSearchInput')?.value || '').toLowerCase().trim();
   const uniqueSubs = getDeduplicatedSubscribers(masterSubscribersData);
 
-  let list = uniqueSubs.filter(item => {
+  const list = uniqueSubs.filter(item => {
     const email = (item.email || item.user_id || '').toLowerCase();
     const cleanName = getDisplayNameForEmail(item.email || '', item).toLowerCase();
     const matchesQuery = !q || email.includes(q) || cleanName.includes(q) || (item.user_id && item.user_id.toLowerCase().includes(q));
     if (!matchesQuery) return false;
 
-    const isLife = item.status === 'pro_lifetime' || item.status === 'premium';
-    const isMonth = item.status === 'pro_monthly';
-
-    if (masterCurrentFilter === 'pro_lifetime') return isLife;
-    if (masterCurrentFilter === 'pro_monthly') return isMonth;
-    if (masterCurrentFilter === 'free') return !isLife && !isMonth;
-    if (masterCurrentFilter === 'inactive') {
-      const info = getUserLastConnectionInfo(item);
-      return info.isInactive;
-    }
+    const plan = getMasterPlanKey(item);
+    if (masterCurrentFilter === 'pro_lifetime') return plan === 'life' || plan === 'founder';
+    if (masterCurrentFilter === 'pro_monthly') return plan === 'month';
+    if (masterCurrentFilter === 'free') return plan === 'free';
+    if (masterCurrentFilter === 'inactive') return plan !== 'founder' && getUserLastConnectionInfo(item).isInactive;
     return true;
   });
 
@@ -6659,18 +7158,26 @@ function renderMasterSubscribers() {
         <td colspan="5" style="text-align: center; padding: 28px; color: var(--text-muted); font-size: 12px;">
           No se encontraron usuarios con el filtro seleccionado.
         </td>
-      </tr>
-    `;
+      </tr>`;
     return;
   }
+
+  // El fundador siempre primero; luego por actividad más reciente
+  list.sort((a, b) => {
+    if (isFounderEmail(a.email)) return -1;
+    if (isFounderEmail(b.email)) return 1;
+    return getUserLastConnectionInfo(b).lastSeenMs - getUserLastConnectionInfo(a).lastSeenMs
+      || (Date.parse(b.created_at) || 0) - (Date.parse(a.created_at) || 0);
+  });
 
   let html = '';
   list.forEach(item => {
     const email = item.email || item.user_id || 'Sin correo';
     const cleanName = getDisplayNameForEmail(email, item);
-    const isCesar = (item.email && item.email.toLowerCase() === 'cesar.risso.f@gmail.com');
-    const isLife = isCesar || item.status === 'pro_lifetime' || item.status === 'premium';
-    const isMonth = !isLife && item.status === 'pro_monthly';
+    const plan = getMasterPlanKey(item);
+    const isCesar = plan === 'founder';
+    const isLife = isCesar || plan === 'life';
+    const isMonth = plan === 'month';
 
     let planBadge = '<span class="master-user-badge-free">🆓 Gratuito</span>';
     let revenueEst = 'S/ 0.00';
@@ -6688,20 +7195,22 @@ function renderMasterSubscribers() {
     const dateStr = item.created_at ? new Date(item.created_at).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Reciente';
     const initial = cleanName.charAt(0).toUpperCase();
     const actInfo = getUserLastConnectionInfo(item);
+    const uid = escapeHtml(item.user_id || '');
+    const em = escapeHtml(email);
 
     html += `
       <tr>
         <td>
           <div style="display: flex; align-items: center; gap: 10px;">
             <div style="width: 34px; height: 34px; border-radius: 10px; background: linear-gradient(135deg, #e2e8f0, #cbd5e1); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; color: #334155; flex-shrink: 0;">
-              ${initial}
+              ${escapeHtml(initial)}
             </div>
             <div>
               <div style="display: flex; align-items: center; gap: 6px;">
                 <span style="font-weight: 800; color: var(--text-main); font-size: 13.5px;">${escapeHtml(cleanName)}</span>
-                <button type="button" onclick="promptEditUserNickname('${escapeHtml(email)}')" title="Editar nombre o apodo" style="background: none; border: none; font-size: 11px; cursor: pointer; opacity: 0.6; padding: 2px;">✏️</button>
+                <button type="button" onclick="promptEditUserNickname('${em}')" title="Editar nombre o apodo" style="background: none; border: none; font-size: 11px; cursor: pointer; opacity: 0.6; padding: 2px;">✏️</button>
               </div>
-              <div style="font-size: 11px; color: var(--text-muted); margin-top: 1px;">${escapeHtml(email)} · Registrado el ${dateStr}</div>
+              <div style="font-size: 11px; color: var(--text-muted); margin-top: 1px;">${em} · Registrado el ${dateStr}</div>
             </div>
           </div>
         </td>
@@ -6710,18 +7219,13 @@ function renderMasterSubscribers() {
         <td style="font-weight: 800; color: var(--text-main);">${revenueEst}</td>
         <td>
           <div style="display: flex; gap: 5px; align-items: center; justify-content: flex-end; flex-wrap: wrap;">
-            ${!isLife ? `<button type="button" class="master-action-btn-pill master-action-btn-life" onclick="setMasterUserPlan('${escapeHtml(item.user_id)}', '${escapeHtml(email)}', 'pro_lifetime')" title="Activar PRO Vitalicio S/ 19.90">👑 Vitalicio</button>` : ''}
-            ${!isMonth && !isCesar ? `<button type="button" class="master-action-btn-pill master-action-btn-month" onclick="setMasterUserPlan('${escapeHtml(item.user_id)}', '${escapeHtml(email)}', 'pro_monthly')" title="Activar PRO Mensual S/ 4.90">📅 Mensual</button>` : ''}
-            ${(isLife || isMonth) && !isCesar ? `<button type="button" class="master-action-btn-pill master-action-btn-free" onclick="setMasterUserPlan('${escapeHtml(item.user_id)}', '${escapeHtml(email)}', 'free')" title="Bajar a cuenta gratuita">⚪ Free</button>` : ''}
-            ${!isCesar ? `
-              <button type="button" class="master-action-btn-delete" onclick="confirmDeleteMasterUser('${escapeHtml(item.user_id)}', '${escapeHtml(email)}', '${escapeHtml(cleanName)}')" title="Eliminar usuario permanentemente de la base de datos">
-                🗑️
-              </button>
-            ` : ''}
+            ${!isLife ? `<button type="button" class="master-action-btn-pill master-action-btn-life" onclick="setMasterUserPlan('${uid}', '${em}', 'pro_lifetime')" title="Activar PRO Vitalicio S/ 19.90">👑 Vitalicio</button>` : ''}
+            ${!isMonth && !isCesar ? `<button type="button" class="master-action-btn-pill master-action-btn-month" onclick="setMasterUserPlan('${uid}', '${em}', 'pro_monthly')" title="Activar PRO Mensual S/ 4.90">📅 Mensual</button>` : ''}
+            ${(isLife || isMonth) && !isCesar ? `<button type="button" class="master-action-btn-pill master-action-btn-free" onclick="setMasterUserPlan('${uid}', '${em}', 'free')" title="Bajar a cuenta gratuita">⚪ Free</button>` : ''}
+            ${!isCesar ? `<button type="button" class="master-action-btn-delete" onclick="confirmDeleteMasterUser('${uid}', '${em}', '${escapeHtml(cleanName)}')" title="Eliminar usuario permanentemente" aria-label="Eliminar usuario">🗑️</button>` : ''}
           </div>
         </td>
-      </tr>
-    `;
+      </tr>`;
   });
 
   tbody.innerHTML = html;
@@ -6729,21 +7233,20 @@ function renderMasterSubscribers() {
 
 async function setMasterUserPlan(userId, email, newPlan) {
   if (!isAdminCesar()) return;
+  if (isFounderEmail(email)) {
+    showToast('La cuenta fundadora es siempre PRO Vitalicio', 'info');
+    return;
+  }
 
   const planLabel = newPlan === 'pro_lifetime' ? 'PRO Vitalicio (S/ 19.90)' : (newPlan === 'pro_monthly' ? 'PRO Mensual (S/ 4.90)' : 'Gratuito (Free)');
-  const ok = confirm(`¿Confirmas actualizar a ${email} al plan ${planLabel}?`);
-  if (!ok) return;
+  if (!confirm(`¿Confirmas actualizar a ${email} al plan ${planLabel}?`)) return;
 
   try {
-    // Solo enviamos columnas base compatibles con la tabla actual de Supabase
-    const updatePayload = {
-      user_id: userId,
-      status: newPlan
-    };
+    // Solo columnas base compatibles con la tabla actual de Supabase
+    const updatePayload = { user_id: userId, status: newPlan };
     if (email) updatePayload.email = email;
 
-    // Actualizar por user_id en Supabase
-    let { error } = await supabaseClient
+    const { error } = await supabaseClient
       .from('user_subscriptions')
       .upsert(updatePayload, { onConflict: 'user_id' });
 
@@ -6756,24 +7259,32 @@ async function setMasterUserPlan(userId, email, newPlan) {
     // Sincronizar también por correo si existen registros duplicados de pruebas
     if (email && email.includes('@')) {
       try {
-        await supabaseClient
-          .from('user_subscriptions')
-          .update({ status: newPlan })
-          .eq('email', email);
+        await supabaseClient.from('user_subscriptions').update({ status: newPlan }).eq('email', email);
       } catch (e) {
         console.warn('Nota de sync duplicados:', e);
       }
     }
 
-    // Actualizar en memoria local
+    // Registro contable (si la tabla subscription_payments existe; si no, se ignora)
+    if (newPlan !== 'free') {
+      try {
+        await supabaseClient.from('subscription_payments').insert([{
+          user_id: userId,
+          user_email: email,
+          amount: newPlan === 'pro_lifetime' ? 19.90 : 4.90,
+          plan_type: newPlan,
+          payment_method: 'yape_plin'
+        }]);
+      } catch (e) { /* opcional */ }
+    }
+
     masterSubscribersData.forEach(s => {
-      if ((s.email && s.email.toLowerCase() === email.toLowerCase()) || s.user_id === userId) {
+      if ((s.email && s.email.toLowerCase() === email.toLowerCase()) || (userId && s.user_id === userId)) {
         s.status = newPlan;
       }
     });
 
-    calculateMasterKPIs();
-    renderMasterSubscribers();
+    renderFounderModule();
     if (navigator.vibrate) navigator.vibrate(30);
     showToast(`✨ ${email} actualizado a ${planLabel}`, 'success');
   } catch (e) {
@@ -6784,79 +7295,79 @@ async function setMasterUserPlan(userId, email, newPlan) {
 
 async function confirmDeleteMasterUser(userId, email, displayName) {
   if (!isAdminCesar()) return;
+  if (isFounderEmail(email)) {
+    showToast('La cuenta fundadora está protegida', 'info');
+    return;
+  }
 
   const cleanName = displayName || email || 'este usuario';
   const msg = `⚠️ ¿ELIMINAR USUARIO PERMANENTEMENTE?\n\n` +
-              `Estás a punto de borrar por completo a:\n` +
+              `Estás a punto de borrar a:\n` +
               `• Nombre: ${cleanName}\n` +
               `• Correo: ${email}\n\n` +
-              `Esta acción eliminará al usuario de tu base de datos y limpiará tu panel para siempre.\n\n` +
+              `Se eliminará su suscripción y desaparecerá de tu panel. Si activaste el SQL del Hub, también se borran su login y todos sus datos financieros.\n\n` +
               `¿Deseas continuar?`;
 
   if (!confirm(msg)) return;
-
   await deleteMasterUser(userId, email, cleanName);
 }
 
 async function deleteMasterUser(userId, email, cleanName) {
-  if (!isAdminCesar()) return;
+  if (!isAdminCesar() || isFounderEmail(email)) return;
 
   showToast(`Eliminando usuario ${cleanName}... ⏳`, 'info');
 
   try {
-    // 1. Intentar borrado integral vía RPC de Supabase (si está configurada)
+    // 1) Borrado integral vía RPC (login + datos + telemetría) — requiere el SQL del Hub
+    let fullyDeleted = false;
     try {
-      await supabaseClient.rpc('delete_user_by_admin', {
-        target_user_id: userId,
+      const { error } = await supabaseClient.rpc('delete_user_by_admin', {
+        target_user_id: userId || '',
         target_email: email
       });
+      fullyDeleted = !error;
     } catch (e) {
-      console.warn('Nota: RPC delete_user_by_admin en evaluación:', e);
+      console.warn('RPC delete_user_by_admin no disponible:', e);
     }
 
-    // 2. Borrado directo en user_subscriptions por user_id y email
+    // 2) Respaldo: borrado directo de la suscripción, estado y telemetría por user_id y correo
     if (userId) {
-      await supabaseClient
-        .from('user_subscriptions')
-        .delete()
-        .eq('user_id', userId);
+      await supabaseClient.from('user_subscriptions').delete().eq('user_id', userId).catch(() => {});
+      await supabaseClient.from('finanzas_state').delete().eq('id', 'state_' + userId).catch(() => {});
+      await supabaseClient.from('app_feedback').delete().eq('user_id', userId).catch(() => {});
     }
-
     if (email && email.includes('@')) {
-      await supabaseClient
-        .from('user_subscriptions')
-        .delete()
-        .eq('email', email);
-
-      // Borrado de telemetría y feedback asociados
-      await supabaseClient
-        .from('app_feedback')
-        .delete()
-        .eq('user_email', email);
+      await supabaseClient.from('user_subscriptions').delete().eq('email', email).catch(() => {});
+      await supabaseClient.from('app_feedback').delete().eq('user_email', email).catch(() => {});
     }
 
-    if (userId) {
-      await supabaseClient
-        .from('app_feedback')
-        .delete()
-        .eq('user_id', userId);
-    }
+    // 3) Marcador en la nube: mantiene el panel limpio en cualquier dispositivo
+    try {
+      await supabaseClient.from('app_feedback').insert([{
+        user_id: userId || null,
+        user_email: (email || '').toLowerCase().trim(),
+        type: 'user_deleted',
+        message: cleanName,
+        app_version: APP_VERSION
+      }]);
+    } catch (e) { /* no crítico */ }
+    masterDeletedMarkers.set((email || '').toLowerCase().trim(), new Date().toISOString());
 
-    // 3. Registrar en lista negra de eliminados localmente
-    saveDeletedUser(userId, email);
-
-    // 4. Remover de memoria local
+    // 4) Memoria local
     masterSubscribersData = masterSubscribersData.filter(s => {
       const matchId = userId && s.user_id === userId;
       const matchEmail = email && s.email && s.email.toLowerCase() === email.toLowerCase();
       return !matchId && !matchEmail;
     });
 
-    calculateMasterKPIs();
-    renderMasterSubscribers();
-
+    renderFounderModule();
     if (navigator.vibrate) navigator.vibrate([40, 60, 40]);
-    showToast(`🗑️ Usuario ${cleanName} eliminado correctamente`, 'success');
+    showToast(
+      fullyDeleted
+        ? `🗑️ ${cleanName} eliminado por completo (cuenta y datos)`
+        : `🗑️ ${cleanName} quitado del panel. Para borrar también su login y datos, activa el SQL del Hub.`,
+      fullyDeleted ? 'success' : 'warning'
+    );
   } catch (err) {
     console.error('Error al eliminar usuario:', err);
     showToast('Error al eliminar usuario: ' + (err.message || err), 'error');
@@ -6878,11 +7389,13 @@ async function handleMasterManualActivate() {
     return;
   }
 
-  // Buscar si el usuario ya está registrado en la base de datos
-  let existing = masterSubscribersData.find(s => s.email && s.email.toLowerCase() === email);
-  const userId = existing ? existing.user_id : 'sub_' + Math.random().toString(36).substring(2, 12);
+  const existing = masterSubscribersData.find(s => s.email && s.email.toLowerCase() === email);
+  if (!existing) {
+    showToast('Ese correo aún no se registró en AliviaFin. Pídele que cree su cuenta primero.', 'warning');
+    return;
+  }
 
-  await setMasterUserPlan(userId, email, plan);
+  await setMasterUserPlan(existing.user_id, email, plan);
   emailInput.value = '';
 }
 
@@ -6890,29 +7403,33 @@ function renderMasterFeedback() {
   const container = document.getElementById('masterFeedbackList');
   if (!container) return;
 
+  masterSetText('masterFeedbackCount', (masterFeedbackData || []).length);
+
   if (!masterFeedbackData || masterFeedbackData.length === 0) {
     container.innerHTML = `
       <div style="text-align: center; padding: 26px; color: var(--text-muted); background: var(--card-bg, #ffffff); border-radius: 16px; border: 1px solid var(--border-color, #e2e8f0); font-size: 12.5px;">
         🎉 No hay mensajes nuevos en el buzón.
-      </div>
-    `;
+      </div>`;
     return;
   }
 
+  const typeMeta = {
+    bug: ['🐞 Reporte de Error', '#ef4444'],
+    feature: ['💡 Sugerencia', '#f59e0b'],
+    deletion_request: ['🗑️ Solicitud de eliminación de cuenta', '#dc2626']
+  };
+
   let html = '';
   masterFeedbackData.forEach(item => {
-    const typeEmoji = item.type === 'bug' ? '🐞 Reporte de Error' : (item.type === 'feature' ? '💡 Sugerencia' : '❓ Duda / Consulta');
-    const badgeColor = item.type === 'bug' ? '#ef4444' : (item.type === 'feature' ? '#f59e0b' : '#3b82f6');
+    const meta = typeMeta[item.type] || ['❓ Duda / Consulta', '#3b82f6'];
     const dateStr = item.created_at ? new Date(item.created_at).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
     const userEmail = item.user_email || 'Anónimo';
 
     html += `
       <div style="background: var(--card-bg, #ffffff); border: 1px solid var(--border-color, #e2e8f0); border-radius: 16px; padding: 14px 18px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 6px;">
-          <span style="font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 6px; background: rgba(0,0,0,0.04); color: ${badgeColor};">
-            ${typeEmoji}
-          </span>
-          <span style="font-size: 11px; color: var(--text-muted);">${dateStr}</span>
+          <span style="font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 6px; background: rgba(0,0,0,0.04); color: ${meta[1]};">${meta[0]}</span>
+          <span style="font-size: 11px; color: var(--text-muted);">${dateStr}${item.app_version ? ' · ' + escapeHtml(item.app_version) : ''}</span>
         </div>
         <div style="font-size: 13px; color: var(--text-main); line-height: 1.5; margin: 8px 0; white-space: pre-wrap;">${escapeHtml(item.message || '')}</div>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; border-top: 1px solid var(--border-color, #f1f5f9); padding-top: 8px;">
@@ -6920,13 +7437,11 @@ function renderMasterFeedback() {
             De: <strong style="color: var(--text-main);">${escapeHtml(userEmail)}</strong>
           </div>
           ${userEmail.includes('@') ? `
-            <a href="mailto:${escapeHtml(userEmail)}?subject=Respuesta de AliviaFin sobre tu mensaje" class="btn btn-secondary" style="padding: 4px 10px; font-size: 11px; font-weight: 800; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+            <a href="mailto:${escapeHtml(userEmail)}?subject=${encodeURIComponent('Respuesta de AliviaFin sobre tu mensaje')}" class="btn btn-secondary" style="padding: 8px 12px; min-height: 44px; font-size: 11px; font-weight: 800; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
               <span>✉️ Responder</span>
-            </a>
-          ` : ''}
+            </a>` : ''}
         </div>
-      </div>
-    `;
+      </div>`;
   });
 
   container.innerHTML = html;
@@ -6994,5 +7509,6 @@ window.syncAdminUI = syncAdminUI;
 window.promptEditUserNickname = promptEditUserNickname;
 window.confirmDeleteMasterUser = confirmDeleteMasterUser;
 window.promptUserAccountDeletion = promptUserAccountDeletion;
-
-
+window.copyFounderSetupSQL = copyFounderSetupSQL;
+window.openSupabaseSQLEditor = openSupabaseSQLEditor;
+window.dismissFounderSetup = dismissFounderSetup;
