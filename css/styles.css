@@ -5248,11 +5248,43 @@
     }
 
     /* ================================================================
+       MODO FUNDADOR / MASTER ADMIN (PANTALLA COMPLETA AISLADA)
+       ================================================================ */
+    body.founder-mode-active .top-navbar,
+    body.founder-mode-active .bottom-nav,
+    body.founder-mode-active .desktop-sidebar {
+      display: none !important;
+    }
+
+    body.founder-mode-active .desktop-main-pane {
+      padding: 0 !important;
+      margin: 0 !important;
+      width: 100% !important;
+      max-width: 100% !important;
+    }
+
+    body.founder-mode-active .container {
+      padding-top: max(14px, env(safe-area-inset-top, 14px)) !important;
+      padding-bottom: max(32px, env(safe-area-inset-bottom, 24px)) !important;
+      max-width: 1200px !important;
+    }
+
+    .fh-tab-text-short {
+      display: none;
+    }
+
+    /* ================================================================
        REGLAS MÓVILES EXCLUSIVAS (IPHONE / PWA / SAFARI)
        ================================================================ */
     @media (max-width: 768px) {
       .desktop-only-header-btn {
         display: none !important;
+      }
+      .fh-tab-text-full {
+        display: none !important;
+      }
+      .fh-tab-text-short {
+        display: inline !important;
       }
       .fh-header-card {
         padding: 14px 16px;
@@ -5290,6 +5322,17 @@
         font-size: 11.5px;
         min-height: 38px;
       }
+      .fh-nav-tabs {
+        gap: 4px !important;
+        padding: 4px !important;
+        margin-bottom: 14px !important;
+      }
+      .fh-nav-btn {
+        padding: 8px 6px !important;
+        font-size: 11.5px !important;
+        white-space: nowrap !important;
+        justify-content: center !important;
+      }
       .master-kpi-grid {
         grid-template-columns: repeat(2, 1fr) !important;
         gap: 10px !important;
@@ -5310,6 +5353,31 @@
       .fh-charts-grid {
         grid-template-columns: 1fr !important;
         gap: 12px !important;
+      }
+      .fh-chart-card {
+        padding: 14px 14px 12px !important;
+        border-radius: 16px !important;
+      }
+      .fh-chart-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 6px !important;
+        margin-bottom: 10px !important;
+      }
+      .fh-chart-title {
+        font-size: 13px !important;
+      }
+      .fh-chart-subtitle {
+        font-size: 10.5px !important;
+      }
+      .fh-chart-stat {
+        align-self: flex-start !important;
+        font-size: 10.5px !important;
+        padding: 2px 7px !important;
+      }
+      .fh-chart-canvas-wrap {
+        height: 160px !important;
+        max-height: 170px !important;
       }
     }
 

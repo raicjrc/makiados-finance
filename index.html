@@ -17,7 +17,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <link rel="stylesheet" href="css/styles.css?v=67.2">
+  <link rel="stylesheet" href="css/styles.css?v=69.3">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
 </head>
 <body>
@@ -403,14 +403,6 @@
                 </div>
               </button>
             </div>
-
-            <!-- Special Windfall Banner (solo admin si aplica) -->
-            <div id="juntaBanner" class="compact-banner" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); color: white; display: none; margin-top: 10px;">
-              <div>
-                <strong>🎉 Junta 15 de Agosto (+S/ 4,500):</strong> S/ 1k Ropa/Viáticos + S/ 3.5k Pago de Deudas.
-              </div>
-              <button class="banner-close-btn" style="color: white;" onclick="closeBanner('juntaBanner')">✕</button>
-            </div>
           </div>
         </div>
 
@@ -772,13 +764,16 @@
         <!-- Subpestañas del Módulo -->
         <div class="fh-nav-tabs">
           <button type="button" class="fh-nav-btn active" id="fhTabOverview" onclick="switchMasterTab('overview')">
-            <span>📊 Visión General (SaaS & Gráficos)</span>
+            <span class="fh-tab-text-full">📊 Visión General (SaaS & Gráficos)</span>
+            <span class="fh-tab-text-short">📊 Métricas</span>
           </button>
           <button type="button" class="fh-nav-btn" id="fhTabUsers" onclick="switchMasterTab('users')">
-            <span>👥 Directorio de Usuarios</span>
+            <span class="fh-tab-text-full">👥 Directorio de Usuarios</span>
+            <span class="fh-tab-text-short">👥 Usuarios</span>
           </button>
           <button type="button" class="fh-nav-btn" id="fhTabFeedback" onclick="switchMasterTab('feedback')">
-            <span>💬 Buzón de Feedback (<span id="masterFeedbackCount">0</span>)</span>
+            <span class="fh-tab-text-full">💬 Buzón de Feedback (<span id="masterFeedbackCount">0</span>)</span>
+            <span class="fh-tab-text-short">💬 Feedback (<span id="masterFeedbackCountMobile">0</span>)</span>
           </button>
         </div>
 
@@ -2411,6 +2406,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
-  <script src="js/app.js?v=69.0"></script>
+  <script src="js/app.js?v=69.3"></script>
 </body>
 </html>

@@ -2330,8 +2330,10 @@
       }
 
       if (tabId === 'founder') {
+        document.body.classList.add('founder-mode-active');
         enterFounderModule();
       } else {
+        document.body.classList.remove('founder-mode-active');
         stopFounderTicker();
       }
 
@@ -2665,17 +2667,6 @@
       populateMonthDropdown();
       ensureMonthTransactions(appState.currentMonth);
       ensureMonthIncomes(appState.currentMonth);
-
-      const banner = document.getElementById('juntaBanner');
-      if (banner) {
-        const isCesarForBanner = isAdminCesar();
-        const curM = appState.currentMonth;
-        if (!isCesarForBanner || ['Septiembre 2026', 'Octubre 2026', 'Noviembre 2026', 'Diciembre 2026'].includes(curM)) {
-          banner.style.display = 'none';
-        } else {
-          banner.style.display = 'flex';
-        }
-      }
 
       renderMetrics();
       renderSafeToSpendCard();
@@ -6411,6 +6402,11 @@ function openMasterDashboardModal() {
 
 function enterFounderModule() {
   if (!isAdminCesar()) return;
+  // En pantallas móviles (< 768px), abre directo en el Directorio de Usuarios para ver inmediatamente
+  // quién se conectó hoy sin saturar la pantalla con 4 gráficos de escritorio
+  if (window.innerWidth < 768 && masterCurrentPane === 'overview') {
+    masterCurrentPane = 'users';
+  }
   switchMasterTab(masterCurrentPane);
   renderFounderModule();            // pinta de inmediato lo que ya hay en memoria
   loadMasterDashboardData();        // y refresca en vivo
@@ -7005,9 +7001,10 @@ function renderFounderCharts() {
       datasets: [{ data: [free, month, life], backgroundColor: ['#cbd5e1', '#6366f1', '#f59e0b'], borderWidth: 0, hoverOffset: 6 }]
     },
     options: {
-      responsive: true, maintainAspectRatio: false, cutout: '68%',
+      responsive: true, maintainAspectRatio: false, cutout: '58%',
+      layout: { padding: 4 },
       plugins: {
-        legend: { position: 'bottom', labels: { color: th.text, font, usePointStyle: true, pointStyle: 'circle', boxWidth: 8, padding: 14 } },
+        legend: { position: 'bottom', labels: { color: th.text, font: { ...font, size: 10 }, usePointStyle: true, boxWidth: 6, padding: 8 } },
         tooltip
       }
     }
@@ -7485,6 +7482,7 @@ function renderMasterFeedback() {
   if (!container) return;
 
   masterSetText('masterFeedbackCount', (masterFeedbackData || []).length);
+  masterSetText('masterFeedbackCountMobile', (masterFeedbackData || []).length);
 
   if (!masterFeedbackData || masterFeedbackData.length === 0) {
     container.innerHTML = `
