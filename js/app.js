@@ -75,9 +75,9 @@
     let CATEGORIES = { ...GENERIC_CATEGORIES };
 
     // ================================================================
-    // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v69.8)
+    // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v69.9)
     // ================================================================
-    const APP_VERSION = 'v69.8';
+    const APP_VERSION = 'v69.9';
 
     const SUPPORTED_CURRENCIES = {
       'PEN': { code: 'PEN', symbol: 'S/', name: 'Soles peruanos', flag: '🇵🇪', locale: 'es-PE' },

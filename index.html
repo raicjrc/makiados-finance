@@ -17,20 +17,9 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <link rel="stylesheet" href="css/styles.css?v=69.8">
+  <link rel="stylesheet" href="css/styles.css?v=69.9">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
-  <script>
-    // Cero parpadeo en móvil: Si el usuario ya inició sesión en este dispositivo,
-    // ocultar de inmediato el modal de login antes del render para evitar pantallas rotas
-    try {
-      var isAuth = Object.keys(localStorage).some(function(k) {
-        return k.indexOf('sb-') === 0 && k.indexOf('-auth-token') !== -1;
-      });
-      if (isAuth) {
-        document.write('<style id="pre-auth-hide">#loginModalScreen{display:none !important;}#appMainWrapper{display:block !important;}</style>');
-      }
-    } catch(e) {}
-  </script>
+
   <style>
     /* Estilos Críticos Inmediatos: Garantizan que el login nunca se rompa aun con caché lenta */
     #loginModalScreen {
@@ -113,7 +102,7 @@
             <span class="legal-dot">•</span>
             <a href="javascript:void(0)" onclick="openReclamacionesModal()">📖 Libro de Reclamaciones</a>
           </div>
-          <p class="login-version-tag">AliviaFin v69.8 · Paz mental para tu dinero</p>
+          <p class="login-version-tag">AliviaFin v69.9 · Paz mental para tu dinero</p>
         </div>
       </div>
 
@@ -219,7 +208,7 @@
             <span class="legal-dot">•</span>
             <a href="javascript:void(0)" onclick="openReclamacionesModal()">📖 Libro de Reclamaciones</a>
           </div>
-          <p id="loginFooterVersion" class="login-version-tag">AliviaFin v69.8 · Paz mental para tu dinero</p>
+          <p id="loginFooterVersion" class="login-version-tag">AliviaFin v69.9 · Paz mental para tu dinero</p>
         </div>
 
       </div>
@@ -1241,7 +1230,7 @@
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
               <span style="font-size: 11px; font-weight: 700; color: #374151;">📱 Versión</span>
-              <span style="font-size: 11px; color: #0d9488; font-weight: 800;" id="settingsVersion">v69.8</span>
+              <span style="font-size: 11px; color: #0d9488; font-weight: 800;" id="settingsVersion">v69.9</span>
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 5px; border-top: 1px dashed #e2e8f0;">
               <span style="font-size: 10.5px; font-weight: 700; color: #64748b;">🏢 Plataforma</span>
@@ -2804,6 +2793,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
-  <script src="js/app.js?v=69.8"></script>
+  <script src="js/app.js?v=69.9"></script>
 </body>
 </html>
