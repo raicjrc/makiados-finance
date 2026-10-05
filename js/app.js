@@ -833,12 +833,69 @@
       document.getElementById('segmentCuotasBox').style.display = type === 'cuotas' ? 'block' : 'none';
     }
 
-    // Registrar Service Worker v67.0 (Network-First, sin caché de datos)
+    function switchPlanMobileSection(section) {
+      const isAnalysis = section === 'analysis';
+      const isBudgets = section === 'budgets';
+      const isCuotas = section === 'cuotas';
+
+      const btnA = document.getElementById('planTabAnalysis');
+      const btnB = document.getElementById('planTabBudgets');
+      const btnC = document.getElementById('planTabCuotas');
+      if (btnA) btnA.classList.toggle('active', isAnalysis);
+      if (btnB) btnB.classList.toggle('active', isBudgets);
+      if (btnC) btnC.classList.toggle('active', isCuotas);
+
+      const planCardLeft = document.querySelector('.plan-card-left');
+      const planCardRight = document.querySelector('.plan-card-right');
+      const grid2 = document.querySelector('.desktop-plan-grid-2');
+      const segChartBox = document.getElementById('segmentChartBox');
+      const segCuotasBox = document.getElementById('segmentCuotasBox');
+
+      if (window.innerWidth <= 768) {
+        if (isAnalysis) {
+          if (planCardLeft) planCardLeft.style.display = 'block';
+          if (planCardRight) planCardRight.style.display = 'block';
+          if (segChartBox) segChartBox.style.display = 'block';
+          if (segCuotasBox) segCuotasBox.style.display = 'none';
+          if (grid2) grid2.style.display = 'none';
+          setTimeout(() => { if (typeof renderDonutChart === 'function') renderDonutChart(); if (typeof renderHistoryChart === 'function') renderHistoryChart(); }, 50);
+        } else if (isBudgets) {
+          if (planCardLeft) planCardLeft.style.display = 'none';
+          if (planCardRight) planCardRight.style.display = 'none';
+          if (grid2) grid2.style.display = 'block';
+        } else if (isCuotas) {
+          if (planCardLeft) planCardLeft.style.display = 'block';
+          if (planCardRight) planCardRight.style.display = 'none';
+          if (segChartBox) segChartBox.style.display = 'none';
+          if (segCuotasBox) segCuotasBox.style.display = 'block';
+          if (grid2) grid2.style.display = 'none';
+          setTimeout(() => { if (typeof renderCuotasTracker === 'function') renderCuotasTracker(); }, 50);
+        }
+      } else {
+        if (planCardLeft) planCardLeft.style.display = '';
+        if (planCardRight) planCardRight.style.display = '';
+        if (grid2) grid2.style.display = '';
+      }
+    }
+    window.switchPlanMobileSection = switchPlanMobileSection;
+
+    window.addEventListener('resize', () => {
+      if (window.innerWidth > 768) {
+        const planCardLeft = document.querySelector('.plan-card-left');
+        const planCardRight = document.querySelector('.plan-card-right');
+        const grid2 = document.querySelector('.desktop-plan-grid-2');
+        if (planCardLeft) planCardLeft.style.display = '';
+        if (planCardRight) planCardRight.style.display = '';
+        if (grid2) grid2.style.display = '';
+      }
+    });
+
+    // Registrar Service Worker v69.4 (Network-First, sin caché de datos)
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=67.0')
+        navigator.serviceWorker.register('./sw.js?v=69.4')
           .then(reg => {
-            console.log('SW v67.0 registrado:', reg.scope);
+            console.log('SW v69.4 registrado:', reg.scope);
             // Forzar actualización inmediata del SW en todos los dispositivos
             reg.update();
             if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
@@ -2352,6 +2409,9 @@
           render503020Rule();
           renderCategoryBudgets();
           renderGastosHormiga();
+          if (window.innerWidth <= 768) {
+            switchPlanMobileSection('analysis');
+          }
         }, 100);
       } else if (tabId === 'metas') {
         renderGoals();
@@ -3373,33 +3433,31 @@
         const effectiveDueDate = getEffectiveDueDate(t);
 
         return `
-          <tr>
-            <td>
-              <div>
-                <div style="display: flex; align-items: center; gap: 6px;">
-                  <span style="font-size: 14px;">${catInfo.icon}</span>
-                  <span style="font-weight: 800;">${t.name}</span>
-                  ${installmentBadge}
-                </div>
-                <div style="font-size: 10px; color: var(--text-muted); margin-top: 1px;">
-                  🗓️ Vence día: <strong>${effectiveDueDate}</strong>
-                </div>
+          <tr class="tx-row-item">
+            <td class="tx-cell-concept">
+              <div class="tx-concept-main">
+                <span class="tx-concept-icon">${catInfo.icon}</span>
+                <span class="tx-concept-title">${escapeHtml(t.name)}</span>
+                ${installmentBadge}
               </div>
             </td>
-            <td>
-              <span class="badge ${catInfo.badgeClass}" ${catInfo.badgeClass === 'badge-custom' ? `style="background-color: ${catInfo.color}20; color: ${catInfo.color}; border: 1px solid ${catInfo.color}40;"` : ''}>${t.category}</span>
+            <td class="tx-cell-meta">
+              <div class="tx-meta-wrap">
+                <span class="badge ${catInfo.badgeClass}" ${catInfo.badgeClass === 'badge-custom' ? `style="background-color: ${catInfo.color}20; color: ${catInfo.color}; border: 1px solid ${catInfo.color}40;"` : ''}>${t.category}</span>
+                <span class="tx-due-pill">🗓️ Día ${effectiveDueDate}</span>
+              </div>
             </td>
-            <td>
+            <td class="tx-cell-status">
               <span class="status-badge ${stClass}" onclick="toggleTxStatus('${t.id}')">
                 ${stLabel}
               </span>
             </td>
-            <td style="font-weight: 800; font-size: 13px;">
+            <td class="tx-cell-amount">
               ${sym} ${t.amount.toFixed(2)}
             </td>
-            <td style="text-align: right;">
-              <button class="btn-pill primary" onclick="openEditExpenseModal('${t.id}')">✏️</button>
-              <button class="btn-pill danger" onclick="deleteTransaction('${t.id}')">🗑️</button>
+            <td class="tx-cell-actions">
+              <button type="button" class="btn-pill primary tx-action-btn" onclick="openEditExpenseModal('${t.id}')" title="Editar gasto">✏️</button>
+              <button type="button" class="btn-pill danger tx-action-btn" onclick="deleteTransaction('${t.id}')" title="Eliminar gasto">🗑️</button>
             </td>
           </tr>
         `;

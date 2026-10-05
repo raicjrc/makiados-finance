@@ -1011,28 +1011,154 @@
       border-bottom: none;
     }
 
-    /* Vista móvil nativa */
+    /* Base Desktop Styles for Semantic Cells */
+    .tx-concept-main { display: flex; align-items: center; gap: 6px; }
+    .tx-concept-icon { font-size: 14px; flex-shrink: 0; }
+    .tx-concept-title { font-weight: 800; color: var(--text-main); }
+    .tx-meta-wrap { display: flex; align-items: center; gap: 6px; }
+    .tx-due-pill { font-size: 10.5px; color: var(--text-muted); font-weight: 600; }
+    .tx-cell-amount { font-weight: 800; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+    .tx-installment-badge {
+      background: linear-gradient(135deg, #fdf4ff, #fae8ff);
+      color: #86198f;
+      padding: 2px 5px;
+      border-radius: 5px;
+      font-size: 9.5px;
+      font-weight: 800;
+      border: 1px solid #f0abfc;
+      white-space: nowrap;
+    }
+
+    /* Vista móvil nativa: Tarjeta Compacta Ejecutiva (2 Filas, Aprovechando el 100% del Ancho) */
     @media (max-width: 600px) {
-      .tx-table thead { display: none; }
-      .tx-table, .tx-table tbody, .tx-table tr, .tx-table td { display: block; width: 100%; }
-      .tx-table tr {
-        background: #ffffff;
-        border: 1px solid var(--border);
-        border-radius: var(--radius-md);
-        margin-bottom: 12px;
-        padding: 16px 14px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+      .tx-table thead { display: none !important; }
+      .tx-table, .tx-table tbody { display: block !important; width: 100% !important; }
+      .tx-table tr.tx-row-item {
+        display: grid !important;
+        grid-template-columns: 1fr auto auto !important;
+        grid-template-rows: auto auto !important;
+        align-items: center !important;
+        column-gap: 8px !important;
+        row-gap: 5px !important;
+        background: var(--card-bg, #ffffff) !important;
+        border: 1px solid var(--border-color, #e2e8f0) !important;
+        border-radius: 14px !important;
+        margin-bottom: 8px !important;
+        padding: 10px 12px !important;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.02) !important;
+        box-sizing: border-box !important;
+        width: 100% !important;
+        transition: transform 0.15s ease, box-shadow 0.15s ease !important;
       }
-      .tx-table tr:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+      .tx-table tr.tx-row-item:hover {
+        transform: translateY(-1px) !important;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05) !important;
       }
-      .tx-table td { padding: 2px 0 !important; border-bottom: none !important; }
-      .tx-table td:nth-child(1) { font-size: 13px; font-weight: 800; }
-      .tx-table td:nth-child(2) { margin-top: 3px; }
-      .tx-table td:nth-child(3) { margin-top: 5px; }
-      .tx-table td:nth-child(4) { font-size: 16px; font-weight: 800; margin-top: 5px; color: var(--text-main); }
-      .tx-table td:nth-child(5) { margin-top: 8px; text-align: left !important; display: flex; gap: 6px; }
+
+      /* Fila 1, Izquierda: Ícono + Nombre del Gasto */
+      .tx-table td.tx-cell-concept {
+        grid-column: 1 !important;
+        grid-row: 1 !important;
+        padding: 0 !important;
+        border: none !important;
+        min-width: 0 !important;
+        overflow: hidden !important;
+      }
+      .tx-concept-main {
+        display: flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        min-width: 0 !important;
+      }
+      .tx-concept-icon {
+        font-size: 15px !important;
+        flex-shrink: 0 !important;
+      }
+      .tx-concept-title {
+        font-size: 13.5px !important;
+        font-weight: 800 !important;
+        color: var(--text-main, #0f172a) !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+      }
+
+      /* Fila 1, Derecha: Monto Grande y Destacado */
+      .tx-table td.tx-cell-amount {
+        grid-column: 2 / -1 !important;
+        grid-row: 1 !important;
+        padding: 0 !important;
+        border: none !important;
+        text-align: right !important;
+        justify-self: end !important;
+        font-size: 15px !important;
+        font-weight: 800 !important;
+        color: var(--text-main, #0f172a) !important;
+        font-variant-numeric: tabular-nums !important;
+        white-space: nowrap !important;
+        margin: 0 !important;
+      }
+
+      /* Fila 2, Izquierda: Categoría + Fecha de Vencimiento */
+      .tx-table td.tx-cell-meta {
+        grid-column: 1 !important;
+        grid-row: 2 !important;
+        padding: 0 !important;
+        border: none !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+      }
+      .tx-meta-wrap {
+        display: flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        flex-wrap: wrap !important;
+      }
+      .tx-due-pill {
+        font-size: 10px !important;
+        color: var(--text-muted, #64748b) !important;
+        font-weight: 600 !important;
+        white-space: nowrap !important;
+      }
+
+      /* Fila 2, Derecha (Columna 2): Badge de Estado (Pagado/Pendiente) */
+      .tx-table td.tx-cell-status {
+        grid-column: 2 !important;
+        grid-row: 2 !important;
+        padding: 0 !important;
+        border: none !important;
+        justify-self: end !important;
+        margin: 0 !important;
+      }
+      .tx-table td.tx-cell-status .status-badge {
+        font-size: 10.5px !important;
+        padding: 3px 8px !important;
+        border-radius: 12px !important;
+        margin: 0 !important;
+        white-space: nowrap !important;
+      }
+
+      /* Fila 2, Derecha (Columna 3): Acciones Rápidas (Editar / Borrar) */
+      .tx-table td.tx-cell-actions {
+        grid-column: 3 !important;
+        grid-row: 2 !important;
+        padding: 0 !important;
+        border: none !important;
+        justify-self: end !important;
+        display: flex !important;
+        gap: 3px !important;
+        margin: 0 !important;
+      }
+      .tx-action-btn {
+        width: 26px !important;
+        height: 26px !important;
+        padding: 0 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 11px !important;
+        border-radius: 7px !important;
+      }
     }
 
     /* ====== BADGES DE CATEGORÍA ====== */
@@ -5273,10 +5399,47 @@
       display: none;
     }
 
+    .mobile-plan-nav {
+      display: none;
+    }
+
     /* ================================================================
        REGLAS MÓVILES EXCLUSIVAS (IPHONE / PWA / SAFARI)
        ================================================================ */
     @media (max-width: 768px) {
+      .mobile-plan-nav {
+        display: flex !important;
+        gap: 5px !important;
+        background: rgba(148, 163, 184, 0.12) !important;
+        padding: 3px !important;
+        border-radius: 12px !important;
+        margin-bottom: 12px !important;
+      }
+      .mobile-plan-btn {
+        flex: 1 !important;
+        padding: 8px 6px !important;
+        border: none !important;
+        background: transparent !important;
+        color: var(--text-secondary, #64748b) !important;
+        font-weight: 700 !important;
+        font-size: 11px !important;
+        border-radius: 9px !important;
+        cursor: pointer !important;
+        transition: all 0.15s ease !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        white-space: nowrap !important;
+      }
+      .mobile-plan-btn.active {
+        background: #ffffff !important;
+        color: var(--text-main, #0f172a) !important;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08) !important;
+      }
+      body.theme-twilight .mobile-plan-btn.active {
+        background: #334155 !important;
+        color: #ffffff !important;
+      }
       .desktop-only-header-btn {
         display: none !important;
       }
