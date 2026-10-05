@@ -3584,7 +3584,13 @@
       modal.style.visibility = 'visible';
       modal.style.opacity = '1';
       modal.style.pointerEvents = 'auto';
-      if (modal.classList.contains('glass-backdrop')) {
+      
+      const inlineZ = parseInt(modal.style.zIndex, 10);
+      if (inlineZ && inlineZ >= 99999) {
+        // Mantener z-index prioritario
+      } else if (modal.id === 'legalModal' || modal.id === 'reclamacionesModal' || modal.id === 'forgotPasswordModal') {
+        modal.style.zIndex = '100010';
+      } else if (modal.classList.contains('glass-backdrop')) {
         modal.style.zIndex = '10005';
       } else {
         modal.style.zIndex = '10000';
