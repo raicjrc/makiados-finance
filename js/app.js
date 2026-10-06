@@ -87,9 +87,33 @@
     let CATEGORIES = { ...GENERIC_CATEGORIES };
 
     // ================================================================
-    // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v71.0)
+    // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v71.2)
     // ================================================================
-    const APP_VERSION = 'v71.0';
+    const APP_VERSION = 'v71.2';
+
+    // ================================================================
+    // CONFIGURACIÓN DE SUPABASE Y CLIENTE DE AUTENTICACIÓN
+    // ================================================================
+    const SUPABASE_URL = 'https://swwvbfemxookbqoqotre.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_CZUC5ueCxjSDFeA3idgVZg_DaEoIJxf';
+    let supabaseClient = null;
+
+    function getSupabaseClient() {
+      if (!supabaseClient) {
+        try {
+          if (typeof supabase !== 'undefined' && supabase && typeof supabase.createClient === 'function') {
+            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+          } else if (typeof window !== 'undefined' && window.supabase && typeof window.supabase.createClient === 'function') {
+            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+          }
+        } catch (e) {
+          console.error('Error al inicializar Supabase Client:', e);
+        }
+      }
+      return supabaseClient;
+    }
+    // Inicialización inmediata si el script de Supabase ya cargó
+    getSupabaseClient();
 
     const SUPPORTED_CURRENCIES = {
       'PEN': { code: 'PEN', symbol: 'S/', name: 'Soles peruanos', flag: '🇵🇪', locale: 'es-PE' },
@@ -256,10 +280,17 @@
         return;
       }
 
+      const client = getSupabaseClient();
+      if (!client) {
+        console.warn('Supabase aún no inicializado en checkLoginStatus, mostrando login.');
+        document.getElementById('loginModalScreen').style.display = 'flex';
+        return;
+      }
+
       // Listener global de cambios de autenticación (OAuth y Password Recovery)
       if (!window._hasConfiguredAuthListener) {
         window._hasConfiguredAuthListener = true;
-        supabaseClient.auth.onAuthStateChange(async (event, session) => {
+        client.auth.onAuthStateChange(async (event, session) => {
           if (event === 'PASSWORD_RECOVERY') {
             openResetPasswordModal();
           } else if (event === 'SIGNED_IN' && session && session.user && !currentUser) {
@@ -283,7 +314,7 @@
         return;
       }
 
-      const { data: { session } } = await supabaseClient.auth.getSession();
+      const { data: { session } } = await client.auth.getSession();
       if (session && session.user) {
         recordUserHeartbeat(session.user, true);
         await onLoginSuccess(session.user);
@@ -720,20 +751,33 @@
       btn.textContent = '⏳ Iniciando sesión...';
       errEl.style.display = 'none';
 
-      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
+      try {
+        const client = getSupabaseClient();
+        if (!client) {
+          throw new Error('Servidor de autenticación no disponible. Verifica tu conexión a internet.');
+        }
 
-      btn.disabled = false;
-      btn.textContent = '🔓 Iniciar Sesión';
+        const { data, error } = await client.auth.signInWithPassword({ email, password: pass });
 
-      if (error) {
-        errEl.textContent = '🚨 ' + (error.message === 'Invalid login credentials'
-          ? 'Correo o contraseña incorrectos.'
-          : error.message);
+        btn.disabled = false;
+        btn.textContent = '🔓 Iniciar Sesión';
+
+        if (error) {
+          errEl.textContent = '🚨 ' + (error.message === 'Invalid login credentials'
+            ? 'Correo o contraseña incorrectos.'
+            : error.message);
+          errEl.style.display = 'block';
+        } else {
+          errEl.style.display = 'none';
+          recordUserHeartbeat(data.user, true);
+          await onLoginSuccess(data.user);
+        }
+      } catch (err) {
+        console.error('Error durante el inicio de sesión:', err);
+        btn.disabled = false;
+        btn.textContent = '🔓 Iniciar Sesión';
+        errEl.textContent = '🚨 ' + (err.message || 'Error de conexión. Inténtalo de nuevo.');
         errEl.style.display = 'block';
-      } else {
-        errEl.style.display = 'none';
-        recordUserHeartbeat(data.user, true);
-        await onLoginSuccess(data.user);
       }
     }
 
@@ -752,28 +796,41 @@
       errEl.style.display = 'none';
       okEl.style.display = 'none';
 
-      const { data, error } = await supabaseClient.auth.signUp({
-        email,
-        password: pass,
-        options: { data: { full_name: name } }
-      });
+      try {
+        const client = getSupabaseClient();
+        if (!client) {
+          throw new Error('Servidor de autenticación no disponible. Verifica tu conexión.');
+        }
 
-      btn.disabled = false;
-      btn.textContent = '🚀 Crear Mi Cuenta';
+        const { data, error } = await client.auth.signUp({
+          email,
+          password: pass,
+          options: { data: { full_name: name } }
+        });
 
-      if (error) {
-        errEl.textContent = '🚨 ' + error.message;
+        btn.disabled = false;
+        btn.textContent = '🚀 Crear Mi Cuenta';
+
+        if (error) {
+          errEl.textContent = '🚨 ' + error.message;
+          errEl.style.display = 'block';
+        } else if (data.user && data.session) {
+          // Login automático exitoso (sin confirmación de correo)
+          okEl.textContent = '✅ ¡Cuenta creada! Iniciando tu espacio...';
+          okEl.style.display = 'block';
+          recordUserHeartbeat(data.user, true);
+          setTimeout(async () => { await onLoginSuccess(data.user); }, 800);
+        } else if (data.user && !data.session) {
+          // Confirmación requerida activada por César en Supabase
+          okEl.textContent = '📧 ¡Casi listo! Revisa tu bandeja de entrada o SPAM. Te hemos enviado un link para activar tu cuenta de AliviaFin.';
+          okEl.style.display = 'block';
+        }
+      } catch (err) {
+        console.error('Error durante el registro:', err);
+        btn.disabled = false;
+        btn.textContent = '🚀 Crear Mi Cuenta';
+        errEl.textContent = '🚨 ' + (err.message || 'Error de conexión. Inténtalo de nuevo.');
         errEl.style.display = 'block';
-      } else if (data.user && data.session) {
-        // Login automático exitoso (sin confirmación de correo)
-        okEl.textContent = '✅ ¡Cuenta creada! Iniciando tu espacio...';
-        okEl.style.display = 'block';
-        recordUserHeartbeat(data.user, true);
-        setTimeout(async () => { await onLoginSuccess(data.user); }, 800);
-      } else if (data.user && !data.session) {
-        // Confirmación requerida activada por César en Supabase
-        okEl.textContent = '📧 ¡Casi listo! Revisa tu bandeja de entrada o SPAM. Te hemos enviado un link para activar tu cuenta de AliviaFin.';
-        okEl.style.display = 'block';
       }
     }
 
@@ -1250,10 +1307,6 @@
     // MOTOR DE SINCRONIZACIÓN v50 - SUPABASE REALTIME
     // Sin polling. Push instantáneo vía WebSockets. < 200ms.
     // ================================================================
-
-    const SUPABASE_URL = 'https://swwvbfemxookbqoqotre.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_CZUC5ueCxjSDFeA3idgVZg_DaEoIJxf';
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let isSyncing = false;
     let lastSuccessfulSyncTime = Date.now();
