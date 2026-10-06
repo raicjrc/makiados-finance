@@ -3134,6 +3134,360 @@
       color: #a5b4fc;
     }
 
+    /* ====== PRO SUBSCRIPTION RENEWAL & PAYMENT SYSTEM (APPLE FINTECH) ====== */
+    .pro-renewal-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 16px;
+      border-radius: 16px;
+      margin-bottom: 14px;
+      transition: all 0.25s cubic-bezier(0.32, 0.72, 0, 1);
+      animation: bannerSlideDown 0.3s ease-out;
+    }
+    @keyframes bannerSlideDown {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .pro-renewal-banner.banner-warning {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(217, 119, 6, 0.08));
+      border: 1.5px solid rgba(245, 158, 11, 0.35);
+    }
+    .pro-renewal-banner.banner-grace {
+      background: linear-gradient(135deg, rgba(234, 88, 12, 0.12), rgba(194, 65, 12, 0.09));
+      border: 1.5px solid rgba(234, 88, 12, 0.4);
+    }
+    .pro-renewal-banner.banner-expired {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(79, 70, 229, 0.06));
+      border: 1.5px solid rgba(99, 102, 241, 0.25);
+    }
+    body.theme-twilight .pro-renewal-banner.banner-warning {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.18), rgba(217, 119, 6, 0.14));
+      border-color: rgba(245, 158, 11, 0.45);
+    }
+    body.theme-twilight .pro-renewal-banner.banner-grace {
+      background: linear-gradient(135deg, rgba(234, 88, 12, 0.22), rgba(194, 65, 12, 0.18));
+      border-color: rgba(234, 88, 12, 0.5);
+    }
+    body.theme-twilight .pro-renewal-banner.banner-expired {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.16), rgba(79, 70, 229, 0.12));
+      border-color: rgba(99, 102, 241, 0.35);
+    }
+    .pro-renewal-banner-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+      flex: 1;
+    }
+    .pro-renewal-banner-icon {
+      font-size: 20px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .pro-renewal-banner-text {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .pro-renewal-banner-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--text-main, #0f172a);
+      letter-spacing: -0.01em;
+    }
+    .pro-renewal-banner-desc {
+      font-size: 11.5px;
+      color: var(--text-muted, #64748b);
+      font-weight: 600;
+      white-space: normal;
+    }
+    .pro-renewal-banner-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .pro-renewal-banner-btn {
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      color: #ffffff;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 3px 10px rgba(124, 58, 237, 0.3);
+      white-space: nowrap;
+      transition: transform 0.18s cubic-bezier(0.32, 0.72, 0, 1), box-shadow 0.18s ease;
+    }
+    .pro-renewal-banner-btn:active {
+      transform: scale(0.96);
+    }
+    .pro-renewal-banner-close {
+      background: transparent;
+      border: none;
+      color: var(--text-muted, #94a3b8);
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s ease;
+    }
+    .pro-renewal-banner-close:hover {
+      background: rgba(0, 0, 0, 0.05);
+    }
+
+    /* Modal de Pago / Renovación Pro */
+    .pro-plan-selector-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 12px 0 14px 0;
+    }
+    .pro-plan-choice {
+      border: 1.5px solid rgba(124, 58, 237, 0.2);
+      background: rgba(255, 255, 255, 0.7);
+      border-radius: 14px;
+      padding: 10px 12px;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.2s cubic-bezier(0.32, 0.72, 0, 1);
+      position: relative;
+    }
+    body.theme-twilight .pro-plan-choice {
+      background: rgba(15, 23, 42, 0.6);
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+    .pro-plan-choice.selected {
+      border-color: #7c3aed;
+      background: rgba(124, 58, 237, 0.08);
+      box-shadow: 0 0 0 1.5px #7c3aed, 0 4px 12px rgba(124, 58, 237, 0.15);
+    }
+    body.theme-twilight .pro-plan-choice.selected {
+      background: rgba(124, 58, 237, 0.2);
+      border-color: #a78bfa;
+      box-shadow: 0 0 0 1.5px #a78bfa, 0 4px 12px rgba(124, 58, 237, 0.3);
+    }
+    .pro-plan-badge-rec {
+      position: absolute;
+      top: -8px;
+      right: 8px;
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #ffffff;
+      font-size: 8.5px;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 6px;
+      letter-spacing: 0.3px;
+    }
+    .pro-plan-choice-title {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--text-muted, #64748b);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin-bottom: 2px;
+    }
+    .pro-plan-choice-price {
+      font-size: 18px;
+      font-weight: 900;
+      color: #4338ca;
+      letter-spacing: -0.02em;
+    }
+    body.theme-twilight .pro-plan-choice-price {
+      color: #c7d2fe;
+    }
+    .pro-plan-choice-price small {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted, #64748b);
+    }
+    .pro-plan-choice-desc {
+      font-size: 10px;
+      color: var(--text-muted, #64748b);
+      margin-top: 2px;
+      line-height: 1.25;
+    }
+
+    /* Caja de Pago Yape / Plin */
+    .pro-yape-box {
+      background: linear-gradient(135deg, rgba(124, 58, 237, 0.04), rgba(79, 70, 229, 0.06));
+      border: 1px solid rgba(124, 58, 237, 0.18);
+      border-radius: 18px;
+      padding: 16px 14px;
+      margin: 12px 0 14px 0;
+      text-align: center;
+    }
+    body.theme-twilight .pro-yape-box {
+      background: rgba(15, 23, 42, 0.6);
+      border-color: rgba(124, 58, 237, 0.3);
+    }
+    .pro-yape-qr-wrap {
+      display: inline-block;
+      position: relative;
+      background: #ffffff;
+      padding: 8px;
+      border-radius: 16px;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+      margin-bottom: 12px;
+    }
+    .pro-yape-qr-img {
+      width: 155px;
+      height: 155px;
+      object-fit: contain;
+      border-radius: 10px;
+      display: block;
+    }
+    .pro-yape-number-pill {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+    }
+    body.theme-twilight .pro-yape-number-pill {
+      background: #1e293b;
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+    .btn-copy-yape {
+      background: rgba(124, 58, 237, 0.1);
+      border: 1px solid rgba(124, 58, 237, 0.25);
+      color: #7c3aed;
+      font-size: 11.5px;
+      font-weight: 800;
+      padding: 6px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s cubic-bezier(0.32, 0.72, 0, 1);
+    }
+    .btn-copy-yape:active {
+      transform: scale(0.95);
+    }
+    body.theme-twilight .btn-copy-yape {
+      background: rgba(124, 58, 237, 0.25);
+      color: #c4b5fd;
+      border-color: rgba(124, 58, 237, 0.5);
+    }
+    .btn-whatsapp-confirm {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      text-align: center;
+      padding: 13px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #25d366, #16a34a);
+      color: #ffffff;
+      font-weight: 800;
+      font-size: 13.5px;
+      text-decoration: none;
+      border: none;
+      box-shadow: 0 4px 16px rgba(37, 211, 102, 0.35);
+      margin-top: 10px;
+      box-sizing: border-box;
+      transition: transform 0.18s cubic-bezier(0.32, 0.72, 0, 1), box-shadow 0.18s ease;
+    }
+    .btn-whatsapp-confirm:active {
+      transform: scale(0.97);
+    }
+
+    /* Founder Hub Expiration Badges & Renew Action */
+    .master-user-badge-exp-active {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 800;
+      background: rgba(16, 185, 129, 0.1);
+      color: #059669;
+      border: 1px solid rgba(16, 185, 129, 0.25);
+    }
+    .master-user-badge-exp-warn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 800;
+      background: rgba(245, 158, 11, 0.12);
+      color: #d97706;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+    .master-user-badge-exp-grace {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 800;
+      background: rgba(234, 88, 12, 0.12);
+      color: #c2410c;
+      border: 1px solid rgba(234, 88, 12, 0.35);
+    }
+    .master-user-badge-exp-danger {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 800;
+      background: rgba(239, 68, 68, 0.1);
+      color: #dc2626;
+      border: 1px solid rgba(239, 68, 68, 0.25);
+    }
+    .master-action-btn-renew {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #ffffff;
+      box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25);
+    }
+    .master-action-btn-renew:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(16, 185, 129, 0.35);
+    }
+
+    @media (max-width: 600px) {
+      .pro-renewal-banner {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 12px;
+        gap: 10px;
+      }
+      .pro-renewal-banner-actions {
+        width: 100%;
+        justify-content: space-between;
+      }
+      .pro-renewal-banner-btn {
+        flex: 1;
+        text-align: center;
+      }
+      .pro-plan-selector-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
     /* ====== ASESOR & CONSEJOS CARDS (COMPACT & EXECUTIVE) ====== */
     .advice-card {
       background: white;

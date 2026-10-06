@@ -387,6 +387,23 @@
       <!-- TAB 1: INICIO (ZEN EXECUTIVE RESUMEN) -->
       <div id="tab-inicio" class="tab-content active">
         
+        <!-- BANNER RECORDATORIO DE RENOVACIÓN PRO (APPLE FINTECH MINIMAL) -->
+        <div id="proRenewalBanner" class="pro-renewal-banner" style="display: none;">
+          <div class="pro-renewal-banner-left">
+            <span class="pro-renewal-banner-icon" id="proRenewalBannerIcon">🟡</span>
+            <div class="pro-renewal-banner-text">
+              <div class="pro-renewal-banner-title" id="proRenewalBannerTitle">Tu suscripción PRO vence pronto</div>
+              <div class="pro-renewal-banner-desc" id="proRenewalBannerDesc">Renueva con Yape o Plin para mantener tus funciones activas.</div>
+            </div>
+          </div>
+          <div class="pro-renewal-banner-actions">
+            <button type="button" class="pro-renewal-banner-btn" id="proRenewalBannerBtn" onclick="openFinZenProModal('Renovación Mensual', 'pro_monthly')">
+              ⚡ Renovar (S/ 4.90)
+            </button>
+            <button type="button" class="pro-renewal-banner-close" onclick="dismissProRenewalBanner()" title="Ocultar recordatorio">✕</button>
+          </div>
+        </div>
+
         <div class="desktop-home-grid">
           <!-- Columna Principal / Izquierda (Desktop): Saldo Banco, Indicadores, Acciones & Radar -->
           <div class="desktop-home-col-left">
@@ -1024,6 +1041,8 @@
               <button type="button" class="master-filter-chip active" id="mFilterAll" onclick="setMasterFilter('all')">Todos (<span id="countMAll">0</span>)</button>
               <button type="button" class="master-filter-chip" id="mFilterLife" onclick="setMasterFilter('pro_lifetime')">👑 Vitalicios (<span id="countMLife">0</span>)</button>
               <button type="button" class="master-filter-chip" id="mFilterMonth" onclick="setMasterFilter('pro_monthly')">📅 Mensuales (<span id="countMMonth">0</span>)</button>
+              <button type="button" class="master-filter-chip" id="mFilterExpiring" onclick="setMasterFilter('expiring')" style="border-color: rgba(245, 158, 11, 0.4); color: #d97706;">🟡 Por Vencer (<span id="countMExpiring">0</span>)</button>
+              <button type="button" class="master-filter-chip" id="mFilterExpired" onclick="setMasterFilter('expired')" style="border-color: rgba(239, 68, 68, 0.4); color: #ef4444;">🔴 Vencidos (<span id="countMExpired">0</span>)</button>
               <button type="button" class="master-filter-chip" id="mFilterFree" onclick="setMasterFilter('free')">🆓 Free (<span id="countMFree">0</span>)</button>
               <button type="button" class="master-filter-chip" id="mFilterInactive" onclick="setMasterFilter('inactive')" style="border-color: rgba(239, 68, 68, 0.35); color: #ef4444;">⚠️ Inactivos +7d (<span id="countMInactive">0</span>)</button>
             </div>
@@ -1035,16 +1054,17 @@
               <table class="master-table">
                 <thead>
                   <tr>
-                    <th style="min-width: 220px;">Usuario / Correo</th>
-                    <th style="min-width: 135px;">Plan Actual</th>
-                    <th style="min-width: 150px;">Última Conexión</th>
-                    <th style="min-width: 110px;">Aporte Total</th>
+                    <th style="min-width: 210px;">Usuario / Correo</th>
+                    <th style="min-width: 130px;">Plan Actual</th>
+                    <th style="min-width: 155px;">Vencimiento / Renovación</th>
+                    <th style="min-width: 145px;">Última Conexión</th>
+                    <th style="min-width: 105px;">Aporte Total</th>
                     <th style="min-width: 230px; text-align: right;">Acciones & Gestión</th>
                   </tr>
                 </thead>
                 <tbody id="masterSubscribersTableBody">
                   <tr>
-                    <td colspan="5" style="text-align: center; padding: 32px; color: var(--text-muted);">
+                    <td colspan="6" style="text-align: center; padding: 32px; color: var(--text-muted);">
                       Cargando suscriptores desde Supabase... ⏳
                     </td>
                   </tr>
@@ -1363,6 +1383,17 @@
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
               <span style="font-size: 11px; font-weight: 700; color: #374151;">👤 Cuenta</span>
               <span id="settingsUserEmail" style="font-size: 11px; color: #6b7280; font-weight: 600;"></span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-size: 11px; font-weight: 700; color: #374151;">👑 Suscripción</span>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span id="settingsPlanBadge" style="font-size: 11px; font-weight: 800; color: #475569;">Plan Free</span>
+                <button type="button" id="settingsRenewBtn" onclick="closeModal('settingsModal'); openFinZenProModal('Renovación Mensual', 'pro_monthly');" style="display: none; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.25); color: #7c3aed; font-size: 10.5px; font-weight: 800; padding: 2px 8px; border-radius: 6px; cursor: pointer;">Renovar ⚡</button>
+              </div>
+            </div>
+            <div id="settingsRenewalRow" style="display: none; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-size: 10.5px; font-weight: 700; color: #64748b;">📅 Próximo vencimiento</span>
+              <span id="settingsRenewalDateText" style="font-size: 10.5px; color: #334155; font-weight: 700;">—</span>
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
               <span style="font-size: 11px; font-weight: 700; color: #374151;">📱 Versión</span>
@@ -2541,74 +2572,111 @@
     </div>
   </div>
 
-  <!-- MODAL: ALIVIAFIN PRO (MINIMALISTA Y LIMPIO) -->
+  <!-- MODAL: ALIVIAFIN PRO & RENOVACIÓN (APPLE FINTECH MINIMAL) -->
   <div class="glass-backdrop" id="finzenProModal" style="z-index: 99999;" onclick="if(event.target === this) closeGlassModal('finzenProModal')">
-    <div class="glass-modal" style="max-width: 440px; width: 92%; text-align: center; border-radius: 24px; padding: 24px 20px; background: #ffffff; box-shadow: 0 24px 60px rgba(0,0,0,0.22); border: 1px solid rgba(0,0,0,0.06); margin: auto;">
-      <div class="glass-modal-header" style="justify-content: flex-end; padding-bottom: 0; border: none; margin-bottom: 4px; display: flex;">
+    <div class="glass-modal" style="max-width: 440px; width: 92%; max-height: 90vh; overflow-y: auto; text-align: center; border-radius: 24px; padding: 22px 18px; background: #ffffff; box-shadow: 0 24px 60px rgba(0,0,0,0.22); border: 1px solid rgba(0,0,0,0.06); margin: auto;">
+      <div class="glass-modal-header" style="justify-content: flex-end; padding-bottom: 0; border: none; margin-bottom: 2px; display: flex;">
         <button class="glass-close-btn" onclick="closeGlassModal('finzenProModal')" style="background: rgba(0,0,0,0.06); border: none; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer; color: #64748b;">✕</button>
       </div>
 
-      <div style="font-size: 40px; margin-bottom: 6px; line-height: 1;">👑</div>
-      <div class="pro-modal-title" style="font-size: 24px; font-weight: 800; color: #0f172a; margin-bottom: 4px; letter-spacing: -0.5px;">
+      <div style="font-size: 36px; margin-bottom: 4px; line-height: 1;">👑</div>
+      <div class="pro-modal-title" style="font-size: 23px; font-weight: 800; color: #0f172a; margin-bottom: 4px; letter-spacing: -0.5px;">
         AliviaFin <span style="background: linear-gradient(135deg, #fbbf24, #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">PRO</span>
       </div>
-      <div class="pro-modal-subtitle" id="proModalSubtitle" style="font-size: 12.5px; color: #64748b; margin-top: 2px; font-weight: 600; margin-bottom: 12px;">
+      <div class="pro-modal-subtitle" id="proModalSubtitle" style="font-size: 12.5px; color: #64748b; margin-top: 2px; font-weight: 600; margin-bottom: 10px;">
         El acelerador para tu tranquilidad financiera
       </div>
 
       <!-- Badge de Garantía de Satisfacción 7 Días -->
-      <div style="display: inline-flex; align-items: center; justify-content: center; gap: 6px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); color: #047857; padding: 5px 12px; border-radius: 20px; font-size: 11.5px; font-weight: 800; margin-bottom: 10px; max-width: 90%;">
+      <div style="display: inline-flex; align-items: center; justify-content: center; gap: 6px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); color: #047857; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; margin-bottom: 10px; max-width: 95%;">
         <span>🛡️</span>
         <span>Garantía de Satisfacción 7 Días · Reembolso 100%</span>
       </div>
 
       <!-- Badge de Función Contextual Soft Paywall -->
-      <div id="proModalContextBadge" style="display: none; background: rgba(245, 158, 11, 0.14); border: 1px solid rgba(245, 158, 11, 0.35); color: #d97706; padding: 4px 12px; border-radius: 20px; font-size: 11.5px; font-weight: 800; margin-bottom: 14px; align-items: center; justify-content: center; gap: 5px;">
+      <div id="proModalContextBadge" style="display: none; background: rgba(245, 158, 11, 0.14); border: 1px solid rgba(245, 158, 11, 0.35); color: #d97706; padding: 4px 12px; border-radius: 20px; font-size: 11.5px; font-weight: 800; margin-bottom: 12px; align-items: center; justify-content: center; gap: 5px;">
         <span>⚡ Desbloquea:</span> <span id="proModalFeatureName" style="color: #b45309;">Función PRO</span>
       </div>
 
-      <div class="pro-modal-features" style="margin: 14px 0; background: rgba(15, 23, 42, 0.035); border: 1px solid rgba(15, 23, 42, 0.08); border-radius: 16px; padding: 14px 16px; text-align: left; display: flex; flex-direction: column; gap: 10px;">
-        <div class="pro-feature-item" style="display: flex; align-items: flex-start; gap: 10px; font-size: 12.5px; color: #1e293b; font-weight: 700; line-height: 1.4; text-align: left;">
-          <span style="color: #10b981; font-size: 15px; font-weight: 900; line-height: 1; flex-shrink: 0; margin-top: 1px;">✓</span>
+      <!-- Selector de Plan: Mensual vs Vitalicio -->
+      <div class="pro-plan-selector-grid">
+        <div id="proChoiceMonthly" class="pro-plan-choice selected" onclick="selectProModalPlan('pro_monthly')">
+          <div class="pro-plan-choice-title">Suscripción</div>
+          <div class="pro-plan-choice-price">S/ 4.90 <small>/ mes</small></div>
+          <div class="pro-plan-choice-desc">Renovación cada 30 días · Cancela cuando desees</div>
+        </div>
+        <div id="proChoiceLifetime" class="pro-plan-choice" onclick="selectProModalPlan('pro_lifetime')">
+          <span class="pro-plan-badge-rec">⭐ Único</span>
+          <div class="pro-plan-choice-title">Acceso Vitalicio</div>
+          <div class="pro-plan-choice-price">S/ 19.90</div>
+          <div class="pro-plan-choice-desc">Pagas una sola vez · Para toda la vida</div>
+        </div>
+      </div>
+
+      <!-- Caja de Pago Oficial Yape / Plin -->
+      <div class="pro-yape-box">
+        <div style="font-size: 12px; font-weight: 800; color: #4338ca; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.4px;">
+          Paga o Renueva al instante con Yape / Plin
+        </div>
+
+        <!-- QR Yape Oficial César Risso -->
+        <div class="pro-yape-qr-wrap">
+          <img src="qr-yape.jpg" alt="Yape QR César Risso" class="pro-yape-qr-img" />
+        </div>
+
+        <!-- Pill con Número de Teléfono y Botón Copiar -->
+        <div class="pro-yape-number-pill">
+          <div style="text-align: left; min-width: 0;">
+            <div style="font-size: 9.5px; font-weight: 800; color: #7c3aed; text-transform: uppercase;">Yape / Plin</div>
+            <div style="font-size: 16px; font-weight: 900; color: #0f172a; letter-spacing: 0.5px; font-variant-numeric: tabular-nums;">914 688 135</div>
+            <div style="font-size: 11px; font-weight: 600; color: #64748b;">César Risso</div>
+          </div>
+          <button type="button" class="btn-copy-yape" id="btnCopyYapePhone" onclick="copyYapePhone(this)" title="Copiar número al portapapeles">
+            <span id="copyYapeBtnIcon">📋</span>
+            <span id="copyYapeBtnText">Copiar</span>
+          </button>
+        </div>
+
+        <!-- Botón de Notificación Directa a WhatsApp -->
+        <a id="proModalWaLink" href="https://wa.me/51914688135?text=Hola%20C%C3%A9sar,%20acabo%20de%20pagar%20mi%20suscripci%C3%B3n%20AliviaFin%20PRO%20(S/%204.90%20mes)" target="_blank" class="btn-whatsapp-confirm">
+          <span>📲 Notificar Pago por WhatsApp</span>
+        </a>
+
+        <div style="font-size: 10.5px; color: #64748b; margin-top: 8px; font-weight: 600;">
+          ⚡ Activación inmediata garantizada por César · Tu información nunca se borra
+        </div>
+      </div>
+
+      <!-- Resumen de Beneficios Pro -->
+      <div class="pro-modal-features" style="margin: 12px 0; background: rgba(15, 23, 42, 0.035); border: 1px solid rgba(15, 23, 42, 0.08); border-radius: 16px; padding: 12px 14px; text-align: left; display: flex; flex-direction: column; gap: 8px;">
+        <div class="pro-feature-item" style="display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: #1e293b; font-weight: 700; line-height: 1.35;">
+          <span style="color: #10b981; font-size: 14px; font-weight: 900; flex-shrink: 0;">✓</span>
           <span>Inyección automática de compras en cuotas</span>
         </div>
-        <div class="pro-feature-item" style="display: flex; align-items: flex-start; gap: 10px; font-size: 12.5px; color: #1e293b; font-weight: 700; line-height: 1.4; text-align: left;">
-          <span style="color: #10b981; font-size: 15px; font-weight: 900; line-height: 1; flex-shrink: 0; margin-top: 1px;">✓</span>
-          <span>Categorías y presupuestos personalizados ilimitados</span>
+        <div class="pro-feature-item" style="display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: #1e293b; font-weight: 700; line-height: 1.35;">
+          <span style="color: #10b981; font-size: 14px; font-weight: 900; flex-shrink: 0;">✓</span>
+          <span>Categorías y presupuestos ilimitados</span>
         </div>
-        <div class="pro-feature-item" style="display: flex; align-items: flex-start; gap: 10px; font-size: 12.5px; color: #1e293b; font-weight: 700; line-height: 1.4; text-align: left;">
-          <span style="color: #10b981; font-size: 15px; font-weight: 900; line-height: 1; flex-shrink: 0; margin-top: 1px;">✓</span>
+        <div class="pro-feature-item" style="display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: #1e293b; font-weight: 700; line-height: 1.35;">
+          <span style="color: #10b981; font-size: 14px; font-weight: 900; flex-shrink: 0;">✓</span>
           <span>Metas de ahorro múltiples sin restricciones</span>
         </div>
-        <div class="pro-feature-item" style="display: flex; align-items: flex-start; gap: 10px; font-size: 12.5px; color: #1e293b; font-weight: 700; line-height: 1.4; text-align: left;">
-          <span style="color: #10b981; font-size: 15px; font-weight: 900; line-height: 1; flex-shrink: 0; margin-top: 1px;">✓</span>
+        <div class="pro-feature-item" style="display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: #1e293b; font-weight: 700; line-height: 1.35;">
+          <span style="color: #10b981; font-size: 14px; font-weight: 900; flex-shrink: 0;">✓</span>
           <span>Asesor de deudas con método bola de nieve</span>
         </div>
-        <div class="pro-feature-item" style="display: flex; align-items: flex-start; gap: 10px; font-size: 12.5px; color: #1e293b; font-weight: 700; line-height: 1.4; text-align: left;">
-          <span style="color: #10b981; font-size: 15px; font-weight: 900; line-height: 1; flex-shrink: 0; margin-top: 1px;">✓</span>
-          <span>Exportación completa a Excel y CSV</span>
+        <div class="pro-feature-item" style="display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: #10b981; font-weight: 700; line-height: 1.35;">
+          <span style="color: #10b981; font-size: 14px; font-weight: 900; flex-shrink: 0;">✓</span>
+          <span style="color: #1e293b;">Exportación completa a Excel y CSV</span>
         </div>
       </div>
-
-      <div class="pro-price-card" style="background: linear-gradient(135deg, rgba(79, 70, 229, 0.08), rgba(124, 58, 237, 0.09)); border: 1.5px solid rgba(124, 58, 237, 0.25); border-radius: 16px; padding: 14px; margin-bottom: 16px; text-align: center;">
-        <div class="pro-price-amount" style="font-size: 24px; font-weight: 800; color: #4338ca;">
-          S/ 4.90 <span class="pro-price-period" style="font-size: 13px; color: #64748b; font-weight: 500;">/ mes</span>
-        </div>
-        <div class="pro-price-note" style="font-size: 11.5px; color: #4f46e5; font-weight: 700; margin-top: 3px;">
-          O pago único de por vida de S/ 19.90 • Cancela cuando quieras
-        </div>
-      </div>
-
-      <a id="proModalWaLink" href="https://wa.me/51914688135?text=Hola%20C%C3%A9sar,%20quiero%20activar%20mi%20suscripci%C3%B3n%20AliviaFin%20Pro%20(S/%204.90%20mes%20o%20S/%2019.90%20vitalicio)" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; text-align: center; padding: 13px; border-radius: 14px; background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; font-weight: 800; font-size: 14px; text-decoration: none; border: none; box-shadow: 0 4px 16px rgba(124, 58, 237, 0.4); margin-bottom: 10px; box-sizing: border-box;">
-        <span>✨ Comenzar AliviaFin Pro</span>
-      </a>
 
       <button type="button" onclick="closeGlassModal('finzenProModal')" style="background: transparent; border: none; color: #94a3b8; font-size: 11.5px; font-weight: 600; cursor: pointer; padding: 6px;">
         Continuar con la versión gratuita
       </button>
 
       <!-- Footer legal y Libro de Reclamaciones -->
-      <div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(15, 23, 42, 0.06); display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 11px;">
+      <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(15, 23, 42, 0.06); display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 11px;">
         <a href="javascript:void(0)" onclick="closeGlassModal('finzenProModal'); openLegalModal('refunds');" style="color: #64748b; text-decoration: none; font-weight: 600;">🛡️ Reembolsos</a>
         <span style="color: #cbd5e1;">•</span>
         <a href="javascript:void(0)" onclick="closeGlassModal('finzenProModal'); openLegalModal('terms');" style="color: #64748b; text-decoration: none; font-weight: 600;">⚖️ Términos</a>

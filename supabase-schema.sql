@@ -81,6 +81,7 @@ CREATE TABLE IF NOT EXISTS user_subscriptions (
 ALTER TABLE user_subscriptions ADD COLUMN IF NOT EXISTS plan_type text DEFAULT 'free';
 ALTER TABLE user_subscriptions ADD COLUMN IF NOT EXISTS price numeric(10,2) DEFAULT 0.00;
 ALTER TABLE user_subscriptions ADD COLUMN IF NOT EXISTS payment_method text DEFAULT 'yape_plin';
+ALTER TABLE user_subscriptions ADD COLUMN IF NOT EXISTS expires_at timestamp with time zone;
 ALTER TABLE user_subscriptions ADD COLUMN IF NOT EXISTS updated_at timestamp with time zone DEFAULT now();
 
 -- Activar RLS
@@ -159,11 +160,13 @@ CREATE POLICY "Solo admin gestiona pagos" ON public.subscription_payments
 -- ================================================================
 
 -- 1. Obtener suscriptores con última conexión real desde auth.users
+DROP FUNCTION IF EXISTS public.get_admin_subscribers();
 CREATE OR REPLACE FUNCTION public.get_admin_subscribers()
 RETURNS TABLE (
   user_id text,
   email text,
   status text,
+  expires_at timestamptz,
   created_at timestamptz,
   last_sign_in_at timestamptz,
   last_active_at timestamptz,
@@ -183,6 +186,7 @@ BEGIN
     s.user_id,
     s.email,
     COALESCE(s.status, 'free')::text as status,
+    s.expires_at,
     COALESCE(s.created_at, u.created_at) as created_at,
     u.last_sign_in_at,
     GREATEST(
@@ -252,6 +256,7 @@ CREATE INDEX IF NOT EXISTS idx_finanzas_state_updated ON public.finanzas_state(u
 CREATE INDEX IF NOT EXISTS idx_user_subs_email ON public.user_subscriptions(email);
 CREATE INDEX IF NOT EXISTS idx_user_subs_status ON public.user_subscriptions(status);
 CREATE INDEX IF NOT EXISTS idx_user_subs_created ON public.user_subscriptions(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_user_subs_expires_at ON public.user_subscriptions(expires_at);
 
 -- 3. Optimización para filtrado de pings y heartbeats en app_feedback
 CREATE INDEX IF NOT EXISTS idx_feedback_type_created ON public.app_feedback(type, created_at DESC);

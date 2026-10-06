@@ -350,18 +350,193 @@
     };
 
     // ================================================================
-    // SISTEMA DE MONETIZACIÓN FREEMIUM (FREE VS PRO)
+    // SISTEMA DE MONETIZACIÓN FREEMIUM (FREE VS PRO CON CICLO DE 30 DÍAS & CORTESÍA 48H)
     // ================================================================
     function isUserPro() {
       // 1. César (admin) siempre tiene acceso Pro de por vida
       if (isAdminCesar()) return true;
       // 2. Si tiene flag 'is_pro' en metadata de Supabase
       if (currentUser && currentUser.user_metadata && currentUser.user_metadata.is_pro === true) return true;
-      // 3. Si en user_subscriptions está como 'premium', 'pro_monthly' o 'pro_lifetime'
-      if (['premium', 'pro_monthly', 'pro_lifetime'].includes(window._currentUserSubscriptionStatus)) return true;
-      // 4. Si tiene desbloqueo local
+      // 3. Si en user_subscriptions está como 'premium' o 'pro_lifetime'
+      const status = window._currentUserSubscriptionStatus;
+      if (['premium', 'pro_lifetime'].includes(status)) return true;
+
+      // 4. Si está en 'pro_monthly', comprobar fecha de expiración + 48h de cortesía
+      if (status === 'pro_monthly') {
+        const expiresAt = window._currentUserSubscriptionExpiresAt;
+        if (!expiresAt) return true; // Si no tiene fecha establecida aún, no bloquear
+        const expMs = new Date(expiresAt).getTime();
+        if (isNaN(expMs)) return true;
+        const nowMs = Date.now();
+        const graceMs = 48 * 60 * 60 * 1000; // 48 horas de cortesía
+        if (nowMs <= (expMs + graceMs)) {
+          return true;
+        }
+        // Venció hace más de 48h: degradación elegante a Free (los datos nunca se borran ni se tocan)
+        return false;
+      }
+
+      // 5. Si tiene desbloqueo local
       if (localStorage.getItem('aliviafin_pro_unlocked') === 'true' || localStorage.getItem('finzen_pro_unlocked') === 'true') return true;
       return false;
+    }
+
+    function getSubscriptionDaysRemaining() {
+      if (isAdminCesar()) {
+        return { status: 'lifetime', isPro: true, days: Infinity, inGrace: false, expiresAt: null };
+      }
+      const status = window._currentUserSubscriptionStatus;
+      if (status === 'pro_lifetime' || status === 'premium') {
+        return { status: 'pro_lifetime', isPro: true, days: Infinity, inGrace: false, expiresAt: null };
+      }
+
+      const expiresAt = window._currentUserSubscriptionExpiresAt;
+      if (status === 'pro_monthly' || (status === 'free' && expiresAt)) {
+        if (!expiresAt) {
+          return { status: 'pro_monthly', isPro: true, days: 30, inGrace: false, expiresAt: null };
+        }
+        const expMs = new Date(expiresAt).getTime();
+        if (isNaN(expMs)) {
+          return { status: 'pro_monthly', isPro: true, days: 30, inGrace: false, expiresAt: null };
+        }
+        const nowMs = Date.now();
+        const diffMs = expMs - nowMs;
+        const graceMs = 48 * 60 * 60 * 1000; // 48 horas de cortesía
+
+        if (diffMs > 0) {
+          const daysLeft = Math.ceil(diffMs / (24 * 60 * 60 * 1000));
+          return { status: 'pro_monthly', isPro: true, days: daysLeft, inGrace: false, expiresAt };
+        } else if (nowMs <= (expMs + graceMs)) {
+          const hoursGrace = Math.max(0, Math.ceil((expMs + graceMs - nowMs) / (60 * 60 * 1000)));
+          return { status: 'pro_monthly', isPro: true, days: 0, inGrace: true, hoursGrace, expiresAt };
+        } else {
+          const daysAgo = Math.ceil((nowMs - expMs) / (24 * 60 * 60 * 1000));
+          return { status: 'expired', isPro: false, days: -daysAgo, inGrace: false, expiresAt };
+        }
+      }
+
+      return { status: 'free', isPro: false, days: 0, inGrace: false, expiresAt: null };
+    }
+
+    function dismissProRenewalBanner() {
+      try {
+        sessionStorage.setItem('aliviafin_dismiss_renewal_banner', 'true');
+      } catch(e) {}
+      const banner = document.getElementById('proRenewalBanner');
+      if (banner) {
+        banner.style.opacity = '0';
+        setTimeout(() => { banner.style.display = 'none'; }, 220);
+      }
+    }
+
+    function checkAndRenderProRenewalBanner() {
+      const banner = document.getElementById('proRenewalBanner');
+      if (!banner) return;
+
+      try {
+        if (sessionStorage.getItem('aliviafin_dismiss_renewal_banner') === 'true') {
+          banner.style.display = 'none';
+          return;
+        }
+      } catch(e) {}
+
+      // César nunca ve banner de renovación
+      if (isAdminCesar()) {
+        banner.style.display = 'none';
+        return;
+      }
+
+      const subInfo = getSubscriptionDaysRemaining();
+      const iconEl = document.getElementById('proRenewalBannerIcon');
+      const titleEl = document.getElementById('proRenewalBannerTitle');
+      const descEl = document.getElementById('proRenewalBannerDesc');
+      const btnEl = document.getElementById('proRenewalBannerBtn');
+
+      if (subInfo.status === 'pro_monthly' && subInfo.days <= 3 && !subInfo.inGrace) {
+        banner.className = 'pro-renewal-banner banner-warning';
+        banner.style.display = 'flex';
+        banner.style.opacity = '1';
+        if (iconEl) iconEl.textContent = '🟡';
+        const dateStr = subInfo.expiresAt ? new Date(subInfo.expiresAt).toLocaleDateString('es-PE', { day: '2-digit', month: 'short' }) : '';
+        if (titleEl) titleEl.textContent = `Tu suscripción PRO vence en ${subInfo.days === 1 ? '1 día' : subInfo.days + ' días'}${dateStr ? ' (' + dateStr + ')' : ''}`;
+        if (descEl) descEl.textContent = 'Renueva con Yape o Plin para mantener tus funciones activas sin interrupciones.';
+        if (btnEl) btnEl.textContent = '⚡ Renovar (S/ 4.90)';
+      } else if (subInfo.inGrace) {
+        banner.className = 'pro-renewal-banner banner-grace';
+        banner.style.display = 'flex';
+        banner.style.opacity = '1';
+        if (iconEl) iconEl.textContent = '⏳';
+        const dateStr = subInfo.expiresAt ? new Date(subInfo.expiresAt).toLocaleDateString('es-PE', { day: '2-digit', month: 'short' }) : '';
+        if (titleEl) titleEl.textContent = `Cortesía de 48h activa · ${subInfo.hoursGrace}h restantes`;
+        if (descEl) descEl.textContent = `Tu mes venció el ${dateStr}. Tus finanzas están intactas. Renueva para continuar.`;
+        if (btnEl) btnEl.textContent = '⚡ Renovar ahora';
+      } else if (subInfo.status === 'expired') {
+        banner.className = 'pro-renewal-banner banner-expired';
+        banner.style.display = 'flex';
+        banner.style.opacity = '1';
+        if (iconEl) iconEl.textContent = '✨';
+        if (titleEl) titleEl.textContent = 'Tu cuenta está en modo Free';
+        if (descEl) descEl.textContent = 'Reanuda tu plan PRO mensual cuando quieras. Todos tus datos siguen seguros.';
+        if (btnEl) btnEl.textContent = '✨ Reactivar PRO';
+      } else {
+        banner.style.display = 'none';
+      }
+    }
+
+    let currentSelectedProPlan = 'pro_monthly';
+
+    function selectProModalPlan(plan) {
+      currentSelectedProPlan = plan;
+      const choiceMonthly = document.getElementById('proChoiceMonthly');
+      const choiceLifetime = document.getElementById('proChoiceLifetime');
+      if (choiceMonthly && choiceLifetime) {
+        if (plan === 'pro_monthly') {
+          choiceMonthly.classList.add('selected');
+          choiceLifetime.classList.remove('selected');
+        } else {
+          choiceLifetime.classList.add('selected');
+          choiceMonthly.classList.remove('selected');
+        }
+      }
+      updateProModalWaLink();
+    }
+
+    function updateProModalWaLink() {
+      const waLink = document.getElementById('proModalWaLink');
+      if (!waLink) return;
+      const userEmail = (currentUser && currentUser.email) ? currentUser.email : '';
+      const planText = currentSelectedProPlan === 'pro_lifetime' 
+        ? 'PRO Vitalicio (S/ 19.90 pago único)' 
+        : 'PRO Mensual (S/ 4.90 / mes)';
+      const msg = `Hola César, acabo de transferir a tu Yape para activar mi suscripción AliviaFin ${planText}.${userEmail ? ' Mi correo registrado es: ' + userEmail : ''}`;
+      waLink.href = 'https://wa.me/51914688135?text=' + encodeURIComponent(msg);
+    }
+
+    function copyYapePhone(btnEl) {
+      const phone = '914688135';
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(phone);
+      } else {
+        try {
+          const input = document.createElement('input');
+          input.value = phone;
+          document.body.appendChild(input);
+          input.select();
+          document.execCommand('copy');
+          document.body.removeChild(input);
+        } catch(e) {}
+      }
+      if (navigator.vibrate) navigator.vibrate(35);
+      showToast('📋 Número 914 688 135 copiado al portapapeles', 'success');
+
+      const textEl = document.getElementById('copyYapeBtnText');
+      const iconEl = document.getElementById('copyYapeBtnIcon');
+      if (textEl) textEl.textContent = '¡Copiado!';
+      if (iconEl) iconEl.textContent = '✓';
+      setTimeout(() => {
+        if (textEl) textEl.textContent = 'Copiar';
+        if (iconEl) iconEl.textContent = '📋';
+      }, 2200);
     }
 
     // Helper para desbloquear Pro internamente o por consola sin ensuciar la UI
@@ -373,28 +548,30 @@
       renderAll();
     };
 
-    function openFinZenProModal(featureName) {
+    function openFinZenProModal(featureName, initialPlan) {
+      if (initialPlan) {
+        selectProModalPlan(initialPlan);
+      } else {
+        selectProModalPlan('pro_monthly');
+      }
+
       const badge = document.getElementById('proModalContextBadge');
       const featText = document.getElementById('proModalFeatureName');
-      const waLink = document.getElementById('proModalWaLink');
       const sub = document.getElementById('proModalSubtitle');
 
-      if (featureName && badge && featText) {
+      if (featureName && featureName.toLowerCase().includes('renovación')) {
+        if (badge) badge.style.display = 'none';
+        if (sub) sub.textContent = 'Renueva tu mes para seguir disfrutando de todas las ventajas exclusivas';
+      } else if (featureName && badge && featText) {
         badge.style.display = 'inline-flex';
         featText.textContent = featureName;
         if (sub) sub.textContent = `Desbloquea ${featureName} y todas las ventajas exclusivas`;
-        if (waLink) {
-          const msg = `Hola César, quiero activar mi suscripción AliviaFin Pro para usar ${featureName} (S/ 4.90 mes o S/ 19.90 vitalicio)`;
-          waLink.href = 'https://wa.me/51914688135?text=' + encodeURIComponent(msg);
-        }
       } else {
         if (badge) badge.style.display = 'none';
         if (sub) sub.textContent = 'El acelerador para tu tranquilidad financiera';
-        if (waLink) {
-          const msg = 'Hola César, quiero activar mi suscripción AliviaFin Pro (S/ 4.90 mes o S/ 19.90 vitalicio)';
-          waLink.href = 'https://wa.me/51914688135?text=' + encodeURIComponent(msg);
-        }
       }
+
+      updateProModalWaLink();
       openModalById('finzenProModal');
     }
 
@@ -470,14 +647,18 @@
 
     async function verifySubscription(user) {
       window._currentUserSubscriptionStatus = 'free';
+      window._currentUserSubscriptionExpiresAt = null;
 
       // Administrador siempre Pro
       if (isAdminCesar(user)) {
         window._currentUserSubscriptionStatus = 'premium';
         const pb = document.getElementById('proBadge');
         if (pb) pb.style.display = 'inline-flex';
+        const sidePb = document.getElementById('sidebarProBadge');
+        if (sidePb) sidePb.style.display = 'inline-flex';
         syncAdminUI();
         recordUserHeartbeat(user, true);
+        checkAndRenderProRenewalBanner();
         setTimeout(() => checkOnboardingAndVersionAnnouncements(), 400);
         return;
       }
@@ -489,8 +670,13 @@
           .eq('user_id', user.id)
           .maybeSingle();
 
-        if (data && ['premium', 'pro_monthly', 'pro_lifetime'].includes(data.status)) {
-          window._currentUserSubscriptionStatus = data.status;
+        if (data) {
+          window._currentUserSubscriptionExpiresAt = data.expires_at || data.trial_ends_at || null;
+          if (['premium', 'pro_monthly', 'pro_lifetime'].includes(data.status)) {
+            window._currentUserSubscriptionStatus = data.status;
+          } else {
+            window._currentUserSubscriptionStatus = 'free';
+          }
         } else if (!data) {
           // Si el usuario no tiene fila en user_subscriptions, la inicializamos automáticamente como 'free'
           await supabaseClient
@@ -508,11 +694,18 @@
       recordUserHeartbeat(user, false);
       syncAdminUI();
 
-      // Actualizar badge Pro en cabecera
+      // Actualizar badge Pro en cabecera y sidebar
       const pb = document.getElementById('proBadge');
       if (pb) {
         pb.style.display = isUserPro() ? 'inline-flex' : 'none';
       }
+      const sidePb = document.getElementById('sidebarProBadge');
+      if (sidePb) {
+        sidePb.style.display = isUserPro() ? 'inline-flex' : 'none';
+      }
+
+      // Evaluar recordatorio de renovación
+      checkAndRenderProRenewalBanner();
 
       // IMPORTANTE: Nunca se bloquea al usuario con paywall.
       // El usuario siempre accede a la app con su plan Free vitalicio.
@@ -777,6 +970,57 @@
       // Rellenar info de usuario y versión
       const emailEl = document.getElementById('settingsUserEmail');
       if (emailEl && currentUser) emailEl.textContent = currentUser.email || '';
+
+      // Sincronizar información de suscripción en Ajustes
+      const planBadge = document.getElementById('settingsPlanBadge');
+      const renewRow = document.getElementById('settingsRenewalRow');
+      const renewDateText = document.getElementById('settingsRenewalDateText');
+      const renewBtn = document.getElementById('settingsRenewBtn');
+      const subInfo = getSubscriptionDaysRemaining();
+
+      if (planBadge) {
+        if (isAdminCesar()) {
+          planBadge.textContent = '👑 Fundador CEO (Vitalicio)';
+          planBadge.style.color = '#d97706';
+          if (renewRow) renewRow.style.display = 'none';
+          if (renewBtn) renewBtn.style.display = 'none';
+        } else if (subInfo.status === 'pro_lifetime' || subInfo.status === 'lifetime') {
+          planBadge.textContent = '👑 PRO Vitalicio';
+          planBadge.style.color = '#7c3aed';
+          if (renewRow) renewRow.style.display = 'none';
+          if (renewBtn) renewBtn.style.display = 'none';
+        } else if (subInfo.status === 'pro_monthly') {
+          planBadge.textContent = subInfo.inGrace ? '⏳ PRO (En Cortesía 48h)' : '📅 PRO Mensual';
+          planBadge.style.color = subInfo.inGrace ? '#ea580c' : '#4f46e5';
+          if (renewRow) {
+            renewRow.style.display = 'flex';
+            const expDateStr = subInfo.expiresAt ? new Date(subInfo.expiresAt).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Próximamente';
+            renewDateText.textContent = subInfo.inGrace 
+              ? `${expDateStr} (Cortesía: ${subInfo.hoursGrace}h)`
+              : `${expDateStr} (${subInfo.days}d restantes)`;
+          }
+          if (renewBtn) {
+            renewBtn.style.display = 'inline-block';
+            renewBtn.textContent = 'Renovar ⚡';
+          }
+        } else {
+          planBadge.textContent = '🆓 Plan Básico (Free)';
+          planBadge.style.color = '#64748b';
+          if (renewRow) {
+            if (subInfo.expiresAt) {
+              renewRow.style.display = 'flex';
+              const expDateStr = new Date(subInfo.expiresAt).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' });
+              renewDateText.textContent = `Venció el ${expDateStr}`;
+            } else {
+              renewRow.style.display = 'none';
+            }
+          }
+          if (renewBtn) {
+            renewBtn.style.display = 'inline-block';
+            renewBtn.textContent = 'Activar PRO ✨';
+          }
+        }
+      }
 
       // Rellenar nombre personalizado en Ajustes
       const nameInput = document.getElementById('settingsUserNameInput');
@@ -6761,7 +7005,32 @@ async function loadMasterDashboardData(force = false) {
         .order('created_at', { ascending: false });
       if (!error && Array.isArray(data)) subs = data;
     }
-    if (subs) masterSubscribersData = subs;
+    if (subs) {
+      masterSubscribersData = subs;
+      // Enriquecer con expires_at de user_subscriptions si la RPC no devolvió esa columna
+      try {
+        const { data: rawSubs } = await supabaseClient
+          .from('user_subscriptions')
+          .select('user_id, email, expires_at, trial_ends_at');
+        if (Array.isArray(rawSubs)) {
+          const expMap = new Map();
+          rawSubs.forEach(r => {
+            const exp = r.expires_at || r.trial_ends_at;
+            if (exp) {
+              if (r.user_id) expMap.set(r.user_id, exp);
+              if (r.email) expMap.set(r.email.toLowerCase(), exp);
+            }
+          });
+          masterSubscribersData.forEach(s => {
+            if (!s.expires_at) {
+              s.expires_at = expMap.get(s.user_id) || (s.email ? expMap.get(s.email.toLowerCase()) : null);
+            }
+          });
+        }
+      } catch (e) {
+        console.warn('Nota de enriquecimiento expires_at:', e);
+      }
+    }
 
     // 2) Telemetría nativa directa desde finanzas_state (respaldos diarios y estados en la nube)
     // Esto garantiza que CUALQUIER usuario que use la app o sincronice se detecte al 100% sin depender de SQL extra
@@ -7209,10 +7478,15 @@ function calculateMasterKPIs() {
   const now = Date.now();
   let life = 0, month = 0, active24 = 0, active7 = 0, risk = 0, new7 = 0;
 
+  let expiring = 0;
+  let expired = 0;
   customers.forEach(s => {
     const plan = getMasterPlanKey(s);
     if (plan === 'life') life++;
     else if (plan === 'month') month++;
+    const expInfo = getSubscriberExpirationInfo(s);
+    if (expInfo.isExpiring) expiring++;
+    if (expInfo.isExpired) expired++;
     const info = getUserLastConnectionInfo(s);
     if (info.lastSeenMs && now - info.lastSeenMs <= 86400000) active24++;
     if (info.lastSeenMs && now - info.lastSeenMs <= 7 * 86400000) active7++;
@@ -7232,7 +7506,8 @@ function calculateMasterKPIs() {
   masterSetText('masterTotalRevenueVal', masterMoney(mrrCents + lifeCents));
   masterSetText('masterLifetimeSalesSub', `${life} membresía${life === 1 ? '' : 's'} vitalicia${life === 1 ? '' : 's'} · estimado por plan activo`);
   masterSetText('masterTotalUsersVal', `${total} Cuenta${total === 1 ? '' : 's'}`);
-  masterSetText('masterUsersBreakdownSub', `${paid} PRO (${life} Vit. / ${month} Men.) · ${free} Free · +${new7} esta semana`);
+  masterUsersBreakdownSub = `${paid} PRO (${life} Vit. / ${month} Men.) · ${free} Free · +${new7} esta semana`;
+  masterSetText('masterUsersBreakdownSub', masterUsersBreakdownSub);
   masterSetText('masterConversionVal', `${conv}%`);
   masterSetText('masterConversionSub', `${paid} de ${total} cuentas pagan`);
   masterSetText('masterActiveVal', `${active24}`);
@@ -7243,6 +7518,8 @@ function calculateMasterKPIs() {
   masterSetText('countMAll', total);
   masterSetText('countMLife', life);
   masterSetText('countMMonth', month);
+  masterSetText('countMExpiring', expiring);
+  masterSetText('countMExpired', expired);
   masterSetText('countMFree', free);
   masterSetText('countMInactive', risk);
 }
@@ -7560,14 +7837,103 @@ function renderFounderModule() {
 // ----------------------------------------------------------------
 // Tabla de usuarios, filtros y acciones
 // ----------------------------------------------------------------
+function getSubscriberExpirationInfo(item) {
+  const plan = getMasterPlanKey(item);
+  if (plan === 'founder') {
+    return {
+      status: 'founder',
+      html: '<span style="font-size:11px; font-weight:800; color:#d97706;">👑 Infinito</span>',
+      isExpiring: false,
+      isExpired: false
+    };
+  }
+  if (plan === 'life') {
+    return {
+      status: 'lifetime',
+      html: '<span style="font-size:11px; font-weight:800; color:#7c3aed; background:rgba(124,58,237,0.1); padding:2px 8px; border-radius:12px;">👑 Vitalicio</span>',
+      isExpiring: false,
+      isExpired: false
+    };
+  }
+
+  const expRaw = item.expires_at || item.trial_ends_at;
+  if (!expRaw) {
+    if (plan === 'month') {
+      return {
+        status: 'month_no_date',
+        html: '<span class="master-user-badge-exp-active">🟢 Activo</span>',
+        isExpiring: false,
+        isExpired: false
+      };
+    }
+    return {
+      status: 'free',
+      html: '<span style="font-size:11px; color:var(--text-muted);">— Básico</span>',
+      isExpiring: false,
+      isExpired: false
+    };
+  }
+
+  const expMs = new Date(expRaw).getTime();
+  if (isNaN(expMs)) {
+    return {
+      status: 'unknown',
+      html: '<span style="font-size:11px; color:var(--text-muted);">—</span>',
+      isExpiring: false,
+      isExpired: false
+    };
+  }
+
+  const nowMs = Date.now();
+  const diffMs = expMs - nowMs;
+  const graceMs = 48 * 60 * 60 * 1000; // 48h de cortesía
+  const shortDate = new Date(expMs).toLocaleDateString('es-PE', { day: '2-digit', month: 'short' });
+
+  if (diffMs > 0) {
+    const daysLeft = Math.ceil(diffMs / (24 * 60 * 60 * 1000));
+    if (daysLeft > 5) {
+      return {
+        status: 'active',
+        html: `<span class="master-user-badge-exp-active">🟢 ${daysLeft}d (${shortDate})</span>`,
+        isExpiring: false,
+        isExpired: false
+      };
+    } else {
+      return {
+        status: 'expiring',
+        html: `<span class="master-user-badge-exp-warn">🟡 ${daysLeft}d (${shortDate})</span>`,
+        isExpiring: true,
+        isExpired: false
+      };
+    }
+  } else if (nowMs <= (expMs + graceMs)) {
+    const hoursGrace = Math.max(0, Math.ceil((expMs + graceMs - nowMs) / (60 * 60 * 1000)));
+    return {
+      status: 'grace',
+      html: `<span class="master-user-badge-exp-grace">⏳ Cortesía (${hoursGrace}h)</span>`,
+      isExpiring: true,
+      isExpired: false
+    };
+  } else {
+    return {
+      status: 'expired',
+      html: `<span class="master-user-badge-exp-danger">🔴 Vencido (${shortDate})</span>`,
+      isExpiring: false,
+      isExpired: true
+    };
+  }
+}
+
 function setMasterFilter(filter) {
   masterCurrentFilter = filter;
   document.querySelectorAll('.master-filter-chip').forEach(c => c.classList.remove('active'));
   const activeBtn = document.getElementById(
     filter === 'pro_lifetime' ? 'mFilterLife' :
     (filter === 'pro_monthly' ? 'mFilterMonth' :
+    (filter === 'expiring' ? 'mFilterExpiring' :
+    (filter === 'expired' ? 'mFilterExpired' :
     (filter === 'free' ? 'mFilterFree' :
-    (filter === 'inactive' ? 'mFilterInactive' : 'mFilterAll')))
+    (filter === 'inactive' ? 'mFilterInactive' : 'mFilterAll')))))
   );
   if (activeBtn) activeBtn.classList.add('active');
   renderMasterSubscribers();
@@ -7593,6 +7959,8 @@ function renderMasterSubscribers() {
     const plan = getMasterPlanKey(item);
     if (masterCurrentFilter === 'pro_lifetime') return plan === 'life' || plan === 'founder';
     if (masterCurrentFilter === 'pro_monthly') return plan === 'month';
+    if (masterCurrentFilter === 'expiring') return plan !== 'founder' && getSubscriberExpirationInfo(item).isExpiring;
+    if (masterCurrentFilter === 'expired') return plan !== 'founder' && getSubscriberExpirationInfo(item).isExpired;
     if (masterCurrentFilter === 'free') return plan === 'free';
     if (masterCurrentFilter === 'inactive') return plan !== 'founder' && getUserLastConnectionInfo(item).isInactive;
     return true;
@@ -7601,7 +7969,7 @@ function renderMasterSubscribers() {
   if (list.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="5" style="text-align: center; padding: 28px; color: var(--text-muted); font-size: 12px;">
+        <td colspan="6" style="text-align: center; padding: 28px; color: var(--text-muted); font-size: 12px;">
           No se encontraron usuarios con el filtro seleccionado.
         </td>
       </tr>`;
@@ -7641,6 +8009,7 @@ function renderMasterSubscribers() {
     const dateStr = item.created_at ? new Date(item.created_at).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Reciente';
     const initial = cleanName.charAt(0).toUpperCase();
     const actInfo = getUserLastConnectionInfo(item);
+    const expInfo = getSubscriberExpirationInfo(item);
     const uid = escapeHtml(item.user_id || '');
     const em = escapeHtml(email);
 
@@ -7661,11 +8030,13 @@ function renderMasterSubscribers() {
           </div>
         </td>
         <td>${planBadge}</td>
+        <td>${expInfo.html}</td>
         <td>${actInfo.html}</td>
         <td style="font-weight: 800; color: var(--text-main);">${revenueEst}</td>
         <td>
           <div style="display: flex; gap: 5px; align-items: center; justify-content: flex-end; flex-wrap: wrap;">
             ${!isLife ? `<button type="button" class="master-action-btn-pill master-action-btn-life" onclick="setMasterUserPlan('${uid}', '${em}', 'pro_lifetime')" title="Activar PRO Vitalicio S/ 19.90">👑 Vitalicio</button>` : ''}
+            ${!isCesar ? `<button type="button" class="master-action-btn-pill master-action-btn-renew" onclick="renewMasterUser30Days('${uid}', '${em}')" title="Extender o renovar 30 días de PRO (S/ 4.90)">⚡ +30 Días</button>` : ''}
             ${!isMonth && !isCesar ? `<button type="button" class="master-action-btn-pill master-action-btn-month" onclick="setMasterUserPlan('${uid}', '${em}', 'pro_monthly')" title="Activar PRO Mensual S/ 4.90">📅 Mensual</button>` : ''}
             ${(isLife || isMonth) && !isCesar ? `<button type="button" class="master-action-btn-pill master-action-btn-free" onclick="setMasterUserPlan('${uid}', '${em}', 'free')" title="Bajar a cuenta gratuita">⚪ Free</button>` : ''}
             ${!isCesar ? `<button type="button" class="master-action-btn-winback" onclick="openWinBackModal('${em}', '${escapeHtml(cleanName)}', ${actInfo.daysInactive || 0})" title="Campaña Win-Back WhatsApp / Correo" style="background: rgba(37, 211, 102, 0.12); color: #16a34a; border: 1.5px solid rgba(37, 211, 102, 0.4); font-weight: 800; font-size: 11px; padding: 4px 8px; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">💬 Win-Back</button>` : ''}
@@ -7689,13 +8060,25 @@ async function setMasterUserPlan(userId, email, newPlan) {
   if (!confirm(`¿Confirmas actualizar a ${email} al plan ${planLabel}?`)) return;
 
   try {
-    // Solo columnas base compatibles con la tabla actual de Supabase
     const updatePayload = { user_id: userId, status: newPlan };
     if (email) updatePayload.email = email;
+    if (newPlan === 'pro_monthly') {
+      updatePayload.expires_at = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+    } else if (newPlan === 'pro_lifetime') {
+      updatePayload.expires_at = null;
+    }
 
-    const { error } = await supabaseClient
+    let { error } = await supabaseClient
       .from('user_subscriptions')
       .upsert(updatePayload, { onConflict: 'user_id' });
+
+    if (error && error.message && error.message.includes('expires_at')) {
+      delete updatePayload.expires_at;
+      const res = await supabaseClient
+        .from('user_subscriptions')
+        .upsert(updatePayload, { onConflict: 'user_id' });
+      error = res.error;
+    }
 
     if (error) {
       console.error('Error al actualizar plan en Supabase:', error);
@@ -7706,7 +8089,9 @@ async function setMasterUserPlan(userId, email, newPlan) {
     // Sincronizar también por correo si existen registros duplicados de pruebas
     if (email && email.includes('@')) {
       try {
-        await supabaseClient.from('user_subscriptions').update({ status: newPlan }).eq('email', email);
+        const syncPayload = { status: newPlan };
+        if (updatePayload.expires_at) syncPayload.expires_at = updatePayload.expires_at;
+        await supabaseClient.from('user_subscriptions').update(syncPayload).eq('email', email);
       } catch (e) {
         console.warn('Nota de sync duplicados:', e);
       }
@@ -7728,6 +8113,7 @@ async function setMasterUserPlan(userId, email, newPlan) {
     masterSubscribersData.forEach(s => {
       if ((s.email && s.email.toLowerCase() === email.toLowerCase()) || (userId && s.user_id === userId)) {
         s.status = newPlan;
+        if (updatePayload.expires_at) s.expires_at = updatePayload.expires_at;
       }
     });
 
@@ -7736,6 +8122,91 @@ async function setMasterUserPlan(userId, email, newPlan) {
     showToast(`✨ ${email} actualizado a ${planLabel}`, 'success');
   } catch (e) {
     console.error('Exception updating user plan:', e);
+    showToast('Error de conexión', 'error');
+  }
+}
+
+async function renewMasterUser30Days(userId, email) {
+  if (!isAdminCesar()) return;
+  if (isFounderEmail(email)) {
+    showToast('La cuenta fundadora es siempre PRO Vitalicio', 'info');
+    return;
+  }
+
+  const sub = masterSubscribersData.find(s => 
+    (s.user_id && s.user_id === userId) || 
+    (s.email && s.email.toLowerCase() === (email || '').toLowerCase())
+  );
+
+  let currentExpiresMs = sub && sub.expires_at ? new Date(sub.expires_at).getTime() : 0;
+  if (isNaN(currentExpiresMs)) currentExpiresMs = 0;
+
+  const nowMs = Date.now();
+  // Suma 30 días a partir de hoy o a partir de su vencimiento actual si aún está vigente
+  const baseMs = Math.max(nowMs, currentExpiresMs);
+  const newExpiresMs = baseMs + (30 * 24 * 60 * 60 * 1000);
+  const newExpiresIso = new Date(newExpiresMs).toISOString();
+  const dateFormatted = new Date(newExpiresMs).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' });
+
+  if (!confirm(`¿Confirmas renovar 30 días PRO para ${email}?\nNueva fecha de vencimiento: ${dateFormatted}`)) {
+    return;
+  }
+
+  try {
+    const updatePayload = {
+      user_id: userId,
+      status: 'pro_monthly',
+      expires_at: newExpiresIso,
+      updated_at: new Date().toISOString()
+    };
+    if (email) updatePayload.email = email;
+
+    let { error } = await supabaseClient
+      .from('user_subscriptions')
+      .upsert(updatePayload, { onConflict: 'user_id' });
+
+    if (error && error.message && error.message.includes('expires_at')) {
+      delete updatePayload.expires_at;
+      const res = await supabaseClient
+        .from('user_subscriptions')
+        .upsert(updatePayload, { onConflict: 'user_id' });
+      error = res.error;
+    }
+
+    if (error) {
+      console.error('Error al renovar suscripción:', error);
+      showToast('Error al renovar: ' + error.message, 'error');
+      return;
+    }
+
+    if (email && email.includes('@')) {
+      try {
+        await supabaseClient.from('user_subscriptions').update({ status: 'pro_monthly', expires_at: newExpiresIso }).eq('email', email);
+      } catch (e) {}
+    }
+
+    try {
+      await supabaseClient.from('subscription_payments').insert([{
+        user_id: userId,
+        user_email: email,
+        amount: 4.90,
+        plan_type: 'pro_monthly',
+        payment_method: 'yape_plin'
+      }]);
+    } catch (e) {}
+
+    masterSubscribersData.forEach(s => {
+      if ((s.email && s.email.toLowerCase() === (email || '').toLowerCase()) || (userId && s.user_id === userId)) {
+        s.status = 'pro_monthly';
+        s.expires_at = newExpiresIso;
+      }
+    });
+
+    renderFounderModule();
+    if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
+    showToast(`✨ Suscripción de ${email} renovada hasta el ${dateFormatted}`, 'success');
+  } catch (err) {
+    console.error('Error renovando suscripción:', err);
     showToast('Error de conexión', 'error');
   }
 }
@@ -8422,7 +8893,13 @@ window.loadMasterDashboardData = loadMasterDashboardData;
 window.setMasterFilter = setMasterFilter;
 window.filterMasterSubscribers = filterMasterSubscribers;
 window.setMasterUserPlan = setMasterUserPlan;
+window.renewMasterUser30Days = renewMasterUser30Days;
 window.handleMasterManualActivate = handleMasterManualActivate;
+window.selectProModalPlan = selectProModalPlan;
+window.copyYapePhone = copyYapePhone;
+window.copyYapeNumber = copyYapePhone;
+window.dismissProRenewalBanner = dismissProRenewalBanner;
+window.checkAndRenderProRenewalBanner = checkAndRenderProRenewalBanner;
 window.syncAdminUI = syncAdminUI;
 window.promptEditUserNickname = promptEditUserNickname;
 window.confirmDeleteMasterUser = confirmDeleteMasterUser;
