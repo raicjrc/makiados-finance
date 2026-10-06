@@ -1666,7 +1666,11 @@
 
     function handleBackdropClick(e, modalId) {
       if (e.target.id === modalId) {
-        closeModal(modalId);
+        if (modalId === 'whatsNewModal') {
+          dismissWhatsNewModal();
+        } else {
+          closeModal(modalId);
+        }
       }
     }
 
@@ -5375,13 +5379,16 @@
       if (wnBadge) wnBadge.textContent = 'Versión ' + APP_VERSION;
 
       const wnSub = document.getElementById('whatsNewVersionSub');
-      if (wnSub) wnSub.textContent = 'Actualización ' + APP_VERSION + ' · Multi-Moneda & Diseño Minimalista';
+      if (wnSub) wnSub.textContent = 'Actualización ' + APP_VERSION + ' · Nuevas Funcionalidades & Paz Mental';
     }
 
     function openWhatsNewModal() {
       closeModal('settingsModal');
       syncVersionUI();
       openModalById('whatsNewModal');
+      const userKey = currentUser ? currentUser.id : 'guest';
+      localStorage.setItem('finanzas_last_seen_version_' + userKey, APP_VERSION);
+      localStorage.setItem('finanzas_last_seen_version', APP_VERSION);
     }
 
     function dismissWhatsNewModal() {
@@ -5399,10 +5406,13 @@
       const setupDone = localStorage.getItem('finanzas_setup_completed_' + userKey) || localStorage.getItem('finanzas_setup_completed');
       const seenVer = localStorage.getItem('finanzas_last_seen_version_' + userKey) || localStorage.getItem('finanzas_last_seen_version');
 
-      // Si es el administrador César, nunca mostrar el wizard de configuración inicial
+      // Si es el administrador César, nunca interrumpir con popups automáticos de wizard ni novedades
       if (isCesar) {
         localStorage.setItem('finanzas_setup_completed_' + userKey, 'true');
         localStorage.setItem('finanzas_setup_completed', 'true');
+        localStorage.setItem('finanzas_last_seen_version_' + userKey, APP_VERSION);
+        localStorage.setItem('finanzas_last_seen_version', APP_VERSION);
+        return;
       } else {
         const hasData = (appState.salary && appState.salary > 0) || (appState.transactions && Object.keys(appState.transactions).some(m => appState.transactions[m].length > 0));
         
@@ -5415,8 +5425,11 @@
         }
       }
 
-      // 1. Prioridad: Si hay una nueva versión de la app, mostrar el modal de Novedades automáticamente
+      // 1. Prioridad: Si hay una nueva versión de la app, mostrar el modal de Novedades automáticamente UNA sola vez
       if (seenVer !== APP_VERSION) {
+        // Se marca de inmediato como vista para evitar que vuelva a saltar si el usuario cierra sesión o recarga
+        localStorage.setItem('finanzas_last_seen_version_' + userKey, APP_VERSION);
+        localStorage.setItem('finanzas_last_seen_version', APP_VERSION);
         setTimeout(() => openWhatsNewModal(), 700);
         return;
       }
