@@ -432,8 +432,11 @@
       }
 
       const expiresAt = window._currentUserSubscriptionExpiresAt;
-      if (status === 'pro_monthly' || (status === 'free' && expiresAt)) {
+      if (status === 'pro_monthly' || status === 'expired' || (status === 'free' && expiresAt)) {
         if (!expiresAt) {
+          if (status === 'expired') {
+            return { status: 'expired', isPro: false, days: -1, inGrace: false, expiresAt: null };
+          }
           return { status: 'pro_monthly', isPro: true, days: 30, inGrace: false, expiresAt: null };
         }
         const expMs = new Date(expiresAt).getTime();
@@ -720,7 +723,7 @@
 
         if (data) {
           window._currentUserSubscriptionExpiresAt = data.expires_at || data.trial_ends_at || null;
-          if (['premium', 'pro_monthly', 'pro_lifetime'].includes(data.status)) {
+          if (['premium', 'pro_monthly', 'pro_lifetime', 'expired'].includes(data.status)) {
             window._currentUserSubscriptionStatus = data.status;
           } else {
             window._currentUserSubscriptionStatus = 'free';
@@ -1148,13 +1151,13 @@
             renewBtn.textContent = 'Renovar ⚡';
           }
         } else if (subInfo.status === 'expired' || (subInfo.expiresAt && !subInfo.isPro)) {
-          const expDateStr = new Date(subInfo.expiresAt).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' });
+          const expDateStr = subInfo.expiresAt ? new Date(subInfo.expiresAt).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' }) : '';
           planBadge.textContent = '🔴 PRO Mensual (Vencido)';
           planBadge.style.color = '#dc2626';
           planBadge.style.fontWeight = '800';
           if (renewRow) {
             renewRow.style.display = 'flex';
-            renewDateText.textContent = `Venció el ${expDateStr}`;
+            renewDateText.textContent = expDateStr ? `Venció el ${expDateStr}` : 'Suscripción mensual vencida';
             renewDateText.style.color = '#dc2626';
           }
           if (renewBtn) {
