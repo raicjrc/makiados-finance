@@ -1151,12 +1151,13 @@
       }
     });
 
-    // Registrar Service Worker v69.5 (Network-First, sin caché de datos)
+    // Registrar Service Worker v71.0 (Network-First, sin caché de datos)
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=69.5')
+        let isRefreshing = false;
+        navigator.serviceWorker.register('./sw.js?v=71.0')
           .then(reg => {
-            console.log('SW v69.5 registrado:', reg.scope);
+            console.log('SW v71.0 registrado:', reg.scope);
             // Forzar actualización inmediata del SW en todos los dispositivos
             reg.update();
             if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
@@ -1173,9 +1174,12 @@
           })
           .catch(err => console.log('SW error:', err));
         
-        // Cuando el SW se actualiza, recargar para usar la nueva versión
+        // Cuando el SW se actualiza, recargar automáticamente una sola vez para que Safari / PWA aplique la versión fresca
         navigator.serviceWorker.addEventListener('controllerchange', () => {
-          console.log('SW actualizado - tomando control');
+          if (!isRefreshing) {
+            isRefreshing = true;
+            window.location.reload();
+          }
         });
       });
     }
