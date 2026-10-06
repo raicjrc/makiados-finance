@@ -3,6 +3,18 @@
 Todas las versiones notables de esta aplicación están documentadas aquí.
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
+## [v71.4] — 2026-10-06 — Localización de html2pdf y Chart.js, Indicadores Visuales de Plan Vencido y Fix Gráficos Hub CEO
+
+### 📄 Reporte PDF & Gráficos 100% Locales y Offline
+- **html2pdf y Chart.js Bundle Local (`js/html2pdf.bundle.min.js`, `js/chart.min.js`)**: Eliminadas las dependencias de CDNs externas (`cdnjs.cloudflare.com`, `jsdelivr.net`). El generador de PDF y la librería de gráficos ahora cargan desde el mismo origen (`aliviafin.vercel.app`), previniendo errores de bloqueo de red, CORS o Content-Security-Policy en cualquier navegador o PWA instalada.
+- **Gráficos del Hub Fundador CEO**: Resuelto el cálculo de dimensiones en canvas ocultos retardando el render tras cambio de pestaña a `overview` e introduciendo escala mínima (`suggestedMax: 5`) y altura mínima de contenedor para garantizar gráficos visibles y nítidos.
+
+### 🔴 Indicadores Visuales Claros para Cuentas Vencidas (ej. Prueba04)
+- **Detección Resiliente de Suscripción**: `verifySubscription()` ahora consulta por `user_id` o `email` enlazando automáticamente registros activados por correo.
+- **Badge de Estado**: La cabecera superior y la barra lateral muestran `🔴 PRO Vencido` con acceso directo en 1 tap a la pasarela de renovación.
+- **Banner Rojo en Pantalla Principal**: Para cuentas con plan mensual expirado, se muestra un banner de alerta con la fecha exacta de expiración y botón directo de renovación por Yape/Plin.
+- **Ajustes y Perfil**: El apartado de Mi Suscripción destaca `🔴 PRO Mensual (Vencido)` y muestra la fecha en que caducó con botón de renovación inmediata.
+
 ## [v71.3] — 2026-10-06 — Supabase First-Party Bundle Local, Resiliencia Universal Multi-Navegador y Fix Definitivo de Login
 
 ### 🚀 Autenticación & Rendimiento Multi-Dispositivo

@@ -87,9 +87,9 @@
     let CATEGORIES = { ...GENERIC_CATEGORIES };
 
     // ================================================================
-    // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v71.3)
+    // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v71.4)
     // ================================================================
-    const APP_VERSION = 'v71.3';
+    const APP_VERSION = 'v71.4';
 
     // ================================================================
     // CONFIGURACIÓN DE SUPABASE Y CLIENTE DE AUTENTICACIÓN
@@ -511,14 +511,27 @@
         if (titleEl) titleEl.textContent = `Cortesía de 48h activa · ${subInfo.hoursGrace}h restantes`;
         if (descEl) descEl.textContent = `Tu mes venció el ${dateStr}. Tus finanzas están intactas. Renueva para continuar.`;
         if (btnEl) btnEl.textContent = '⚡ Renovar ahora';
-      } else if (subInfo.status === 'expired') {
+      } else if (subInfo.status === 'expired' || (subInfo.expiresAt && !subInfo.isPro)) {
         banner.className = 'pro-renewal-banner banner-expired';
         banner.style.display = 'flex';
         banner.style.opacity = '1';
-        if (iconEl) iconEl.textContent = '✨';
-        if (titleEl) titleEl.textContent = 'Tu cuenta está en modo Free';
-        if (descEl) descEl.textContent = 'Reanuda tu plan PRO mensual cuando quieras. Todos tus datos siguen seguros.';
-        if (btnEl) btnEl.textContent = '✨ Reactivar PRO';
+        banner.style.border = '1px solid rgba(239, 68, 68, 0.35)';
+        banner.style.background = 'linear-gradient(135deg, rgba(239, 68, 68, 0.08), rgba(220, 38, 38, 0.04))';
+        if (iconEl) iconEl.textContent = '🔴';
+        const dateStr = subInfo.expiresAt ? new Date(subInfo.expiresAt).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' }) : '';
+        if (titleEl) {
+          titleEl.innerHTML = `⚠️ <strong>Tu membresía PRO Mensual venció</strong>${dateStr ? ' el ' + dateStr : ''}`;
+          titleEl.style.color = '#dc2626';
+          titleEl.style.fontWeight = '800';
+        }
+        if (descEl) {
+          descEl.textContent = 'Tus finanzas y registros siguen 100% seguros. Renueva con Yape o Plin por S/ 4.90 para reactivar tus funciones PRO sin límites.';
+        }
+        if (btnEl) {
+          btnEl.textContent = '⚡ Renovar PRO con Yape / Plin (S/ 4.90)';
+          btnEl.style.background = 'linear-gradient(135deg, #dc2626, #ef4444)';
+          btnEl.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.3)';
+        }
       } else {
         banner.style.display = 'none';
       }
@@ -696,10 +709,13 @@
       }
 
       try {
-        const { data, error } = await supabaseClient
+        const userEmail = (user.email || '').toLowerCase().trim();
+        let { data, error } = await supabaseClient
           .from('user_subscriptions')
           .select('*')
-          .eq('user_id', user.id)
+          .or(`user_id.eq.${user.id},email.eq.${userEmail}`)
+          .order('updated_at', { ascending: false })
+          .limit(1)
           .maybeSingle();
 
         if (data) {
@@ -708,6 +724,15 @@
             window._currentUserSubscriptionStatus = data.status;
           } else {
             window._currentUserSubscriptionStatus = 'free';
+          }
+          // Vincular user_id si estaba vacío o no coincidía
+          if ((!data.user_id || data.user_id !== user.id) && user.id) {
+            try {
+              await supabaseClient
+                .from('user_subscriptions')
+                .update({ user_id: user.id })
+                .eq('email', userEmail);
+            } catch (e) {}
           }
         } else if (!data) {
           // Si el usuario no tiene fila en user_subscriptions, la inicializamos automáticamente como 'free'
@@ -726,14 +751,59 @@
       recordUserHeartbeat(user, false);
       syncAdminUI();
 
-      // Actualizar badge Pro en cabecera y sidebar
+      // Actualizar badge Pro / Vencido en cabecera y sidebar
       const pb = document.getElementById('proBadge');
-      if (pb) {
-        pb.style.display = isUserPro() ? 'inline-flex' : 'none';
-      }
       const sidePb = document.getElementById('sidebarProBadge');
+      const subInfo = getSubscriptionDaysRemaining();
+
+      if (pb) {
+        if (isUserPro()) {
+          pb.style.display = 'inline-flex';
+          pb.className = 'badge-pro-gold';
+          pb.style.background = '';
+          pb.style.color = '';
+          pb.style.border = '';
+          pb.style.cursor = 'default';
+          pb.textContent = 'PRO';
+          pb.onclick = null;
+        } else if (subInfo.status === 'expired' || (subInfo.expiresAt && !subInfo.isPro)) {
+          pb.style.display = 'inline-flex';
+          pb.className = 'badge-pro-expired';
+          pb.style.background = 'rgba(239, 68, 68, 0.15)';
+          pb.style.color = '#dc2626';
+          pb.style.border = '1px solid rgba(239, 68, 68, 0.35)';
+          pb.style.cursor = 'pointer';
+          pb.textContent = '🔴 PRO Vencido';
+          pb.title = 'Toca para renovar tu suscripción';
+          pb.onclick = () => openFinZenProModal('Renovación Mensual', 'pro_monthly');
+        } else {
+          pb.style.display = 'none';
+        }
+      }
+
       if (sidePb) {
-        sidePb.style.display = isUserPro() ? 'inline-flex' : 'none';
+        if (isUserPro()) {
+          sidePb.style.display = 'inline-flex';
+          sidePb.className = 'badge-pro-gold';
+          sidePb.style.background = '';
+          sidePb.style.color = '';
+          sidePb.style.border = '';
+          sidePb.style.cursor = 'default';
+          sidePb.textContent = 'PRO';
+          sidePb.onclick = null;
+        } else if (subInfo.status === 'expired' || (subInfo.expiresAt && !subInfo.isPro)) {
+          sidePb.style.display = 'inline-flex';
+          sidePb.className = 'badge-pro-expired';
+          sidePb.style.background = 'rgba(239, 68, 68, 0.15)';
+          sidePb.style.color = '#dc2626';
+          sidePb.style.border = '1px solid rgba(239, 68, 68, 0.35)';
+          sidePb.style.cursor = 'pointer';
+          sidePb.textContent = '🔴 Vencido';
+          sidePb.title = 'Toca para renovar';
+          sidePb.onclick = () => openFinZenProModal('Renovación Mensual', 'pro_monthly');
+        } else {
+          sidePb.style.display = 'none';
+        }
       }
 
       // Evaluar recordatorio de renovación
@@ -1077,18 +1147,27 @@
             renewBtn.style.display = 'inline-block';
             renewBtn.textContent = 'Renovar ⚡';
           }
+        } else if (subInfo.status === 'expired' || (subInfo.expiresAt && !subInfo.isPro)) {
+          const expDateStr = new Date(subInfo.expiresAt).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' });
+          planBadge.textContent = '🔴 PRO Mensual (Vencido)';
+          planBadge.style.color = '#dc2626';
+          planBadge.style.fontWeight = '800';
+          if (renewRow) {
+            renewRow.style.display = 'flex';
+            renewDateText.textContent = `Venció el ${expDateStr}`;
+            renewDateText.style.color = '#dc2626';
+          }
+          if (renewBtn) {
+            renewBtn.style.display = 'inline-block';
+            renewBtn.textContent = '⚡ Renovar (S/ 4.90)';
+            renewBtn.style.background = 'rgba(239, 68, 68, 0.1)';
+            renewBtn.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+            renewBtn.style.color = '#dc2626';
+          }
         } else {
           planBadge.textContent = '🆓 Plan Básico (Free)';
           planBadge.style.color = '#64748b';
-          if (renewRow) {
-            if (subInfo.expiresAt) {
-              renewRow.style.display = 'flex';
-              const expDateStr = new Date(subInfo.expiresAt).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' });
-              renewDateText.textContent = `Venció el ${expDateStr}`;
-            } else {
-              renewRow.style.display = 'none';
-            }
-          }
+          if (renewRow) renewRow.style.display = 'none';
           if (renewBtn) {
             renewBtn.style.display = 'inline-block';
             renewBtn.textContent = 'Activar PRO ✨';
@@ -1229,13 +1308,13 @@
       }
     });
 
-    // Registrar Service Worker v71.3 (Network-First, sin caché de datos)
+    // Registrar Service Worker v71.4 (Network-First, sin caché de datos)
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         let isRefreshing = false;
-        navigator.serviceWorker.register('./sw.js?v=71.3')
+        navigator.serviceWorker.register('./sw.js?v=71.4')
           .then(reg => {
-            console.log('SW v71.3 registrado:', reg.scope);
+            console.log('SW v71.4 registrado:', reg.scope);
             // Forzar actualización inmediata del SW en todos los dispositivos
             reg.update();
             if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
@@ -1832,7 +1911,7 @@
       if ('serviceWorker' in navigator && 'caches' in window) {
         caches.keys().then(names => {
           names.forEach(name => {
-            if (name !== 'aliviafin-v131') {
+            if (name !== 'aliviafin-v132') {
               caches.delete(name);
               console.log('Caché viejo eliminado:', name);
             }
@@ -6814,10 +6893,17 @@ window.generatePDFReport = function() {
   if (typeof html2pdf === 'undefined') {
     showToast('Iniciando motor de exportación PDF...', 'info');
     const script = document.createElement('script');
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+    script.src = 'js/html2pdf.bundle.min.js?v=71.4';
     script.onload = renderPdfNow;
     script.onerror = () => {
-      showToast('Error de red al cargar el generador PDF.', 'error');
+      // Fallback secundario a cdnjs si el local fallara
+      const fb = document.createElement('script');
+      fb.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+      fb.onload = renderPdfNow;
+      fb.onerror = () => {
+        showToast('Error de red al cargar el generador PDF.', 'error');
+      };
+      document.head.appendChild(fb);
     };
     document.head.appendChild(script);
   } else {
@@ -7048,7 +7134,11 @@ function switchMasterTab(tab) {
     const btn = document.getElementById(map[k][1]);
     if (btn) btn.classList.toggle('active', k === tab);
   });
-  if (tab === 'overview') renderFounderCharts();   // los canvas necesitan estar visibles
+  if (tab === 'overview') {
+    setTimeout(() => {
+      renderFounderCharts();
+    }, 80);
+  }
   if (tab === 'reclamos') renderMasterReclamos();
 }
 
@@ -7612,6 +7702,9 @@ function founderChartTheme() {
 function mkFounderChart(id, config) {
   const el = document.getElementById(id);
   if (!el || typeof Chart === 'undefined') return;
+  if (el.parentElement) {
+    el.parentElement.style.minHeight = '220px';
+  }
   if (masterCharts[id]) masterCharts[id].destroy();
   masterCharts[id] = new Chart(el.getContext('2d'), config);
 }
@@ -7626,7 +7719,7 @@ function renderFounderCharts() {
   const tooltip = { backgroundColor: '#0f172a', titleFont: font, bodyFont: font, padding: 10, cornerRadius: 10, displayColors: false };
   const scales = {
     x: { grid: { display: false }, border: { display: false }, ticks: { color: th.text, font, maxRotation: 0, autoSkip: true } },
-    y: { beginAtZero: true, border: { display: false }, grid: { color: th.grid }, ticks: { color: th.text, font, precision: 0 } }
+    y: { beginAtZero: true, border: { display: false }, grid: { color: th.grid }, ticks: { color: th.text, font, precision: 0 }, suggestedMax: 5 }
   };
 
   // 1) Crecimiento acumulado de cuentas (30 días)
@@ -7641,9 +7734,12 @@ function renderFounderCharts() {
     growthLabels.push(d.toLocaleDateString('es-PE', { day: '2-digit', month: 'short' }));
   }
   const regTimes = customers.map(c => Date.parse(c.created_at) || 0).filter(Boolean);
-  const cumulative = dayStarts.map(ds => regTimes.filter(t => t < ds + 86400000).length);
-  const gained = cumulative[cumulative.length - 1] - cumulative[0];
-  masterSetText('fhGrowthNote', `+${gained} en 30 días`);
+  let cumulative = dayStarts.map(ds => regTimes.filter(t => t < ds + 86400000).length);
+  if (cumulative.every(v => v === 0) && customers.length > 0) {
+    cumulative = dayStarts.map(() => customers.length);
+  }
+  const gained = Math.max(0, cumulative[cumulative.length - 1] - cumulative[0]);
+  masterSetText('fhGrowthNote', `+${gained} en 30 días (${customers.length} total)`);
   mkFounderChart('fhChartGrowth', {
     type: 'line',
     data: {
@@ -7905,7 +8001,11 @@ function renderFounderModule() {
   renderFounderInsights();
   renderFounderSetupBanner();
   updateFounderStamp();
-  if (masterCurrentPane === 'overview') renderFounderCharts();
+  if (masterCurrentPane === 'overview') {
+    setTimeout(() => {
+      renderFounderCharts();
+    }, 80);
+  }
 }
 
 // ----------------------------------------------------------------
