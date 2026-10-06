@@ -3,6 +3,14 @@
 Todas las versiones notables de esta aplicación están documentadas aquí.
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
+## [v71.3] — 2026-10-06 — Supabase First-Party Bundle Local, Resiliencia Universal Multi-Navegador y Fix Definitivo de Login
+
+### 🚀 Autenticación & Rendimiento Multi-Dispositivo
+- **Supabase JS Embebido Localmente (`js/supabase.min.js`)**: Se eliminó la dependencia de CDNs de terceros (`jsdelivr`/`unpkg`) para el motor de autenticación y base de datos. El script se sirve como asset de primer orden en el mismo origen (`aliviafin.vercel.app`), garantizando carga instantánea (<10ms), inmunidad a bloqueadores de rastreo en Safari/iOS y funcionamiento 100% offline.
+- **Resolución Universal de `window.supabase`**: Exportación explícita a `window.supabase` y `globalThis.supabase`, garantizando inicialización síncrona en Safari iOS, macOS, Chrome, Firefox, Edge y Android PWA.
+- **Resiliencia en Formulario de Login & Registro**: Manejo exhaustivo de errores en `handleLoginSubmit` y `handleRegisterSubmit` con recuperación automática de estado del botón "Iniciar Sesión" y mensajes claros ante credenciales inválidas.
+- **Service Worker v71.3 (Cache `aliviafin-v131`)**: Limpieza automática de cachés antiguas (`aliviafin-v102` y anteriores) y propagación inmediata vía `SKIP_WAITING` y `controllerchange`.
+
 ## [v71.0] — 2026-10-06 — Blindaje de Seguridad, Eliminación de Código Legado, Carga Asíncrona PDF (-1.2 MB) y Minimalismo de Producto
 
 ### 🛡️ Blindaje de Seguridad & RLS

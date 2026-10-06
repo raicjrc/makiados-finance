@@ -87,9 +87,9 @@
     let CATEGORIES = { ...GENERIC_CATEGORIES };
 
     // ================================================================
-    // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v71.2)
+    // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v71.3)
     // ================================================================
-    const APP_VERSION = 'v71.2';
+    const APP_VERSION = 'v71.3';
 
     // ================================================================
     // CONFIGURACIÓN DE SUPABASE Y CLIENTE DE AUTENTICACIÓN
@@ -101,10 +101,11 @@
     function getSupabaseClient() {
       if (!supabaseClient) {
         try {
-          if (typeof supabase !== 'undefined' && supabase && typeof supabase.createClient === 'function') {
-            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-          } else if (typeof window !== 'undefined' && window.supabase && typeof window.supabase.createClient === 'function') {
-            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+          const sb = (typeof window !== 'undefined' && window.supabase) ||
+                     (typeof supabase !== 'undefined' ? supabase : null) ||
+                     (typeof globalThis !== 'undefined' && globalThis.supabase);
+          if (sb && typeof sb.createClient === 'function') {
+            supabaseClient = sb.createClient(SUPABASE_URL, SUPABASE_KEY);
           }
         } catch (e) {
           console.error('Error al inicializar Supabase Client:', e);
@@ -112,8 +113,8 @@
       }
       return supabaseClient;
     }
-    // Inicialización inmediata si el script de Supabase ya cargó
-    getSupabaseClient();
+    // Inicialización inmediata y robusta
+    supabaseClient = getSupabaseClient();
 
     const SUPPORTED_CURRENCIES = {
       'PEN': { code: 'PEN', symbol: 'S/', name: 'Soles peruanos', flag: '🇵🇪', locale: 'es-PE' },
@@ -280,7 +281,11 @@
         return;
       }
 
-      const client = getSupabaseClient();
+      let client = getSupabaseClient();
+      if (!client) {
+        await new Promise(r => setTimeout(r, 100));
+        client = getSupabaseClient();
+      }
       if (!client) {
         console.warn('Supabase aún no inicializado en checkLoginStatus, mostrando login.');
         document.getElementById('loginModalScreen').style.display = 'flex';
@@ -752,7 +757,11 @@
       errEl.style.display = 'none';
 
       try {
-        const client = getSupabaseClient();
+        let client = getSupabaseClient();
+        if (!client) {
+          await new Promise(r => setTimeout(r, 150));
+          client = getSupabaseClient();
+        }
         if (!client) {
           throw new Error('Servidor de autenticación no disponible. Verifica tu conexión a internet.');
         }
@@ -797,7 +806,11 @@
       okEl.style.display = 'none';
 
       try {
-        const client = getSupabaseClient();
+        let client = getSupabaseClient();
+        if (!client) {
+          await new Promise(r => setTimeout(r, 150));
+          client = getSupabaseClient();
+        }
         if (!client) {
           throw new Error('Servidor de autenticación no disponible. Verifica tu conexión.');
         }
@@ -974,7 +987,12 @@
     // AUTH SOCIAL (GOOGLE / MICROSOFT)
     async function handleOAuthLogin(provider) {
       try {
-        const { data, error } = await supabaseClient.auth.signInWithOAuth({
+        const client = getSupabaseClient();
+        if (!client) {
+          alert('🚨 El motor de autenticación se está conectando. Por favor reintenta en un momento.');
+          return;
+        }
+        const { data, error } = await client.auth.signInWithOAuth({
           provider: provider,
           options: {
             redirectTo: window.location.origin + window.location.pathname
@@ -997,7 +1015,10 @@
     async function handleLogout() {
       if (!confirm('¿Deseas cerrar tu sesión?')) return;
       try { sessionStorage.clear(); } catch(e) {}
-      await supabaseClient.auth.signOut();
+      try {
+        const client = getSupabaseClient();
+        if (client) await client.auth.signOut();
+      } catch(e) {}
       currentUser = null;
       appState = getCleanUserState();
       syncAdminUI();
@@ -1208,13 +1229,13 @@
       }
     });
 
-    // Registrar Service Worker v71.0 (Network-First, sin caché de datos)
+    // Registrar Service Worker v71.3 (Network-First, sin caché de datos)
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         let isRefreshing = false;
-        navigator.serviceWorker.register('./sw.js?v=71.0')
+        navigator.serviceWorker.register('./sw.js?v=71.3')
           .then(reg => {
-            console.log('SW v71.0 registrado:', reg.scope);
+            console.log('SW v71.3 registrado:', reg.scope);
             // Forzar actualización inmediata del SW en todos los dispositivos
             reg.update();
             if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
@@ -1811,7 +1832,7 @@
       if ('serviceWorker' in navigator && 'caches' in window) {
         caches.keys().then(names => {
           names.forEach(name => {
-            if (name !== 'aliviafin-v102') {
+            if (name !== 'aliviafin-v131') {
               caches.delete(name);
               console.log('Caché viejo eliminado:', name);
             }
