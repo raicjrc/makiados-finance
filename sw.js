@@ -1,6 +1,6 @@
-// Service Worker v70.2 - NETWORK FIRST para sincronización en tiempo real
+// Service Worker v71.0 - NETWORK FIRST para sincronización en tiempo real
 // Este SW NUNCA sirve datos de caché - siempre va a la red primero
-const CACHE_NAME = 'aliviafin-v127';
+const CACHE_NAME = 'aliviafin-v128';
 
 // Solo cachear assets estáticos (fonts, chart.js CDN)
 const STATIC_ASSETS = [
@@ -11,12 +11,9 @@ const STATIC_ASSETS = [
 
 // URLs que NUNCA deben ser cacheadas - siempre van a la red
 const NEVER_CACHE = [
-  '/api/',
-  'webhook.site',
-  'firebaseio.com',
   'supabase.co',
-  '/api/data',
-  'database.json'
+  '/auth/',
+  '/rest/'
 ];
 
 self.addEventListener('install', event => {
@@ -70,14 +67,17 @@ self.addEventListener('fetch', event => {
     return;
   }
   
+  // Solo se cachean respuestas GET exitosas del mismo origen
+  if (event.request.method !== 'GET') return;
+
   // Para todo lo demás: NETWORK FIRST (intentar la red, guardar en caché, si falla usar caché)
   event.respondWith(
     fetch(event.request)
       .then(response => {
-        const clone = response.clone();
-        caches.open(CACHE_NAME).then(cache => {
-          cache.put(event.request, clone);
-        });
+        if (response && response.ok && (response.type === 'basic' || response.type === 'cors')) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone)).catch(() => {});
+        }
         return response;
       })
       .catch(() => caches.match(event.request))

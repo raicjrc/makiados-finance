@@ -38,6 +38,18 @@
       'Otros': { icon: '📦', badgeClass: 'badge-otros', color: '#64748b', budget: 500 }
     };
 
+    // Helper de escape HTML contra inyecciones XSS (estándar OWASP)
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+    window.escapeHtml = escapeHtml;
+
     // Helper: identifica si el usuario es el administrador César
     function isAdminCesar(userOrEmail) {
       const u = userOrEmail || currentUser;
@@ -75,18 +87,13 @@
     let CATEGORIES = { ...GENERIC_CATEGORIES };
 
     // ================================================================
-    // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v69.9)
+    // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v71.0)
     // ================================================================
-    const APP_VERSION = 'v70.1';
+    const APP_VERSION = 'v71.0';
 
     const SUPPORTED_CURRENCIES = {
       'PEN': { code: 'PEN', symbol: 'S/', name: 'Soles peruanos', flag: '🇵🇪', locale: 'es-PE' },
-      'USD': { code: 'USD', symbol: '$', name: 'Dólares estadounidenses', flag: '🇺🇸', locale: 'en-US' },
-      'EUR': { code: 'EUR', symbol: '€', name: 'Euros', flag: '🇪🇺', locale: 'de-DE' },
-      'MXN': { code: 'MXN', symbol: '$', name: 'Pesos mexicanos', flag: '🇲🇽', locale: 'es-MX' },
-      'COP': { code: 'COP', symbol: '$', name: 'Pesos colombianos', flag: '🇨🇴', locale: 'es-CO' },
-      'ARS': { code: 'ARS', symbol: '$', name: 'Pesos argentinos', flag: '🇦🇷', locale: 'es-AR' },
-      'CLP': { code: 'CLP', symbol: '$', name: 'Pesos chilenos', flag: '🇨🇱', locale: 'es-CL' }
+      'USD': { code: 'USD', symbol: '$', name: 'Dólares estadounidenses', flag: '🇺🇸', locale: 'en-US' }
     };
 
     function getActiveCurrency() {
@@ -355,8 +362,8 @@
     function isUserPro() {
       // 1. César (admin) siempre tiene acceso Pro de por vida
       if (isAdminCesar()) return true;
-      // 2. Si tiene flag 'is_pro' en metadata de Supabase
-      if (currentUser && currentUser.user_metadata && currentUser.user_metadata.is_pro === true) return true;
+      // 2. Única fuente de verdad: user_subscriptions (protegida por RLS y trigger en Supabase).
+      //    Se ignoran user_metadata y localStorage porque el usuario puede editarlos.
       // 3. Si en user_subscriptions está como 'premium' o 'pro_lifetime'
       const status = window._currentUserSubscriptionStatus;
       if (['premium', 'pro_lifetime'].includes(status)) return true;
@@ -376,8 +383,6 @@
         return false;
       }
 
-      // 5. Si tiene desbloqueo local
-      if (localStorage.getItem('aliviafin_pro_unlocked') === 'true' || localStorage.getItem('finzen_pro_unlocked') === 'true') return true;
       return false;
     }
 
@@ -538,15 +543,6 @@
         if (iconEl) iconEl.textContent = '📋';
       }, 2200);
     }
-
-    // Helper para desbloquear Pro internamente o por consola sin ensuciar la UI
-    window.aliviafinUnlockPro = window.finzenUnlockPro = function() {
-      localStorage.setItem('aliviafin_pro_unlocked', 'true');
-      const pb = document.getElementById('proBadge');
-      if (pb) pb.style.display = 'inline-flex';
-      showToast('✨ AliviaFin Pro activado con éxito', 'success');
-      renderAll();
-    };
 
     function openFinZenProModal(featureName, initialPlan) {
       if (initialPlan) {
@@ -834,7 +830,7 @@
           errEl.textContent = '🚨 ' + error.message;
           errEl.style.display = 'block';
         } else {
-          okEl.innerHTML = `✅ ¡Listo! Te enviamos un correo a <b>${email}</b> con el enlace seguro para restablecer tu contraseña. Revisa también tu carpeta de Spam.`;
+          okEl.innerHTML = `✅ ¡Listo! Te enviamos un correo a <b>${escapeHtml(email)}</b> con el enlace seguro para restablecer tu contraseña. Revisa también tu carpeta de Spam.`;
           okEl.style.display = 'block';
         }
       } catch (err) {
@@ -1074,19 +1070,6 @@
           console.warn('Nota guardando nombre en Supabase:', e);
         }
         showToast('✅ Nombre actualizado a "' + newName + '"', 'success');
-      }
-    }
-
-    function toggleTourPreference(showTour) {
-      const userKey = currentUser ? currentUser.id : 'guest';
-      if (!showTour) {
-        localStorage.setItem('finanzas_tour_dismissed_' + userKey, 'true');
-        localStorage.setItem('finanzas_tour_dismissed', 'true');
-        showToast('Tour desactivado al iniciar sesión', 'info');
-      } else {
-        localStorage.removeItem('finanzas_tour_dismissed_' + userKey);
-        localStorage.removeItem('finanzas_tour_dismissed');
-        showToast('Tour activado al iniciar sesión', 'info');
       }
     }
 
@@ -5269,16 +5252,6 @@
     // ================================================================
     // ASISTENTE DE BIENVENIDA & TUTORIAL ONBOARDING (v55.0)
     // ================================================================
-    function escapeHtml(str) {
-      if (!str) return '';
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-    }
-
     let wizardCurrentStep = 1;
 
     function openOnboardingWizard(force = false) {
@@ -5669,14 +5642,17 @@
         }
       }
 
-      // 1. Prioridad: Si hay una nueva versión de la app, mostrar el modal de Novedades automáticamente UNA sola vez
-      if (seenVer !== APP_VERSION) {
-        // Se marca de inmediato como vista para evitar que vuelva a saltar si el usuario cierra sesión o recarga
+      // Si el navegador ya tiene registrada alguna versión vista, NO molestar con popups automáticos en login/logout
+      // El usuario puede consultar novedades cuando lo desee desde Ajustes > 🚀 Novedades
+      if (seenVer) {
         localStorage.setItem('finanzas_last_seen_version_' + userKey, APP_VERSION);
         localStorage.setItem('finanzas_last_seen_version', APP_VERSION);
-        setTimeout(() => openWhatsNewModal(), 700);
         return;
       }
+
+      // Primera vez absoluta en este navegador
+      localStorage.setItem('finanzas_last_seen_version_' + userKey, APP_VERSION);
+      localStorage.setItem('finanzas_last_seen_version', APP_VERSION);
     }
 
     // ================================================================
@@ -6746,9 +6722,29 @@ window.generatePDFReport = function() {
   };
 
   showToast('Generando reporte PDF...', 'success');
-  html2pdf().set(opt).from(element).save().then(() => {
-    showToast('¡PDF descargado exitosamente!', 'success');
-  });
+
+  // Carga bajo demanda de html2pdf para no sobrecargar el inicio de la app (~900 KB)
+  const renderPdfNow = () => {
+    html2pdf().set(opt).from(element).save().then(() => {
+      showToast('¡PDF descargado exitosamente!', 'success');
+    }).catch(err => {
+      console.error(err);
+      showToast('Error al generar el PDF. Inténtalo de nuevo.', 'error');
+    });
+  };
+
+  if (typeof html2pdf === 'undefined') {
+    showToast('Iniciando motor de exportación PDF...', 'info');
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+    script.onload = renderPdfNow;
+    script.onerror = () => {
+      showToast('Error de red al cargar el generador PDF.', 'error');
+    };
+    document.head.appendChild(script);
+  } else {
+    renderPdfNow();
+  }
 };
 window.exportMonthlyReportPDF = window.generatePDFReport;
 

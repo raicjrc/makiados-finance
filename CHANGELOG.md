@@ -3,6 +3,33 @@
 Todas las versiones notables de esta aplicación están documentadas aquí.
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
+## [v71.0] — 2026-10-06 — Blindaje de Seguridad, Eliminación de Código Legado, Carga Asíncrona PDF (-1.2 MB) y Minimalismo de Producto
+
+### 🛡️ Blindaje de Seguridad & RLS
+- **Fuente Única de Verdad para PRO**: `isUserPro()` ahora consulta exclusivamente el estado en `user_subscriptions` validado en Supabase. Se removieron dependencias de `user_metadata` y flags locales en `localStorage`, impidiendo cualquier manipulación desde la consola del navegador.
+- **Eliminación de Endpoints Huérfanos**: Se eliminaron completamente `/api/data.js` y `server.py` que contenían rezagos de webhook y endpoints públicos sin autenticación.
+- **Cabeceras HTTP de Alta Seguridad en Vercel**: Configuración en `vercel.json` con `Content-Security-Policy` estricta, `X-Frame-Options: DENY`, `Strict-Transport-Security`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` y `Cross-Origin-Opener-Policy`.
+- **Script Transaccional de Hardening SQL (`supabase-hardening.sql`)**: 
+  - Función `public.is_admin()` basada en UUID del fundador.
+  - Políticas RLS estrictas y trigger `trg_guard_user_subscriptions` que fuerzan plan `free` en creación e impiden que usuarios normales modifiquen su plan o fecha de expiración.
+  - Triggers anti-spam y validación de longitud para `app_feedback` y `app_reclamaciones`.
+  - Revocación de privilegios públicos en RPCs administrativas.
+- **Prevención de Inyección XSS**: Centralización y exportación global de `escapeHtml()` y sanitización en modales y flujos de recuperación de cuenta.
+
+### ⚡ Optimización de Rendimiento y Carga (< 100ms)
+- **Eliminación de `pdf.js`**: Removido del `<head>` del HTML (~300 KB liberados del parser inicial).
+- **Carga Asíncrona Bajo Demanda de `html2pdf`**: La librería de ~900 KB ya no se descarga en el arranque de la app; se descarga en segundo plano únicamente cuando el usuario hace clic en *"Descargar Reporte Mensual (PDF)"*.
+- **Versiones Fijadas de Librerías Externas**: `chart.js` fijado a `@4.4.7` y `supabase-js` fijado a `@2.48.1`.
+- **Service Worker v71.0 (Cache v128)**: Invalida cachés obsoletas y refuerza el patrón Network-First seguro.
+
+### 🎨 Minimalismo de Producto y Experiencia Ejecutiva
+- **Selector de Moneda Depurado**: Ajustado exclusivamente a Soles (PEN 🇵🇪) y Dólares (USD 🇺🇸).
+- **Ajustes Simplificados**: Se eliminó el botón duplicado de privacidad (disponible en cabecera) y el toggle de tour automático al iniciar.
+- **Unificación de Sueldo**: Se consolidó la edición de sueldo y gastos fijos en un solo flujo intuitivo.
+- **Control de Novedades**: Se corrigió la reaparición repetitiva del modal de novedades al cerrar y reabrir sesión.
+
+---
+
 ## [v69.0] — 2026-10-04 — Hub de Fundador CEO a Pantalla Completa, Gráficos SaaS Chart.js, Telemetría Viva sin Throttling en Login y Auditoría Total
 
 ### 👑 Hub de Fundador CEO a Pantalla Completa (Módulo Nativo)
