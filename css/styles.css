@@ -1904,75 +1904,237 @@
     .mt-4 { margin-top: 16px; }
     .mb-2 { margin-bottom: 8px; }
 
-    /* ====== LOGIN SCREEN v69.7 (SPLIT-SCREEN EMERALD & DEEP SLATE) ====== */
+    /* ====== LOGIN SCREEN v70.1 (SPLIT-SCREEN EMERALD & DEEP SLATE) ====== */
     #loginModalScreen {
       position: fixed;
       inset: 0;
       background: 
-        radial-gradient(circle at 18% 28%, rgba(16, 185, 129, 0.15) 0%, transparent 45%),
-        radial-gradient(circle at 82% 78%, rgba(5, 150, 105, 0.10) 0%, transparent 50%),
-        radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 0.7) 0%, transparent 100%),
+        radial-gradient(circle at 18% 25%, rgba(16, 185, 129, 0.16) 0%, transparent 45%),
+        radial-gradient(circle at 82% 75%, rgba(5, 150, 105, 0.12) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 0.8) 0%, transparent 100%),
         #080c14;
       display: flex;
       align-items: center;
       justify-content: center;
       z-index: 99999;
-      padding: 20px 16px;
+      padding: max(20px, env(safe-area-inset-top)) 20px max(20px, env(safe-area-inset-bottom)) 20px;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
       min-height: 100dvh;
+      box-sizing: border-box;
     }
 
     .login-layout-container {
-      max-width: 440px;
+      max-width: 980px;
       width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 48px;
       margin: auto;
       position: relative;
       z-index: 2;
+      box-sizing: border-box;
+    }
+
+    /* Panel Izquierdo Desktop: Marca y Confianza */
+    .login-showcase-pane {
+      flex: 1;
+      max-width: 460px;
       display: flex;
       flex-direction: column;
+      justify-content: space-between;
+      gap: 24px;
+      color: #ffffff;
+    }
+
+    .login-brand-header {
+      display: flex;
       align-items: center;
       gap: 16px;
+    }
+
+    .login-brand-logo {
+      width: 58px;
+      height: 58px;
+      border-radius: 18px;
+      box-shadow: 0 8px 24px rgba(5, 150, 105, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      flex-shrink: 0;
+    }
+
+    .login-brand-title {
+      font-size: 28px;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: -0.5px;
+      margin: 0 0 2px 0;
+      line-height: 1.1;
+    }
+
+    .login-brand-tagline {
+      font-size: 13.5px;
+      color: #94a3b8;
+      margin: 0;
+      font-weight: 500;
+    }
+
+    .login-hero-glass-card {
+      background: rgba(255, 255, 255, 0.04);
+      backdrop-filter: blur(28px) saturate(180%);
+      -webkit-backdrop-filter: blur(28px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 24px;
+      padding: 24px 22px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+      position: relative;
+    }
+
+    .hero-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .hero-card-pill {
+      font-size: 11px;
+      font-weight: 800;
+      color: #10b981;
+      background: rgba(16, 185, 129, 0.14);
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .hero-card-status {
+      font-size: 11px;
+      color: #64748b;
+      font-weight: 600;
+    }
+
+    .hero-card-metric {
+      margin-bottom: 18px;
+    }
+
+    .hero-metric-label {
+      font-size: 10.5px;
+      font-weight: 800;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .hero-metric-value {
+      font-size: 26px;
+      font-weight: 900;
+      color: #ffffff;
+      letter-spacing: -0.5px;
+      margin-top: 3px;
+    }
+
+    .hero-card-badges {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding-top: 16px;
+    }
+
+    .hero-badge-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .hero-badge-icon {
+      font-size: 18px;
+      line-height: 1;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .hero-badge-item strong {
+      color: #f1f5f9;
+      font-size: 12.5px;
+      display: block;
+    }
+
+    .hero-badge-item p {
+      margin: 1px 0 0 0;
+      color: #94a3b8;
+      font-size: 11px;
+    }
+
+    /* Panel Derecho: Tarjeta de Acceso */
+    .login-auth-pane {
+      flex: 1;
+      max-width: 420px;
+      width: 100%;
     }
 
     .login-card {
       background: #ffffff;
       border-radius: 26px;
-      padding: 34px 28px;
-      box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.15);
+      padding: 32px 28px;
+      box-shadow: 0 32px 80px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.9);
       position: relative;
       width: 100%;
       box-sizing: border-box;
     }
 
-    .login-brand-header-center {
+    /* Marca Móvil (Visible en celulares) */
+    .login-mobile-brand {
+      display: none;
+      flex-direction: column;
+      align-items: center;
       text-align: center;
-      margin-bottom: 22px;
+      margin-bottom: 18px;
     }
 
-    .login-brand-header-center img {
-      width: 54px;
-      height: 54px;
+    .login-mobile-logo {
+      width: 52px;
+      height: 52px;
       border-radius: 16px;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
       box-shadow: 0 8px 22px rgba(5, 150, 105, 0.28);
+      border: 1px solid rgba(255, 255, 255, 0.15);
     }
 
-    .login-brand-header-center h2 {
-      font-size: 24px;
+    .login-mobile-title {
+      font-size: 22px;
       font-weight: 800;
       color: #0f172a;
       letter-spacing: -0.5px;
       margin: 0 0 2px 0;
     }
 
-    .login-brand-header-center p {
-      font-size: 13px;
+    .login-mobile-tagline {
+      font-size: 12.5px;
       color: #64748b;
-      margin: 0;
+      margin: 0 0 8px 0;
       font-weight: 500;
     }
 
+    .login-mobile-pill-tag {
+      font-size: 10.5px;
+      font-weight: 700;
+      color: #059669;
+      background: rgba(16, 185, 129, 0.10);
+      padding: 3px 10px;
+      border-radius: 20px;
+      border: 1px solid rgba(16, 185, 129, 0.22);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Enlace Legal Unificado */
     .login-unified-legal-link {
       color: #94a3b8;
       font-size: 12px;
@@ -1997,12 +2159,88 @@
     .login-version-tag {
       font-size: 11px;
       color: #64748b;
-      margin: 4px 0 0 0;
+      margin: 6px 0 0 0;
       font-weight: 500;
-      text-align: center;
     }
 
-    @media (max-width: 640px) {
+    .desktop-only-footer {
+      display: block;
+      margin-top: 6px;
+    }
+
+    .mobile-only-footer {
+      display: none;
+    }
+
+    /* Adaptación Móvil (< 900px) */
+    @media (max-width: 899px) {
+      #loginModalScreen {
+        align-items: flex-start;
+        padding: 16px 14px;
+      }
+      .login-layout-container {
+        flex-direction: column;
+        gap: 16px;
+        padding-top: max(10px, env(safe-area-inset-top));
+        padding-bottom: max(16px, env(safe-area-inset-bottom));
+      }
+      .login-showcase-pane {
+        display: none;
+      }
+      .desktop-only-footer {
+        display: none;
+      }
+      .login-mobile-brand {
+        display: flex;
+      }
+      .mobile-only-footer {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        margin-top: 12px;
+      }
+      .mobile-trust-badges {
+        background: rgba(255, 255, 255, 0.04);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 18px;
+        padding: 14px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        width: 100%;
+        box-sizing: border-box;
+      }
+      .mobile-trust-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        font-size: 11px;
+        line-height: 1.35;
+      }
+      .mobile-trust-icon {
+        font-size: 16px;
+        line-height: 1;
+        flex-shrink: 0;
+        margin-top: 1px;
+      }
+      .mobile-trust-item strong {
+        color: #f1f5f9;
+        font-size: 11.5px;
+        display: block;
+      }
+      .mobile-trust-item p {
+        margin: 1px 0 0 0;
+        color: #94a3b8;
+        font-size: 10.5px;
+      }
+      .mobile-legal-wrap {
+        text-align: center;
+        margin-top: 14px;
+        width: 100%;
+      }
       .login-card {
         padding: 26px 20px;
         border-radius: 22px;

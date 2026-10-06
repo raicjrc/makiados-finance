@@ -77,7 +77,7 @@
     // ================================================================
     // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v69.9)
     // ================================================================
-    const APP_VERSION = 'v69.9';
+    const APP_VERSION = 'v70.1';
 
     const SUPPORTED_CURRENCIES = {
       'PEN': { code: 'PEN', symbol: 'S/', name: 'Soles peruanos', flag: '🇵🇪', locale: 'es-PE' },
@@ -261,7 +261,13 @@
         });
       }
 
-      // Soporte para depuración / vista previa local (?debug_tour=1 o ?demo=1 o ?preview=1)
+      // Soporte para depuración / vista previa local (?debug_tour=1 o ?demo=1 o ?preview=1 o ?view_login=1)
+      if (window.location.search.includes('view_login=1')) {
+        document.getElementById('loginModalScreen').style.display = 'flex';
+        document.getElementById('appMainWrapper').style.display = 'none';
+        return;
+      }
+
       if (window.location.search.includes('debug_tour=1') || window.location.search.includes('demo=1') || window.location.search.includes('preview=1')) {
         await onLoginSuccess({ id: 'test_user_tour', email: 'cesar.risso.f@gmail.com', user_metadata: { full_name: 'makiados' } });
         if (window.location.search.includes('debug_tour=1')) {
@@ -5355,8 +5361,9 @@
     // NOVEDADES DE LA VERSIÓN (WHAT'S NEW)
     // ================================================================
     function syncVersionUI() {
-      const loginVer = document.getElementById('loginFooterVersion');
-      if (loginVer) loginVer.textContent = 'AliviaFin ' + APP_VERSION + ' · Paz mental para tu dinero';
+      document.querySelectorAll('.login-version-tag').forEach(el => {
+        el.textContent = 'AliviaFin ' + APP_VERSION + ' · Paz mental para tu dinero';
+      });
 
       const settVer = document.getElementById('settingsVersion');
       if (settVer) settVer.textContent = APP_VERSION;
