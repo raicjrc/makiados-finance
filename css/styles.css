@@ -3748,77 +3748,67 @@
 
     /* ====== 0. EXECUTIVE BALANCE CARD & APPLE FINTECH SPRINGS (v67.4) ====== */
     .executive-balance-card {
-      background: rgba(255, 255, 255, 0.82);
-      border-radius: 22px;
-      padding: 18px 20px;
-      margin-bottom: 14px;
-      border: 1px solid rgba(226, 232, 240, 0.85);
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03), 0 10px 28px -4px rgba(15, 23, 42, 0.05);
+      background: rgba(18, 26, 43, 0.82);
+      border-radius: 24px;
+      padding: 22px 24px;
+      margin-bottom: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45), 0 0 35px rgba(16, 185, 129, 0.08);
       position: relative;
       overflow: hidden;
       transition: transform 0.22s var(--apple-spring), box-shadow 0.22s var(--apple-spring), border-color 0.22s ease;
-      backdrop-filter: blur(24px) saturate(180%);
-      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      backdrop-filter: blur(28px) saturate(180%);
+      -webkit-backdrop-filter: blur(28px) saturate(180%);
     }
     .executive-balance-card:hover {
       transform: translateY(-2px);
-      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
-      border-color: rgba(99, 102, 241, 0.35);
+      box-shadow: 0 20px 48px rgba(0, 0, 0, 0.55), 0 0 45px rgba(16, 185, 129, 0.14);
+      border-color: rgba(16, 185, 129, 0.35);
     }
     .executive-balance-card:active {
-      transform: scale(0.975);
+      transform: scale(0.98);
     }
 
-    .exec-card-header {
+    .exec-card-top-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 8px;
+      margin-bottom: 14px;
     }
-    .exec-card-title-group {
+    .exec-card-brand-label {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: 7px;
     }
-    .exec-card-badge-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: #10b981;
+    .exec-apple-glyph {
+      font-size: 14px;
+      opacity: 0.85;
+      color: #10b981;
     }
     .exec-card-title {
-      font-size: 11px;
-      font-weight: 800;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: #64748b;
-    }
-    .exec-card-info-icon {
-      font-size: 11px;
-      opacity: 0.65;
-      transition: opacity 0.2s;
-    }
-    .exec-card-info-icon:hover {
-      opacity: 1;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: #94a3b8;
     }
 
     .exec-badge-live {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      font-size: 10px;
+      font-size: 10.5px;
       font-weight: 800;
       letter-spacing: 0.04em;
-      padding: 3.5px 9px;
+      padding: 3.5px 10px;
       border-radius: 9999px;
-      background: rgba(16, 185, 129, 0.12);
-      color: #059669;
-      border: 1px solid rgba(16, 185, 129, 0.28);
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.35);
       transition: all 0.25s ease;
     }
     .exec-badge-live.is-historical {
-      background: rgba(100, 116, 139, 0.12);
-      color: #475569;
+      background: rgba(100, 116, 139, 0.15);
+      color: #94a3b8;
       border: 1px solid rgba(100, 116, 139, 0.25);
     }
 
@@ -3836,81 +3826,142 @@
       100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
     }
 
-    .exec-card-body {
-      margin-top: 2px;
+    .exec-card-main-content {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    @media (min-width: 640px) {
+      .exec-card-main-content {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: flex-end;
+      }
+    }
+
+    .exec-card-balance-section {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
     }
     .exec-balance-amount {
       position: relative;
-      font-size: 34px;
+      font-size: 38px;
       font-weight: 800;
-      letter-spacing: -0.03em;
-      color: #0f172a;
-      line-height: 1.15;
+      letter-spacing: -0.035em;
+      color: #ffffff;
+      line-height: 1.1;
       font-variant-numeric: tabular-nums;
-      display: flex;
+      display: inline-flex;
       align-items: baseline;
-      gap: 3px;
+      white-space: nowrap;
+      gap: 4px;
+      text-shadow: 0 0 28px rgba(16, 185, 129, 0.18);
     }
     .exec-currency-glyph {
-      font-size: 21px;
+      font-size: 22px;
       font-weight: 700;
-      opacity: 0.75;
+      opacity: 0.85;
+      color: #10b981;
+      white-space: nowrap;
     }
-    .exec-balance-context {
-      position: relative;
-      margin-top: 6px;
-      font-size: 11.5px;
+    .exec-card-subtitle {
+      font-size: 12px;
+      font-weight: 600;
       color: #64748b;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      flex-wrap: wrap;
+      margin-top: 2px;
     }
 
+    /* Integrated Metrics Cluster (3 Soft Glass Pills) */
+    .exec-card-metrics-cluster {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    @media (min-width: 640px) {
+      .exec-card-metrics-cluster {
+        display: flex;
+        flex-direction: row;
+        gap: 12px;
+        flex-shrink: 0;
+      }
+    }
+
+    .exec-cluster-pill {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 11px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      transition: all 0.18s ease;
+      min-width: 0;
+    }
+    .exec-cluster-pill:hover {
+      background: rgba(255, 255, 255, 0.09);
+      border-color: rgba(255, 255, 255, 0.15);
+      transform: translateY(-1px);
+    }
+    .exec-pill-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .exec-pill-dot.dot-income {
+      background: #10b981;
+      box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+    }
+    .exec-pill-dot.dot-expense {
+      background: #f43f5e;
+      box-shadow: 0 0 8px rgba(244, 63, 94, 0.5);
+    }
+    .exec-pill-dot.dot-pending {
+      background: #f59e0b;
+      box-shadow: 0 0 8px rgba(245, 158, 11, 0.5);
+    }
+
+    .exec-pill-content {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    .exec-pill-label {
+      font-size: 9.5px;
+      font-weight: 700;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .exec-pill-val {
+      font-size: 13.5px;
+      font-weight: 800;
+      color: #f8fafc;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .exec-pill-val.text-danger { color: #fda4af; }
+    .exec-pill-val.text-warning { color: #fde68a; }
+
     .exec-history-banner {
-      margin-top: 10px;
-      padding: 7px 12px;
-      background: rgba(15, 23, 42, 0.04);
-      border: 1px solid rgba(15, 23, 42, 0.08);
-      border-radius: 11px;
-      font-size: 11.5px;
+      margin-top: 12px;
+      padding: 8px 14px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      font-size: 12px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      color: #334155;
-    }
-    .exec-history-return {
-      color: #4f46e5;
-      font-weight: 800;
-      text-decoration: underline;
-      cursor: pointer;
-    }
-
-    /* Twilight Theme Adaptation for Executive Balance Card */
-    body.theme-twilight .executive-balance-card {
-      background: rgba(30, 41, 59, 0.72);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 12px 32px rgba(0, 0, 0, 0.35);
-    }
-    body.theme-twilight .executive-balance-card:hover {
-      border-color: rgba(99, 102, 241, 0.4);
-    }
-    body.theme-twilight .exec-card-title {
-      color: #94a3b8;
-    }
-    body.theme-twilight .exec-balance-amount {
-      color: #f8fafc;
-    }
-    body.theme-twilight .exec-balance-context {
-      color: #94a3b8;
-    }
-    body.theme-twilight .exec-history-banner {
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.12);
       color: #e2e8f0;
     }
-    body.theme-twilight .exec-history-return {
-      color: #818cf8;
+    .exec-history-return {
+      color: #34d399;
+      font-weight: 800;
+      cursor: pointer;
     }
 
     /* Tab entrance animation (cross-fade & micro-slide) */
@@ -4294,72 +4345,88 @@
       transform: translateY(-1px);
     }
 
-    /* ====== 2. FEED DE ÚLTIMOS MOVIMIENTOS ====== */
+    /* ====== 2. FEED DE ÚLTIMOS MOVIMIENTOS (APPLE WALLET STYLE) ====== */
     .recent-tx-feed {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 2px;
       margin-bottom: 8px;
     }
     .recent-tx-item {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 10px 12px;
-      background: var(--bg-main);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      transition: all 0.15s ease;
+      padding: 12px 4px;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      transition: background 0.15s ease, transform 0.15s ease;
+      cursor: pointer;
     }
     .recent-tx-item:hover {
-      background: var(--card-hover-bg);
-      border-color: var(--card-glass-border);
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 12px;
+      padding-left: 8px;
+      padding-right: 8px;
       transform: translateX(2px);
+    }
+    .recent-tx-item:last-child {
+      border-bottom: none;
     }
     .recent-tx-left {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
       min-width: 0;
     }
     .recent-tx-icon-box {
-      width: 36px;
-      height: 36px;
-      border-radius: 10px;
-      background: var(--card-bg);
-      border: 1px solid var(--border);
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.08);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 17px;
+      font-size: 18px;
       flex-shrink: 0;
+      color: #f8fafc;
     }
     .recent-tx-info {
       min-width: 0;
     }
     .recent-tx-name {
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--text-main);
+      font-size: 14px;
+      font-weight: 600;
+      color: #f8fafc;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
     .recent-tx-meta {
-      font-size: 10.5px;
-      font-weight: 600;
-      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 500;
+      color: #94a3b8;
       display: flex;
       align-items: center;
       gap: 6px;
-      margin-top: 1px;
+      margin-top: 2px;
+    }
+    .recent-tx-cat-pill {
+      background: rgba(255, 255, 255, 0.06);
+      color: #94a3b8;
+      padding: 1.5px 7px;
+      border-radius: 6px;
+      font-size: 10.5px;
+      font-weight: 600;
     }
     .recent-tx-amount {
-      font-size: 13.5px;
-      font-weight: 800;
-      color: var(--danger);
+      font-size: 14.5px;
+      font-weight: 700;
+      color: #f8fafc;
       white-space: nowrap;
-      margin-left: 8px;
+      margin-left: 10px;
+      font-variant-numeric: tabular-nums;
     }
     .btn-see-all-tx {
       width: 100%;
@@ -4745,12 +4812,23 @@
     }
 
     @media (min-width: 1024px) {
-      .container {
-        max-width: 1360px;
-        padding: 16px 28px;
+      .top-navbar .brand-group {
+        display: none !important;
+      }
+      .top-navbar {
+        background: transparent !important;
+        border-bottom: none !important;
+        box-shadow: none !important;
+        padding-top: 14px;
+        padding-bottom: 6px;
       }
       .top-navbar-inner {
         max-width: 1360px;
+        justify-content: flex-end;
+      }
+      .container {
+        max-width: 1360px;
+        padding: 16px 28px;
       }
       .desktop-home-grid {
         display: grid;
@@ -6421,24 +6499,48 @@
       }
     }
 
-    @media (max-width: 480px) {
+    @media (max-width: 1023px) {
+      .zen-actions-grid {
+        display: none !important;
+      }
+      .desktop-user-badge {
+        display: none !important;
+      }
       .bottom-nav {
-        height: calc(56px + env(safe-area-inset-bottom, 8px));
-        padding-bottom: env(safe-area-inset-bottom, 8px);
-        padding-left: 2px;
-        padding-right: 2px;
+        position: fixed !important;
+        bottom: max(12px, env(safe-area-inset-bottom, 12px)) !important;
+        left: 14px !important;
+        right: 14px !important;
+        width: auto !important;
+        max-width: calc(100vw - 28px) !important;
+        margin: 0 auto !important;
+        height: 62px !important;
+        background: rgba(18, 25, 42, 0.88) !important;
+        backdrop-filter: blur(28px) saturate(190%) !important;
+        -webkit-backdrop-filter: blur(28px) saturate(190%) !important;
+        border: 1px solid rgba(255, 255, 255, 0.12) !important;
+        border-radius: 28px !important;
+        box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5) !important;
+        display: grid !important;
+        grid-template-columns: 1fr 1fr 58px 1fr 1fr !important;
+        align-items: center !important;
+        justify-items: center !important;
+        z-index: 1000 !important;
+        padding: 0 4px !important;
+      }
+      .container {
+        padding-bottom: 96px !important;
       }
       .nav-item {
-        padding: 4px 1px;
-        font-size: 9.5px;
-        gap: 1px;
+        padding: 6px 2px;
+        font-size: 10px;
+        color: #94a3b8;
       }
-      .nav-item span {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+      .nav-item.active {
+        color: #10b981;
+        background: rgba(16, 185, 129, 0.12);
       }
-      .nav-item .nav-icon {
-        font-size: 17px;
+      .nav-icon {
+        font-size: 18px;
       }
     }

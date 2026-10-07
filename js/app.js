@@ -854,14 +854,8 @@
           uBadge.onclick = () => openFinZenProModal('Renovación Mensual', 'pro_monthly');
           uBadge.style.cursor = 'pointer';
         } else if (isPro) {
-          uBadge.style.display = 'inline-flex';
-          uBadge.style.background = 'linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(217, 119, 6, 0.22))';
-          uBadge.style.border = '1px solid rgba(245, 158, 11, 0.45)';
-          uBadge.style.color = '#d97706';
-          uDot.textContent = '👑';
-          uText.textContent = 'PRO';
-          uBadge.onclick = null;
-          uBadge.style.cursor = 'default';
+          // Si el usuario es PRO activo, no duplicar el badge en la cabecera (ya aparece en el logo)
+          uBadge.style.display = 'none';
         } else {
           uBadge.style.display = 'none';
         }
@@ -2224,7 +2218,15 @@
     }
 
     function initTheme() {
-      const savedTheme = localStorage.getItem('finanzas_theme') || 'crystal';
+      // Migración automática v72 para asegurar la estética ejecutiva Obsidian Dark de los mockups
+      let savedTheme = localStorage.getItem('finanzas_theme');
+      if (!localStorage.getItem('aliviafin_theme_v72_migrated')) {
+        savedTheme = 'twilight';
+        localStorage.setItem('finanzas_theme', 'twilight');
+        localStorage.setItem('aliviafin_theme_v72_migrated', 'true');
+      }
+      if (!savedTheme) savedTheme = 'twilight';
+
       if (savedTheme === 'twilight') {
         document.body.classList.add('theme-twilight');
       } else {
@@ -2851,13 +2853,13 @@
               <div class="recent-tx-info">
                 <div class="recent-tx-name">${escapeHtml(t.name)}</div>
                 <div class="recent-tx-meta">
-                  <span>${escapeHtml(t.category)}</span>
-                  <span title="${isPagado ? 'Pagado' : 'Pendiente'}">${isPagado ? '🟢' : '⏳'}</span>
+                  <span class="recent-tx-cat-pill">${escapeHtml(t.category)}</span>
+                  ${isPagado ? '' : '<span title="Pendiente">⏳</span>'}
                   ${methodTag}
                 </div>
               </div>
             </div>
-            <div class="recent-tx-amount">- ${getCurrencySymbol()} ${(t.amount || 0).toLocaleString(getActiveCurrency().locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+            <div class="recent-tx-amount">${getCurrencySymbol()} ${(t.amount || 0).toLocaleString(getActiveCurrency().locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
           </div>
         `;
       }).join('');
@@ -3708,24 +3710,24 @@
 
       if (isCurrentRealMonth) {
         if (elBadge) elBadge.className = 'exec-badge-live';
-        if (elBadgeText) elBadgeText.textContent = '🟢 EN VIVO (HOY)';
+        if (elBadgeText) elBadgeText.textContent = 'En Vivo';
         if (elPulse) elPulse.style.display = 'inline-block';
         if (elContextSource) {
-          elContextSource.textContent = breakdown.prevMonth ? `Partida de ${breakdown.prevMonth.split(' ')[0]}: ${sym} ${breakdown.prevClosingBalance.toFixed(2)}` : 'Saldo inicial';
+          elContextSource.textContent = 'Total disponible en banco';
         }
         if (elMonthFlow) {
-          elMonthFlow.textContent = `Pagos hechos en ${appState.currentMonth.split(' ')[0]}: -${sym} ${breakdown.totalPaid.toFixed(2)}`;
+          elMonthFlow.textContent = '';
         }
         if (elHistoryBanner) elHistoryBanner.style.display = 'none';
       } else {
         if (elBadge) elBadge.className = 'exec-badge-live is-historical';
-        if (elBadgeText) elBadgeText.textContent = '🔒 CIERRE HISTÓRICO';
+        if (elBadgeText) elBadgeText.textContent = 'Cierre Histórico';
         if (elPulse) elPulse.style.display = 'none';
         if (elContextSource) {
-          elContextSource.textContent = `Foto final de cierre de ${appState.currentMonth}`;
+          elContextSource.textContent = `Foto de cierre · ${appState.currentMonth}`;
         }
         if (elMonthFlow) {
-          elMonthFlow.textContent = `Resultado: ${breakdown.currentMonthFlow >= 0 ? '+' : ''}${sym} ${breakdown.currentMonthFlow.toFixed(2)}`;
+          elMonthFlow.textContent = '';
         }
         if (elHistoryBanner) {
           elHistoryBanner.style.display = 'flex';
@@ -3746,22 +3748,10 @@
         }
       }
 
-      // Alerta de Liquidez (Opción D)
+      // Alerta de Liquidez (Oculta en tarjeta hero para preservar minimalismo Apple)
       let liquidityAlert = document.getElementById('liquidityAlertMsg');
-      if (!liquidityAlert && elSavings) {
-        liquidityAlert = document.createElement('div');
-        liquidityAlert.id = 'liquidityAlertMsg';
-        liquidityAlert.style.cssText = 'font-size: 9px; margin-top: 4px; font-weight: 800; background: #fee2e2; color: #b91c1c; padding: 2px 6px; border-radius: 4px; display: inline-block; line-height: 1.2;';
-        elSavings.parentNode.appendChild(liquidityAlert);
-      }
       if (liquidityAlert) {
-        if (currentBalance < totalPending && currentBalance >= 0) {
-          const shortfall = totalPending - currentBalance;
-          liquidityAlert.textContent = `⚠️ Faltan ${sym} ${shortfall.toLocaleString(loc, {minimumFractionDigits: 2})} para pendientes`;
-          liquidityAlert.style.display = 'inline-block';
-        } else {
-          liquidityAlert.style.display = 'none';
-        }
+        liquidityAlert.style.display = 'none';
       }
 
       // Termómetro Fondo Emergencia (Opción F)
@@ -4037,27 +4027,21 @@
       const cashflowEl = document.getElementById('desktopCashflowChart');
       if (cashflowEl) {
         const isDark = document.body.classList.contains('theme-twilight');
-        const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Dic'];
+        const monthsList = (typeof getFilteredMonthsForHistory === 'function' ? getFilteredMonthsForHistory() : []).slice(-6);
+        const displayMonths = monthsList.length > 0 ? monthsList : [appState.currentMonth || 'Octubre 2026'];
         
-        const baseSal = (appState.profile && appState.profile.salary) || 0;
-        const incomeData = [];
-        const expenseData = [];
-        const labels = [];
+        const labels = displayMonths.map(m => m.split(' ')[0].substring(0, 3));
+        const baseSal = appState.salary || 0;
         
-        const curMonthIdx = appState.currentMonth !== undefined ? appState.currentMonth : new Date().getMonth();
-        const startIdx = Math.max(0, curMonthIdx - 5);
+        const incomeData = displayMonths.map(m => {
+          const mExtra = (appState.extraIncomes && appState.extraIncomes[m]) || [];
+          return baseSal + mExtra.reduce((s, it) => s + (it.amount || 0), 0);
+        });
         
-        for (let i = startIdx; i <= Math.min(11, curMonthIdx); i++) {
-          labels.push(months[i]);
-          const mExtra = (appState.extraIncomes && appState.extraIncomes[i]) || [];
-          const mTotInc = baseSal + mExtra.reduce((s, it) => s + (it.amount || 0), 0);
-          
-          const mTxs = (appState.transactions && appState.transactions[i]) || [];
-          const mTotExp = mTxs.reduce((s, it) => s + (it.amount || 0), 0);
-          
-          incomeData.push(mTotInc);
-          expenseData.push(mTotExp);
-        }
+        const expenseData = displayMonths.map(m => {
+          const mTxs = (appState.transactions && appState.transactions[m]) || [];
+          return mTxs.reduce((s, it) => s + (it.amount || 0), 0);
+        });
 
         if (desktopCashflowChartObj) {
           desktopCashflowChartObj.destroy();
@@ -4066,6 +4050,14 @@
 
         try {
           const ctx = cashflowEl.getContext('2d');
+          const incGrad = ctx.createLinearGradient(0, 0, 0, 220);
+          incGrad.addColorStop(0, 'rgba(16, 185, 129, 0.3)');
+          incGrad.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
+
+          const expGrad = ctx.createLinearGradient(0, 0, 0, 220);
+          expGrad.addColorStop(0, 'rgba(244, 63, 94, 0.22)');
+          expGrad.addColorStop(1, 'rgba(244, 63, 94, 0.0)');
+
           desktopCashflowChartObj = new Chart(ctx, {
             type: 'line',
             data: {
@@ -4075,29 +4067,29 @@
                   label: 'Ingresos',
                   data: incomeData,
                   borderColor: '#10b981',
-                  backgroundColor: 'rgba(16, 185, 129, 0.12)',
+                  backgroundColor: incGrad,
                   borderWidth: 2.5,
                   fill: true,
-                  tension: 0.38,
+                  tension: 0.4,
                   pointBackgroundColor: '#10b981',
-                  pointBorderColor: isDark ? '#0f172a' : '#ffffff',
+                  pointBorderColor: '#0b101e',
                   pointBorderWidth: 2,
                   pointRadius: 4,
-                  pointHoverRadius: 7
+                  pointHoverRadius: 6
                 },
                 {
                   label: 'Gastos',
                   data: expenseData,
                   borderColor: '#f43f5e',
-                  backgroundColor: 'rgba(244, 63, 94, 0.08)',
+                  backgroundColor: expGrad,
                   borderWidth: 2.5,
                   fill: true,
-                  tension: 0.38,
+                  tension: 0.4,
                   pointBackgroundColor: '#f43f5e',
-                  pointBorderColor: isDark ? '#0f172a' : '#ffffff',
+                  pointBorderColor: '#0b101e',
                   pointBorderWidth: 2,
                   pointRadius: 4,
-                  pointHoverRadius: 7
+                  pointHoverRadius: 6
                 }
               ]
             },
@@ -7591,7 +7583,7 @@ function syncAdminUI() {
   const settMasterRow = document.getElementById('settingsMasterAdminRow');
   if (settMasterRow) settMasterRow.style.display = isCesar ? 'block' : 'none';
   const btnFounderHeader = document.getElementById('btnFounderHeader');
-  if (btnFounderHeader) btnFounderHeader.style.display = isCesar ? 'inline-flex' : 'none';
+  if (btnFounderHeader) btnFounderHeader.style.display = 'none'; // Despejar cabecera: acceso en Ajustes y Sidebar
 }
 
 // Compatibilidad: antes abría un modal; ahora abre el módulo de pantalla completa.

@@ -14,9 +14,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <script src="js/chart.min.js?v=71.8"></script>
-  <script src="js/supabase.min.js?v=71.8"></script>
-  <link rel="stylesheet" href="css/styles.css?v=71.8">
+  <script src="js/chart.min.js?v=72.0"></script>
+  <script src="js/supabase.min.js?v=72.0"></script>
+  <link rel="stylesheet" href="css/styles.css?v=72.0">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
 
   <style>
@@ -39,7 +39,7 @@
     }
   </style>
 </head>
-<body>
+<body class="theme-twilight">
 
   <!-- MANDATORY LOGIN/REGISTER SCREEN v70.1 (SPLIT-SCREEN EMERALD & DEEP SLATE) -->
   <div id="loginModalScreen">
@@ -377,9 +377,9 @@
           </div>
           <button class="privacy-toggle-btn" id="privacyToggleBtn" onclick="togglePrivacyMode()" title="Ocultar o mostrar montos (Modo Privacidad)">👁️</button>
           <button class="theme-toggle-btn desktop-only-header-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Cambiar a Modo Noche Suave">🌙</button>
-          <button id="btnFounderHeader" class="settings-popover-btn master-admin-only" onclick="switchTab('founder')" title="Hub de Fundador CEO (Métricas & Suscriptores)" style="display: none; background: linear-gradient(135deg, rgba(245, 158, 11, 0.18), rgba(217, 119, 6, 0.28)); border: 1.5px solid rgba(245, 158, 11, 0.5); color: #d97706; font-size: 15px; margin-right: 2px; position: relative;">
+          <button id="btnFounderHeader" class="settings-popover-btn master-admin-only" onclick="switchTab('founder')" title="Hub de Fundador CEO (Métricas & Suscriptores)" style="display: none !important;">
             👑
-            <span id="founderPendingAlertBadgeMob" style="position: absolute; top: 2px; right: 2px; width: 8px; height: 8px; background: #ef4444; border-radius: 50%; display: none; border: 1.5px solid #ffffff;"></span>
+            <span id="founderPendingAlertBadgeMob" style="display: none;"></span>
           </button>
           <button id="btnSettings" class="settings-popover-btn hide-on-desktop" onclick="openSettingsModal()" title="Ajustes y Opciones">⚙️</button>
         </div>
@@ -412,26 +412,54 @@
           <!-- Columna Principal / Izquierda (Desktop): Saldo Banco, Indicadores, Acciones & Radar -->
           <div class="desktop-home-col-left">
             <!-- EXECUTIVE APPLE CARD: BALANCE GENERAL EN VIVO (SERENE & CLUTTER-FREE) -->
+            <!-- EXECUTIVE APPLE CARD: BALANCE GENERAL EN VIVO (SERENE & CLUTTER-FREE) -->
             <div id="executiveBalanceCard" class="executive-balance-card" onclick="openExplainSurplusModal()" style="cursor: pointer;" title="Toca para ver el desglose exacto de tu saldo bancario">
-              <div class="exec-card-header">
-                <div class="exec-card-title-group">
-                  <span class="exec-card-badge-dot"></span>
-                  <span class="exec-card-title">SALDO EN BANCO</span>
-                  <span class="exec-card-info-icon" title="Ver desglose matemático">ℹ️</span>
+              <div class="exec-card-top-row">
+                <div class="exec-card-brand-label">
+                  <span class="exec-apple-glyph"></span>
+                  <span class="exec-card-title">Disponible en banco</span>
                 </div>
                 <div id="balanceLiveBadge" class="exec-badge-live">
                   <span class="exec-pulse-dot" id="balancePulseDot"></span>
-                  <span id="balanceLiveBadgeText">🟢 EN VIVO (HOY)</span>
+                  <span id="balanceLiveBadgeText">En Vivo</span>
                 </div>
               </div>
               
-              <div class="exec-card-body">
-                <div class="exec-balance-amount" id="metricExecutiveBalance">
-                  <span class="exec-currency-glyph" id="execBalanceCurrency">S/</span><span id="metricSavingsLarge" class="tabular-nums">0.00</span>
-                  <span id="metricSavings" style="display: none;">S/ 0.00</span>
+              <div class="exec-card-main-content">
+                <div class="exec-card-balance-section">
+                  <div class="exec-balance-amount" id="metricExecutiveBalance">
+                    <span class="exec-currency-glyph" id="execBalanceCurrency">S/</span><span id="metricSavingsLarge" class="tabular-nums">0.00</span>
+                    <span id="metricSavings" style="display: none;">S/ 0.00</span>
+                  </div>
+                  <div class="exec-card-subtitle" id="balanceContextText">
+                    <span id="balanceContextSource">Total disponible en banco</span>
+                    <span id="balanceMonthFlow" style="display: none;"></span>
+                  </div>
                 </div>
-                <div class="exec-balance-context" id="balanceContextText">
-                  <span id="balanceContextSource">Iniciado con cierre anterior</span> · <span id="balanceMonthFlow" class="text-muted">Calculando...</span>
+
+                <!-- Integrated Executive Metrics: Ingresos, Gastos, Por Pagar -->
+                <div class="exec-card-metrics-cluster">
+                  <div class="exec-cluster-pill exec-pill-income" title="Ingresos del mes">
+                    <span class="exec-pill-dot dot-income"></span>
+                    <div class="exec-pill-content">
+                      <span class="exec-pill-label">Ingresos</span>
+                      <span class="exec-pill-val" id="metricSalary">S/ 0</span>
+                    </div>
+                  </div>
+                  <div class="exec-cluster-pill exec-pill-expense" title="Gastos pagados este mes">
+                    <span class="exec-pill-dot dot-expense"></span>
+                    <div class="exec-pill-content">
+                      <span class="exec-pill-label">Gastos</span>
+                      <span class="exec-pill-val" id="metricSpent">S/ 0</span>
+                    </div>
+                  </div>
+                  <div class="exec-cluster-pill exec-pill-pending" title="Gastos pendientes de pago" onclick="event.stopPropagation(); switchTab('movimientos'); selectStatusFilter('Pendiente');">
+                    <span class="exec-pill-dot dot-pending"></span>
+                    <div class="exec-pill-content">
+                      <span class="exec-pill-label">Por Pagar</span>
+                      <span class="exec-pill-val" id="metricPending">S/ 0</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -442,29 +470,8 @@
               </div>
             </div>
 
-            <!-- 3 Stat Cards Grid (Compact & Minimalist - Apple Squircle) -->
-            <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); margin-bottom: 14px;">
-              <div class="stat-card stat-card-ingreso">
-                <div class="stat-label">💵 INGRESO</div>
-                <div class="stat-value" id="metricSalary" style="font-size: 17px;">S/ 0</div>
-              </div>
-
-              <div class="stat-card stat-card-gasto">
-                <div class="stat-label">🛍️ GASTO REAL</div>
-                <div class="stat-value text-danger" id="metricSpent" style="font-size: 17px;">S/ 0</div>
-              </div>
-
-              <div class="stat-card stat-card-pending" style="cursor: pointer;" onclick="switchTab('movimientos'); selectStatusFilter('Pendiente');" title="Ver gastos pendientes de pago">
-                <div class="stat-label" style="display: flex; align-items: center; justify-content: space-between;">
-                  <span>⏳ POR PAGAR</span>
-                  <span style="font-size: 10px; opacity: 0.7;">↗</span>
-                </div>
-                <div class="stat-value text-warning" id="metricPending" style="font-size: 17px;">S/ 0</div>
-              </div>
-            </div>
-
-            <!-- Action Buttons (Apple Pill Springs) -->
-            <div class="zen-actions-grid">
+            <!-- Action Buttons (Desktop Only / Subtle Glass) -->
+            <div class="zen-actions-grid desktop-only">
               <button id="btnRegistrarGasto" class="action-pill action-pill-expense" onclick="openQuickExpenseModal()">
                 <span class="action-pill-icon">⚡</span>
                 <span>Registrar Gasto</span>
@@ -1283,6 +1290,10 @@
       <button id="navTabPlan" class="nav-item" onclick="switchTab('plan')">
         <span class="nav-icon">📊</span>
         <span>Finanzas</span>
+      </button>
+      <button id="navTabAjustes" class="nav-item" onclick="openSettingsModal()" title="Ajustes">
+        <span class="nav-icon">⚙️</span>
+        <span>Ajustes</span>
       </button>
     </div>
 
@@ -3127,6 +3138,6 @@
   <div id="masterDashboardModal" style="display: none;"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
-  <script src="js/app.js?v=71.8"></script>
+  <script src="js/app.js?v=72.0"></script>
 </body>
 </html>
