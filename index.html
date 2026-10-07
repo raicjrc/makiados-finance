@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>AliviaFin — Paz mental para tu dinero</title>
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png?v=67.0">
   <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png?v=67.0">
@@ -16,7 +16,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="js/chart.min.js?v=72.0"></script>
   <script src="js/supabase.min.js?v=72.0"></script>
-  <link rel="stylesheet" href="css/styles.css?v=73.0">
+  <link rel="stylesheet" href="css/styles.css?v=73.1">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
 
   <style>
@@ -325,10 +325,6 @@
       </nav>
 
       <div class="desktop-sidebar-footer">
-        <button class="desktop-nav-item" id="deskNavPrivacyBtn" onclick="togglePrivacyMode()" style="margin-bottom: 6px;">
-          <span class="desk-nav-icon" id="deskPrivacyIcon">👁️</span>
-          <span id="deskPrivacyLabel">Ocultar Saldos</span>
-        </button>
         <button class="desktop-nav-item" id="deskNavTabSettings" onclick="openSettingsModal()" style="margin-bottom: 6px;">
           <span class="desk-nav-icon">⚙️</span>
           <span>Ajustes</span>
@@ -438,8 +434,8 @@
                     <span class="exec-currency-glyph" id="execBalanceCurrency">S/</span><span id="metricSavingsLarge" class="tabular-nums">0.00</span>
                     <span id="metricSavings" style="display: none;">S/ 0.00</span>
                   </div>
-                  <div class="exec-card-subtitle" id="balanceContextText">
-                    <span id="balanceContextSource">Total disponible en banco</span>
+                  <div class="exec-card-subtitle" id="balanceContextText" style="display: none !important;">
+                    <span id="balanceContextSource"></span>
                     <span id="balanceMonthFlow" style="display: none;"></span>
                   </div>
                 </div>
@@ -483,7 +479,7 @@
                 <div>
                   <div class="card-title" style="font-size: 13.5px; font-weight: 800; display: flex; align-items: center; gap: 6px;">
                     <span>📈</span>
-                    <span>Flujo de Caja (Cashflow Proyectado)</span>
+                    <span>Flujo de Caja</span>
                   </div>
                   <div style="font-size: 11px; color: var(--text-muted); font-weight: 600; margin-top: 2px;">
                     Ingresos vs Gastos en tiempo real
@@ -3128,6 +3124,6 @@
   <div id="masterDashboardModal" style="display: none;"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
-  <script src="js/app.js?v=73.0"></script>
+  <script src="js/app.js?v=73.1"></script>
 </body>
 </html>

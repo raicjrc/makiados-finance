@@ -3459,7 +3459,9 @@
              if (gaby) gaby.status = 'Recibido';
              const hasJunta = incs.find(i => i.name.toLowerCase().includes('junta'));
              if (!hasJunta) {
-               incs.push({ id: 'inc_junta_agosto2026', name: 'Junta de Agosto', amount: 4500, status: 'Pendiente', date: 15 });
+               incs.push({ id: 'inc_junta_agosto2026', name: 'Junta de Agosto', amount: 5000, status: 'Recibido', date: 15 });
+             } else if (hasJunta.amount < 5000) {
+               hasJunta.amount = 5000;
              }
           }
         } else {
@@ -3477,11 +3479,15 @@
       }
     }
 
-    function getMonthTotalIncome() {
-      const incs = appState.incomes ? (appState.incomes[appState.currentMonth] || []) : [];
-      const sum = incs.reduce((s, i) => s + i.amount, 0);
+    function getMonthTotalIncome(targetMonth = appState.currentMonth) {
+      if (typeof ensureMonthIncomes === 'function') {
+        ensureMonthIncomes(targetMonth);
+      }
+      const incs = appState.incomes ? (appState.incomes[targetMonth] || []) : [];
+      const sum = incs.reduce((s, i) => s + (i.amount || 0), 0);
       if (sum === 0 && appState.salary && appState.salary > 0) {
-        return appState.salary;
+        const mExtra = (appState.extraIncomes && appState.extraIncomes[targetMonth]) || [];
+        return appState.salary + mExtra.reduce((s, i) => s + (i.amount || 0), 0);
       }
       return sum;
     }
@@ -3672,14 +3678,14 @@
       const loc = getActiveCurrency().locale;
 
       const elSalary = document.getElementById('metricSalary');
-      if (elSalary) elSalary.textContent = sym + ' ' + totalIncome.toLocaleString(loc, {minimumFractionDigits: 0});
+      if (elSalary) elSalary.textContent = sym + ' ' + Math.round(totalIncome).toLocaleString(loc);
       const elSpent = document.getElementById('metricSpent');
-      if (elSpent) elSpent.textContent = sym + ' ' + totalSpent.toLocaleString(loc, {minimumFractionDigits: 2});
+      if (elSpent) elSpent.textContent = sym + ' ' + Math.round(totalSpent).toLocaleString(loc);
       
       // Métrica de Por Pagar
       const totalPending = totalSpent - totalPaid;
       const elPending = document.getElementById('metricPending');
-      if (elPending) elPending.textContent = sym + ' ' + totalPending.toLocaleString(loc, {minimumFractionDigits: 2});
+      if (elPending) elPending.textContent = sym + ' ' + Math.round(totalPending).toLocaleString(loc);
 
       // Executive Balance Card
       const elSavingsLarge = document.getElementById('metricSavingsLarge');
@@ -4031,12 +4037,7 @@
         const displayMonths = monthsList.length > 0 ? monthsList : [appState.currentMonth || 'Octubre 2026'];
         
         const labels = displayMonths.map(m => m.split(' ')[0].substring(0, 3));
-        const baseSal = appState.salary || 0;
-        
-        const incomeData = displayMonths.map(m => {
-          const mExtra = (appState.extraIncomes && appState.extraIncomes[m]) || [];
-          return baseSal + mExtra.reduce((s, it) => s + (it.amount || 0), 0);
-        });
+        const incomeData = displayMonths.map(m => getMonthTotalIncome(m));
         
         const expenseData = displayMonths.map(m => {
           const mTxs = (appState.transactions && appState.transactions[m]) || [];
@@ -4825,9 +4826,7 @@
       months.forEach(m => {
         const txs = appState.transactions[m] || [];
         const spent = txs.reduce((s, t) => s + t.amount, 0);
-        const baseSal = appState.salary;
-        const monthExtras = appState.extraIncomes[m] || [];
-        const totInc = baseSal + monthExtras.reduce((s, i) => s + i.amount, 0);
+        const totInc = getMonthTotalIncome(m);
         const savings = totInc - spent;
         const pctColor = savings >= 440 ? 'text-success' : (savings >= 0 ? 'text-warning' : 'text-danger');
 
@@ -4856,9 +4855,7 @@
       months.forEach(m => {
         const txs = appState.transactions[m] || [];
         const spent = txs.reduce((s, t) => s + t.amount, 0);
-        const baseSal = appState.salary;
-        const monthExtras = appState.extraIncomes[m] || [];
-        const totInc = baseSal + monthExtras.reduce((s, i) => s + i.amount, 0);
+        const totInc = getMonthTotalIncome(m);
         const savings = Math.max(0, totInc - spent);
         spentData.push(spent);
         savingsData.push(savings);
