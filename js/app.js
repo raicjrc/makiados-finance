@@ -377,12 +377,12 @@
       loadLocalState();
       populateMonthDropdown();
       renderCategoryChips();
+      // Verificar suscripción de Paywall de inmediato en paralelo
+      const subPromise = verifySubscription(user);
       renderAll();
       await loadStateFromServer(3);
       setupRealtimeSync();
-      
-      // Verificar suscripción de Paywall
-      await verifySubscription(user);
+      await subPromise;
       syncAdminUI();
       checkMonthEndNotification();
     }
@@ -1295,6 +1295,10 @@
         if (client) await client.auth.signOut();
       } catch(e) {}
       currentUser = null;
+      window.currentUser = null;
+      window._currentUserSubscriptionStatus = 'free';
+      window._currentUserSubscriptionExpiresAt = null;
+      updateAllProBadgesAndBanners();
       appState = getCleanUserState();
       syncAdminUI();
       document.getElementById('loginModalScreen').style.display = 'flex';
@@ -1338,21 +1342,7 @@
           planBadge.style.color = '#7c3aed';
           if (renewRow) renewRow.style.display = 'none';
           if (renewBtn) renewBtn.style.display = 'none';
-        } else if (subInfo.status === 'pro_monthly') {
-          planBadge.textContent = subInfo.inGrace ? '⏳ PRO (En Cortesía 48h)' : '📅 PRO Mensual';
-          planBadge.style.color = subInfo.inGrace ? '#ea580c' : '#4f46e5';
-          if (renewRow) {
-            renewRow.style.display = 'flex';
-            const expDateStr = subInfo.expiresAt ? new Date(subInfo.expiresAt).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Próximamente';
-            renewDateText.textContent = subInfo.inGrace 
-              ? `${expDateStr} (Cortesía: ${subInfo.hoursGrace}h)`
-              : `${expDateStr} (${subInfo.days}d restantes)`;
-          }
-          if (renewBtn) {
-            renewBtn.style.display = 'inline-block';
-            renewBtn.textContent = 'Renovar ⚡';
-          }
-        } else if (subInfo.status === 'expired' || (subInfo.expiresAt && !subInfo.isPro)) {
+        } else if (subInfo.isExpired || subInfo.status === 'expired' || (subInfo.expiresAt && !subInfo.isPro)) {
           const expDateStr = subInfo.expiresAt ? new Date(subInfo.expiresAt).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' }) : '';
           planBadge.textContent = '🔴 PRO Mensual (Vencido)';
           planBadge.style.color = '#dc2626';
@@ -1368,6 +1358,20 @@
             renewBtn.style.background = 'rgba(239, 68, 68, 0.1)';
             renewBtn.style.borderColor = 'rgba(239, 68, 68, 0.3)';
             renewBtn.style.color = '#dc2626';
+          }
+        } else if (subInfo.status === 'pro_monthly') {
+          planBadge.textContent = subInfo.inGrace ? '⏳ PRO (En Cortesía 48h)' : '📅 PRO Mensual';
+          planBadge.style.color = subInfo.inGrace ? '#ea580c' : '#4f46e5';
+          if (renewRow) {
+            renewRow.style.display = 'flex';
+            const expDateStr = subInfo.expiresAt ? new Date(subInfo.expiresAt).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Próximamente';
+            renewDateText.textContent = subInfo.inGrace 
+              ? `${expDateStr} (Cortesía: ${subInfo.hoursGrace}h)`
+              : `${expDateStr} (${subInfo.days}d restantes)`;
+          }
+          if (renewBtn) {
+            renewBtn.style.display = 'inline-block';
+            renewBtn.textContent = 'Renovar ⚡';
           }
         } else {
           planBadge.textContent = '🆓 Plan Básico (Free)';
