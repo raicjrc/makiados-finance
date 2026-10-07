@@ -87,9 +87,9 @@
     let CATEGORIES = { ...GENERIC_CATEGORIES };
 
     // ================================================================
-    // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v71.4)
+    // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v71.5)
     // ================================================================
-    const APP_VERSION = 'v71.4';
+    const APP_VERSION = 'v71.5';
 
     // ================================================================
     // CONFIGURACIÓN DE SUPABASE Y CLIENTE DE AUTENTICACIÓN
@@ -477,13 +477,6 @@
       const banner = document.getElementById('proRenewalBanner');
       if (!banner) return;
 
-      try {
-        if (sessionStorage.getItem('aliviafin_dismiss_renewal_banner') === 'true') {
-          banner.style.display = 'none';
-          return;
-        }
-      } catch(e) {}
-
       // César nunca ve banner de renovación
       if (isAdminCesar()) {
         banner.style.display = 'none';
@@ -491,6 +484,15 @@
       }
 
       const subInfo = getSubscriptionDaysRemaining();
+      const isExpiredUser = (subInfo.status === 'expired') || (subInfo.expiresAt && !subInfo.isPro);
+
+      try {
+        if (!isExpiredUser && sessionStorage.getItem('aliviafin_dismiss_renewal_banner') === 'true') {
+          banner.style.display = 'none';
+          return;
+        }
+      } catch(e) {}
+
       const iconEl = document.getElementById('proRenewalBannerIcon');
       const titleEl = document.getElementById('proRenewalBannerTitle');
       const descEl = document.getElementById('proRenewalBannerDesc');
@@ -514,12 +516,12 @@
         if (titleEl) titleEl.textContent = `Cortesía de 48h activa · ${subInfo.hoursGrace}h restantes`;
         if (descEl) descEl.textContent = `Tu mes venció el ${dateStr}. Tus finanzas están intactas. Renueva para continuar.`;
         if (btnEl) btnEl.textContent = '⚡ Renovar ahora';
-      } else if (subInfo.status === 'expired' || (subInfo.expiresAt && !subInfo.isPro)) {
+      } else if (isExpiredUser) {
         banner.className = 'pro-renewal-banner banner-expired';
         banner.style.display = 'flex';
         banner.style.opacity = '1';
-        banner.style.border = '1px solid rgba(239, 68, 68, 0.35)';
-        banner.style.background = 'linear-gradient(135deg, rgba(239, 68, 68, 0.08), rgba(220, 38, 38, 0.04))';
+        banner.style.border = '1.5px solid rgba(239, 68, 68, 0.4)';
+        banner.style.background = 'linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(220, 38, 38, 0.06))';
         if (iconEl) iconEl.textContent = '🔴';
         const dateStr = subInfo.expiresAt ? new Date(subInfo.expiresAt).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' }) : '';
         if (titleEl) {
@@ -693,74 +695,15 @@
       }
     }
 
-    async function verifySubscription(user) {
-      window._currentUserSubscriptionStatus = 'free';
-      window._currentUserSubscriptionExpiresAt = null;
-
-      // Administrador siempre Pro
-      if (isAdminCesar(user)) {
-        window._currentUserSubscriptionStatus = 'premium';
-        const pb = document.getElementById('proBadge');
-        if (pb) pb.style.display = 'inline-flex';
-        const sidePb = document.getElementById('sidebarProBadge');
-        if (sidePb) sidePb.style.display = 'inline-flex';
-        syncAdminUI();
-        recordUserHeartbeat(user, true);
-        checkAndRenderProRenewalBanner();
-        setTimeout(() => checkOnboardingAndVersionAnnouncements(), 400);
-        return;
-      }
-
-      try {
-        const userEmail = (user.email || '').toLowerCase().trim();
-        let { data, error } = await supabaseClient
-          .from('user_subscriptions')
-          .select('*')
-          .or(`user_id.eq.${user.id},email.eq.${userEmail}`)
-          .order('updated_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
-        if (data) {
-          window._currentUserSubscriptionExpiresAt = data.expires_at || data.trial_ends_at || null;
-          if (['premium', 'pro_monthly', 'pro_lifetime', 'expired'].includes(data.status)) {
-            window._currentUserSubscriptionStatus = data.status;
-          } else {
-            window._currentUserSubscriptionStatus = 'free';
-          }
-          // Vincular user_id si estaba vacío o no coincidía
-          if ((!data.user_id || data.user_id !== user.id) && user.id) {
-            try {
-              await supabaseClient
-                .from('user_subscriptions')
-                .update({ user_id: user.id })
-                .eq('email', userEmail);
-            } catch (e) {}
-          }
-        } else if (!data) {
-          // Si el usuario no tiene fila en user_subscriptions, la inicializamos automáticamente como 'free'
-          await supabaseClient
-            .from('user_subscriptions')
-            .insert([{
-              user_id: user.id,
-              email: user.email,
-              status: 'free'
-            }]);
-        }
-      } catch (err) {
-        console.warn('Nota de suscripción:', err);
-      }
-
-      recordUserHeartbeat(user, false);
-      syncAdminUI();
-
-      // Actualizar badge Pro / Vencido en cabecera y sidebar
-      const pb = document.getElementById('proBadge');
-      const sidePb = document.getElementById('sidebarProBadge');
+    function updateAllProBadgesAndBanners() {
+      const isPro = isUserPro();
       const subInfo = getSubscriptionDaysRemaining();
+      const isExpired = (subInfo.status === 'expired') || (subInfo.expiresAt && !subInfo.isPro);
 
+      // 1. Badge junto al logo en el header principal (#proBadge)
+      const pb = document.getElementById('proBadge');
       if (pb) {
-        if (isUserPro()) {
+        if (isPro) {
           pb.style.display = 'inline-flex';
           pb.className = 'badge-pro-gold';
           pb.style.background = '';
@@ -769,7 +712,7 @@
           pb.style.cursor = 'default';
           pb.textContent = 'PRO';
           pb.onclick = null;
-        } else if (subInfo.status === 'expired' || (subInfo.expiresAt && !subInfo.isPro)) {
+        } else if (isExpired) {
           pb.style.display = 'inline-flex';
           pb.className = 'badge-pro-expired';
           pb.style.background = 'rgba(239, 68, 68, 0.15)';
@@ -784,8 +727,10 @@
         }
       }
 
+      // 2. Badge en la barra lateral (#sidebarProBadge)
+      const sidePb = document.getElementById('sidebarProBadge');
       if (sidePb) {
-        if (isUserPro()) {
+        if (isPro) {
           sidePb.style.display = 'inline-flex';
           sidePb.className = 'badge-pro-gold';
           sidePb.style.background = '';
@@ -794,7 +739,7 @@
           sidePb.style.cursor = 'default';
           sidePb.textContent = 'PRO';
           sidePb.onclick = null;
-        } else if (subInfo.status === 'expired' || (subInfo.expiresAt && !subInfo.isPro)) {
+        } else if (isExpired) {
           sidePb.style.display = 'inline-flex';
           sidePb.className = 'badge-pro-expired';
           sidePb.style.background = 'rgba(239, 68, 68, 0.15)';
@@ -809,8 +754,181 @@
         }
       }
 
-      // Evaluar recordatorio de renovación
+      // 3. Badge en la cabecera superior derecha junto a usuario (#userSubStatusBadge)
+      const uBadge = document.getElementById('userSubStatusBadge');
+      const uDot = document.getElementById('userSubStatusDot');
+      const uText = document.getElementById('userSubStatusText');
+      if (uBadge && uDot && uText) {
+        if (isPro) {
+          uBadge.style.display = 'inline-flex';
+          uBadge.style.background = 'linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(217, 119, 6, 0.22))';
+          uBadge.style.border = '1px solid rgba(245, 158, 11, 0.45)';
+          uBadge.style.color = '#d97706';
+          uDot.textContent = '👑';
+          uText.textContent = 'PRO';
+          uBadge.onclick = null;
+          uBadge.style.cursor = 'default';
+        } else if (isExpired) {
+          uBadge.style.display = 'inline-flex';
+          uBadge.style.background = 'rgba(239, 68, 68, 0.12)';
+          uBadge.style.border = '1.5px solid rgba(239, 68, 68, 0.4)';
+          uBadge.style.color = '#dc2626';
+          uDot.textContent = '🔴';
+          uText.textContent = 'PRO Vencido';
+          uBadge.onclick = () => openFinZenProModal('Renovación Mensual', 'pro_monthly');
+          uBadge.style.cursor = 'pointer';
+        } else {
+          uBadge.style.display = 'none';
+        }
+      }
+
+      // 4. Badge en la tarjeta inferior de usuario del sidebar (#deskSidebarUserSubBadge)
+      const sideUserBadge = document.getElementById('deskSidebarUserSubBadge');
+      if (sideUserBadge) {
+        if (isPro) {
+          sideUserBadge.style.display = 'inline-block';
+          sideUserBadge.style.background = 'rgba(245, 158, 11, 0.18)';
+          sideUserBadge.style.color = '#d97706';
+          sideUserBadge.textContent = '👑 PRO';
+        } else if (isExpired) {
+          sideUserBadge.style.display = 'inline-block';
+          sideUserBadge.style.background = 'rgba(239, 68, 68, 0.15)';
+          sideUserBadge.style.color = '#dc2626';
+          sideUserBadge.textContent = '🔴 Vencido';
+        } else {
+          sideUserBadge.style.display = 'none';
+        }
+      }
+
+      // 5. Banner en pantalla de inicio
       checkAndRenderProRenewalBanner();
+    }
+
+    async function verifySubscription(user) {
+      window._currentUserSubscriptionStatus = 'free';
+      window._currentUserSubscriptionExpiresAt = null;
+
+      // Administrador siempre Pro
+      if (isAdminCesar(user)) {
+        window._currentUserSubscriptionStatus = 'premium';
+        syncAdminUI();
+        recordUserHeartbeat(user, true);
+        updateAllProBadgesAndBanners();
+        setTimeout(() => checkOnboardingAndVersionAnnouncements(), 400);
+        return;
+      }
+
+      try {
+        const userEmail = (user.email || '').toLowerCase().trim();
+        let candidateRows = [];
+
+        // 1. Intentar por user_id (consulta limpia sin columnas inexistentes)
+        if (user.id) {
+          try {
+            const { data: uidRows, error: uidErr } = await supabaseClient
+              .from('user_subscriptions')
+              .select('*')
+              .eq('user_id', user.id);
+            if (!uidErr && Array.isArray(uidRows) && uidRows.length > 0) {
+              candidateRows.push(...uidRows);
+            }
+          } catch (e) {
+            console.warn('Query sub by user_id note:', e);
+          }
+        }
+
+        // 2. Intentar por email (por si fue creada o activada por correo)
+        if (userEmail) {
+          try {
+            const { data: emRows, error: emErr } = await supabaseClient
+              .from('user_subscriptions')
+              .select('*')
+              .ilike('email', userEmail);
+            if (!emErr && Array.isArray(emRows) && emRows.length > 0) {
+              candidateRows.push(...emRows);
+            }
+          } catch (e) {
+            console.warn('Query sub by email note:', e);
+          }
+        }
+
+        // Deduplicar filas por id o combinación user_id/email
+        const uniqueMap = new Map();
+        candidateRows.forEach(r => {
+          if (r && r.id) uniqueMap.set(r.id, r);
+          else if (r) uniqueMap.set((r.user_id || '') + '_' + (r.email || ''), r);
+        });
+        const rows = Array.from(uniqueMap.values());
+
+        let bestSub = null;
+        if (rows.length > 0) {
+          // Prioridad: 
+          // 1. pro_lifetime / premium
+          // 2. pro_monthly (activo o con fecha)
+          // 3. expired
+          // 4. free
+          bestSub = rows.find(r => r.status === 'pro_lifetime' || r.status === 'premium')
+                 || rows.find(r => r.status === 'pro_monthly' && (r.expires_at || r.trial_ends_at))
+                 || rows.find(r => r.status === 'pro_monthly')
+                 || rows.find(r => r.status === 'expired')
+                 || rows[0];
+        }
+
+        if (bestSub) {
+          window._currentUserSubscriptionExpiresAt = bestSub.expires_at || bestSub.trial_ends_at || null;
+          
+          if (['premium', 'pro_lifetime'].includes(bestSub.status)) {
+            window._currentUserSubscriptionStatus = bestSub.status;
+          } else if (bestSub.status === 'pro_monthly' || bestSub.status === 'expired') {
+            // Evaluar expiración con 48h de cortesía
+            if (window._currentUserSubscriptionExpiresAt) {
+              const expMs = new Date(window._currentUserSubscriptionExpiresAt).getTime();
+              const nowMs = Date.now();
+              const graceMs = 48 * 3600 * 1000;
+              if (!isNaN(expMs)) {
+                if (nowMs > (expMs + graceMs)) {
+                  window._currentUserSubscriptionStatus = 'expired';
+                } else {
+                  window._currentUserSubscriptionStatus = 'pro_monthly';
+                }
+              } else {
+                window._currentUserSubscriptionStatus = bestSub.status;
+              }
+            } else {
+              window._currentUserSubscriptionStatus = bestSub.status;
+            }
+          } else {
+            window._currentUserSubscriptionStatus = 'free';
+          }
+
+          // Si el usuario tenía fila por email pero sin user_id vinculado, intentar enlazar
+          if (user.id && (!bestSub.user_id || bestSub.user_id !== user.id) && bestSub.id) {
+            try {
+              await supabaseClient
+                .from('user_subscriptions')
+                .update({ user_id: user.id })
+                .eq('id', bestSub.id);
+            } catch (e) {}
+          }
+        } else {
+          // Si no existe ninguna fila, crear la fila free inicial
+          try {
+            await supabaseClient
+              .from('user_subscriptions')
+              .insert([{
+                user_id: user.id,
+                email: user.email,
+                status: 'free'
+              }]);
+          } catch (e) {}
+        }
+      } catch (err) {
+        console.warn('Nota de suscripción:', err);
+      }
+
+      recordUserHeartbeat(user, false);
+      syncAdminUI();
+      updateAllProBadgesAndBanners();
 
       // IMPORTANTE: Nunca se bloquea al usuario con paywall.
       // El usuario siempre accede a la app con su plan Free vitalicio.
@@ -1311,13 +1429,13 @@
       }
     });
 
-    // Registrar Service Worker v71.4 (Network-First, sin caché de datos)
+    // Registrar Service Worker v71.5 (Network-First, sin caché de datos)
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         let isRefreshing = false;
-        navigator.serviceWorker.register('./sw.js?v=71.4')
+        navigator.serviceWorker.register('./sw.js?v=71.5')
           .then(reg => {
-            console.log('SW v71.4 registrado:', reg.scope);
+            console.log('SW v71.5 registrado:', reg.scope);
             // Forzar actualización inmediata del SW en todos los dispositivos
             reg.update();
             if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
@@ -1914,7 +2032,7 @@
       if ('serviceWorker' in navigator && 'caches' in window) {
         caches.keys().then(names => {
           names.forEach(name => {
-            if (name !== 'aliviafin-v132') {
+            if (name !== 'aliviafin-v133') {
               caches.delete(name);
               console.log('Caché viejo eliminado:', name);
             }
@@ -2823,6 +2941,7 @@
         renderSafeToSpendCard();
         renderRecentTransactions();
         renderMetrics();
+        checkAndRenderProRenewalBanner();
       } else if (tabId === 'movimientos') {
         renderTransactions();
         renderIncomes();
@@ -6896,7 +7015,7 @@ window.generatePDFReport = function() {
   if (typeof html2pdf === 'undefined') {
     showToast('Iniciando motor de exportación PDF...', 'info');
     const script = document.createElement('script');
-    script.src = 'js/html2pdf.bundle.min.js?v=71.4';
+    script.src = 'js/html2pdf.bundle.min.js?v=71.5';
     script.onload = renderPdfNow;
     script.onerror = () => {
       // Fallback secundario a cdnjs si el local fallara
@@ -9090,3 +9209,4 @@ window.copyWinBackMessage = copyWinBackMessage;
 window.sendWinBackViaEmail = sendWinBackViaEmail;
 window.toggleMonthEndNotification = toggleMonthEndNotification;
 window.checkMonthEndNotification = checkMonthEndNotification;
+window.updateAllProBadgesAndBanners = updateAllProBadgesAndBanners;

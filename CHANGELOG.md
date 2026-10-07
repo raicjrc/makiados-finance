@@ -3,6 +3,17 @@
 Todas las versiones notables de esta aplicación están documentadas aquí.
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
+## [v71.5] — 2026-10-06 — Detección Multi-Query de Suscripciones Vencidas, Hardening RLS y Badges Omnipresentes
+
+### 🔴 Fix Definitivo de Detección de Cuenta Vencida (Prueba04)
+- **Eliminación del Ordenamiento por `updated_at` Inexistente**: Se corrigió el error `42703 (column user_subscriptions.updated_at does not exist)` que provocaba que la consulta de suscripción fallara silenciosamente en PostgREST y degradara todas las cuentas a Free sin fecha.
+- **Estrategia Multi-Query Resiliente**: `verifySubscription()` ahora consulta en paralelo por `user_id` y por `email`, deduplicando y seleccionando con prioridad cualquier registro `pro_monthly` o `expired` registrado en Supabase.
+- **Badges de Alta Visibilidad**:
+  - Cabecera Superior: Se agregó un badge directo junto al nombre de usuario `[👤 Usuario] [🔴 PRO Vencido]` además del badge junto al logo `aliviafin [🔴 PRO Vencido]`.
+  - Barra Lateral: Badge `🔴 Vencido` junto al logo y en la tarjeta de perfil inferior.
+  - Banner en Inicio: Alerta en rojo carmesí con fecha exacta de vencimiento y botón directo de renovación por Yape/Plin, protegido contra descartes accidentales de sesión.
+- **Blindaje RLS SQL (`supabase-hardening.sql`)**: Se actualizó la política `Usuario puede ver su suscripción` para permitir lectura tanto por `user_id = auth.uid()::text` como por `LOWER(email) = LOWER(auth.jwt() ->> 'email')`, y se agregó `updated_at timestamptz DEFAULT now()`.
+
 ## [v71.4] — 2026-10-06 — Localización de html2pdf y Chart.js, Indicadores Visuales de Plan Vencido y Fix Gráficos Hub CEO
 
 ### 📄 Reporte PDF & Gráficos 100% Locales y Offline

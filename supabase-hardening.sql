@@ -36,6 +36,7 @@ CREATE TABLE IF NOT EXISTS public.user_subscriptions (
 );
 ALTER TABLE public.user_subscriptions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_subscriptions ADD COLUMN IF NOT EXISTS expires_at timestamptz;
+ALTER TABLE public.user_subscriptions ADD COLUMN IF NOT EXISTS updated_at timestamptz DEFAULT now();
 
 DROP POLICY IF EXISTS "Usuario puede ver su suscripción" ON public.user_subscriptions;
 DROP POLICY IF EXISTS "Cualquiera puede insertar su registro inicial" ON public.user_subscriptions;
@@ -44,7 +45,11 @@ DROP POLICY IF EXISTS "Solo admin puede editar todas las suscripciones" ON publi
 
 CREATE POLICY "Usuario puede ver su suscripción" ON public.user_subscriptions
   FOR SELECT TO authenticated
-  USING (user_id = auth.uid()::text OR public.is_admin());
+  USING (
+    user_id = auth.uid()::text 
+    OR LOWER(email) = LOWER(COALESCE(auth.jwt() ->> 'email', ''))
+    OR public.is_admin()
+  );
 
 CREATE POLICY "Usuario crea su fila free" ON public.user_subscriptions
   FOR INSERT TO authenticated

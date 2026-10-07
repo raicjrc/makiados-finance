@@ -14,9 +14,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <script src="js/chart.min.js?v=71.4"></script>
-  <script src="js/supabase.min.js?v=71.4"></script>
-  <link rel="stylesheet" href="css/styles.css?v=71.4">
+  <script src="js/chart.min.js?v=71.5"></script>
+  <script src="js/supabase.min.js?v=71.5"></script>
+  <link rel="stylesheet" href="css/styles.css?v=71.5">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
 
   <style>
@@ -96,7 +96,7 @@
           <a href="javascript:void(0)" onclick="openLegalModal('terms')" class="login-unified-legal-link">
             <span>⚖️ Centro Legal, Garantías & Reclamaciones</span>
           </a>
-          <p id="loginFooterVersionDesk" class="login-version-tag">AliviaFin v71.4 · Paz mental para tu dinero</p>
+          <p id="loginFooterVersionDesk" class="login-version-tag">AliviaFin v71.5 · Paz mental para tu dinero</p>
         </div>
       </div>
 
@@ -215,7 +215,7 @@
             <a href="javascript:void(0)" onclick="openLegalModal('terms')" class="login-unified-legal-link">
               <span>⚖️ Centro Legal, Garantías & Reclamaciones</span>
             </a>
-            <p id="loginFooterVersionMob" class="login-version-tag">AliviaFin v71.4 · Paz mental para tu dinero</p>
+            <p id="loginFooterVersionMob" class="login-version-tag">AliviaFin v71.5 · Paz mental para tu dinero</p>
           </div>
         </div>
 
@@ -344,6 +344,7 @@
             <div id="deskSidebarUser" style="font-size: 11px; font-weight: 800; color: var(--text-main);">Usuario</div>
             <div style="font-size: 9.5px; color: var(--text-muted);">Cerrar sesión</div>
           </div>
+          <span id="deskSidebarUserSubBadge" style="display: none; font-size: 9.5px; font-weight: 800; padding: 2px 6px; border-radius: 10px; margin-left: 6px;"></span>
         </div>
       </div>
     </aside>
@@ -366,6 +367,10 @@
           <div id="userBadge" onclick="handleLogout()" title="Cerrar sesión" class="desktop-user-badge">
             <span style="font-size:14px;">👤</span>
             <span id="userBadgeText" style="font-size:11px; font-weight:700; color:var(--text-secondary); max-width:90px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Usuario</span>
+          </div>
+          <div id="userSubStatusBadge" style="display: none; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 20px; font-size: 10.5px; font-weight: 800; cursor: pointer; transition: all 0.2s;" onclick="openFinZenProModal('Renovación de Membresía', 'pro_monthly')" title="Toca para renovar tu suscripción">
+            <span id="userSubStatusDot">🔴</span>
+            <span id="userSubStatusText">Vencido</span>
           </div>
           <div class="month-selector">
             <select id="monthSelect" onchange="changeMonth(this.value)"></select>
@@ -1378,7 +1383,7 @@
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
               <span style="font-size: 11px; font-weight: 700; color: #374151;">📱 Versión</span>
-              <span style="font-size: 11px; color: #0d9488; font-weight: 800;" id="settingsVersion">v71.4</span>
+              <span style="font-size: 11px; color: #0d9488; font-weight: 800;" id="settingsVersion">v71.5</span>
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 5px; border-top: 1px dashed #e2e8f0;">
               <span style="font-size: 10.5px; font-weight: 700; color: #64748b;">🏢 Plataforma</span>
@@ -2358,7 +2363,7 @@
             <span>🚀</span> <span>¡Novedades en AliviaFin!</span>
           </div>
           <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
-            <span class="whats-new-card-badge" id="whatsNewVersionBadge">Versión v71.4</span>
+            <span class="whats-new-card-badge" id="whatsNewVersionBadge">Versión v71.5</span>
             <span style="font-size: 11px; color: var(--text-muted); font-weight: 600;" id="whatsNewVersionSub">Nuevas Funcionalidades & Paz Mental para tu Dinero</span>
           </div>
         </div>
@@ -3098,6 +3103,6 @@
   <div id="masterDashboardModal" style="display: none;"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
-  <script src="js/app.js?v=71.4"></script>
+  <script src="js/app.js?v=71.5"></script>
 </body>
 </html>
