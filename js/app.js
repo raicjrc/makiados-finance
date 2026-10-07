@@ -87,9 +87,9 @@
     let CATEGORIES = { ...GENERIC_CATEGORIES };
 
     // ================================================================
-    // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v71.7)
+    // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v71.8)
     // ================================================================
-    const APP_VERSION = 'v71.7';
+    const APP_VERSION = 'v71.8';
 
     // ================================================================
     // CONFIGURACIÓN DE SUPABASE Y CLIENTE DE AUTENTICACIÓN
@@ -1531,13 +1531,13 @@
       }
     });
 
-    // Registrar Service Worker v71.7 (Network-First, sin caché de datos)
+    // Registrar Service Worker v71.8 (Network-First, sin caché de datos)
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         let isRefreshing = false;
-        navigator.serviceWorker.register('./sw.js?v=71.7')
+        navigator.serviceWorker.register('./sw.js?v=71.8')
           .then(reg => {
-            console.log('SW v71.7 registrado:', reg.scope);
+            console.log('SW v71.8 registrado:', reg.scope);
             // Forzar actualización inmediata del SW en todos los dispositivos
             reg.update();
             if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
@@ -2128,6 +2128,8 @@
 
     let categoryChartObj = null;
     let historyChartObj = null;
+    let desktopCashflowChartObj = null;
+    let desktopCategoryChartObj = null;
 
     document.addEventListener('DOMContentLoaded', () => {
       // Limpiar caché del Service Worker viejo para garantizar datos frescos
@@ -2200,6 +2202,12 @@
       showToast(isDark ? '🌙 Modo Noche Suave activado' : '✨ Modo Claro Cristal activado', 'info');
       if (typeof updateSimulatedCalculations === 'function' && document.getElementById('installmentsSimulatorModal')?.classList.contains('active')) {
         updateSimulatedCalculations();
+      }
+      if (typeof renderDesktopExecutiveCharts === 'function') {
+        renderDesktopExecutiveCharts();
+      }
+      if (typeof renderDonutChart === 'function') {
+        renderDonutChart();
       }
     }
 
@@ -3016,12 +3024,17 @@
         window.scrollTo(0, 0);
       }
       
-      const tabIndices = { 'inicio': 0, 'movimientos': 1, 'plan': 2, 'metas': 3, 'consejos': 4 };
-      if (tabIndices[tabId] !== undefined) {
-        const bottomItems = document.querySelectorAll('.bottom-nav .nav-item');
-        if (bottomItems[tabIndices[tabId]]) {
-          bottomItems[tabIndices[tabId]].classList.add('active');
-        }
+      // Sincronizar items de la barra inferior móvil
+      document.querySelectorAll('.bottom-nav .nav-item').forEach(el => el.classList.remove('active'));
+      if (tabId === 'inicio') {
+        const btn = document.getElementById('navTabInicio');
+        if (btn) btn.classList.add('active');
+      } else if (tabId === 'movimientos') {
+        const btn = document.getElementById('navTabMovimientos');
+        if (btn) btn.classList.add('active');
+      } else if (tabId === 'plan' || tabId === 'metas' || tabId === 'consejos') {
+        const btn = document.getElementById('navTabPlan');
+        if (btn) btn.classList.add('active');
       }
 
       // Sincronizar items de la barra lateral de escritorio
@@ -3387,6 +3400,7 @@
       renderRecentTransactions();
       renderCuotasTracker();
       renderDonutChart();
+      renderDesktopExecutiveCharts();
       renderCategoryChips();
 
       document.getElementById('chipStateAll').className = 'chip ' + (currentStatusFilter === 'TODOS' ? 'active' : '');
@@ -4015,6 +4029,250 @@
           }
         }]
       });
+    }
+
+    /* ====== GRÁFICOS EJECUTIVOS DESKTOP (APPLE MAC FINTECH) ====== */
+    function renderDesktopExecutiveCharts() {
+      // 1. Chart Flujo de Caja (Cashflow Mensual Proyectado)
+      const cashflowEl = document.getElementById('desktopCashflowChart');
+      if (cashflowEl) {
+        const isDark = document.body.classList.contains('theme-twilight');
+        const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Dic'];
+        
+        const baseSal = (appState.profile && appState.profile.salary) || 0;
+        const incomeData = [];
+        const expenseData = [];
+        const labels = [];
+        
+        const curMonthIdx = appState.currentMonth !== undefined ? appState.currentMonth : new Date().getMonth();
+        const startIdx = Math.max(0, curMonthIdx - 5);
+        
+        for (let i = startIdx; i <= Math.min(11, curMonthIdx); i++) {
+          labels.push(months[i]);
+          const mExtra = (appState.extraIncomes && appState.extraIncomes[i]) || [];
+          const mTotInc = baseSal + mExtra.reduce((s, it) => s + (it.amount || 0), 0);
+          
+          const mTxs = (appState.transactions && appState.transactions[i]) || [];
+          const mTotExp = mTxs.reduce((s, it) => s + (it.amount || 0), 0);
+          
+          incomeData.push(mTotInc);
+          expenseData.push(mTotExp);
+        }
+
+        if (desktopCashflowChartObj) {
+          desktopCashflowChartObj.destroy();
+          desktopCashflowChartObj = null;
+        }
+
+        try {
+          const ctx = cashflowEl.getContext('2d');
+          desktopCashflowChartObj = new Chart(ctx, {
+            type: 'line',
+            data: {
+              labels: labels,
+              datasets: [
+                {
+                  label: 'Ingresos',
+                  data: incomeData,
+                  borderColor: '#10b981',
+                  backgroundColor: 'rgba(16, 185, 129, 0.12)',
+                  borderWidth: 2.5,
+                  fill: true,
+                  tension: 0.38,
+                  pointBackgroundColor: '#10b981',
+                  pointBorderColor: isDark ? '#0f172a' : '#ffffff',
+                  pointBorderWidth: 2,
+                  pointRadius: 4,
+                  pointHoverRadius: 7
+                },
+                {
+                  label: 'Gastos',
+                  data: expenseData,
+                  borderColor: '#f43f5e',
+                  backgroundColor: 'rgba(244, 63, 94, 0.08)',
+                  borderWidth: 2.5,
+                  fill: true,
+                  tension: 0.38,
+                  pointBackgroundColor: '#f43f5e',
+                  pointBorderColor: isDark ? '#0f172a' : '#ffffff',
+                  pointBorderWidth: 2,
+                  pointRadius: 4,
+                  pointHoverRadius: 7
+                }
+              ]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              interaction: {
+                mode: 'index',
+                intersect: false
+              },
+              plugins: {
+                legend: { display: false },
+                tooltip: {
+                  backgroundColor: isDark ? 'rgba(15, 23, 42, 0.94)' : 'rgba(255, 255, 255, 0.95)',
+                  titleColor: isDark ? '#f8fafc' : '#0f172a',
+                  bodyColor: isDark ? '#cbd5e1' : '#334155',
+                  borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(226, 232, 240, 0.9)',
+                  borderWidth: 1,
+                  padding: 10,
+                  boxPadding: 4,
+                  usePointStyle: true,
+                  callbacks: {
+                    label: function(context) {
+                      const val = context.parsed.y || 0;
+                      return ` ${context.dataset.label}: ${getCurrencySymbol()} ${val.toLocaleString(getActiveCurrency().locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                    }
+                  }
+                }
+              },
+              scales: {
+                x: {
+                  grid: { display: false },
+                  ticks: {
+                    color: isDark ? '#94a3b8' : '#64748b',
+                    font: { family: '-apple-system, SF Pro Text, sans-serif', size: 11, weight: '600' }
+                  }
+                },
+                y: {
+                  grid: {
+                    color: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.04)',
+                    drawBorder: false
+                  },
+                  ticks: {
+                    color: isDark ? '#94a3b8' : '#64748b',
+                    font: { family: '-apple-system, SF Pro Text, sans-serif', size: 10.5, weight: '500' },
+                    callback: v => getCurrencySymbol() + ' ' + (v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v)
+                  }
+                }
+              }
+            }
+          });
+        } catch (e) {
+          console.warn('Error al renderizar desktopCashflowChart:', e);
+        }
+      }
+
+      // 2. Chart Distribución por Categorías (Donut Ejecutivo + Leyenda con Porcentajes)
+      const catEl = document.getElementById('desktopCategoryChart');
+      const legendEl = document.getElementById('desktopCategoryLegend');
+      if (catEl) {
+        const txs = getMonthTxList();
+        const catTotals = {};
+        Object.keys(CATEGORIES).forEach(c => catTotals[c] = 0);
+        let totalSpent = 0;
+        txs.forEach(t => {
+          const amt = t.amount || 0;
+          catTotals[t.category] = (catTotals[t.category] || 0) + amt;
+          totalSpent += amt;
+        });
+
+        const sortedCats = Object.entries(catTotals)
+          .filter(([_, amt]) => amt > 0)
+          .sort((a, b) => b[1] - a[1]);
+
+        const isDark = document.body.classList.contains('theme-twilight');
+        const labels = [];
+        const data = [];
+        const colors = [];
+
+        sortedCats.slice(0, 5).forEach(([cat, amt]) => {
+          labels.push(cat);
+          data.push(amt);
+          colors.push((CATEGORIES[cat] && CATEGORIES[cat].color) || '#10b981');
+        });
+
+        if (sortedCats.length > 5) {
+          const otherSum = sortedCats.slice(5).reduce((s, it) => s + it[1], 0);
+          labels.push('Otras');
+          data.push(otherSum);
+          colors.push('#94a3b8');
+        }
+
+        const hasExpenses = data.length > 0;
+        if (!hasExpenses) {
+          labels.push('Sin gastos');
+          data.push(1);
+          colors.push(isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)');
+        }
+
+        if (desktopCategoryChartObj) {
+          desktopCategoryChartObj.destroy();
+          desktopCategoryChartObj = null;
+        }
+
+        try {
+          const ctx = catEl.getContext('2d');
+          desktopCategoryChartObj = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+              labels: labels,
+              datasets: [{
+                data: data,
+                backgroundColor: colors,
+                borderWidth: hasExpenses ? 2 : 0,
+                borderColor: isDark ? '#0f172a' : '#ffffff',
+                hoverOffset: hasExpenses ? 8 : 0,
+                borderRadius: hasExpenses ? 6 : 0
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              cutout: '72%',
+              plugins: {
+                legend: { display: false },
+                tooltip: {
+                  enabled: hasExpenses,
+                  backgroundColor: isDark ? 'rgba(15, 23, 42, 0.94)' : 'rgba(255, 255, 255, 0.95)',
+                  titleColor: isDark ? '#f8fafc' : '#0f172a',
+                  bodyColor: isDark ? '#cbd5e1' : '#334155',
+                  borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(226, 232, 240, 0.9)',
+                  borderWidth: 1,
+                  callbacks: {
+                    label: function(context) {
+                      const val = context.parsed || 0;
+                      const pct = totalSpent > 0 ? ((val / totalSpent) * 100).toFixed(1) : 0;
+                      return ` ${context.label}: ${getCurrencySymbol()} ${val.toFixed(2)} (${pct}%)`;
+                    }
+                  }
+                }
+              }
+            }
+          });
+        } catch (e) {
+          console.warn('Error al renderizar desktopCategoryChart:', e);
+        }
+
+        if (legendEl) {
+          if (!hasExpenses) {
+            legendEl.innerHTML = `
+              <div style="font-size: 11.5px; color: var(--text-muted); padding: 8px;">
+                ✨ No hay gastos registrados este mes.<br>Tu capital está 100% disponible.
+              </div>
+            `;
+          } else {
+            legendEl.innerHTML = sortedCats.slice(0, 4).map(([cat, amt]) => {
+              const catColor = (CATEGORIES[cat] && CATEGORIES[cat].color) || '#10b981';
+              const catIcon = (CATEGORIES[cat] && CATEGORIES[cat].icon) || '🏷️';
+              const pct = totalSpent > 0 ? ((amt / totalSpent) * 100).toFixed(0) : 0;
+              return `
+                <div class="donut-legend-item">
+                  <div class="donut-legend-left">
+                    <span class="donut-legend-dot" style="background: ${catColor};"></span>
+                    <span class="donut-legend-name">${catIcon} ${escapeHtml(cat)}</span>
+                  </div>
+                  <div class="donut-legend-right">
+                    <span class="donut-legend-amount">${getCurrencySymbol()} ${amt.toFixed(2)}</span>
+                    <span class="donut-legend-pct">${pct}%</span>
+                  </div>
+                </div>
+              `;
+            }).join('');
+          }
+        }
+      }
     }
 
     function renderTransactions() {

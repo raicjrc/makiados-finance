@@ -14,9 +14,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <script src="js/chart.min.js?v=71.7"></script>
-  <script src="js/supabase.min.js?v=71.7"></script>
-  <link rel="stylesheet" href="css/styles.css?v=71.7">
+  <script src="js/chart.min.js?v=71.8"></script>
+  <script src="js/supabase.min.js?v=71.8"></script>
+  <link rel="stylesheet" href="css/styles.css?v=71.8">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
 
   <style>
@@ -96,7 +96,7 @@
           <a href="javascript:void(0)" onclick="openLegalModal('terms')" class="login-unified-legal-link">
             <span>⚖️ Centro Legal, Garantías & Reclamaciones</span>
           </a>
-          <p id="loginFooterVersionDesk" class="login-version-tag">AliviaFin v71.7 · Paz mental para tu dinero</p>
+          <p id="loginFooterVersionDesk" class="login-version-tag">AliviaFin v71.8 · Paz mental para tu dinero</p>
         </div>
       </div>
 
@@ -215,7 +215,7 @@
             <a href="javascript:void(0)" onclick="openLegalModal('terms')" class="login-unified-legal-link">
               <span>⚖️ Centro Legal, Garantías & Reclamaciones</span>
             </a>
-            <p id="loginFooterVersionMob" class="login-version-tag">AliviaFin v71.7 · Paz mental para tu dinero</p>
+            <p id="loginFooterVersionMob" class="login-version-tag">AliviaFin v71.8 · Paz mental para tu dinero</p>
           </div>
         </div>
 
@@ -475,20 +475,68 @@
               </button>
             </div>
 
-            <!-- RADAR DE PRÓXIMOS VENCIMIENTOS (APPLE FINTECH WIDGET) -->
-            <div id="upcomingBillsContainer">
-              <!-- Renders dynamically via renderUpcomingDueDates() -->
+            <!-- GRÁFICOS EJECUTIVOS DESKTOP (PREMIUM & INTERACTIVOS) -->
+            <div class="desktop-executive-charts desktop-only" style="margin-top: 14px;">
+              
+              <!-- 1. Curva de Flujo de Caja (Cashflow Mensual) -->
+              <div class="card executive-chart-card">
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                  <div>
+                    <div class="card-title" style="font-size: 13.5px; font-weight: 800; display: flex; align-items: center; gap: 6px;">
+                      <span>📈</span>
+                      <span>Flujo de Caja (Cashflow Proyectado)</span>
+                    </div>
+                    <div style="font-size: 11px; color: var(--text-muted); font-weight: 600; margin-top: 2px;">
+                      Ingresos vs Gastos en tiempo real
+                    </div>
+                  </div>
+                  <div class="chart-legend-pills" style="display: flex; gap: 6px;">
+                    <span style="font-size: 10.5px; font-weight: 800; color: #10b981; background: rgba(16, 185, 129, 0.12); padding: 2px 8px; border-radius: 20px;">🟢 Ingresos</span>
+                    <span style="font-size: 10.5px; font-weight: 800; color: #f43f5e; background: rgba(244, 63, 94, 0.12); padding: 2px 8px; border-radius: 20px;">🔴 Gastos</span>
+                  </div>
+                </div>
+                <div style="height: 220px; position: relative;">
+                  <canvas id="desktopCashflowChart"></canvas>
+                </div>
+              </div>
+
+              <!-- 2. Desglose de Gastos por Categoría (Donut & Ranking) -->
+              <div class="card executive-chart-card" style="margin-top: 14px;">
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                  <div>
+                    <div class="card-title" style="font-size: 13.5px; font-weight: 800; display: flex; align-items: center; gap: 6px;">
+                      <span>🍩</span>
+                      <span>Distribución de Gastos del Mes</span>
+                    </div>
+                    <div style="font-size: 11px; color: var(--text-muted); font-weight: 600; margin-top: 2px;">
+                      Concentración de capital por categoría
+                    </div>
+                  </div>
+                  <button type="button" onclick="switchTab('plan')" style="background: none; border: none; font-size: 11px; font-weight: 800; color: var(--primary); cursor: pointer; padding: 2px 4px;">
+                    Ver Plan 50/30/20 ↗
+                  </button>
+                </div>
+                <div class="desktop-donut-wrapper" style="display: flex; align-items: center; gap: 20px; min-height: 170px;">
+                  <div style="width: 170px; height: 170px; position: relative; flex-shrink: 0;">
+                    <canvas id="desktopCategoryChart"></canvas>
+                  </div>
+                  <div id="desktopCategoryLegend" class="desktop-donut-legend" style="flex: 1; min-width: 0;">
+                    <!-- Renderizado dinámico vía renderDesktopExecutiveCharts() -->
+                  </div>
+                </div>
+              </div>
+
             </div>
           </div>
 
-          <!-- Columna Lateral / Derecha (Desktop): Movimientos Recientes & Quick Tools -->
+          <!-- Columna Lateral / Derecha (Desktop): Movimientos Recientes & Radar de Vencimientos -->
           <div class="desktop-home-col-right">
-            <!-- FEED: ÚLTIMOS MOVIMIENTOS (Solo los últimos 3-4 para mantener la mente despejada) -->
+            <!-- FEED: ÚLTIMOS MOVIMIENTOS (Inmediato, despejado y accesible) -->
             <div class="card" style="margin-bottom: 14px;">
               <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                 <div class="card-title" style="font-size: 13px; font-weight: 800; display: flex; align-items: center; gap: 6px;">
                   <span>🕒</span>
-                  <span>Movimientos Recientes</span>
+                  <span>Actividad Reciente</span>
                 </div>
                 <button type="button" onclick="switchTab('movimientos')" style="background: none; border: none; font-size: 11.5px; font-weight: 800; color: var(--primary); cursor: pointer; padding: 2px 4px; display: inline-flex; align-items: center; gap: 4px;">
                   <span>Ver todos (<span id="recentTxCountBadge">0</span>) ↗</span>
@@ -500,38 +548,9 @@
               </div>
             </div>
 
-            <!-- Quick Tools Hub (Minimalista y Compacto) -->
-            <div class="quick-tools-grid">
-              <button id="btnQuickConciliar" class="quick-tool-card" onclick="openReconcileModal()" title="Conciliar Saldo con Banco">
-                <div class="quick-tool-icon">⚖️</div>
-                <div class="quick-tool-info">
-                  <div class="quick-tool-title">
-                    <span>Conciliar Saldo</span>
-                    <span class="quick-tool-arrow">↗</span>
-                  </div>
-                  <div class="quick-tool-desc">Compara con tu banco y cuadra en 1 tap</div>
-                </div>
-              </button>
-              <button id="btnQuickSimulador" class="quick-tool-card" onclick="openInstallmentsSimulatorModal()" title="Simulador de Cuotas y Crédito">
-                <div class="quick-tool-icon">💳</div>
-                <div class="quick-tool-info">
-                  <div class="quick-tool-title">
-                    <span>Simulador de Cuotas</span>
-                    <span class="quick-tool-arrow">↗</span>
-                  </div>
-                  <div class="quick-tool-desc">Calcula y proyecta compras a plazos</div>
-                </div>
-              </button>
-              <button id="btnQuickHelp" class="quick-tool-card" onclick="openFeedbackModal()" title="¿Dudas o Sugerencias?">
-                <div class="quick-tool-icon">💬</div>
-                <div class="quick-tool-info">
-                  <div class="quick-tool-title">
-                    <span>¿Ayuda o Sugerencias?</span>
-                    <span class="quick-tool-arrow">↗</span>
-                  </div>
-                  <div class="quick-tool-desc">Soporte directo y reporte de ideas</div>
-                </div>
-              </button>
+            <!-- RADAR DE PRÓXIMOS VENCIMIENTOS (APPLE FINTECH WIDGET) -->
+            <div id="upcomingBillsContainer">
+              <!-- Renders dynamically via renderUpcomingDueDates() -->
             </div>
           </div>
         </div>
@@ -1256,17 +1275,14 @@
         <span class="nav-icon">💳</span>
         <span>Movimientos</span>
       </button>
+      <button id="navTabQuickAdd" class="nav-item-quick-action" onclick="openQuickExpenseModal()" title="Registrar Gasto Rápido">
+        <div class="nav-quick-btn-glow">
+          <span class="nav-quick-btn-icon">+</span>
+        </div>
+      </button>
       <button id="navTabPlan" class="nav-item" onclick="switchTab('plan')">
         <span class="nav-icon">📊</span>
-        <span>Plan</span>
-      </button>
-      <button id="navTabMetas" class="nav-item" onclick="switchTab('metas')">
-        <span class="nav-icon">🎯</span>
-        <span>Metas</span>
-      </button>
-      <button id="navTabConsejos" class="nav-item" onclick="switchTab('consejos')">
-        <span class="nav-icon">💡</span>
-        <span>Asesor</span>
+        <span>Finanzas</span>
       </button>
     </div>
 
@@ -1388,7 +1404,7 @@
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
               <span style="font-size: 11px; font-weight: 700; color: #374151;">📱 Versión</span>
-              <span style="font-size: 11px; color: #0d9488; font-weight: 800;" id="settingsVersion">v71.7</span>
+              <span style="font-size: 11px; color: #0d9488; font-weight: 800;" id="settingsVersion">v71.8</span>
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 5px; border-top: 1px dashed #e2e8f0;">
               <span style="font-size: 10.5px; font-weight: 700; color: #64748b;">🏢 Plataforma</span>
@@ -2368,7 +2384,7 @@
             <span>🚀</span> <span>¡Novedades en AliviaFin!</span>
           </div>
           <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
-            <span class="whats-new-card-badge" id="whatsNewVersionBadge">Versión v71.7</span>
+            <span class="whats-new-card-badge" id="whatsNewVersionBadge">Versión v71.8</span>
             <span style="font-size: 11px; color: var(--text-muted); font-weight: 600;" id="whatsNewVersionSub">Nuevas Funcionalidades & Paz Mental para tu Dinero</span>
           </div>
         </div>
@@ -3108,6 +3124,6 @@
   <div id="masterDashboardModal" style="display: none;"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
-  <script src="js/app.js?v=71.7"></script>
+  <script src="js/app.js?v=71.8"></script>
 </body>
 </html>
