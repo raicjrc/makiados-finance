@@ -35,3 +35,15 @@ La aplicación se utiliza principalmente en **iPhone (César y Gaby)** en modo P
 
 1. Consultar y respetar siempre las directivas de diseño de `.agents/skills/apple_fintech_design` y `.agents/skills/mobile_desktop_ux_design`.
 2. Utilizar tipografía del sistema (`-apple-system`, `SF Pro Display`, `SF Pro Text`), glassmorphism con `backdrop-filter: blur(24px) saturate(180%)`, y paleta de colores armónica y ejecutiva (evitar colores primarios chillones).
+
+---
+
+## 5. ⚡ Eficiencia Extrema de Tokens (Protección de Cuota Claude)
+
+Para evitar el agotamiento prematuro de tokens y límites de tasa en modelos avanzados como **Claude Sonnet 5.5** y **Claude Opus 5.5**:
+
+1. **Lectura Quirúrgica Estricta:** NUNCA leer archivos grandes (`js/app.js`, `index.html`, etc.) de forma completa. Usar siempre `grep_search` para ubicar las líneas de interés y limitar `view_file` a rangos pequeños (máximo 80 líneas).
+2. **Ediciones Mínimas:** Usar `replace_file_content` con el bloque exacto a cambiar, sin repetir bloques de código intactos.
+3. **Salidas de Terminal Limpias:** Limitar la salida de comandos de consola (`head`, `tail`, `git log -n 5`) para no saturar el historial con texto basura.
+4. **Respuestas Concisas:** Explicaciones directas y al grano sin verborrea innecesaria.
+
