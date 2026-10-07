@@ -2136,7 +2136,7 @@
       if ('serviceWorker' in navigator && 'caches' in window) {
         caches.keys().then(names => {
           names.forEach(name => {
-            if (name !== 'aliviafin-v134') {
+            if (name !== 'aliviafin-v136') {
               caches.delete(name);
               console.log('Caché viejo eliminado:', name);
             }
@@ -6243,6 +6243,29 @@
 
       const wnSub = document.getElementById('whatsNewVersionSub');
       if (wnSub) wnSub.textContent = 'Actualización ' + APP_VERSION + ' · Nuevas Funcionalidades & Paz Mental';
+    }
+
+    function forceAppRefresh() {
+      showToast('🔄 Actualizando a la última versión...', 'info');
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(regs => {
+          for (let reg of regs) {
+            reg.update();
+            reg.unregister();
+          }
+        });
+      }
+      if ('caches' in window) {
+        caches.keys().then(names => Promise.all(names.map(n => caches.delete(n)))).then(() => {
+          setTimeout(() => {
+            window.location.href = window.location.origin + window.location.pathname + '?v=' + Date.now();
+          }, 350);
+        });
+      } else {
+        setTimeout(() => {
+          window.location.reload();
+        }, 350);
+      }
     }
 
     function openWhatsNewModal() {
