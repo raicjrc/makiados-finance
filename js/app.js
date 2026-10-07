@@ -87,9 +87,9 @@
     let CATEGORIES = { ...GENERIC_CATEGORIES };
 
     // ================================================================
-    // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v71.5)
+    // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v71.6)
     // ================================================================
-    const APP_VERSION = 'v71.5';
+    const APP_VERSION = 'v71.6';
 
     // ================================================================
     // CONFIGURACIÓN DE SUPABASE Y CLIENTE DE AUTENTICACIÓN
@@ -395,71 +395,136 @@
     // ================================================================
     // SISTEMA DE MONETIZACIÓN FREEMIUM (FREE VS PRO CON CICLO DE 30 DÍAS & CORTESÍA 48H)
     // ================================================================
-    function isUserPro() {
-      // 1. César (admin) siempre tiene acceso Pro de por vida
-      if (isAdminCesar()) return true;
-      // 2. Única fuente de verdad: user_subscriptions (protegida por RLS y trigger en Supabase).
-      //    Se ignoran user_metadata y localStorage porque el usuario puede editarlos.
-      // 3. Si en user_subscriptions está como 'premium' o 'pro_lifetime'
-      const status = window._currentUserSubscriptionStatus;
-      if (['premium', 'pro_lifetime'].includes(status)) return true;
-
-      // 4. Si está en 'pro_monthly', comprobar fecha de expiración + 48h de cortesía
-      if (status === 'pro_monthly') {
-        const expiresAt = window._currentUserSubscriptionExpiresAt;
-        if (!expiresAt) return true; // Si no tiene fecha establecida aún, no bloquear
-        const expMs = new Date(expiresAt).getTime();
-        if (isNaN(expMs)) return true;
-        const nowMs = Date.now();
-        const graceMs = 48 * 60 * 60 * 1000; // 48 horas de cortesía
-        if (nowMs <= (expMs + graceMs)) {
-          return true;
-        }
-        // Venció hace más de 48h: degradación elegante a Free (los datos nunca se borran ni se tocan)
-        return false;
-      }
-
-      return false;
-    }
-
-    function getSubscriptionDaysRemaining() {
+    function getSubscriptionDetails(options = {}) {
       if (isAdminCesar()) {
-        return { status: 'lifetime', isPro: true, days: Infinity, inGrace: false, expiresAt: null };
-      }
-      const status = window._currentUserSubscriptionStatus;
-      if (status === 'pro_lifetime' || status === 'premium') {
-        return { status: 'pro_lifetime', isPro: true, days: Infinity, inGrace: false, expiresAt: null };
+        return {
+          status: 'lifetime',
+          plan: 'founder',
+          isPro: true,
+          isExpired: false,
+          inGrace: false,
+          days: Infinity,
+          hoursGrace: 0,
+          expiresAt: null,
+          label: '👑 Fundador PRO'
+        };
       }
 
-      const expiresAt = window._currentUserSubscriptionExpiresAt;
-      if (status === 'pro_monthly' || status === 'expired' || (status === 'free' && expiresAt)) {
+      const status = options.status || window._currentUserSubscriptionStatus || 'free';
+      const expiresAt = options.expires_at || window._currentUserSubscriptionExpiresAt || null;
+
+      if (status === 'pro_lifetime' || status === 'premium') {
+        return {
+          status: 'pro_lifetime',
+          plan: 'life',
+          isPro: true,
+          isExpired: false,
+          inGrace: false,
+          days: Infinity,
+          hoursGrace: 0,
+          expiresAt: null,
+          label: '👑 PRO Vitalicio'
+        };
+      }
+
+      if (status === 'pro_monthly' || status === 'expired' || expiresAt) {
         if (!expiresAt) {
-          if (status === 'expired') {
-            return { status: 'expired', isPro: false, days: -1, inGrace: false, expiresAt: null };
-          }
-          return { status: 'pro_monthly', isPro: true, days: 30, inGrace: false, expiresAt: null };
+          // Si está en pro_monthly o expired pero NO tiene fecha registrada:
+          // Es una suscripción mensual vencida / no renovada. NUNCA dar PRO infinito.
+          return {
+            status: 'expired',
+            plan: 'month',
+            isPro: false,
+            isExpired: true,
+            inGrace: false,
+            days: -1,
+            hoursGrace: 0,
+            expiresAt: null,
+            label: '🔴 PRO Vencido'
+          };
         }
+
         const expMs = new Date(expiresAt).getTime();
         if (isNaN(expMs)) {
-          return { status: 'pro_monthly', isPro: true, days: 30, inGrace: false, expiresAt: null };
+          return {
+            status: 'expired',
+            plan: 'month',
+            isPro: false,
+            isExpired: true,
+            inGrace: false,
+            days: -1,
+            hoursGrace: 0,
+            expiresAt: null,
+            label: '🔴 PRO Vencido'
+          };
         }
+
         const nowMs = Date.now();
         const diffMs = expMs - nowMs;
-        const graceMs = 48 * 60 * 60 * 1000; // 48 horas de cortesía
+        const graceMs = 48 * 60 * 60 * 1000; // 48h de cortesía
 
         if (diffMs > 0) {
           const daysLeft = Math.ceil(diffMs / (24 * 60 * 60 * 1000));
-          return { status: 'pro_monthly', isPro: true, days: daysLeft, inGrace: false, expiresAt };
+          return {
+            status: 'pro_monthly',
+            plan: 'month',
+            isPro: true,
+            isExpired: false,
+            inGrace: false,
+            days: daysLeft,
+            hoursGrace: 0,
+            expiresAt: expiresAt,
+            label: `📅 PRO (${daysLeft}d)`
+          };
         } else if (nowMs <= (expMs + graceMs)) {
           const hoursGrace = Math.max(0, Math.ceil((expMs + graceMs - nowMs) / (60 * 60 * 1000)));
-          return { status: 'pro_monthly', isPro: true, days: 0, inGrace: true, hoursGrace, expiresAt };
+          return {
+            status: 'pro_monthly',
+            plan: 'month',
+            isPro: true,
+            isExpired: false,
+            inGrace: true,
+            days: 0,
+            hoursGrace: hoursGrace,
+            expiresAt: expiresAt,
+            label: `⏳ Cortesía (${hoursGrace}h)`
+          };
         } else {
-          const daysAgo = Math.ceil((nowMs - expMs) / (24 * 60 * 60 * 1000));
-          return { status: 'expired', isPro: false, days: -daysAgo, inGrace: false, expiresAt };
+          const daysAgo = Math.max(1, Math.ceil((nowMs - expMs) / (24 * 60 * 60 * 1000)));
+          return {
+            status: 'expired',
+            plan: 'month',
+            isPro: false,
+            isExpired: true,
+            inGrace: false,
+            days: -daysAgo,
+            hoursGrace: 0,
+            expiresAt: expiresAt,
+            label: '🔴 PRO Vencido'
+          };
         }
       }
 
-      return { status: 'free', isPro: false, days: 0, inGrace: false, expiresAt: null };
+      return {
+        status: 'free',
+        plan: 'free',
+        isPro: false,
+        isExpired: false,
+        inGrace: false,
+        days: 0,
+        hoursGrace: 0,
+        expiresAt: null,
+        label: 'Gratuito'
+      };
+    }
+
+    function isUserPro() {
+      if (isAdminCesar()) return true;
+      return getSubscriptionDetails().isPro;
+    }
+
+    function getSubscriptionDaysRemaining() {
+      return getSubscriptionDetails();
     }
 
     function dismissProRenewalBanner() {
@@ -484,7 +549,7 @@
       }
 
       const subInfo = getSubscriptionDaysRemaining();
-      const isExpiredUser = (subInfo.status === 'expired') || (subInfo.expiresAt && !subInfo.isPro);
+      const isExpiredUser = subInfo.isExpired;
 
       try {
         if (!isExpiredUser && sessionStorage.getItem('aliviafin_dismiss_renewal_banner') === 'true') {
@@ -498,25 +563,7 @@
       const descEl = document.getElementById('proRenewalBannerDesc');
       const btnEl = document.getElementById('proRenewalBannerBtn');
 
-      if (subInfo.status === 'pro_monthly' && subInfo.days <= 3 && !subInfo.inGrace) {
-        banner.className = 'pro-renewal-banner banner-warning';
-        banner.style.display = 'flex';
-        banner.style.opacity = '1';
-        if (iconEl) iconEl.textContent = '🟡';
-        const dateStr = subInfo.expiresAt ? new Date(subInfo.expiresAt).toLocaleDateString('es-PE', { day: '2-digit', month: 'short' }) : '';
-        if (titleEl) titleEl.textContent = `Tu suscripción PRO vence en ${subInfo.days === 1 ? '1 día' : subInfo.days + ' días'}${dateStr ? ' (' + dateStr + ')' : ''}`;
-        if (descEl) descEl.textContent = 'Renueva con Yape o Plin para mantener tus funciones activas sin interrupciones.';
-        if (btnEl) btnEl.textContent = '⚡ Renovar (S/ 4.90)';
-      } else if (subInfo.inGrace) {
-        banner.className = 'pro-renewal-banner banner-grace';
-        banner.style.display = 'flex';
-        banner.style.opacity = '1';
-        if (iconEl) iconEl.textContent = '⏳';
-        const dateStr = subInfo.expiresAt ? new Date(subInfo.expiresAt).toLocaleDateString('es-PE', { day: '2-digit', month: 'short' }) : '';
-        if (titleEl) titleEl.textContent = `Cortesía de 48h activa · ${subInfo.hoursGrace}h restantes`;
-        if (descEl) descEl.textContent = `Tu mes venció el ${dateStr}. Tus finanzas están intactas. Renueva para continuar.`;
-        if (btnEl) btnEl.textContent = '⚡ Renovar ahora';
-      } else if (isExpiredUser) {
+      if (isExpiredUser) {
         banner.className = 'pro-renewal-banner banner-expired';
         banner.style.display = 'flex';
         banner.style.opacity = '1';
@@ -536,6 +583,31 @@
           btnEl.textContent = '⚡ Renovar PRO con Yape / Plin (S/ 4.90)';
           btnEl.style.background = 'linear-gradient(135deg, #dc2626, #ef4444)';
           btnEl.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.3)';
+          btnEl.onclick = () => openFinZenProModal('Renovación Mensual', 'pro_monthly');
+        }
+      } else if (subInfo.inGrace) {
+        banner.className = 'pro-renewal-banner banner-grace';
+        banner.style.display = 'flex';
+        banner.style.opacity = '1';
+        if (iconEl) iconEl.textContent = '⏳';
+        const dateStr = subInfo.expiresAt ? new Date(subInfo.expiresAt).toLocaleDateString('es-PE', { day: '2-digit', month: 'short' }) : '';
+        if (titleEl) titleEl.textContent = `Cortesía de 48h activa · ${subInfo.hoursGrace}h restantes`;
+        if (descEl) descEl.textContent = `Tu mes venció el ${dateStr}. Tus finanzas están intactas. Renueva para continuar.`;
+        if (btnEl) {
+          btnEl.textContent = '⚡ Renovar ahora';
+          btnEl.onclick = () => openFinZenProModal('Renovación Mensual', 'pro_monthly');
+        }
+      } else if (subInfo.status === 'pro_monthly' && subInfo.days <= 3) {
+        banner.className = 'pro-renewal-banner banner-warning';
+        banner.style.display = 'flex';
+        banner.style.opacity = '1';
+        if (iconEl) iconEl.textContent = '🟡';
+        const dateStr = subInfo.expiresAt ? new Date(subInfo.expiresAt).toLocaleDateString('es-PE', { day: '2-digit', month: 'short' }) : '';
+        if (titleEl) titleEl.textContent = `Tu suscripción PRO vence en ${subInfo.days === 1 ? '1 día' : subInfo.days + ' días'}${dateStr ? ' (' + dateStr + ')' : ''}`;
+        if (descEl) descEl.textContent = 'Renueva con Yape o Plin para mantener tus funciones activas sin interrupciones.';
+        if (btnEl) {
+          btnEl.textContent = '⚡ Renovar (S/ 4.90)';
+          btnEl.onclick = () => openFinZenProModal('Renovación Mensual', 'pro_monthly');
         }
       } else {
         banner.style.display = 'none';
@@ -696,23 +768,14 @@
     }
 
     function updateAllProBadgesAndBanners() {
-      const isPro = isUserPro();
-      const subInfo = getSubscriptionDaysRemaining();
-      const isExpired = (subInfo.status === 'expired') || (subInfo.expiresAt && !subInfo.isPro);
+      const subInfo = getSubscriptionDetails();
+      const isExpired = subInfo.isExpired;
+      const isPro = subInfo.isPro && !isExpired;
 
       // 1. Badge junto al logo en el header principal (#proBadge)
       const pb = document.getElementById('proBadge');
       if (pb) {
-        if (isPro) {
-          pb.style.display = 'inline-flex';
-          pb.className = 'badge-pro-gold';
-          pb.style.background = '';
-          pb.style.color = '';
-          pb.style.border = '';
-          pb.style.cursor = 'default';
-          pb.textContent = 'PRO';
-          pb.onclick = null;
-        } else if (isExpired) {
+        if (isExpired) {
           pb.style.display = 'inline-flex';
           pb.className = 'badge-pro-expired';
           pb.style.background = 'rgba(239, 68, 68, 0.15)';
@@ -722,6 +785,15 @@
           pb.textContent = '🔴 PRO Vencido';
           pb.title = 'Toca para renovar tu suscripción';
           pb.onclick = () => openFinZenProModal('Renovación Mensual', 'pro_monthly');
+        } else if (isPro) {
+          pb.style.display = 'inline-flex';
+          pb.className = 'badge-pro-gold';
+          pb.style.background = '';
+          pb.style.color = '';
+          pb.style.border = '';
+          pb.style.cursor = 'default';
+          pb.textContent = 'PRO';
+          pb.onclick = null;
         } else {
           pb.style.display = 'none';
         }
@@ -730,16 +802,7 @@
       // 2. Badge en la barra lateral (#sidebarProBadge)
       const sidePb = document.getElementById('sidebarProBadge');
       if (sidePb) {
-        if (isPro) {
-          sidePb.style.display = 'inline-flex';
-          sidePb.className = 'badge-pro-gold';
-          sidePb.style.background = '';
-          sidePb.style.color = '';
-          sidePb.style.border = '';
-          sidePb.style.cursor = 'default';
-          sidePb.textContent = 'PRO';
-          sidePb.onclick = null;
-        } else if (isExpired) {
+        if (isExpired) {
           sidePb.style.display = 'inline-flex';
           sidePb.className = 'badge-pro-expired';
           sidePb.style.background = 'rgba(239, 68, 68, 0.15)';
@@ -749,6 +812,15 @@
           sidePb.textContent = '🔴 Vencido';
           sidePb.title = 'Toca para renovar';
           sidePb.onclick = () => openFinZenProModal('Renovación Mensual', 'pro_monthly');
+        } else if (isPro) {
+          sidePb.style.display = 'inline-flex';
+          sidePb.className = 'badge-pro-gold';
+          sidePb.style.background = '';
+          sidePb.style.color = '';
+          sidePb.style.border = '';
+          sidePb.style.cursor = 'default';
+          sidePb.textContent = 'PRO';
+          sidePb.onclick = null;
         } else {
           sidePb.style.display = 'none';
         }
@@ -759,16 +831,7 @@
       const uDot = document.getElementById('userSubStatusDot');
       const uText = document.getElementById('userSubStatusText');
       if (uBadge && uDot && uText) {
-        if (isPro) {
-          uBadge.style.display = 'inline-flex';
-          uBadge.style.background = 'linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(217, 119, 6, 0.22))';
-          uBadge.style.border = '1px solid rgba(245, 158, 11, 0.45)';
-          uBadge.style.color = '#d97706';
-          uDot.textContent = '👑';
-          uText.textContent = 'PRO';
-          uBadge.onclick = null;
-          uBadge.style.cursor = 'default';
-        } else if (isExpired) {
+        if (isExpired) {
           uBadge.style.display = 'inline-flex';
           uBadge.style.background = 'rgba(239, 68, 68, 0.12)';
           uBadge.style.border = '1.5px solid rgba(239, 68, 68, 0.4)';
@@ -777,6 +840,15 @@
           uText.textContent = 'PRO Vencido';
           uBadge.onclick = () => openFinZenProModal('Renovación Mensual', 'pro_monthly');
           uBadge.style.cursor = 'pointer';
+        } else if (isPro) {
+          uBadge.style.display = 'inline-flex';
+          uBadge.style.background = 'linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(217, 119, 6, 0.22))';
+          uBadge.style.border = '1px solid rgba(245, 158, 11, 0.45)';
+          uBadge.style.color = '#d97706';
+          uDot.textContent = '👑';
+          uText.textContent = 'PRO';
+          uBadge.onclick = null;
+          uBadge.style.cursor = 'default';
         } else {
           uBadge.style.display = 'none';
         }
@@ -785,16 +857,16 @@
       // 4. Badge en la tarjeta inferior de usuario del sidebar (#deskSidebarUserSubBadge)
       const sideUserBadge = document.getElementById('deskSidebarUserSubBadge');
       if (sideUserBadge) {
-        if (isPro) {
-          sideUserBadge.style.display = 'inline-block';
-          sideUserBadge.style.background = 'rgba(245, 158, 11, 0.18)';
-          sideUserBadge.style.color = '#d97706';
-          sideUserBadge.textContent = '👑 PRO';
-        } else if (isExpired) {
+        if (isExpired) {
           sideUserBadge.style.display = 'inline-block';
           sideUserBadge.style.background = 'rgba(239, 68, 68, 0.15)';
           sideUserBadge.style.color = '#dc2626';
           sideUserBadge.textContent = '🔴 Vencido';
+        } else if (isPro) {
+          sideUserBadge.style.display = 'inline-block';
+          sideUserBadge.style.background = 'rgba(245, 158, 11, 0.18)';
+          sideUserBadge.style.color = '#d97706';
+          sideUserBadge.textContent = '👑 PRO';
         } else {
           sideUserBadge.style.display = 'none';
         }
@@ -862,16 +934,27 @@
 
         let bestSub = null;
         if (rows.length > 0) {
-          // Prioridad: 
-          // 1. pro_lifetime / premium
-          // 2. pro_monthly (activo o con fecha)
-          // 3. expired
-          // 4. free
-          bestSub = rows.find(r => r.status === 'pro_lifetime' || r.status === 'premium')
-                 || rows.find(r => r.status === 'pro_monthly' && (r.expires_at || r.trial_ends_at))
-                 || rows.find(r => r.status === 'pro_monthly')
-                 || rows.find(r => r.status === 'expired')
-                 || rows[0];
+          // 1. Prioridad absoluta: vitalicio/premium
+          const lifeSub = rows.find(r => r.status === 'pro_lifetime' || r.status === 'premium');
+          if (lifeSub) {
+            bestSub = lifeSub;
+          } else {
+            // 2. Prioridad: filas con fecha explícita (expires_at o trial_ends_at)
+            const datedSubs = rows.filter(r => (r.expires_at || r.trial_ends_at));
+            if (datedSubs.length > 0) {
+              const now = Date.now();
+              const activeDated = datedSubs.find(r => {
+                const exp = new Date(r.expires_at || r.trial_ends_at).getTime();
+                return !isNaN(exp) && (exp + 48 * 3600 * 1000) > now;
+              });
+              bestSub = activeDated || datedSubs[0];
+            } else {
+              // 3. Filas sin fecha: buscar 'expired' primero, luego 'pro_monthly', luego cualquiera
+              bestSub = rows.find(r => r.status === 'expired')
+                     || rows.find(r => r.status === 'pro_monthly')
+                     || rows[0];
+            }
+          }
         }
 
         if (bestSub) {
@@ -880,7 +963,6 @@
           if (['premium', 'pro_lifetime'].includes(bestSub.status)) {
             window._currentUserSubscriptionStatus = bestSub.status;
           } else if (bestSub.status === 'pro_monthly' || bestSub.status === 'expired') {
-            // Evaluar expiración con 48h de cortesía
             if (window._currentUserSubscriptionExpiresAt) {
               const expMs = new Date(window._currentUserSubscriptionExpiresAt).getTime();
               const nowMs = Date.now();
@@ -892,10 +974,12 @@
                   window._currentUserSubscriptionStatus = 'pro_monthly';
                 }
               } else {
-                window._currentUserSubscriptionStatus = bestSub.status;
+                window._currentUserSubscriptionStatus = 'expired';
               }
             } else {
-              window._currentUserSubscriptionStatus = bestSub.status;
+              // Si un usuario está marcado como pro_monthly pero carece de fecha de expiración,
+              // NUNCA conceder PRO ilimitado: se marca como vencido para activar renovación
+              window._currentUserSubscriptionStatus = 'expired';
             }
           } else {
             window._currentUserSubscriptionStatus = 'free';
@@ -1429,13 +1513,13 @@
       }
     });
 
-    // Registrar Service Worker v71.5 (Network-First, sin caché de datos)
+    // Registrar Service Worker v71.6 (Network-First, sin caché de datos)
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         let isRefreshing = false;
-        navigator.serviceWorker.register('./sw.js?v=71.5')
+        navigator.serviceWorker.register('./sw.js?v=71.6')
           .then(reg => {
-            console.log('SW v71.5 registrado:', reg.scope);
+            console.log('SW v71.6 registrado:', reg.scope);
             // Forzar actualización inmediata del SW en todos los dispositivos
             reg.update();
             if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
@@ -2032,7 +2116,7 @@
       if ('serviceWorker' in navigator && 'caches' in window) {
         caches.keys().then(names => {
           names.forEach(name => {
-            if (name !== 'aliviafin-v133') {
+            if (name !== 'aliviafin-v134') {
               caches.delete(name);
               console.log('Caché viejo eliminado:', name);
             }
@@ -7015,7 +7099,7 @@ window.generatePDFReport = function() {
   if (typeof html2pdf === 'undefined') {
     showToast('Iniciando motor de exportación PDF...', 'info');
     const script = document.createElement('script');
-    script.src = 'js/html2pdf.bundle.min.js?v=71.5';
+    script.src = 'js/html2pdf.bundle.min.js?v=71.6';
     script.onload = renderPdfNow;
     script.onerror = () => {
       // Fallback secundario a cdnjs si el local fallara
@@ -8153,15 +8237,9 @@ function getSubscriberExpirationInfo(item) {
   }
 
   const expRaw = item.expires_at || item.trial_ends_at;
-  if (!expRaw) {
-    if (plan === 'month') {
-      return {
-        status: 'month_no_date',
-        html: '<span class="master-user-badge-exp-active">🟢 Activo</span>',
-        isExpiring: false,
-        isExpired: false
-      };
-    }
+  const sub = getSubscriptionDetails({ status: item.status, expires_at: expRaw });
+
+  if (sub.status === 'free') {
     return {
       status: 'free',
       html: '<span style="font-size:11px; color:var(--text-muted);">— Básico</span>',
@@ -8170,54 +8248,43 @@ function getSubscriberExpirationInfo(item) {
     };
   }
 
-  const expMs = new Date(expRaw).getTime();
-  if (isNaN(expMs)) {
-    return {
-      status: 'unknown',
-      html: '<span style="font-size:11px; color:var(--text-muted);">—</span>',
-      isExpiring: false,
-      isExpired: false
-    };
-  }
+  const shortDate = expRaw && !isNaN(new Date(expRaw).getTime())
+    ? new Date(expRaw).toLocaleDateString('es-PE', { day: '2-digit', month: 'short' })
+    : '';
 
-  const nowMs = Date.now();
-  const diffMs = expMs - nowMs;
-  const graceMs = 48 * 60 * 60 * 1000; // 48h de cortesía
-  const shortDate = new Date(expMs).toLocaleDateString('es-PE', { day: '2-digit', month: 'short' });
-
-  if (diffMs > 0) {
-    const daysLeft = Math.ceil(diffMs / (24 * 60 * 60 * 1000));
-    if (daysLeft > 5) {
-      return {
-        status: 'active',
-        html: `<span class="master-user-badge-exp-active">🟢 ${daysLeft}d (${shortDate})</span>`,
-        isExpiring: false,
-        isExpired: false
-      };
-    } else {
-      return {
-        status: 'expiring',
-        html: `<span class="master-user-badge-exp-warn">🟡 ${daysLeft}d (${shortDate})</span>`,
-        isExpiring: true,
-        isExpired: false
-      };
-    }
-  } else if (nowMs <= (expMs + graceMs)) {
-    const hoursGrace = Math.max(0, Math.ceil((expMs + graceMs - nowMs) / (60 * 60 * 1000)));
-    return {
-      status: 'grace',
-      html: `<span class="master-user-badge-exp-grace">⏳ Cortesía (${hoursGrace}h)</span>`,
-      isExpiring: true,
-      isExpired: false
-    };
-  } else {
+  if (sub.isExpired) {
     return {
       status: 'expired',
-      html: `<span class="master-user-badge-exp-danger">🔴 Vencido (${shortDate})</span>`,
+      html: `<span class="master-user-badge-exp-danger">🔴 Vencido${shortDate ? ' (' + shortDate + ')' : ''}</span>`,
       isExpiring: false,
       isExpired: true
     };
   }
+
+  if (sub.inGrace) {
+    return {
+      status: 'grace',
+      html: `<span class="master-user-badge-exp-grace">⏳ Cortesía (${sub.hoursGrace}h)</span>`,
+      isExpiring: true,
+      isExpired: false
+    };
+  }
+
+  if (sub.days <= 5) {
+    return {
+      status: 'expiring',
+      html: `<span class="master-user-badge-exp-warn">🟡 ${sub.days}d (${shortDate})</span>`,
+      isExpiring: true,
+      isExpired: false
+    };
+  }
+
+  return {
+    status: 'active',
+    html: `<span class="master-user-badge-exp-active">🟢 ${sub.days}d (${shortDate})</span>`,
+    isExpiring: false,
+    isExpired: false
+  };
 }
 
 function setMasterFilter(filter) {
@@ -9210,3 +9277,4 @@ window.sendWinBackViaEmail = sendWinBackViaEmail;
 window.toggleMonthEndNotification = toggleMonthEndNotification;
 window.checkMonthEndNotification = checkMonthEndNotification;
 window.updateAllProBadgesAndBanners = updateAllProBadgesAndBanners;
+window.getSubscriptionDetails = getSubscriptionDetails;

@@ -3,6 +3,18 @@
 Todas las versiones notables de esta aplicación están documentadas aquí.
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
+## [v71.6] — 2026-10-06 — Unificación Absoluta de Estado de Suscripción (Single Source of Truth), Eliminación de Falsos Activos y Prioridad de Expiración en UI
+
+### 🛡️ Unificación Raíz del Sistema de Suscripción (`getSubscriptionDetails`)
+- **Fuente Única de Verdad (`getSubscriptionDetails`)**: Se unificaron `isUserPro()`, `getSubscriptionDaysRemaining()` y `getSubscriberExpirationInfo()` en una única función de evaluación compartida tanto por la aplicación del cliente como por el Founder Hub. Se eliminaron por completo las discrepancias donde el panel del fundador marcaba una cuenta como vencida y el cliente mostraba PRO activo.
+- **Eliminación del Loophole de Fechas Nulas**: Se eliminó la condición defectuosa que trataba cualquier registro `pro_monthly` sin fecha o con fecha corrupta como PRO activo ilimitado. Ahora, cualquier cuenta mensual sin fecha válida de expiración en el futuro se evalúa rigurosamente como vencida (`🔴 PRO Vencido`), exigiendo renovación legítima.
+- **Prioridad Incondicional de Estado Vencido en Badges**: En `updateAllProBadgesAndBanners()`, la condición `if (isExpired)` ahora se evalúa antes de cualquier otra condición, garantizando que si una cuenta caducó, todos los badges (`#proBadge`, `#sidebarProBadge`, `#userSubStatusBadge`, `#deskSidebarUserSubBadge`) muestren `🔴 PRO Vencido` / `🔴 Vencido` en lugar de insignias doradas.
+- **Selección Inteligente de Fila Candidata en `verifySubscription`**: Si existen registros duplicados o filas desincronizadas para un usuario, se priorizan las filas con fecha explícita (`expires_at` o `trial_ends_at`), impidiendo que una fila huérfana sin fecha enmascare el vencimiento real.
+- **Actualización Cruzada en Panel Founder Hub**: Al renovar (`+30 Días`) o cambiar de plan, se sincroniza simultáneamente por `user_id` y por `email`, evitando inconsistencias por RLS.
+- **Service Worker v71.6 (Caché `aliviafin-v134`)**: Purgado forzado de cachés antiguas para entrega inmediata en iPhone Safari, Chrome, Windows y Mac.
+
+---
+
 ## [v71.5] — 2026-10-06 — Detección Multi-Query de Suscripciones Vencidas, Hardening RLS y Badges Omnipresentes
 
 ### 🔴 Fix Definitivo de Detección de Cuenta Vencida (Prueba04)
