@@ -3,6 +3,20 @@
 Todas las versiones notables de esta aplicación están documentadas aquí.
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
+## [v71.7] — 2026-10-07 — Corrección de Evaluación en Founder Hub (Eliminación de Falsos Infinityd), Restauración de Modo Privacidad Móvil y Ajustes
+
+### 👑 Corrección de Evaluación en Founder Hub (`getSubscriptionDetails`)
+- **Aislamiento de la Sesión del Fundador**: En `getSubscriptionDetails()`, la validación de cuenta fundadora (`isAdminCesar()`) ahora diferencia estrictamente si se evalúa la sesión activa o un suscriptor del directorio (`isEvaluatingItem`). Previamente, al consultar el Hub estando conectado como César, la condición evaluaba `true` para todos los usuarios de la lista, asignando `days: Infinity` y ocultando el estado vencido con `🟢 Infinityd (30-set.)`.
+- **Detección Certera de Suscriptores Vencidos en el Hub**: Las cuentas vencidas ahora muestran correctamente su insignia roja `🔴 Vencido (fecha)` en la columna de Vencimiento, `📅 PRO Mensual (Vencido)` en Plan Actual, y el filtro `🔴 Vencidos` contabiliza e incluye de inmediato a los usuarios que necesitan renovación.
+- **Preservación de `expires_at` en Deduplicación**: En `getDeduplicatedSubscribers()`, las fechas de expiración se combinan con seguridad evitando que registros secundarios sin fecha sobreescriban los datos del suscriptor.
+
+### 👁️ Restauración y Acceso Universal a Modo Privacidad en Celular / Móvil
+- **Botón Visible en Cabecera Móvil (`#privacyToggleBtn`)**: Se retiró la clase limitante para que el icono del ojo `👁️` / `🙈` esté disponible de inmediato en la cabecera superior de iPhone y Android junto al selector de mes y ajustes.
+- **Acceso Directo en Modal de Ajustes (`#settingsPrivacyBtn`)**: Se integró un botón dedicado para alternar el Modo Privacidad (`👁️ Ocultar Saldos` / `🙈 Mostrar Saldos`) junto a la opción de Modo Noche, permitiendo cambiarlo fácilmente desde el popover en cualquier dispositivo.
+- **Sincronización Total de Estado**: Ambas ubicaciones reflejan visualmente y en tiempo real si la privacidad está activa o inactiva.
+
+---
+
 ## [v71.6] — 2026-10-06 — Unificación Absoluta de Estado de Suscripción (Single Source of Truth), Eliminación de Falsos Activos y Prioridad de Expiración en UI
 
 ### 🛡️ Unificación Raíz del Sistema de Suscripción (`getSubscriptionDetails`)

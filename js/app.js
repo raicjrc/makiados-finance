@@ -87,9 +87,9 @@
     let CATEGORIES = { ...GENERIC_CATEGORIES };
 
     // ================================================================
-    // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v71.6)
+    // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v71.7)
     // ================================================================
-    const APP_VERSION = 'v71.6';
+    const APP_VERSION = 'v71.7';
 
     // ================================================================
     // CONFIGURACIÓN DE SUPABASE Y CLIENTE DE AUTENTICACIÓN
@@ -396,7 +396,14 @@
     // SISTEMA DE MONETIZACIÓN FREEMIUM (FREE VS PRO CON CICLO DE 30 DÍAS & CORTESÍA 48H)
     // ================================================================
     function getSubscriptionDetails(options = {}) {
-      if (isAdminCesar()) {
+      // Determinar si estamos evaluando un ítem/suscriptor específico (ej. desde el Hub de Fundador)
+      // o la sesión del usuario actual
+      const isEvaluatingItem = options.status !== undefined || options.expires_at !== undefined || options.email !== undefined;
+      const isFounder = isEvaluatingItem 
+        ? (options.email ? isAdminCesar(options.email) : false)
+        : isAdminCesar();
+
+      if (isFounder) {
         return {
           status: 'lifetime',
           plan: 'founder',
@@ -410,8 +417,14 @@
         };
       }
 
-      const status = options.status || window._currentUserSubscriptionStatus || 'free';
-      const expiresAt = options.expires_at || window._currentUserSubscriptionExpiresAt || null;
+      // Si se pasa options, usar estrictamente los valores de options sin caer en los globales del usuario logueado
+      const status = isEvaluatingItem 
+        ? (options.status || 'free') 
+        : (window._currentUserSubscriptionStatus || 'free');
+
+      const expiresAt = isEvaluatingItem 
+        ? (options.expires_at || null) 
+        : (window._currentUserSubscriptionExpiresAt || null);
 
       if (status === 'pro_lifetime' || status === 'premium') {
         return {
@@ -1315,6 +1328,7 @@
 
     function openSettingsModal() {
       syncAdminUI();
+      syncPrivacyUI(isPrivacyModeActive());
       // Cerrar cualquier otro modal abierto para evitar superposiciones
       document.querySelectorAll('.modal-backdrop.active, .glass-backdrop.active').forEach(m => {
         if (m.id !== 'settingsModal') closeModal(m);
@@ -1517,13 +1531,13 @@
       }
     });
 
-    // Registrar Service Worker v71.6 (Network-First, sin caché de datos)
+    // Registrar Service Worker v71.7 (Network-First, sin caché de datos)
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         let isRefreshing = false;
-        navigator.serviceWorker.register('./sw.js?v=71.6')
+        navigator.serviceWorker.register('./sw.js?v=71.7')
           .then(reg => {
-            console.log('SW v71.6 registrado:', reg.scope);
+            console.log('SW v71.7 registrado:', reg.scope);
             // Forzar actualización inmediata del SW en todos los dispositivos
             reg.update();
             if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
@@ -2242,6 +2256,13 @@
       if (deskIcon) deskIcon.textContent = isActive ? '🙈' : '👁️';
       if (deskLabel) deskLabel.textContent = isActive ? 'Mostrar Saldos' : 'Ocultar Saldos';
       if (deskBtn) deskBtn.classList.toggle('active', isActive);
+
+      const setPrivIcon = document.getElementById('settingsPrivacyIcon');
+      const setPrivLabel = document.getElementById('settingsPrivacyLabel');
+      const setPrivBtn = document.getElementById('settingsPrivacyBtn');
+      if (setPrivIcon) setPrivIcon.textContent = isActive ? '🙈' : '👁️';
+      if (setPrivLabel) setPrivLabel.textContent = isActive ? 'Mostrar Saldos' : 'Ocultar Saldos';
+      if (setPrivBtn) setPrivBtn.classList.toggle('active', isActive);
     }
 
     function togglePrivacyMode() {
@@ -7758,6 +7779,15 @@ function getDeduplicatedSubscribers(rawList) {
     if (item.last_active_at && (!existing.last_active_at || newer(item.last_active_at, existing.last_active_at))) {
       existing.last_active_at = item.last_active_at;
     }
+    if (item.expires_at && (!existing.expires_at || newer(item.expires_at, existing.expires_at))) {
+      existing.expires_at = item.expires_at;
+    }
+    if (item.trial_ends_at && !existing.trial_ends_at) {
+      existing.trial_ends_at = item.trial_ends_at;
+    }
+    if (item.status === 'expired' && !['pro_lifetime', 'premium'].includes(existing.status)) {
+      existing.status = 'expired';
+    }
     if (item.user_name && !existing.user_name) existing.user_name = item.user_name;
     if (item.full_name && !existing.full_name) existing.full_name = item.full_name;
   });
@@ -7773,7 +7803,7 @@ function getMasterCustomers() {
 function getMasterPlanKey(item) {
   if (isFounderEmail(item.email)) return 'founder';
   if (item.status === 'pro_lifetime' || item.status === 'premium') return 'life';
-  if (item.status === 'pro_monthly') return 'month';
+  if (item.status === 'pro_monthly' || item.status === 'expired') return 'month';
   return 'free';
 }
 
@@ -7856,9 +7886,14 @@ function calculateMasterKPIs() {
   let expired = 0;
   customers.forEach(s => {
     const plan = getMasterPlanKey(s);
-    if (plan === 'life') life++;
-    else if (plan === 'month') month++;
     const expInfo = getSubscriberExpirationInfo(s);
+    if (plan === 'life') {
+      life++;
+    } else if (plan === 'month') {
+      if (!expInfo.isExpired) {
+        month++;
+      }
+    }
     if (expInfo.isExpiring) expiring++;
     if (expInfo.isExpired) expired++;
     const info = getUserLastConnectionInfo(s);
@@ -8241,7 +8276,7 @@ function getSubscriberExpirationInfo(item) {
   }
 
   const expRaw = item.expires_at || item.trial_ends_at;
-  const sub = getSubscriptionDetails({ status: item.status, expires_at: expRaw });
+  const sub = getSubscriptionDetails({ status: item.status, expires_at: expRaw, email: item.email });
 
   if (sub.status === 'free') {
     return {
@@ -8359,6 +8394,7 @@ function renderMasterSubscribers() {
     const isCesar = plan === 'founder';
     const isLife = isCesar || plan === 'life';
     const isMonth = plan === 'month';
+    const expInfo = getSubscriberExpirationInfo(item);
 
     let planBadge = '<span class="master-user-badge-free">🆓 Gratuito</span>';
     let revenueEst = 'S/ 0.00';
@@ -8369,14 +8405,18 @@ function renderMasterSubscribers() {
       planBadge = '<span class="master-user-badge-pro-life">👑 PRO Vitalicio</span>';
       revenueEst = 'S/ 19.90';
     } else if (isMonth) {
-      planBadge = '<span class="master-user-badge-pro-month">📅 PRO Mensual</span>';
-      revenueEst = 'S/ 4.90 / mes';
+      if (expInfo.isExpired) {
+        planBadge = '<span class="master-user-badge-pro-month" style="background: rgba(239, 68, 68, 0.12); color: #dc2626; border: 1.5px solid rgba(239, 68, 68, 0.35); font-weight: 800;">📅 PRO Mensual (Vencido)</span>';
+        revenueEst = 'S/ 4.90 (Vencido)';
+      } else {
+        planBadge = '<span class="master-user-badge-pro-month">📅 PRO Mensual</span>';
+        revenueEst = 'S/ 4.90 / mes';
+      }
     }
 
     const dateStr = item.created_at ? new Date(item.created_at).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Reciente';
     const initial = cleanName.charAt(0).toUpperCase();
     const actInfo = getUserLastConnectionInfo(item);
-    const expInfo = getSubscriberExpirationInfo(item);
     const uid = escapeHtml(item.user_id || '');
     const em = escapeHtml(email);
 

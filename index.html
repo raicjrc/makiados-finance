@@ -14,9 +14,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <script src="js/chart.min.js?v=71.6"></script>
-  <script src="js/supabase.min.js?v=71.6"></script>
-  <link rel="stylesheet" href="css/styles.css?v=71.6">
+  <script src="js/chart.min.js?v=71.7"></script>
+  <script src="js/supabase.min.js?v=71.7"></script>
+  <link rel="stylesheet" href="css/styles.css?v=71.7">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
 
   <style>
@@ -96,7 +96,7 @@
           <a href="javascript:void(0)" onclick="openLegalModal('terms')" class="login-unified-legal-link">
             <span>⚖️ Centro Legal, Garantías & Reclamaciones</span>
           </a>
-          <p id="loginFooterVersionDesk" class="login-version-tag">AliviaFin v71.6 · Paz mental para tu dinero</p>
+          <p id="loginFooterVersionDesk" class="login-version-tag">AliviaFin v71.7 · Paz mental para tu dinero</p>
         </div>
       </div>
 
@@ -215,7 +215,7 @@
             <a href="javascript:void(0)" onclick="openLegalModal('terms')" class="login-unified-legal-link">
               <span>⚖️ Centro Legal, Garantías & Reclamaciones</span>
             </a>
-            <p id="loginFooterVersionMob" class="login-version-tag">AliviaFin v71.6 · Paz mental para tu dinero</p>
+            <p id="loginFooterVersionMob" class="login-version-tag">AliviaFin v71.7 · Paz mental para tu dinero</p>
           </div>
         </div>
 
@@ -375,7 +375,7 @@
           <div class="month-selector">
             <select id="monthSelect" onchange="changeMonth(this.value)"></select>
           </div>
-          <button class="privacy-toggle-btn desktop-only-header-btn" id="privacyToggleBtn" onclick="togglePrivacyMode()" title="Ocultar o mostrar montos (Modo Privacidad)">👁️</button>
+          <button class="privacy-toggle-btn" id="privacyToggleBtn" onclick="togglePrivacyMode()" title="Ocultar o mostrar montos (Modo Privacidad)">👁️</button>
           <button class="theme-toggle-btn desktop-only-header-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Cambiar a Modo Noche Suave">🌙</button>
           <button id="btnFounderHeader" class="settings-popover-btn master-admin-only" onclick="switchTab('founder')" title="Hub de Fundador CEO (Métricas & Suscriptores)" style="display: none; background: linear-gradient(135deg, rgba(245, 158, 11, 0.18), rgba(217, 119, 6, 0.28)); border: 1.5px solid rgba(245, 158, 11, 0.5); color: #d97706; font-size: 15px; margin-right: 2px; position: relative;">
             👑
@@ -1294,10 +1294,15 @@
 
         <div style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 2px;">Mi Perfil & App</div>
 
-        <!-- Modo Noche Quick Toggle (Privacidad está siempre disponible en la cabecera superior) -->
-        <button type="button" class="btn btn-secondary" onclick="toggleTheme()" style="width: 100%; padding: 10px 12px; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 6px;">
-          <span>🌙</span> <span>Alternar Modo Noche</span>
-        </button>
+        <!-- Controles Rápidos: Modo Privacidad & Modo Noche -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 6px;">
+          <button type="button" class="btn btn-secondary" id="settingsPrivacyBtn" onclick="togglePrivacyMode()" style="padding: 10px 8px; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 6px; border-radius: 10px;" title="Ocultar o mostrar saldos en la app">
+            <span id="settingsPrivacyIcon">👁️</span> <span id="settingsPrivacyLabel">Ocultar Saldos</span>
+          </button>
+          <button type="button" class="btn btn-secondary" id="settingsThemeBtn" onclick="toggleTheme()" style="padding: 10px 8px; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 6px; border-radius: 10px;" title="Cambiar a modo noche o día">
+            <span>🌙</span> <span>Modo Noche</span>
+          </button>
+        </div>
 
         <!-- Nombre de Usuario / Apodo Personalizado -->
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 12px; margin-bottom: 4px;">
@@ -1383,7 +1388,7 @@
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
               <span style="font-size: 11px; font-weight: 700; color: #374151;">📱 Versión</span>
-              <span style="font-size: 11px; color: #0d9488; font-weight: 800;" id="settingsVersion">v71.6</span>
+              <span style="font-size: 11px; color: #0d9488; font-weight: 800;" id="settingsVersion">v71.7</span>
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 5px; border-top: 1px dashed #e2e8f0;">
               <span style="font-size: 10.5px; font-weight: 700; color: #64748b;">🏢 Plataforma</span>
@@ -2363,7 +2368,7 @@
             <span>🚀</span> <span>¡Novedades en AliviaFin!</span>
           </div>
           <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
-            <span class="whats-new-card-badge" id="whatsNewVersionBadge">Versión v71.6</span>
+            <span class="whats-new-card-badge" id="whatsNewVersionBadge">Versión v71.7</span>
             <span style="font-size: 11px; color: var(--text-muted); font-weight: 600;" id="whatsNewVersionSub">Nuevas Funcionalidades & Paz Mental para tu Dinero</span>
           </div>
         </div>
@@ -3103,6 +3108,6 @@
   <div id="masterDashboardModal" style="display: none;"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
-  <script src="js/app.js?v=71.6"></script>
+  <script src="js/app.js?v=71.7"></script>
 </body>
 </html>

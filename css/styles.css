@@ -5047,9 +5047,11 @@
       background: var(--card-hover-bg);
       transform: translateY(-1px);
     }
-    .privacy-toggle-btn.active {
-      background: rgba(99, 102, 241, 0.14);
-      border-color: var(--primary);
+    .privacy-toggle-btn.active,
+    #settingsPrivacyBtn.active {
+      background: rgba(99, 102, 241, 0.14) !important;
+      border-color: var(--primary) !important;
+      color: var(--primary) !important;
     }
 
     /* Ocultar el texto real haciéndolo transparente */
