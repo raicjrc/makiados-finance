@@ -93,6 +93,7 @@
     }
 
     html {
+      background-color: var(--bg);
       box-sizing: border-box;
       width: 100%;
       max-width: 100vw;
@@ -362,6 +363,7 @@
     }
 
     /* ====== TEMA TWILIGHT SLATE (DARK SUAVE - CERO NEGRO) ====== */
+    html.theme-twilight,
     body.theme-twilight {
       --primary: #10b981;
       --primary-hover: #059669;
@@ -379,6 +381,7 @@
       --border: rgba(255, 255, 255, 0.08);
       --border-light: rgba(255, 255, 255, 0.04);
       --shadow-md: 0 8px 24px -4px rgba(0, 0, 0, 0.5);
+      background-color: #090d16 !important;
     }
     body.theme-twilight .top-navbar {
       background: rgba(15, 23, 42, 0.82);

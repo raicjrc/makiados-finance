@@ -2190,8 +2190,15 @@
     // ================================================================
     function toggleTheme() {
       const isDark = document.body.classList.toggle('theme-twilight');
+      document.documentElement.classList.toggle('theme-twilight', isDark);
       const currentTheme = isDark ? 'twilight' : 'crystal';
       localStorage.setItem('finanzas_theme', currentTheme);
+      
+      const meta = document.getElementById('themeColorMeta') || document.querySelector('meta[name="theme-color"]');
+      if (meta) {
+        meta.setAttribute('content', isDark ? '#090d16' : '#fbfbfd');
+      }
+
       updateThemeButtons(currentTheme);
       showToast(isDark ? '🌙 Modo Noche Suave activado' : '✨ Modo Claro Cristal activado', 'info');
       if (typeof updateSimulatedCalculations === 'function' && document.getElementById('installmentsSimulatorModal')?.classList.contains('active')) {
@@ -2227,11 +2234,15 @@
       }
       if (!savedTheme) savedTheme = 'twilight';
 
-      if (savedTheme === 'twilight') {
-        document.body.classList.add('theme-twilight');
-      } else {
-        document.body.classList.remove('theme-twilight');
+      const isDark = (savedTheme === 'twilight');
+      document.documentElement.classList.toggle('theme-twilight', isDark);
+      document.body.classList.toggle('theme-twilight', isDark);
+
+      const meta = document.getElementById('themeColorMeta') || document.querySelector('meta[name="theme-color"]');
+      if (meta) {
+        meta.setAttribute('content', isDark ? '#090d16' : '#fbfbfd');
       }
+
       updateThemeButtons(savedTheme);
     }
 
