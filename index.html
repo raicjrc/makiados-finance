@@ -16,7 +16,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="js/chart.min.js?v=72.0"></script>
   <script src="js/supabase.min.js?v=72.0"></script>
-  <link rel="stylesheet" href="css/styles.css?v=72.0">
+  <link rel="stylesheet" href="css/styles.css?v=73.0">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
 
   <style>
@@ -363,11 +363,18 @@
         </div>
 
         <div class="header-right-group">
-          <!-- Badge de usuario activo en desktop -->
-          <div id="userBadge" onclick="handleLogout()" title="Cerrar sesión" class="desktop-user-badge">
-            <span style="font-size:14px;">👤</span>
-            <span id="userBadgeText" style="font-size:11px; font-weight:700; color:var(--text-secondary); max-width:90px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Usuario</span>
+          <!-- Quick Actions Directas en Header Desktop (Zen Fintech) -->
+          <div class="desktop-header-quick-actions desktop-only">
+            <button type="button" class="btn-header-action btn-header-expense" onclick="openQuickExpenseModal()" title="Registrar nuevo gasto (⚡)">
+              <span class="action-icon">⚡</span>
+              <span>Gasto</span>
+            </button>
+            <button type="button" class="btn-header-action btn-header-income" onclick="openAddExtraIncomeModal()" title="Registrar nuevo ingreso (💵)">
+              <span class="action-icon">💵</span>
+              <span>Ingreso</span>
+            </button>
           </div>
+          <span id="userBadgeText" style="display: none !important;"></span>
           <div id="userSubStatusBadge" style="display: none; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 20px; font-size: 10.5px; font-weight: 800; cursor: pointer; transition: all 0.2s;" onclick="openFinZenProModal('Renovación de Membresía', 'pro_monthly')" title="Toca para renovar tu suscripción">
             <span id="userSubStatusDot">🔴</span>
             <span id="userSubStatusText">Vencido</span>
@@ -416,7 +423,7 @@
             <div id="executiveBalanceCard" class="executive-balance-card" onclick="openExplainSurplusModal()" style="cursor: pointer;" title="Toca para ver el desglose exacto de tu saldo bancario">
               <div class="exec-card-top-row">
                 <div class="exec-card-brand-label">
-                  <span class="exec-apple-glyph"></span>
+                  <span class="exec-card-dot-glyph"></span>
                   <span class="exec-card-title">Disponible en banco</span>
                 </div>
                 <div id="balanceLiveBadge" class="exec-badge-live">
@@ -470,73 +477,30 @@
               </div>
             </div>
 
-            <!-- Action Buttons (Desktop Only / Subtle Glass) -->
-            <div class="zen-actions-grid desktop-only">
-              <button id="btnRegistrarGasto" class="action-pill action-pill-expense" onclick="openQuickExpenseModal()">
-                <span class="action-pill-icon">⚡</span>
-                <span>Registrar Gasto</span>
-              </button>
-              <button id="btnRegistrarIngreso" class="action-pill action-pill-income" onclick="openAddExtraIncomeModal()">
-                <span class="action-pill-icon">💵</span>
-                <span>Registrar Ingreso</span>
-              </button>
-            </div>
-
-            <!-- GRÁFICOS EJECUTIVOS DESKTOP (PREMIUM & INTERACTIVOS) -->
-            <div class="desktop-executive-charts desktop-only" style="margin-top: 14px;">
-              
-              <!-- 1. Curva de Flujo de Caja (Cashflow Mensual) -->
-              <div class="card executive-chart-card">
-                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                  <div>
-                    <div class="card-title" style="font-size: 13.5px; font-weight: 800; display: flex; align-items: center; gap: 6px;">
-                      <span>📈</span>
-                      <span>Flujo de Caja (Cashflow Proyectado)</span>
-                    </div>
-                    <div style="font-size: 11px; color: var(--text-muted); font-weight: 600; margin-top: 2px;">
-                      Ingresos vs Gastos en tiempo real
-                    </div>
+            <!-- 1. Curva de Flujo de Caja (Cashflow Mensual) -->
+            <div class="card executive-chart-card desktop-only" style="margin-top: 14px;">
+              <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <div>
+                  <div class="card-title" style="font-size: 13.5px; font-weight: 800; display: flex; align-items: center; gap: 6px;">
+                    <span>📈</span>
+                    <span>Flujo de Caja (Cashflow Proyectado)</span>
                   </div>
-                  <div class="chart-legend-pills" style="display: flex; gap: 6px;">
-                    <span style="font-size: 10.5px; font-weight: 800; color: #10b981; background: rgba(16, 185, 129, 0.12); padding: 2px 8px; border-radius: 20px;">🟢 Ingresos</span>
-                    <span style="font-size: 10.5px; font-weight: 800; color: #f43f5e; background: rgba(244, 63, 94, 0.12); padding: 2px 8px; border-radius: 20px;">🔴 Gastos</span>
+                  <div style="font-size: 11px; color: var(--text-muted); font-weight: 600; margin-top: 2px;">
+                    Ingresos vs Gastos en tiempo real
                   </div>
                 </div>
-                <div style="height: 220px; position: relative;">
-                  <canvas id="desktopCashflowChart"></canvas>
+                <div class="chart-legend-pills" style="display: flex; gap: 6px;">
+                  <span style="font-size: 10.5px; font-weight: 800; color: #10b981; background: rgba(16, 185, 129, 0.12); padding: 2px 8px; border-radius: 20px;">🟢 Ingresos</span>
+                  <span style="font-size: 10.5px; font-weight: 800; color: #f43f5e; background: rgba(244, 63, 94, 0.12); padding: 2px 8px; border-radius: 20px;">🔴 Gastos</span>
                 </div>
               </div>
-
-              <!-- 2. Desglose de Gastos por Categoría (Donut & Ranking) -->
-              <div class="card executive-chart-card" style="margin-top: 14px;">
-                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                  <div>
-                    <div class="card-title" style="font-size: 13.5px; font-weight: 800; display: flex; align-items: center; gap: 6px;">
-                      <span>🍩</span>
-                      <span>Distribución de Gastos del Mes</span>
-                    </div>
-                    <div style="font-size: 11px; color: var(--text-muted); font-weight: 600; margin-top: 2px;">
-                      Concentración de capital por categoría
-                    </div>
-                  </div>
-                  <button type="button" onclick="switchTab('plan')" style="background: none; border: none; font-size: 11px; font-weight: 800; color: var(--primary); cursor: pointer; padding: 2px 4px;">
-                    Ver Plan 50/30/20 ↗
-                  </button>
-                </div>
-                <div class="desktop-donut-wrapper" style="display: flex; align-items: center; gap: 20px; min-height: 170px;">
-                  <div style="width: 170px; height: 170px; position: relative; flex-shrink: 0;">
-                    <canvas id="desktopCategoryChart"></canvas>
-                  </div>
-                  <div id="desktopCategoryLegend" class="desktop-donut-legend" style="flex: 1; min-width: 0;">
-                    <!-- Renderizado dinámico vía renderDesktopExecutiveCharts() -->
-                  </div>
-                </div>
+              <div style="height: 220px; position: relative;">
+                <canvas id="desktopCashflowChart"></canvas>
               </div>
-
             </div>
           </div>
 
-          <!-- Columna Lateral / Derecha (Desktop): Movimientos Recientes & Radar de Vencimientos -->
+          <!-- Columna Lateral / Derecha (Desktop): Movimientos Recientes & Distribución -->
           <div class="desktop-home-col-right">
             <!-- FEED: ÚLTIMOS MOVIMIENTOS (Inmediato, despejado y accesible) -->
             <div class="card" style="margin-bottom: 14px;">
@@ -558,6 +522,32 @@
             <!-- RADAR DE PRÓXIMOS VENCIMIENTOS (APPLE FINTECH WIDGET) -->
             <div id="upcomingBillsContainer">
               <!-- Renders dynamically via renderUpcomingDueDates() -->
+            </div>
+
+            <!-- 2. Desglose de Gastos por Categoría (Donut & Ranking) -->
+            <div class="card executive-chart-card desktop-only" style="margin-top: 14px;">
+              <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <div>
+                  <div class="card-title" style="font-size: 13.5px; font-weight: 800; display: flex; align-items: center; gap: 6px;">
+                    <span>🍩</span>
+                    <span>Distribución de Gastos del Mes</span>
+                  </div>
+                  <div style="font-size: 11px; color: var(--text-muted); font-weight: 600; margin-top: 2px;">
+                    Concentración de capital por categoría
+                  </div>
+                </div>
+                <button type="button" onclick="switchTab('plan')" style="background: none; border: none; font-size: 11px; font-weight: 800; color: var(--primary); cursor: pointer; padding: 2px 4px;">
+                  Ver Plan 50/30/20 ↗
+                </button>
+              </div>
+              <div class="desktop-donut-wrapper" style="display: flex; align-items: center; gap: 20px; min-height: 170px;">
+                <div style="width: 170px; height: 170px; position: relative; flex-shrink: 0;">
+                  <canvas id="desktopCategoryChart"></canvas>
+                </div>
+                <div id="desktopCategoryLegend" class="desktop-donut-legend" style="flex: 1; min-width: 0;">
+                  <!-- Renderizado dinámico vía renderDesktopExecutiveCharts() -->
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -3138,6 +3128,6 @@
   <div id="masterDashboardModal" style="display: none;"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
-  <script src="js/app.js?v=72.0"></script>
+  <script src="js/app.js?v=73.0"></script>
 </body>
 </html>
