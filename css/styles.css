@@ -7378,3 +7378,133 @@
     body.theme-twilight .debt-row-action-btn:hover {
       background: rgba(255, 255, 255, 0.1);
     }
+
+    /* ================================================================
+       ESTADOS CRÍTICOS DE UX (APPLE FINTECH MINIMAL)
+       Carga (Skeletons), Vacíos (Empty States) y Error (Offline Fallback)
+       ================================================================ */
+
+    /* 1. SKELETON / LOADING SHIMMER */
+    @keyframes subtlePulse {
+      0% { opacity: 0.4; }
+      50% { opacity: 0.85; }
+      100% { opacity: 0.4; }
+    }
+    .skeleton-shimmer {
+      background: rgba(148, 163, 184, 0.2);
+      border-radius: 6px;
+      animation: subtlePulse 1.3s ease-in-out infinite;
+      pointer-events: none;
+      user-select: none;
+      display: inline-block;
+    }
+    body.theme-twilight .skeleton-shimmer {
+      background: rgba(255, 255, 255, 0.09);
+    }
+    .skeleton-row {
+      pointer-events: none;
+    }
+
+    /* 2. MINIMAL EMPTY STATE */
+    .minimal-empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 34px 20px;
+      margin: 6px 0;
+    }
+    .minimal-empty-icon-wrap {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.03);
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      margin-bottom: 12px;
+    }
+    body.theme-twilight .minimal-empty-icon-wrap {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+    .minimal-empty-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 4px;
+      letter-spacing: -0.01em;
+    }
+    .minimal-empty-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      max-width: 360px;
+      line-height: 1.45;
+      margin-bottom: 12px;
+    }
+
+    /* 3. ERROR & OFFLINE SYNC BANNER */
+    .offline-sync-banner {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 16px;
+      border-radius: 14px;
+      background: rgba(245, 158, 11, 0.08);
+      border: 1px solid rgba(245, 158, 11, 0.25);
+      margin-bottom: 16px;
+      backdrop-filter: blur(12px);
+      transition: all 0.3s ease;
+    }
+    body.theme-twilight .offline-sync-banner {
+      background: rgba(245, 158, 11, 0.12);
+      border-color: rgba(245, 158, 11, 0.3);
+    }
+    .offline-banner-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .offline-banner-icon {
+      font-size: 16px;
+    }
+    .offline-banner-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: #b45309;
+    }
+    body.theme-twilight .offline-banner-title {
+      color: #fbbf24;
+    }
+    .offline-banner-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .offline-banner-retry-btn {
+      background: #ffffff;
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      color: #b45309;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 6px 14px;
+      border-radius: 9px;
+      cursor: pointer;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s ease;
+      min-height: 32px;
+    }
+    .offline-banner-retry-btn:hover {
+      background: #fef3c7;
+    }
+    body.theme-twilight .offline-banner-retry-btn {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fde68a;
+      border-color: rgba(245, 158, 11, 0.4);
+    }

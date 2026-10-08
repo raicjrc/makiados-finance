@@ -1599,12 +1599,38 @@
       return candidateMonth;
     }
 
+    function showOfflineBanner(show) {
+      const banner = document.getElementById('offlineSyncBanner');
+      if (banner) banner.style.display = show ? 'flex' : 'none';
+    }
+    window.showOfflineBanner = showOfflineBanner;
+
+    async function retrySyncNow() {
+      const btn = document.querySelector('.offline-banner-retry-btn');
+      if (btn) btn.textContent = '⏳ Conectando...';
+      updateSyncIndicator('syncing', '⏳ Reconectando...');
+      try {
+        await syncStateToServer();
+        await loadStateFromServer(1);
+        showToast('🟢 Conexión reestablecida con la nube', 'success');
+        showOfflineBanner(false);
+      } catch (e) {
+        showToast('⚠️ Aún sin señal. Seguimos operando en Modo Local', 'warning');
+        updateSyncIndicator('error', '🔴 Offline (Modo Local)');
+        showOfflineBanner(true);
+      } finally {
+        if (btn) btn.textContent = '🔄 Reintentar';
+      }
+    }
+    window.retrySyncNow = retrySyncNow;
+
     function updateSyncIndicator(status, text) {
       const dot = document.getElementById('syncDot');
       const txt = document.getElementById('syncText');
       if (dot && txt) {
         txt.textContent = text;
         if (status === 'synced') {
+          showOfflineBanner(false);
           dot.className = 'sync-status-dot live';
           dot.style.background = '#10b981';
           const execCard = document.getElementById('executiveBalanceCard');
@@ -1616,6 +1642,10 @@
         } else if (status === 'syncing') {
           dot.className = 'sync-status-dot syncing';
           dot.style.background = '#f59e0b';
+        } else if (status === 'error') {
+          dot.className = 'sync-status-dot';
+          dot.style.background = '#ef4444';
+          showOfflineBanner(true);
         }
       }
     }
@@ -1895,7 +1925,7 @@
           updateSyncIndicator('syncing', '⚠️ Reintentando...');
         }
       } catch(e) {
-        updateSyncIndicator('syncing', '⚠️ Sin conexión');
+        updateSyncIndicator('error', '🔴 Offline (Modo Local)');
       } finally {
         isSyncing = false;
         if (syncPending) {
@@ -2338,13 +2368,46 @@
       }
     }
 
+    function renderTransactionsSkeleton(count = 4) {
+      const container = document.getElementById('txTableBody');
+      if (!container) return;
+      let skeletonHtml = '';
+      for (let i = 0; i < count; i++) {
+        const rowWidth = 50 + (i * 12);
+        skeletonHtml += `
+          <tr class="tx-row-item skeleton-row">
+            <td class="tx-cell-concept">
+              <div class="tx-concept-main">
+                <div class="skeleton-shimmer" style="width: 28px; height: 28px; border-radius: 8px;"></div>
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 5px;">
+                  <div class="skeleton-shimmer" style="width: ${rowWidth}%; height: 13px;"></div>
+                  <div class="skeleton-shimmer" style="width: 35%; height: 9px;"></div>
+                </div>
+              </div>
+            </td>
+            <td><div class="skeleton-shimmer" style="width: 58px; height: 18px; border-radius: 12px;"></div></td>
+            <td><div class="skeleton-shimmer" style="width: 64px; height: 18px; border-radius: 12px;"></div></td>
+            <td style="text-align: right;"><div class="skeleton-shimmer" style="width: 62px; height: 14px; margin-left: auto;"></div></td>
+            <td><div class="skeleton-shimmer" style="width: 48px; height: 22px; border-radius: 6px; margin: auto;"></div></td>
+          </tr>
+        `;
+      }
+      container.innerHTML = skeletonHtml;
+    }
+    window.renderTransactionsSkeleton = renderTransactionsSkeleton;
+
     function changeMonth(month) {
       sessionStorage.setItem('aliviafin_session_month', month);
       appState.currentMonth = month;
       ensureMonthTransactions(month);
       ensureMonthIncomes(month);
       saveState();
-      renderAll();
+
+      // Transición visual elegante estilo Apple (skeleton suave sin layout shifts)
+      renderTransactionsSkeleton();
+      setTimeout(() => {
+        renderAll();
+      }, 120);
     }
 
     /* ================================================================
@@ -4345,7 +4408,33 @@
       if (elSum) elSum.textContent = `Total: ${sym} ${totalSum.toFixed(2)}`;
 
       if (txs.length === 0) {
-        container.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 20px;">No hay gastos.</td></tr>`;
+        if (allTxs.length === 0) {
+          container.innerHTML = `
+            <tr>
+              <td colspan="5">
+                <div class="minimal-empty-state">
+                  <div class="minimal-empty-icon-wrap">📋</div>
+                  <div class="minimal-empty-title">Aún no hay gastos registrados este mes</div>
+                  <div class="minimal-empty-sub">Comienza a registrar tus pagos o consumos para tener control total de tu presupuesto.</div>
+                  <button type="button" class="btn btn-primary btn-sm" onclick="openQuickExpenseModal()" style="font-size: 11.5px; border-radius: 9px; padding: 7px 16px; font-weight: 700;">+ Registrar Primer Gasto</button>
+                </div>
+              </td>
+            </tr>
+          `;
+        } else {
+          container.innerHTML = `
+            <tr>
+              <td colspan="5">
+                <div class="minimal-empty-state">
+                  <div class="minimal-empty-icon-wrap">🔍</div>
+                  <div class="minimal-empty-title">Sin resultados para tu búsqueda</div>
+                  <div class="minimal-empty-sub">No se encontraron movimientos que coincidan con los filtros aplicados.</div>
+                  <button type="button" class="btn btn-outline btn-sm" onclick="clearAllFilters()" style="font-size: 11.5px; border-radius: 9px; padding: 6px 14px; font-weight: 700; border-color: var(--border);">Limpiar Filtros</button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }
         return;
       }
 
@@ -7454,8 +7543,14 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
         if (totalInterestSavedEl) totalInterestSavedEl.textContent = `${getCurrencySymbol()} 0 ahorrados`;
         if (tableContainerEl) {
           tableContainerEl.innerHTML = `
-            <div style="text-align: center; color: var(--text-muted); font-size: 13px; padding: 24px;">
-              🎉 No tienes compras en cuotas ni compromisos registrados. Haz clic en "🔄 Sincronizar Cuotas del Mes" para cargar tus cuotas activas.
+            <div class="minimal-empty-state">
+              <div class="minimal-empty-icon-wrap">💳</div>
+              <div class="minimal-empty-title">Sin compras en cuotas registradas</div>
+              <div class="minimal-empty-sub">Sincroniza tus cuotas activas del mes o añade compromisos a plazos para proyectar tu fecha de libertad financiera.</div>
+              <div style="display: flex; gap: 8px; justify-content: center; margin-top: 6px; flex-wrap: wrap;">
+                <button type="button" class="btn btn-outline btn-sm" onclick="syncDebtsFromCuotas()" style="font-size: 11px; border-radius: 9px; padding: 6px 14px; font-weight: 700; border-color: var(--border);">🔄 Sincronizar Cuotas del Mes</button>
+                <button type="button" class="btn btn-primary btn-sm" onclick="openNewDebtPromptModal()" style="font-size: 11px; border-radius: 9px; padding: 6px 14px; font-weight: 700;">+ Añadir Cuota / Compromiso</button>
+              </div>
             </div>
           `;
         }
@@ -7670,8 +7765,13 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
         if (displayedDebts.length === 0) {
           tableHtml += `
             <tr>
-              <td colspan="9" style="text-align: center; color: var(--text-muted); font-size: 13px; padding: 28px;">
-                🔍 No se encontraron compromisos que coincidan con "<strong>${escapeHtml(debtSearchTerm)}</strong>".
+              <td colspan="9">
+                <div class="minimal-empty-state" style="padding: 24px 16px;">
+                  <div class="minimal-empty-icon-wrap" style="width: 40px; height: 40px; font-size: 18px; margin-bottom: 8px;">🔍</div>
+                  <div class="minimal-empty-title">Sin resultados para "${escapeHtml(debtSearchTerm)}"</div>
+                  <div class="minimal-empty-sub">No se encontraron compras en cuotas que coincidan con la búsqueda.</div>
+                  <button type="button" class="btn btn-outline btn-sm" onclick="clearDebtSearch()" style="font-size: 11px; border-radius: 9px; padding: 5px 14px; font-weight: 700; border-color: var(--border);">Limpiar Búsqueda</button>
+                </div>
               </td>
             </tr>
           `;
