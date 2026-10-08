@@ -7188,13 +7188,16 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
       if (currentSnowballDebts && currentSnowballDebts.length > 0) {
         const curTxs = getMonthTxList();
 
-        // PURGAR DE RAÍZ CUALQUIER MOVIMIENTO QUE NO ESTÉ EN CUOTAS Y NO SEA TARJETA O PRÉSTAMO
+        // PURGA DE RAÍZ CUALQUIER MOVIMIENTO QUE NO ESTÉ EXPLÍCITAMENTE EN CUOTAS (isInstallment === true)
         currentSnowballDebts = currentSnowballDebts.filter(d => {
           const dKey = getNormalizedNameKey(d.name);
-          const matchedTx = curTxs.find(t => getNormalizedNameKey(t.name) === dKey);
+          const matchedTx = curTxs.find(t => {
+            const tKey = getNormalizedNameKey(t.name);
+            return tKey === dKey || tKey.replace(/\s+/g, '') === dKey.replace(/\s+/g, '');
+          });
           if (matchedTx) {
-            // Si la transacción en Movimientos existe y el usuario NO marcó cuotas, y no es Tarjetas/Préstamos: ELIMINAR
-            if (!matchedTx.isInstallment && matchedTx.category !== 'Tarjetas' && matchedTx.category !== 'Préstamos') {
+            // Si la transacción en Movimientos existe y el usuario NO la marcó en cuotas: ELIMINAR INMEDIATAMENTE
+            if (!matchedTx.isInstallment) {
               return false;
             }
           }
@@ -7203,7 +7206,10 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
 
         currentSnowballDebts.forEach(d => {
           const dKey = getNormalizedNameKey(d.name);
-          const matchedTx = curTxs.find(t => getNormalizedNameKey(t.name) === dKey);
+          const matchedTx = curTxs.find(t => {
+            const tKey = getNormalizedNameKey(t.name);
+            return tKey === dKey || tKey.replace(/\s+/g, '') === dKey.replace(/\s+/g, '');
+          });
           if (matchedTx && matchedTx.isInstallment) {
             d.installmentsTotal = matchedTx.installmentsTotal || d.installmentsTotal || 12;
             d.installmentsCurrent = matchedTx.installmentsCurrent || d.installmentsCurrent || 1;
@@ -7213,6 +7219,7 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
             if (typeof matchedTx.tea === 'number') d.tea = matchedTx.tea;
           }
         });
+        saveDebtSnowballPlanQuiet();
       }
 
       // Si aún no hay deudas cargadas, sincronizar automáticamente desde el mes actual
@@ -7225,12 +7232,9 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
       const txs = getMonthTxList();
 
       const candidates = txs.filter(t => {
-        // REGLA ESTRICTA: Solo entran a Bola de Nieve compras que el usuario marcó explícitamente en cuotas (isInstallment: true)
-        // O deudas bancarias de categoría Tarjetas o Préstamos.
-        // NUNCA incluir movimientos de categoría "Otros" u otras si NO están marcados en cuotas.
-        if (t.isInstallment) return true;
-        if (t.category === 'Tarjetas' || t.category === 'Préstamos') return true;
-        return false;
+        // REGLA ESTRICTA DE ORO: Solo entran compras que el usuario marcó EXPLÍCITAMENTE en cuotas (isInstallment: true).
+        // NUNCA incluir movimientos por categoría (Tarjetas/Préstamos) si no tienen isInstallment: true activo.
+        return t.isInstallment === true;
       });
 
       const synced = [];
@@ -7331,7 +7335,7 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
 
       const titleEl = document.getElementById('debtTableTitle');
       if (titleEl) {
-        titleEl.textContent = `Deudas Pendientes (Orden de Ataque: ${currentDebtStrategy === 'snowball' ? 'Bola de Nieve' : 'Avalancha'})`;
+        titleEl.textContent = `Compras en Cuotas y Compromisos (Orden: ${currentDebtStrategy === 'snowball' ? 'Bola de Nieve' : 'Avalancha'})`;
       }
 
       calculateAndRenderDebtPlan(currentDebtExtraPayment);
@@ -7348,7 +7352,7 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
 
       const titleEl = document.getElementById('debtTableTitle');
       if (titleEl) {
-        titleEl.textContent = `Deudas Pendientes (Orden de Ataque: ${strat === 'snowball' ? 'Bola de Nieve' : 'Avalancha'})`;
+        titleEl.textContent = `Compras en Cuotas y Compromisos (Orden: ${strat === 'snowball' ? 'Bola de Nieve' : 'Avalancha'})`;
       }
 
       saveDebtSnowballPlanQuiet();
@@ -7419,10 +7423,30 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
       const totalInterestSavedEl = document.getElementById('debtTotalInterestSaved');
       const tableContainerEl = document.getElementById('debtTacticalTableContainer');
 
+      // PURGA ACTIVA DE SEGURIDAD: Asegurar que NINGÚN movimiento que NO esté en cuotas permanezca aquí
+      if (currentSnowballDebts && currentSnowballDebts.length > 0) {
+        const curTxs = getMonthTxList();
+        const initialLen = currentSnowballDebts.length;
+        currentSnowballDebts = currentSnowballDebts.filter(d => {
+          const dKey = getNormalizedNameKey(d.name);
+          const matchedTx = curTxs.find(t => {
+            const tKey = getNormalizedNameKey(t.name);
+            return tKey === dKey || tKey.replace(/\s+/g, '') === dKey.replace(/\s+/g, '');
+          });
+          if (matchedTx && !matchedTx.isInstallment) {
+            return false;
+          }
+          return true;
+        });
+        if (currentSnowballDebts.length !== initialLen) {
+          saveDebtSnowballPlanQuiet();
+        }
+      }
+
       if (!currentSnowballDebts || currentSnowballDebts.length === 0) {
-        if (targetDateEl) targetDateEl.textContent = '¡Sin deudas activas!';
-        if (speedBadgeEl) speedBadgeEl.textContent = 'Libre de Deudas';
-        if (speedSubtitleEl) speedSubtitleEl.textContent = 'No tienes compromisos pendientes';
+        if (targetDateEl) targetDateEl.textContent = '¡Sin cuotas activas!';
+        if (speedBadgeEl) speedBadgeEl.textContent = 'Libre de Cuotas';
+        if (speedSubtitleEl) speedSubtitleEl.textContent = 'No tienes compromisos en cuotas pendientes';
         if (progressBarFillEl) progressBarFillEl.style.width = '100%';
         if (progressTextEl) progressTextEl.textContent = '100% LIBRE';
         if (progressRemEl) progressRemEl.textContent = '0%';
@@ -7431,7 +7455,7 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
         if (tableContainerEl) {
           tableContainerEl.innerHTML = `
             <div style="text-align: center; color: var(--text-muted); font-size: 13px; padding: 24px;">
-              🎉 No tienes deudas registradas. Haz clic en "🔄 Sincronizar desde Cuotas" para cargar tus compromisos activos.
+              🎉 No tienes compras en cuotas ni compromisos registrados. Haz clic en "🔄 Sincronizar Cuotas del Mes" para cargar tus cuotas activas.
             </div>
           `;
         }
@@ -7621,8 +7645,8 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
         const countLabel = document.getElementById('debtSearchCountLabel');
         if (countLabel) {
           countLabel.textContent = debtSearchTerm
-            ? `Mostrando ${displayedDebts.length} de ${workingDebts.length} deudas`
-            : `${workingDebts.length} deudas registradas`;
+            ? `Mostrando ${displayedDebts.length} de ${workingDebts.length} compromisos`
+            : `${workingDebts.length} compromisos en cuotas`;
         }
 
         let tableHtml = `
@@ -7630,7 +7654,7 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
             <thead>
               <tr>
                 <th style="width: 32px;">#</th>
-                <th>DEUDA / COMPROMISO</th>
+                <th>COMPRA EN CUOTAS / COMPROMISO</th>
                 <th>SALDO PENDIENTE</th>
                 <th>TASA (TEA)</th>
                 <th>CUOTA MENSUAL</th>
@@ -7678,8 +7702,8 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
             const debtFinalStr = `${monthsNames[debtFinalDate.getMonth()].slice(0, 3)} ${debtFinalDate.getFullYear()}`;
 
             const statusBadge = isTarget
-              ? `<span class="badge-status-attack">EN ATAQUE ⚡</span>`
-              : `<span class="badge-status-pending">Pendiente</span>`;
+              ? `<span class="badge-status-attack" title="Objetivo prioritario: Recibe todo tu superávit para liquidarse al 100% lo antes posible">EN ATAQUE ⚡</span>`
+              : `<span class="badge-status-pending" title="Pago regular: Cubres su cuota mínima mensual programada mientras la #1 está en ataque">Pendiente</span>`;
 
             const timeBadge = debtMonths === 1
               ? `<span class="badge-time-remaining" style="color: #059669; font-weight: 800; border-color: rgba(16,185,129,0.3); background: rgba(16,185,129,0.1);">1 mes restante (¡Última cuota!)</span>`
@@ -7777,6 +7801,9 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
       const d = currentSnowballDebts[idx];
 
       const origIdxEl = document.getElementById('editDebtOrigIdx');
+      const titleEl = document.getElementById('editDebtModalTitle');
+      const iconEl = document.getElementById('editDebtModalIcon');
+      const submitBtn = document.getElementById('editDebtSubmitBtn');
       const nameEl = document.getElementById('editDebtName');
       const totEl = document.getElementById('editDebtInstallmentsTotal');
       const curEl = document.getElementById('editDebtInstallmentsCurrent');
@@ -7788,6 +7815,10 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
       if (!origIdxEl || !nameEl) return;
 
       origIdxEl.value = idx;
+      if (titleEl) titleEl.textContent = 'Editar Compra en Cuotas / Compromiso';
+      if (iconEl) iconEl.textContent = '✏️';
+      if (submitBtn) submitBtn.textContent = 'Guardar Cambios';
+
       nameEl.value = d.name || '';
 
       const total = d.installmentsTotal || 12;
@@ -7814,11 +7845,16 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
 
     function handleSaveDebtFromModal(e) {
       e.preventDefault();
-      const origIdx = parseInt(document.getElementById('editDebtOrigIdx').value, 10);
-      if (isNaN(origIdx) || origIdx < 0 || origIdx >= currentSnowballDebts.length) return;
+      const origIdxVal = document.getElementById('editDebtOrigIdx')?.value;
+      const origIdx = parseInt(origIdxVal, 10);
+      if (isNaN(origIdx)) return;
 
-      const d = currentSnowballDebts[origIdx];
-      const name = (document.getElementById('editDebtName')?.value || d.name).trim();
+      const name = (document.getElementById('editDebtName')?.value || '').trim();
+      if (!name) {
+        showToast('Por favor ingresa un nombre para el compromiso', 'warning');
+        return;
+      }
+
       const total = parseInt(document.getElementById('editDebtInstallmentsTotal')?.value, 10) || 1;
       const current = parseInt(document.getElementById('editDebtInstallmentsCurrent')?.value, 10) || 1;
       const remaining = parseInt(document.getElementById('editDebtInstallmentsRemaining')?.value, 10) || 1;
@@ -7826,7 +7862,67 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
       const bal = Math.max(0, parseFloat(document.getElementById('editDebtBalance')?.value) || (remaining * minP));
       const tea = Math.max(0, parseFloat(document.getElementById('editDebtTea')?.value) || 0);
 
+      const curMonth = appState.currentMonth || getCurrentCalendarMonthName();
+      if (!appState.transactions) appState.transactions = {};
+      if (!appState.transactions[curMonth]) appState.transactions[curMonth] = [];
+      const curTxs = appState.transactions[curMonth];
+
+      if (origIdx === -1) {
+        // MODO CREAR NUEVA COMPRA EN CUOTAS / COMPROMISO
+        const newDebt = {
+          id: 'd_user_' + Date.now(),
+          name: name,
+          balance: bal,
+          tea: tea,
+          minPayment: minP,
+          initialBalance: Math.round(minP * total),
+          remainingInstallments: remaining,
+          installmentsTotal: total,
+          installmentsCurrent: current
+        };
+        currentSnowballDebts.push(newDebt);
+
+        const newNormKey = getNormalizedNameKey(name);
+        let tx = curTxs.find(t => getNormalizedNameKey(t.name) === newNormKey);
+        if (!tx) {
+          tx = {
+            id: 'tx_' + Date.now(),
+            name: name,
+            amount: minP,
+            category: 'Tarjetas',
+            type: 'expense',
+            status: 'Pendiente',
+            isInstallment: true,
+            installmentsTotal: total,
+            installmentsCurrent: current,
+            remainingInstallments: remaining,
+            tea: tea,
+            date: new Date().toISOString().split('T')[0]
+          };
+          curTxs.push(tx);
+        } else {
+          tx.isInstallment = true;
+          tx.installmentsTotal = total;
+          tx.installmentsCurrent = current;
+          tx.remainingInstallments = remaining;
+          tx.amount = minP;
+          tx.tea = tea;
+        }
+
+        saveState();
+        saveDebtSnowballPlanQuiet();
+        closeModal('editDebtModal');
+        calculateAndRenderDebtPlan(currentDebtExtraPayment);
+        renderExecutiveAdvisor();
+        if (typeof renderAll === 'function') renderAll();
+        showToast('✨ Compromiso en cuotas añadido exitosamente', 'success');
+        return;
+      }
+
+      if (origIdx < 0 || origIdx >= currentSnowballDebts.length) return;
+      const d = currentSnowballDebts[origIdx];
       const oldName = d.name;
+
       d.name = name;
       d.installmentsTotal = total;
       d.installmentsCurrent = current;
@@ -7837,8 +7933,6 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
       d.tea = tea;
 
       // Sincronizar automáticamente con el gasto correspondiente en Movimientos
-      const curMonth = appState.currentMonth;
-      const curTxs = appState.transactions[curMonth] || [];
       const oldNormKey = getNormalizedNameKey(oldName);
       const newNormKey = getNormalizedNameKey(name);
 
@@ -7859,7 +7953,7 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
       calculateAndRenderDebtPlan(currentDebtExtraPayment);
       renderExecutiveAdvisor();
       if (typeof renderAll === 'function') renderAll();
-      showToast('✅ Compromiso de deuda actualizado exitosamente', 'success');
+      showToast('✅ Compromiso en cuotas actualizado exitosamente', 'success');
     }
     window.handleSaveDebtFromModal = handleSaveDebtFromModal;
 
@@ -7951,14 +8045,12 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
       const txs = getMonthTxList();
 
       const candidates = txs.filter(t => {
-        // REGLA ESTRICTA: Solo compras marcadas en cuotas (isInstallment: true) o Tarjetas / Préstamos
-        if (t.isInstallment) return true;
-        if (t.category === 'Tarjetas' || t.category === 'Préstamos') return true;
-        return false;
+        // REGLA ESTRICTA DE ORO: Solo compras marcadas EXPLÍCITAMENTE en cuotas (isInstallment: true)
+        return t.isInstallment === true;
       });
 
       if (candidates.length === 0) {
-        showToast('No se encontraron compras en cuotas ni deudas bancarias activas este mes', 'info');
+        showToast('No se encontraron compras en cuotas activas este mes', 'info');
         return;
       }
 
@@ -8036,31 +8128,33 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
     window.syncDebtsFromCuotas = syncDebtsFromCuotas;
 
     function openNewDebtPromptModal() {
-      const name = prompt('Nombre del compromiso o entidad (ej: Tarjeta Ripley, Préstamo BCP):');
-      if (!name || !name.trim()) return;
+      const origIdxEl = document.getElementById('editDebtOrigIdx');
+      const titleEl = document.getElementById('editDebtModalTitle');
+      const iconEl = document.getElementById('editDebtModalIcon');
+      const submitBtn = document.getElementById('editDebtSubmitBtn');
+      const nameEl = document.getElementById('editDebtName');
+      const totEl = document.getElementById('editDebtInstallmentsTotal');
+      const curEl = document.getElementById('editDebtInstallmentsCurrent');
+      const remEl = document.getElementById('editDebtInstallmentsRemaining');
+      const minEl = document.getElementById('editDebtMinPayment');
+      const balEl = document.getElementById('editDebtBalance');
+      const teaEl = document.getElementById('editDebtTea');
 
-      const balanceStr = prompt('Saldo pendiente actual en Soles (ej: 1800):', '1000');
-      const balance = Math.max(1, parseFloat(balanceStr) || 1000);
+      if (origIdxEl) origIdxEl.value = -1;
+      if (titleEl) titleEl.textContent = 'Añadir Compra en Cuotas / Compromiso';
+      if (iconEl) iconEl.textContent = '✨';
+      if (submitBtn) submitBtn.textContent = '+ Añadir al Plan';
 
-      const teaStr = prompt('Tasa de interés anual TEA aproximada en % (ej: 0 para cuotas sin intereses, 28.5 para préstamo):', '0');
-      const tea = Math.max(0, parseFloat(teaStr) || 0);
+      if (nameEl) nameEl.value = '';
+      if (totEl) totEl.value = 12;
+      if (curEl) curEl.value = 1;
+      if (remEl) remEl.value = 12;
+      if (minEl) minEl.value = 100;
+      if (balEl) balEl.value = 1200;
+      if (teaEl) teaEl.value = 0;
 
-      const minStr = prompt('Pago mensual o cuota en Soles (ej: 150):', '120');
-      const minPayment = Math.max(1, parseFloat(minStr) || 120);
-
-      currentSnowballDebts.push({
-        id: 'd_user_' + Date.now(),
-        name: name.trim(),
-        balance: balance,
-        tea: tea,
-        minPayment: minPayment,
-        initialBalance: balance
-      });
-
-      saveDebtSnowballPlanQuiet();
-      calculateAndRenderDebtPlan(currentDebtExtraPayment);
-      renderExecutiveAdvisor();
-      showToast('✅ Nuevo compromiso añadido al plan de ataque', 'success');
+      syncEditDebtFields('remaining');
+      openModalById('editDebtModal');
     }
     window.openNewDebtPromptModal = openNewDebtPromptModal;
 

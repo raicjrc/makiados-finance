@@ -19,7 +19,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="js/chart.min.js?v=72.0"></script>
   <script src="js/supabase.min.js?v=72.0"></script>
-  <link rel="stylesheet" href="css/styles.css?v=74.5">
+  <link rel="stylesheet" href="css/styles.css?v=74.6">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
 
   <style>
@@ -846,19 +846,19 @@
           <div class="flex-between" style="margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
             <div>
               <div class="card-title" id="debtTableTitle" style="font-size: 15.5px; font-weight: 800;">
-                Deudas Pendientes (Orden de Ataque: Bola de Nieve)
+                Compras en Cuotas y Compromisos (Método Bola de Nieve)
               </div>
               <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">
-                Concentra todo el superávit en la deuda #1 mientras cubres los mínimos de las demás
+                Concentra tu capacidad de pago en la cuota #1 (<span style="color: #ea580c; font-weight: 700;">EN ATAQUE ⚡</span>) mientras mantienes al día las demás (<span style="color: #b45309; font-weight: 700;">Pendiente</span>)
               </div>
             </div>
             
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
               <button type="button" class="btn btn-outline btn-sm" onclick="syncDebtsFromCuotas()" style="font-size: 11px; padding: 5px 12px; border-radius: 10px; font-weight: 700; border-color: var(--border);">
-                🔄 Sincronizar desde Cuotas
+                🔄 Sincronizar Cuotas del Mes
               </button>
               <button type="button" class="btn btn-primary btn-sm" onclick="openNewDebtPromptModal()" style="font-size: 11px; padding: 5px 14px; border-radius: 10px; font-weight: 700;">
-                + Añadir Deuda
+                + Añadir Cuota / Compromiso
               </button>
             </div>
           </div>
@@ -867,7 +867,7 @@
           <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; flex-wrap: wrap;">
             <div style="position: relative; flex: 1; min-width: 200px; max-width: 380px;">
               <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 13px; pointer-events: none;">🔍</span>
-              <input type="text" id="debtSearchInput" class="form-control" placeholder="Buscar deuda por nombre..." oninput="onDebtSearchInput(this.value)" style="padding-left: 32px; padding-right: 28px; height: 36px; font-size: 13px; border-radius: 10px; width: 100%;">
+              <input type="text" id="debtSearchInput" class="form-control" placeholder="Buscar compra en cuotas por nombre..." oninput="onDebtSearchInput(this.value)" style="padding-left: 32px; padding-right: 28px; height: 36px; font-size: 13px; border-radius: 10px; width: 100%;">
               <button type="button" id="debtSearchClearBtn" onclick="clearDebtSearch()" style="display: none; position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); font-size: 14px; cursor: pointer; padding: 2px 6px;">✕</button>
             </div>
             <div id="debtSearchCountLabel" style="font-size: 11.5px; color: var(--text-muted); font-weight: 600;"></div>
@@ -2252,8 +2252,8 @@
     <div class="modal" style="max-width: 440px;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
         <div class="modal-title" style="margin: 0; display: flex; align-items: center; gap: 8px;">
-          <span>✏️</span>
-          <span>Editar Compromiso / Deuda</span>
+          <span id="editDebtModalIcon">✏️</span>
+          <span id="editDebtModalTitle">Editar Compra en Cuotas / Compromiso</span>
         </div>
         <button type="button" onclick="closeModal('editDebtModal')" aria-label="Cerrar" style="background: #f1f5f9; border: 1px solid #cbd5e1; width: 30px; height: 30px; border-radius: 50%; font-size: 15px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #475569;">✕</button>
       </div>
@@ -2304,7 +2304,7 @@
 
         <div class="modal-actions">
           <button type="button" class="btn btn-secondary" onclick="closeModal('editDebtModal')">Cancelar</button>
-          <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+          <button type="submit" id="editDebtSubmitBtn" class="btn btn-primary">Guardar Cambios</button>
         </div>
       </form>
     </div>
@@ -3291,6 +3291,6 @@
   <div id="masterDashboardModal" style="display: none;"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
-  <script src="js/app.js?v=74.5"></script>
+  <script src="js/app.js?v=74.6"></script>
 </body>
 </html>
