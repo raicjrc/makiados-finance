@@ -5493,7 +5493,9 @@
     body.privacy-active .goal-current-amount,
     body.privacy-active .goal-saved-val,
     body.privacy-active .goal-target-val,
-    body.privacy-active .sensitive-amount {
+    body.privacy-active .sensitive-amount,
+    body.privacy-active .exec-pill-val,
+    body.privacy-active .donut-legend-amount {
       position: relative !important;
       color: transparent !important;
       user-select: none !important;
@@ -5504,8 +5506,27 @@
     body.privacy-active .exec-balance-amount *,
     body.privacy-active .exec-balance-context *,
     body.privacy-active .stat-card-pending .stat-value *,
-    body.privacy-active .hero-zen-number * {
+    body.privacy-active .hero-zen-number *,
+    body.privacy-active .exec-pill-val *,
+    body.privacy-active .donut-legend-amount * {
       color: transparent !important;
+    }
+
+    /* Máscara de puntos para pastillas ejecutivas de cabecera (Ingresos, Gastos, Por Pagar) */
+    body.privacy-active .exec-pill-val::after {
+      content: var(--privacy-mask-text, "S/ •••••") !important;
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      color: var(--text-main) !important;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      pointer-events: none;
+      letter-spacing: 0.04em;
     }
 
     /* Máscara de puntos para la tarjeta Ejecutiva (Saldo en Banco) */
@@ -5664,7 +5685,8 @@
     body.privacy-active .goal-current-amount::after,
     body.privacy-active .goal-saved-val::after,
     body.privacy-active .goal-target-val::after,
-    body.privacy-active .sensitive-amount::after {
+    body.privacy-active .sensitive-amount::after,
+    body.privacy-active .donut-legend-amount::after {
       content: var(--privacy-mask-text, "S/ •••••") !important;
       position: absolute;
       right: 0;
@@ -5707,14 +5729,18 @@
     body.privacy-active .upcoming-bill-amount:active,
     body.privacy-active .tx-row-amount:active,
     body.privacy-active .tx-summary-val:active,
-    body.privacy-active .sensitive-amount:active {
+    body.privacy-active .sensitive-amount:active,
+    body.privacy-active .exec-pill-val:active,
+    body.privacy-active .donut-legend-amount:active {
       color: inherit !important;
     }
 
     body.privacy-active .exec-balance-amount:active *,
     body.privacy-active .exec-balance-context:active *,
     body.privacy-active .hero-zen-number:active *,
-    body.privacy-active .hero-zen-subtext:active * {
+    body.privacy-active .hero-zen-subtext:active *,
+    body.privacy-active .exec-pill-val:active *,
+    body.privacy-active .donut-legend-amount:active * {
       color: inherit !important;
     }
 
@@ -5729,7 +5755,9 @@
     body.privacy-active .upcoming-bill-amount:active::after,
     body.privacy-active .tx-row-amount:active::after,
     body.privacy-active .tx-summary-val:active::after,
-    body.privacy-active .sensitive-amount:active::after {
+    body.privacy-active .sensitive-amount:active::after,
+    body.privacy-active .exec-pill-val:active::after,
+    body.privacy-active .donut-legend-amount:active::after {
       display: none !important;
     }
 
@@ -7168,6 +7196,11 @@
       font-size: 10px;
       font-weight: 800;
       letter-spacing: 0.04em;
+      white-space: nowrap !important;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
     }
     body.theme-twilight .badge-status-attack {
       color: #f87171;
@@ -7180,6 +7213,10 @@
       border-radius: 6px;
       font-size: 10px;
       font-weight: 800;
+      white-space: nowrap !important;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
     body.theme-twilight .badge-status-pending {
       color: #fbbf24;
@@ -7192,6 +7229,10 @@
       border-radius: 6px;
       font-size: 10px;
       font-weight: 800;
+      white-space: nowrap !important;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
     body.theme-twilight .badge-status-paid {
       color: #34d399;
@@ -7204,6 +7245,10 @@
       border-radius: 6px;
       font-size: 10.5px;
       font-weight: 700;
+      white-space: nowrap !important;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
     body.theme-twilight .badge-time-remaining {
       background: rgba(255, 255, 255, 0.06);

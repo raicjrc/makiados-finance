@@ -2284,6 +2284,10 @@
       if (setPrivIcon) setPrivIcon.textContent = isActive ? '🙈' : '👁️';
       if (setPrivLabel) setPrivLabel.textContent = isActive ? 'Mostrar Saldos' : 'Ocultar Saldos';
       if (setPrivBtn) setPrivBtn.classList.toggle('active', isActive);
+
+      if (typeof renderDesktopExecutiveCharts === 'function' && (desktopCashflowChartObj || desktopCategoryChartObj)) {
+        renderDesktopExecutiveCharts();
+      }
     }
 
     function togglePrivacyMode() {
@@ -3814,7 +3818,7 @@
                 <div class="cuota-title" style="color: #86198f;">💳 ${ci.name}</div>
                 <div class="cuota-sub">${getCurrencySymbol()} ${ci.amount.toFixed(2)} / mes</div>
               </div>
-              <div class="cuota-badge" style="background: linear-gradient(135deg, #fdf4ff, #fae8ff); color: #86198f; border: 1px solid #f0abfc; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">${ci.installmentsCurrent} de ${ci.installmentsTotal}</div>
+              <div class="cuota-badge" style="background: linear-gradient(135deg, #fdf4ff, #fae8ff); color: #86198f; border: 1px solid #f0abfc; box-shadow: 0 1px 2px rgba(0,0,0,0.05); font-weight: 800; font-size: 11px; white-space: nowrap;">Cuota ${ci.installmentsCurrent || 1} de ${ci.installmentsTotal || 1}${ci.remainingInstallments ? ` (${ci.remainingInstallments} pendientes)` : ''}</div>
             </div>
           `;
         });
@@ -4130,6 +4134,9 @@
                   usePointStyle: true,
                   callbacks: {
                     label: function(context) {
+                      if (typeof isPrivacyModeActive === 'function' && isPrivacyModeActive()) {
+                        return ` ${context.dataset.label}: ${getCurrencySymbol()} •••••`;
+                      }
                       const val = context.parsed.y || 0;
                       return ` ${context.dataset.label}: ${getCurrencySymbol()} ${val.toLocaleString(getActiveCurrency().locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
                     }
@@ -4241,6 +4248,9 @@
                   borderWidth: 1,
                   callbacks: {
                     label: function(context) {
+                      if (typeof isPrivacyModeActive === 'function' && isPrivacyModeActive()) {
+                        return ` ${context.label}: ${getCurrencySymbol()} •••••`;
+                      }
                       const val = context.parsed || 0;
                       const pct = totalSpent > 0 ? ((val / totalSpent) * 100).toFixed(1) : 0;
                       return ` ${context.label}: ${getCurrencySymbol()} ${val.toFixed(2)} (${pct}%)`;
@@ -4347,7 +4357,8 @@
 
         let installmentBadge = '';
         if (t.isInstallment) {
-          installmentBadge = `<span style="background: linear-gradient(135deg, #fdf4ff, #fae8ff); color: #86198f; padding: 3px 6px; border-radius: 6px; font-size: 10px; font-weight: 800; border: 1px solid #f0abfc; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">💳 ${t.installmentsCurrent}/${t.installmentsTotal}</span>`;
+          const remText = (typeof t.remainingInstallments === 'number') ? ` (${t.remainingInstallments} pendientes)` : '';
+          installmentBadge = `<span style="background: linear-gradient(135deg, #fdf4ff, #fae8ff); color: #86198f; padding: 3px 6px; border-radius: 6px; font-size: 10px; font-weight: 800; border: 1px solid #f0abfc; box-shadow: 0 1px 2px rgba(0,0,0,0.05); white-space: nowrap;" title="Cuota ${t.installmentsCurrent || 1} de ${t.installmentsTotal || 1}${remText}">💳 Cuota ${t.installmentsCurrent || 1} de ${t.installmentsTotal || 1}</span>`;
         }
 
         const effectiveDueDate = getEffectiveDueDate(t);
@@ -4407,8 +4418,56 @@
 
     function toggleInstallmentFields() {
       const isChecked = document.getElementById('txIsInstallment').checked;
-      document.getElementById('installmentFieldsGroup').style.display = isChecked ? 'grid' : 'none';
+      const group = document.getElementById('installmentFieldsGroup');
+      if (group) {
+        group.style.display = isChecked ? 'flex' : 'none';
+        if (isChecked) syncInstallmentFields('total');
+      }
     }
+
+    function syncInstallmentFields(source) {
+      const totalEl = document.getElementById('txInstallmentsTotal');
+      const currEl = document.getElementById('txInstallmentsCurrent');
+      const remEl = document.getElementById('txInstallmentsRemaining');
+      const hintEl = document.getElementById('installmentSummaryHint');
+      const amtEl = document.getElementById('txAmount');
+      if (!totalEl || !currEl || !remEl) return;
+
+      let total = parseInt(totalEl.value, 10);
+      if (isNaN(total) || total < 1) total = 1;
+
+      let current = parseInt(currEl.value, 10);
+      if (isNaN(current) || current < 1) current = 1;
+
+      let remaining = parseInt(remEl.value, 10);
+      if (isNaN(remaining) || remaining < 1) remaining = 1;
+
+      if (source === 'remaining') {
+        if (remaining > total) total = remaining;
+        totalEl.value = total;
+        current = Math.max(1, total - remaining + 1);
+        currEl.value = current;
+      } else if (source === 'current') {
+        if (current > total) total = current;
+        totalEl.value = total;
+        remaining = Math.max(1, total - current + 1);
+        remEl.value = remaining;
+      } else {
+        // source === 'total'
+        if (current > total) current = total;
+        currEl.value = current;
+        remaining = Math.max(1, total - current + 1);
+        remEl.value = remaining;
+      }
+
+      if (hintEl) {
+        const amt = parseFloat(amtEl?.value) || 0;
+        const saldo = remaining * amt;
+        hintEl.innerHTML = `💡 Pagando <b>Cuota ${current} de ${total}</b> • Faltan <b>${remaining} cuotas</b> por pagar (Saldo pendiente: <b>${getCurrencySymbol()} ${saldo.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</b>)`;
+      }
+    }
+    window.syncInstallmentFields = syncInstallmentFields;
+    window.toggleInstallmentFields = toggleInstallmentFields;
 
     function deleteTransaction(id) {
       const txs = getMonthTxList();
@@ -4456,9 +4515,20 @@
       
       const isInst = tx.isInstallment || false;
       document.getElementById('txIsInstallment').checked = isInst;
-      document.getElementById('installmentFieldsGroup').style.display = isInst ? 'grid' : 'none';
-      document.getElementById('txInstallmentsTotal').value = tx.installmentsTotal || 12;
-      document.getElementById('txInstallmentsCurrent').value = tx.installmentsCurrent || 10;
+      const instGroup = document.getElementById('installmentFieldsGroup');
+      if (instGroup) instGroup.style.display = isInst ? 'flex' : 'none';
+      
+      const totalInst = tx.installmentsTotal || 12;
+      let currInst = tx.installmentsCurrent || 1;
+      let remInst = tx.remainingInstallments || Math.max(1, totalInst - currInst + 1);
+      const teaVal = (typeof tx.tea === 'number') ? tx.tea : 0;
+
+      if (document.getElementById('txInstallmentsTotal')) document.getElementById('txInstallmentsTotal').value = totalInst;
+      if (document.getElementById('txInstallmentsCurrent')) document.getElementById('txInstallmentsCurrent').value = currInst;
+      if (document.getElementById('txInstallmentsRemaining')) document.getElementById('txInstallmentsRemaining').value = remInst;
+      if (document.getElementById('txInstallmentTea')) document.getElementById('txInstallmentTea').value = teaVal;
+
+      if (isInst) syncInstallmentFields('current');
 
       document.getElementById('txPropagateFuture').checked = false;
 
@@ -4516,6 +4586,8 @@
       const isInstallment = document.getElementById('txIsInstallment').checked;
       const installmentsTotal = parseInt(document.getElementById('txInstallmentsTotal').value) || 1;
       const installmentsCurrent = parseInt(document.getElementById('txInstallmentsCurrent').value) || 1;
+      const remainingInstallments = parseInt(document.getElementById('txInstallmentsRemaining')?.value) || Math.max(1, installmentsTotal - installmentsCurrent + 1);
+      const teaRate = parseFloat(document.getElementById('txInstallmentTea')?.value) || 0;
       
       const currentSelectedMonth = appState.currentMonth;
       const newNormKey = getNormalizedNameKey(name);
@@ -4560,10 +4632,13 @@
               t.installmentsTotal = installmentsTotal;
               
               if (isInstallment) {
-                let calculated = installmentsCurrent - idx;
-                t.installmentsCurrent = calculated < 0 ? 0 : calculated;
+                t.installmentsCurrent = Math.min(installmentsTotal, installmentsCurrent + idx);
+                t.remainingInstallments = Math.max(0, remainingInstallments - idx);
+                t.tea = teaRate;
               } else {
-                t.installmentsCurrent = installmentsCurrent;
+                t.installmentsCurrent = 1;
+                t.remainingInstallments = 1;
+                t.tea = 0;
               }
 
               if (m === currentSelectedMonth) {
@@ -4577,9 +4652,10 @@
           
           if (!found && shouldPropagateForward) {
              let adjCurrent = installmentsCurrent;
+             let adjRemaining = remainingInstallments;
              if (isInstallment) {
-               let calculated = installmentsCurrent - idx;
-               adjCurrent = calculated < 0 ? 0 : calculated;
+               adjCurrent = Math.min(installmentsTotal, installmentsCurrent + idx);
+               adjRemaining = Math.max(0, remainingInstallments - idx);
              }
              appState.transactions[m].push({
                id: m + '_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
@@ -4590,7 +4666,9 @@
                dueDate: dueDate,
                isInstallment: isInstallment,
                installmentsTotal: installmentsTotal,
-               installmentsCurrent: adjCurrent
+               installmentsCurrent: adjCurrent,
+               remainingInstallments: adjRemaining,
+               tea: isInstallment ? teaRate : 0
              });
           }
         });
@@ -4611,9 +4689,10 @@
           let existingItem = appState.transactions[m].find(t => getNormalizedNameKey(t.name) === newNormKey);
           
           let adjCurrent = installmentsCurrent;
+          let adjRemaining = remainingInstallments;
           if (isInstallment && shouldPropagateForward) {
-            let calculated = installmentsCurrent - idx;
-            adjCurrent = calculated < 0 ? 0 : calculated;
+            adjCurrent = Math.min(installmentsTotal, installmentsCurrent + idx);
+            adjRemaining = Math.max(0, remainingInstallments - idx);
           }
 
           if (existingItem) {
@@ -4627,6 +4706,8 @@
             existingItem.isInstallment = isInstallment;
             existingItem.installmentsTotal = installmentsTotal;
             existingItem.installmentsCurrent = adjCurrent;
+            existingItem.remainingInstallments = adjRemaining;
+            existingItem.tea = isInstallment ? teaRate : 0;
           } else {
             appState.transactions[m].push({
               id: m + '_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
@@ -4637,12 +4718,18 @@
               dueDate: dueDate,
               isInstallment: isInstallment,
               installmentsTotal: installmentsTotal,
-              installmentsCurrent: adjCurrent
+              installmentsCurrent: adjCurrent,
+              remainingInstallments: adjRemaining,
+              tea: isInstallment ? teaRate : 0
             });
           }
         });
 
         addAuditLog('➕ Gasto Registrado', `Gasto '${name}' (S/ ${amount}, Día ${dueDate}) añadido.`);
+      }
+
+      if (isInstallment && typeof syncDebtsFromCuotas === 'function') {
+        syncDebtsFromCuotas();
       }
 
       currentCategoryFilter = 'TODAS';
@@ -5216,7 +5303,7 @@
       const leakKeywords = {
         cafes: ['café', 'cafe', 'starbucks', 'snack', 'golosina', 'antojo', 'panaderia', 'dulce', 'helado'],
         delivery: ['delivery', 'rappi', 'pedidosya', 'uber eats', 'didi food', 'propina'],
-        taxis: ['taxi', 'uber', 'cabify', 'indrive', 'pasaje', 'peaje']
+        taxis: ['taxi', 'uber', 'cabify', 'indrive', 'colectivo', 'combi']
       };
 
       const plannedServices = [];
@@ -5248,24 +5335,40 @@
           });
           servicesMonthlyTotal += amt;
         } 
-        // 2. Gastos Hormiga & Compras Menores (Consumos < S/ 35 o compras menores)
-        else if (amt <= 35 || 
-                 leakKeywords.cafes.some(k => nameLower.includes(k)) || 
-                 leakKeywords.delivery.some(k => nameLower.includes(k)) || 
-                 leakKeywords.taxis.some(k => nameLower.includes(k))) {
-          let icon = '🐜';
-          if (leakKeywords.cafes.some(k => nameLower.includes(k))) icon = '☕';
-          else if (leakKeywords.delivery.some(k => nameLower.includes(k))) icon = '🛵';
-          else if (leakKeywords.taxis.some(k => nameLower.includes(k))) icon = '🚕';
+        // 2. Gastos Hormiga & Compras Menores (Consumos < S/ 35 cotidianos)
+        // Regla: NUNCA clasificar viajes, cuotas bancarias, compras mayores a 35 ni servicios como hormiga
+        else {
+          const isMajorOrInstallment = t.isInstallment || 
+                                       amt > 35 || 
+                                       catLower === 'viajes' || 
+                                       catLower === 'tarjetas' || 
+                                       catLower === 'préstamos' || 
+                                       catLower === 'alquiler' || 
+                                       catLower === 'vivienda' ||
+                                       catLower === 'carro' ||
+                                       catLower === 'papá' ||
+                                       catLower === 'mapfre';
 
-          microExpenses.push({
-            icon,
-            name: t.name,
-            monthly: amt,
-            annual: amt * 12,
-            type: 'micro'
-          });
-          microSpendTotal += amt;
+          if (!isMajorOrInstallment && (
+              amt <= 35 || 
+              leakKeywords.cafes.some(k => nameLower.includes(k)) || 
+              leakKeywords.delivery.some(k => nameLower.includes(k)) || 
+              leakKeywords.taxis.some(k => nameLower.includes(k))
+          )) {
+            let icon = '🐜';
+            if (leakKeywords.cafes.some(k => nameLower.includes(k))) icon = '☕';
+            else if (leakKeywords.delivery.some(k => nameLower.includes(k))) icon = '🛵';
+            else if (leakKeywords.taxis.some(k => nameLower.includes(k))) icon = '🚕';
+
+            microExpenses.push({
+              icon,
+              name: t.name,
+              monthly: amt,
+              annual: amt * 12,
+              type: 'micro'
+            });
+            microSpendTotal += amt;
+          }
         }
       });
 
@@ -5648,6 +5751,10 @@
       document.getElementById('txDueDate').value = new Date().getDate().toString();
       document.getElementById('txIsInstallment').checked = false;
       document.getElementById('installmentFieldsGroup').style.display = 'none';
+      if (document.getElementById('txInstallmentsTotal')) document.getElementById('txInstallmentsTotal').value = '12';
+      if (document.getElementById('txInstallmentsCurrent')) document.getElementById('txInstallmentsCurrent').value = '1';
+      if (document.getElementById('txInstallmentsRemaining')) document.getElementById('txInstallmentsRemaining').value = '12';
+      if (document.getElementById('txInstallmentTea')) document.getElementById('txInstallmentTea').value = '0';
 
       document.getElementById('expenseModalTitle').textContent = '+ Registrar Nuevo Gasto';
       document.getElementById('saveExpenseBtn').textContent = 'Guardar Gasto';
@@ -7104,6 +7211,7 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
       candidates.forEach((c, idx) => {
         let total = c.installmentsTotal || 1;
         let current = c.installmentsCurrent || 1;
+        let remaining = null;
 
         const nameMatch = (c.name || '').match(/(?:cuota\s+)?(\d+)\s+de\s+(\d+)/i);
         if (nameMatch) {
@@ -7111,28 +7219,42 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
           total = parseInt(nameMatch[2], 10) || total;
         }
 
-        // Si se llama "Pasajes cusco" y está en Octubre, sabemos que es la cuota final
+        // Casos conocidos específicos
         if (/cusco/i.test(c.name)) {
           total = 6;
-          current = (c.status === 'Pagado') ? 6 : 6;
+          current = 6; // En Octubre 2026 es la última cuota (1 cuota pendiente)
+          remaining = (c.status === 'Pagado') ? 0 : 1;
         }
         if (/junta/i.test(c.name)) {
           total = 2;
           current = 2;
+          remaining = (c.status === 'Pagado') ? 0 : 1;
         }
         if (/macbook/i.test(c.name)) {
           total = 24;
           current = 21;
+          remaining = (c.status === 'Pagado') ? 3 : 4;
+        }
+        if (/mami/i.test(c.name)) {
+          total = 12;
+          current = (c.installmentsCurrent && c.installmentsCurrent <= 3) ? c.installmentsCurrent : 3;
+          remaining = 10;
         }
 
-        let remaining = (c.status === 'Pagado') 
-          ? Math.max(0, total - current) 
-          : Math.max(1, total - current + 1);
+        if (remaining === null) {
+          if (typeof c.remainingInstallments === 'number' && c.remainingInstallments > 0) {
+            remaining = (c.status === 'Pagado') ? Math.max(0, c.remainingInstallments - 1) : c.remainingInstallments;
+          } else {
+            remaining = (c.status === 'Pagado') 
+              ? Math.max(0, total - current) 
+              : Math.max(1, total - current + 1);
+          }
+        }
 
         if (remaining <= 0) return; // Ya terminó de pagarse
 
         const isLoan = /diners|préstamo|prestamo|revolving/i.test(c.name);
-        const tea = isLoan ? 28.5 : 0.0;
+        const tea = (typeof c.tea === 'number') ? c.tea : (isLoan ? 28.5 : 0.0);
         const bal = Math.round((parseFloat(c.amount) || 0) * remaining);
         const minP = Math.round(parseFloat(c.amount) || 0);
 
@@ -7462,7 +7584,7 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
                   <span style="font-size: 16px;">💳</span>
                   <div>
                     <strong style="color: var(--text-main);">${escapeHtml(d.name)}</strong>
-                    ${d.remainingInstallments ? `<div style="font-size: 10px; color: var(--text-muted);">Cuota ${d.installmentsCurrent || 1} de ${d.installmentsTotal || 1}</div>` : ''}
+                    ${d.remainingInstallments ? `<div style="font-size: 10px; color: var(--text-muted); margin-top: 2px;">Cuota ${d.installmentsCurrent || 1} de ${d.installmentsTotal || 1} <span style="color: #6366f1; font-weight: 700;">(${d.remainingInstallments} pendientes)</span></div>` : ''}
                   </div>
                 </div>
               </td>
@@ -7628,6 +7750,7 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
       candidates.forEach((c, idx) => {
         let total = c.installmentsTotal || 1;
         let current = c.installmentsCurrent || 1;
+        let remaining = null;
 
         const nameMatch = (c.name || '').match(/(?:cuota\s+)?(\d+)\s+de\s+(\d+)/i);
         if (nameMatch) {
@@ -7638,24 +7761,38 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
         if (/cusco/i.test(c.name)) {
           total = 6;
           current = 6; // En Octubre 2026 es la última cuota (1 cuota pendiente)
+          remaining = (c.status === 'Pagado') ? 0 : 1;
         }
         if (/junta/i.test(c.name)) {
           total = 2;
           current = 2; // Cuota 2 de 2 (Final)
+          remaining = (c.status === 'Pagado') ? 0 : 1;
         }
         if (/macbook/i.test(c.name)) {
           total = 24;
           current = 21; // Cuota 21 de 24 (quedan 4 cuotas)
+          remaining = (c.status === 'Pagado') ? 3 : 4;
+        }
+        if (/mami/i.test(c.name)) {
+          total = 12;
+          current = (c.installmentsCurrent && c.installmentsCurrent <= 3) ? c.installmentsCurrent : 3;
+          remaining = 10;
         }
 
-        let remaining = (c.status === 'Pagado') 
-          ? Math.max(0, total - current) 
-          : Math.max(1, total - current + 1);
+        if (remaining === null) {
+          if (typeof c.remainingInstallments === 'number' && c.remainingInstallments > 0) {
+            remaining = (c.status === 'Pagado') ? Math.max(0, c.remainingInstallments - 1) : c.remainingInstallments;
+          } else {
+            remaining = (c.status === 'Pagado') 
+              ? Math.max(0, total - current) 
+              : Math.max(1, total - current + 1);
+          }
+        }
 
         if (remaining <= 0) return; // Si ya fue pagada la última cuota, no está pendiente
 
         const isLoan = /diners|préstamo|prestamo|revolving/i.test(c.name);
-        const tea = isLoan ? 28.5 : 0.0;
+        const tea = (typeof c.tea === 'number') ? c.tea : (isLoan ? 28.5 : 0.0);
         const bal = Math.round((parseFloat(c.amount) || 0) * remaining);
         const minP = Math.round(parseFloat(c.amount) || 0);
 

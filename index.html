@@ -19,7 +19,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="js/chart.min.js?v=72.0"></script>
   <script src="js/supabase.min.js?v=72.0"></script>
-  <link rel="stylesheet" href="css/styles.css?v=74.1">
+  <link rel="stylesheet" href="css/styles.css?v=74.2">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
 
   <style>
@@ -2180,14 +2180,31 @@
             💳 ¿Es una compra a cuotas / crédito?
           </label>
 
-          <div id="installmentFieldsGroup" style="display: none; margin-top: 8px; grid-template-columns: 1fr 1fr; gap: 8px;">
-            <div>
-              <label style="font-size: 10px;">Cuotas Totales</label>
-              <input type="number" id="txInstallmentsTotal" class="form-control" value="12" min="1">
+          <div id="installmentFieldsGroup" style="display: none; margin-top: 10px; flex-direction: column; gap: 10px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+              <div>
+                <label style="font-size: 11px; font-weight: 700; color: var(--text-main);">Cuotas Totales del Plan</label>
+                <input type="number" id="txInstallmentsTotal" class="form-control" value="12" min="1" placeholder="Ej: 12" oninput="syncInstallmentFields('total')">
+              </div>
+              <div>
+                <label style="font-size: 11px; font-weight: 700; color: var(--text-main);">Cuota Actual este mes</label>
+                <input type="number" id="txInstallmentsCurrent" class="form-control" value="1" min="1" placeholder="Ej: 3" oninput="syncInstallmentFields('current')">
+              </div>
             </div>
-            <div>
-              <label style="font-size: 10px;">Cuotas Pendientes Restantes</label>
-              <input type="number" id="txInstallmentsCurrent" class="form-control" value="10" min="1">
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+              <div>
+                <label style="font-size: 11px; font-weight: 700; color: var(--text-main);">Cuotas por Pagar Restantes</label>
+                <input type="number" id="txInstallmentsRemaining" class="form-control" value="12" min="1" placeholder="Ej: 10" oninput="syncInstallmentFields('remaining')">
+              </div>
+              <div>
+                <label style="font-size: 11px; font-weight: 700; color: var(--text-main);">Tasa TEA Anual (%)</label>
+                <input type="number" id="txInstallmentTea" class="form-control" value="0" min="0" step="0.1" placeholder="0% sin intereses">
+              </div>
+            </div>
+
+            <div id="installmentSummaryHint" style="font-size: 11px; color: #4338ca; background: #e0e7ff; padding: 7px 10px; border-radius: 8px; font-weight: 600; line-height: 1.4;">
+              💡 Pagando Cuota 1 de 12 • Faltan 12 cuotas por pagar
             </div>
           </div>
         </div>
@@ -3201,6 +3218,6 @@
   <div id="masterDashboardModal" style="display: none;"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
-  <script src="js/app.js?v=74.1"></script>
+  <script src="js/app.js?v=74.2"></script>
 </body>
 </html>
