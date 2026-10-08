@@ -7251,6 +7251,70 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
     let currentDebtStrategy = 'snowball'; // 'snowball' o 'avalanche'
     let currentDebtExtraPayment = 0; // Por defecto 0 (sin amortización adicional)
 
+    function extractDebtMetricsFromTx(c) {
+      let total = c.installmentsTotal || 1;
+      let current = c.installmentsCurrent || 1;
+      let remaining = null;
+
+      const nameMatch = (c.name || '').match(/(?:cuota\s+)?(\d+)\s+de\s+(\d+)/i);
+      if (nameMatch) {
+        current = parseInt(nameMatch[1], 10) || current;
+        total = parseInt(nameMatch[2], 10) || total;
+      }
+
+      if (/cusco/i.test(c.name)) {
+        total = 6;
+        current = 6; // En Octubre 2026 es la última cuota (1 cuota pendiente)
+        remaining = (c.status === 'Pagado') ? 0 : 1;
+      }
+      if (/junta/i.test(c.name)) {
+        total = 2;
+        current = 2; // Cuota 2 de 2 (Final)
+        remaining = (c.status === 'Pagado') ? 0 : 1;
+      }
+      if (/macbook/i.test(c.name)) {
+        total = 24;
+        current = 21; // Cuota 21 de 24 (quedan 4 cuotas)
+        remaining = (c.status === 'Pagado') ? 3 : 4;
+      }
+      if (/mami/i.test(c.name)) {
+        total = 12;
+        current = (c.installmentsCurrent && c.installmentsCurrent <= 3) ? c.installmentsCurrent : 3;
+        remaining = 10;
+      }
+
+      if (remaining === null) {
+        if (typeof c.remainingInstallments === 'number' && c.remainingInstallments > 0) {
+          remaining = (c.status === 'Pagado') ? Math.max(0, c.remainingInstallments - 1) : c.remainingInstallments;
+        } else {
+          remaining = (c.status === 'Pagado') 
+            ? Math.max(0, total - current) 
+            : Math.max(1, total - current + 1);
+        }
+      }
+
+      remaining = Math.max(0, remaining);
+
+      const isLoan = /diners|préstamo|prestamo|revolving/i.test(c.name);
+      const tea = (typeof c.tea === 'number') ? c.tea : (isLoan ? 28.5 : 0.0);
+      const minP = Math.round(parseFloat(c.amount) || 0);
+      const bal = Math.round(minP * remaining);
+      const initialBal = Math.round(minP * total);
+
+      current = Math.min(total, Math.max(1, total - remaining + 1));
+
+      return {
+        total,
+        current,
+        remaining,
+        minPayment: minP,
+        balance: bal,
+        initialBalance: initialBal,
+        tea
+      };
+    }
+    window.extractDebtMetricsFromTx = extractDebtMetricsFromTx;
+
     function initDebtCommandCenterState() {
       if (appState && appState.debtSnowball && Array.isArray(appState.debtSnowball.debts) && appState.debtSnowball.debts.length > 0) {
         currentSnowballDebts = JSON.parse(JSON.stringify(appState.debtSnowball.debts));
@@ -7273,7 +7337,8 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
           } catch(e) {}
         }
       }
-      // Sincronizar en vivo los valores actualizados de cuotas y saldos desde Movimientos
+
+      // Sincronizar en vivo los valores exactos canónicos de cuotas y saldos desde Movimientos
       if (currentSnowballDebts && currentSnowballDebts.length > 0) {
         const curTxs = getMonthTxList();
 
@@ -7300,12 +7365,18 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
             return tKey === dKey || tKey.replace(/\s+/g, '') === dKey.replace(/\s+/g, '');
           });
           if (matchedTx && matchedTx.isInstallment) {
-            d.installmentsTotal = matchedTx.installmentsTotal || d.installmentsTotal || 12;
-            d.installmentsCurrent = matchedTx.installmentsCurrent || d.installmentsCurrent || 1;
-            d.remainingInstallments = (typeof matchedTx.remainingInstallments === 'number') ? matchedTx.remainingInstallments : Math.max(1, d.installmentsTotal - d.installmentsCurrent + 1);
-            d.minPayment = Math.max(1, parseFloat(matchedTx.amount) || d.minPayment || 60);
-            d.balance = Math.round(d.remainingInstallments * d.minPayment);
-            if (typeof matchedTx.tea === 'number') d.tea = matchedTx.tea;
+            const metrics = extractDebtMetricsFromTx(matchedTx);
+            d.installmentsTotal = metrics.total;
+            d.installmentsCurrent = metrics.current;
+            d.remainingInstallments = metrics.remaining;
+            d.minPayment = metrics.minPayment;
+            d.balance = metrics.balance;
+            d.initialBalance = metrics.initialBalance;
+            d.tea = metrics.tea;
+          } else {
+            if (!d.initialBalance && d.installmentsTotal && d.minPayment) {
+              d.initialBalance = Math.round(d.minPayment * d.installmentsTotal);
+            }
           }
         });
         saveDebtSnowballPlanQuiet();
@@ -7318,83 +7389,7 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
     }
 
     function autoSyncDebtsSilently() {
-      const txs = getMonthTxList();
-
-      const candidates = txs.filter(t => {
-        // REGLA ESTRICTA DE ORO: Solo entran compras que el usuario marcó EXPLÍCITAMENTE en cuotas (isInstallment: true).
-        // NUNCA incluir movimientos por categoría (Tarjetas/Préstamos) si no tienen isInstallment: true activo.
-        return t.isInstallment === true;
-      });
-
-      const synced = [];
-      candidates.forEach((c, idx) => {
-        let total = c.installmentsTotal || 1;
-        let current = c.installmentsCurrent || 1;
-        let remaining = null;
-
-        const nameMatch = (c.name || '').match(/(?:cuota\s+)?(\d+)\s+de\s+(\d+)/i);
-        if (nameMatch) {
-          current = parseInt(nameMatch[1], 10) || current;
-          total = parseInt(nameMatch[2], 10) || total;
-        }
-
-        // Casos conocidos específicos
-        if (/cusco/i.test(c.name)) {
-          total = 6;
-          current = 6; // En Octubre 2026 es la última cuota (1 cuota pendiente)
-          remaining = (c.status === 'Pagado') ? 0 : 1;
-        }
-        if (/junta/i.test(c.name)) {
-          total = 2;
-          current = 2;
-          remaining = (c.status === 'Pagado') ? 0 : 1;
-        }
-        if (/macbook/i.test(c.name)) {
-          total = 24;
-          current = 21;
-          remaining = (c.status === 'Pagado') ? 3 : 4;
-        }
-        if (/mami/i.test(c.name)) {
-          total = 12;
-          current = (c.installmentsCurrent && c.installmentsCurrent <= 3) ? c.installmentsCurrent : 3;
-          remaining = 10;
-        }
-
-        if (remaining === null) {
-          if (typeof c.remainingInstallments === 'number' && c.remainingInstallments > 0) {
-            remaining = (c.status === 'Pagado') ? Math.max(0, c.remainingInstallments - 1) : c.remainingInstallments;
-          } else {
-            remaining = (c.status === 'Pagado') 
-              ? Math.max(0, total - current) 
-              : Math.max(1, total - current + 1);
-          }
-        }
-
-        if (remaining <= 0) return; // Ya terminó de pagarse
-
-        const isLoan = /diners|préstamo|prestamo|revolving/i.test(c.name);
-        const tea = (typeof c.tea === 'number') ? c.tea : (isLoan ? 28.5 : 0.0);
-        const bal = Math.round((parseFloat(c.amount) || 0) * remaining);
-        const minP = Math.round(parseFloat(c.amount) || 0);
-
-        current = Math.min(total, Math.max(1, total - remaining + 1));
-
-        synced.push({
-          id: 'd_sync_' + idx + '_' + Math.random().toString(36).substr(2, 4),
-          name: c.name,
-          balance: bal,
-          minPayment: minP,
-          tea: tea,
-          initialBalance: Math.round(minP * total),
-          remainingInstallments: remaining,
-          installmentsTotal: total,
-          installmentsCurrent: current
-        });
-      });
-
-      if (synced.length > 0) {
-        currentSnowballDebts = synced;
-      }
+      syncDebtsFromCuotas(true);
     }
 
     function renderDebtCommandCenter() {
@@ -7560,7 +7555,11 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
       currentSnowballDebts.forEach((d, i) => {
         if (!d.id) d.id = 'd_' + i;
         if (d.tea === undefined) d.tea = 0.0;
-        if (!d.initialBalance) d.initialBalance = d.balance || (d.minPayment * 6);
+        const totInst = d.installmentsTotal || 12;
+        const minP = parseFloat(d.minPayment) || 60;
+        if (!d.initialBalance || d.initialBalance < d.balance) {
+          d.initialBalance = Math.round(minP * totInst);
+        }
       });
 
       const sumMin = currentSnowballDebts.reduce((acc, d) => acc + (parseFloat(d.minPayment) || 0), 0);
@@ -8141,7 +8140,7 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
     }
     window.renderExecutiveAdvisor = renderExecutiveAdvisor;
 
-    function syncDebtsFromCuotas() {
+    function syncDebtsFromCuotas(silent = false) {
       const txs = getMonthTxList();
 
       const candidates = txs.filter(t => {
@@ -8150,72 +8149,25 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
       });
 
       if (candidates.length === 0) {
-        showToast('No se encontraron compras en cuotas activas este mes', 'info');
+        if (!silent) showToast('No se encontraron compras en cuotas activas este mes', 'info');
         return;
       }
 
       const freshDebts = [];
       candidates.forEach((c, idx) => {
-        let total = c.installmentsTotal || 1;
-        let current = c.installmentsCurrent || 1;
-        let remaining = null;
-
-        const nameMatch = (c.name || '').match(/(?:cuota\s+)?(\d+)\s+de\s+(\d+)/i);
-        if (nameMatch) {
-          current = parseInt(nameMatch[1], 10) || current;
-          total = parseInt(nameMatch[2], 10) || total;
-        }
-
-        if (/cusco/i.test(c.name)) {
-          total = 6;
-          current = 6; // En Octubre 2026 es la última cuota (1 cuota pendiente)
-          remaining = (c.status === 'Pagado') ? 0 : 1;
-        }
-        if (/junta/i.test(c.name)) {
-          total = 2;
-          current = 2; // Cuota 2 de 2 (Final)
-          remaining = (c.status === 'Pagado') ? 0 : 1;
-        }
-        if (/macbook/i.test(c.name)) {
-          total = 24;
-          current = 21; // Cuota 21 de 24 (quedan 4 cuotas)
-          remaining = (c.status === 'Pagado') ? 3 : 4;
-        }
-        if (/mami/i.test(c.name)) {
-          total = 12;
-          current = (c.installmentsCurrent && c.installmentsCurrent <= 3) ? c.installmentsCurrent : 3;
-          remaining = 10;
-        }
-
-        if (remaining === null) {
-          if (typeof c.remainingInstallments === 'number' && c.remainingInstallments > 0) {
-            remaining = (c.status === 'Pagado') ? Math.max(0, c.remainingInstallments - 1) : c.remainingInstallments;
-          } else {
-            remaining = (c.status === 'Pagado') 
-              ? Math.max(0, total - current) 
-              : Math.max(1, total - current + 1);
-          }
-        }
-
-        if (remaining <= 0) return; // Si ya fue pagada la última cuota, no está pendiente
-
-        const isLoan = /diners|préstamo|prestamo|revolving/i.test(c.name);
-        const tea = (typeof c.tea === 'number') ? c.tea : (isLoan ? 28.5 : 0.0);
-        const bal = Math.round((parseFloat(c.amount) || 0) * remaining);
-        const minP = Math.round(parseFloat(c.amount) || 0);
-
-        current = Math.min(total, Math.max(1, total - remaining + 1));
+        const metrics = extractDebtMetricsFromTx(c);
+        if (metrics.remaining <= 0) return; // Si ya fue pagada la última cuota, no está pendiente
 
         freshDebts.push({
           id: 'd_sync_' + idx + '_' + Math.random().toString(36).substr(2, 4),
           name: c.name,
-          balance: bal,
-          minPayment: minP,
-          tea: tea,
-          initialBalance: Math.round(minP * total),
-          remainingInstallments: remaining,
-          installmentsTotal: total,
-          installmentsCurrent: current
+          balance: metrics.balance,
+          minPayment: metrics.minPayment,
+          tea: metrics.tea,
+          initialBalance: metrics.initialBalance,
+          remainingInstallments: metrics.remaining,
+          installmentsTotal: metrics.total,
+          installmentsCurrent: metrics.current
         });
       });
 
@@ -8223,7 +8175,7 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
       saveDebtSnowballPlanQuiet();
       calculateAndRenderDebtPlan(currentDebtExtraPayment);
       renderExecutiveAdvisor();
-      showToast(`🔄 Se sincronizaron ${freshDebts.length} compromisos en cuotas activos con éxito`, 'success');
+      if (!silent) showToast(`🔄 Se sincronizaron ${freshDebts.length} compromisos en cuotas activos con éxito`, 'success');
     }
     window.syncDebtsFromCuotas = syncDebtsFromCuotas;
 
