@@ -1119,59 +1119,55 @@
         };
       }
 
-      // 4. Detección inteligente de errores tipográficos en los principales proveedores
-      const typoSuggestions = {
-        'gmai.com': 'gmail.com',
-        'gmiak.com': 'gmail.com',
-        'gmaik.com': 'gmail.com',
-        'gamil.com': 'gmail.com',
-        'gmial.com': 'gmail.com',
-        'gmaill.com': 'gmail.com',
-        'gmaul.com': 'gmail.com',
-        'gmai.co': 'gmail.com',
-        'gmeil.com': 'gmail.com',
-        'gmil.com': 'gmail.com',
-        'gnail.com': 'gmail.com',
-        'hotmial.com': 'hotmail.com',
-        'hotmai.com': 'hotmail.com',
-        'hotmil.com': 'hotmail.com',
-        'hotmaill.com': 'hotmail.com',
-        'outlok.com': 'outlook.com',
-        'outloo.com': 'outlook.com',
-        'outlock.com': 'outlook.com',
-        'yaho.com': 'yahoo.com',
-        'yahooo.com': 'yahoo.com',
-        'yaho.es': 'yahoo.es',
-        'iclod.com': 'icloud.com',
-        'icould.com': 'icloud.com'
-      };
-
-      if (typoSuggestions[domain]) {
-        const correctDomain = typoSuggestions[domain];
-        return {
-          valid: false,
-          error: `Parece que escribiste '@${domain}'. ¿Quisiste decir '@${correctDomain}'? Corrígelo para recibir tus accesos.`
-        };
+      // 4. Detección exhaustiva de errores tipográficos en proveedores comunes (Gmail, Hotmail, Outlook, Yahoo, iCloud)
+      function getLevDistance(s1, s2) {
+        const m = [];
+        for (let i = 0; i <= s2.length; i++) m[i] = [i];
+        for (let j = 0; j <= s1.length; j++) m[0][j] = j;
+        for (let i = 1; i <= s2.length; i++) {
+          for (let j = 1; j <= s1.length; j++) {
+            m[i][j] = s2[i - 1] === s1[j - 1] ? m[i - 1][j - 1] : Math.min(m[i - 1][j - 1] + 1, m[i][j - 1] + 1, m[i - 1][j] + 1);
+          }
+        }
+        return m[s2.length][s1.length];
       }
 
-      // Detección general por patrón si se parece a gmail/hotmail/outlook
-      if (/^g(?:m|n)[a-z0-9]{1,4}\.(?:com|co|es|net)$/i.test(domain) && domain !== 'gmail.com') {
-        return {
-          valid: false,
-          error: `Parece que escribiste '@${domain}'. ¿Quisiste decir '@gmail.com'? Corrígelo para recibir tus accesos.`
-        };
-      }
-      if (/^hotm[a-z0-9]{1,4}\.(?:com|es|net)$/i.test(domain) && domain !== 'hotmail.com' && domain !== 'hotmail.es') {
-        return {
-          valid: false,
-          error: `Parece que escribiste '@${domain}'. ¿Quisiste decir '@hotmail.com'? Corrígelo para recibir tus accesos.`
-        };
-      }
-      if (/^outl[a-z0-9]{1,4}\.(?:com|es|net)$/i.test(domain) && domain !== 'outlook.com') {
-        return {
-          valid: false,
-          error: `Parece que escribiste '@${domain}'. ¿Quisiste decir '@outlook.com'? Corrígelo para recibir tus accesos.`
-        };
+      const popularProviders = ['gmail.com', 'hotmail.com', 'outlook.com', 'yahoo.com', 'icloud.com', 'live.com', 'yahoo.es', 'hotmail.es'];
+      
+      for (const p of popularProviders) {
+        if (domain === p) continue;
+        
+        // Verificación 1: Distancia Levenshtein <= 2 en el dominio completo
+        const dist = getLevDistance(domain, p);
+        if (dist <= 2) {
+          return {
+            valid: false,
+            error: `Parece que escribiste '@${domain}'. ¿Quisiste decir '@${p}'? Corrígelo para recibir tus accesos.`
+          };
+        }
+
+        // Verificación 2: Patrones fonéticos y de teclado comunes
+        const dName = domain.split('.')[0];
+        const dExt = domain.split('.').slice(1).join('.');
+        const [pName, pExt] = p.split('.');
+
+        if (dExt === pExt || dExt === 'co' || dExt === 'cm' || dExt === 'con' || dExt === 'comm') {
+          if (pName === 'gmail' && (/^g[mna][a-z0-9]{1,4}$/i.test(dName) || dName.includes('gma') || dName.includes('gmi') || dName.includes('gml'))) {
+            return { valid: false, error: `Parece que escribiste '@${domain}'. ¿Quisiste decir '@gmail.com'? Corrígelo para recibir tus accesos.` };
+          }
+          if (pName === 'hotmail' && (/^h[o0]t?m[a-z0-9]{1,4}$/i.test(dName) || dName.includes('hotm') || dName.includes('homail') || dName.includes('hotmai') || dName.includes('hotmial') || dName.includes('hotmil'))) {
+            return { valid: false, error: `Parece que escribiste '@${domain}'. ¿Quisiste decir '@hotmail.com'? Corrígelo para recibir tus accesos.` };
+          }
+          if (pName === 'outlook' && (/^o[u0]tl[a-z0-9]{1,4}$/i.test(dName) || dName.includes('outl') || dName.includes('outloo') || dName.includes('outlok'))) {
+            return { valid: false, error: `Parece que escribiste '@${domain}'. ¿Quisiste decir '@outlook.com'? Corrígelo para recibir tus accesos.` };
+          }
+          if (pName === 'yahoo' && (/^yah[a-z0-9]{1,4}$/i.test(dName) || dName.includes('yaho') || dName.includes('yahooo'))) {
+            return { valid: false, error: `Parece que escribiste '@${domain}'. ¿Quisiste decir '@yahoo.com'? Corrígelo para recibir tus accesos.` };
+          }
+          if (pName === 'icloud' && (/^ic[a-z0-9]{1,4}$/i.test(dName) || dName.includes('iclo') || dName.includes('icou'))) {
+            return { valid: false, error: `Parece que escribiste '@${domain}'. ¿Quisiste decir '@icloud.com'? Corrígelo para recibir tus accesos.` };
+          }
+        }
       }
 
       return { valid: true, email };
