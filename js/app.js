@@ -1072,20 +1072,112 @@
       }
     }
 
+    // ================================================================
+    // VALIDACIÓN INTELIGENTE ANTI-REBOTES DE EMAIL (ANTI-BOUNCE SHIELD)
+    // ================================================================
+    function validateSafeEmail(rawEmail) {
+      const email = (rawEmail || '').trim().toLowerCase();
+      
+      // 1. Sintaxis RFC básica y segura
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      if (!email || !emailRegex.test(email)) {
+        return { valid: false, error: 'Por favor ingresa un correo electrónico válido (ej: nombre@gmail.com).' };
+      }
+
+      const parts = email.split('@');
+      if (parts.length !== 2) {
+        return { valid: false, error: 'Formato de correo no válido.' };
+      }
+      const [user, domain] = parts;
+
+      if (!user || user.length < 2) {
+        return { valid: false, error: 'El nombre del correo es demasiado corto.' };
+      }
+
+      // 2. Bloquear dominios ficticios de prueba que siempre rebotan
+      const bannedDummyDomains = [
+        'test.com', 'example.com', 'fake.com', 'prueba.com', 'asdf.com', 
+        'correo.com', 'mail.com', 'sample.com', 'testing.com', 'test.pe', 'demo.com'
+      ];
+      if (bannedDummyDomains.includes(domain)) {
+        return { 
+          valid: false, 
+          error: `El dominio '@${domain}' es ficticio y no puede recibir correos. Por favor usa tu correo real (ej: Gmail, Outlook o de tu empresa).` 
+        };
+      }
+
+      // 3. Bloquear correos temporales / desechables conocidos
+      const disposableDomains = [
+        'mailinator.com', '10minutemail.com', 'guerrillamail.com', 'tempmail.com',
+        'yopmail.com', 'throwawaymail.com', 'trashmail.com', 'sharklasers.com',
+        'getairmail.com', 'dispostable.com'
+      ];
+      if (disposableDomains.includes(domain)) {
+        return {
+          valid: false,
+          error: 'No se permiten correos temporales o desechables. Por favor usa tu correo habitual.'
+        };
+      }
+
+      // 4. Detección inteligente de errores tipográficos en los principales proveedores
+      const typoSuggestions = {
+        'gmai.com': 'gmail.com',
+        'gamil.com': 'gmail.com',
+        'gmial.com': 'gmail.com',
+        'gmaill.com': 'gmail.com',
+        'gmaul.com': 'gmail.com',
+        'gmai.co': 'gmail.com',
+        'gmeil.com': 'gmail.com',
+        'hotmial.com': 'hotmail.com',
+        'hotmai.com': 'hotmail.com',
+        'hotmil.com': 'hotmail.com',
+        'hotmaill.com': 'hotmail.com',
+        'outlok.com': 'outlook.com',
+        'outloo.com': 'outlook.com',
+        'outlock.com': 'outlook.com',
+        'yaho.com': 'yahoo.com',
+        'yahooo.com': 'yahoo.com',
+        'yaho.es': 'yahoo.es',
+        'iclod.com': 'icloud.com',
+        'icould.com': 'icloud.com'
+      };
+
+      if (typoSuggestions[domain]) {
+        const correctDomain = typoSuggestions[domain];
+        return {
+          valid: false,
+          error: `Parece que escribiste '@${domain}'. ¿Quisiste decir '@${correctDomain}'? Corrígelo para recibir tus accesos.`
+        };
+      }
+
+      return { valid: true, email };
+    }
+    window.validateSafeEmail = validateSafeEmail;
+
     // REGISTRO con Supabase Auth
     async function handleRegisterSubmit(e) {
       e.preventDefault();
       const name  = document.getElementById('registerName').value.trim();
-      const email = document.getElementById('registerEmail').value.trim().toLowerCase();
+      const rawEmail = document.getElementById('registerEmail').value;
       const pass  = document.getElementById('registerPassword').value;
       const btn   = document.getElementById('registerSubmitBtn');
       const errEl = document.getElementById('registerErrorMsg');
       const okEl  = document.getElementById('registerSuccessMsg');
 
-      btn.disabled = true;
-      btn.textContent = '⏳ Creando cuenta...';
       errEl.style.display = 'none';
       okEl.style.display = 'none';
+
+      // BLINDAJE PREVIO: Validación estricta anti-errores y anti-rebotes
+      const emailValidation = validateSafeEmail(rawEmail);
+      if (!emailValidation.valid) {
+        errEl.textContent = '🚨 ' + emailValidation.error;
+        errEl.style.display = 'block';
+        return;
+      }
+      const email = emailValidation.email;
+
+      btn.disabled = true;
+      btn.textContent = '⏳ Creando cuenta...';
 
       try {
         let client = getSupabaseClient();
@@ -1160,15 +1252,25 @@
 
     async function handleForgotPasswordSubmit(e) {
       e.preventDefault();
-      const email = document.getElementById('forgotPasswordEmail').value.trim().toLowerCase();
+      const rawEmail = document.getElementById('forgotPasswordEmail').value;
       const btn = document.getElementById('forgotPasswordBtn');
       const errEl = document.getElementById('forgotPassErrorMsg');
       const okEl = document.getElementById('forgotPassSuccessMsg');
 
-      btn.disabled = true;
-      btn.textContent = '⏳ Enviando enlace...';
       errEl.style.display = 'none';
       okEl.style.display = 'none';
+
+      // BLINDAJE PREVIO: Validación estricta anti-errores y anti-rebotes
+      const emailValidation = validateSafeEmail(rawEmail);
+      if (!emailValidation.valid) {
+        errEl.textContent = '🚨 ' + emailValidation.error;
+        errEl.style.display = 'block';
+        return;
+      }
+      const email = emailValidation.email;
+
+      btn.disabled = true;
+      btn.textContent = '⏳ Enviando enlace...';
 
       try {
         const { data, error } = await supabaseClient.auth.resetPasswordForEmail(email, {
