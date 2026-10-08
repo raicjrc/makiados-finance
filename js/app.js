@@ -4658,6 +4658,19 @@
       renderAll();
     }
 
+    function getPreviousMonthKey(currentMonth) {
+      const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+      if (!currentMonth) return 'Septiembre 2026';
+      const parts = currentMonth.trim().split(' ');
+      const mName = parts[0] || 'Octubre';
+      const year = parseInt(parts[1], 10) || 2026;
+      let idx = months.findIndex(m => m.toLowerCase() === mName.toLowerCase() || (mName.toLowerCase().startsWith('seti') && m.toLowerCase().startsWith('sept')));
+      if (idx <= 0) {
+        return `Diciembre ${year - 1}`;
+      }
+      return `${months[idx - 1]} ${year}`;
+    }
+
     function render503020Rule() {
       const salary = getMonthTotalIncome();
       const txs = getMonthTxList();
@@ -4670,11 +4683,11 @@
 
       txs.forEach(t => {
         const c = t.category;
-        if (c === 'Tarjetas') {
+        if (c === 'Tarjetas' || c === 'Préstamos' || t.isInstallment) {
           savingsDebtReal += t.amount;
         } else if (['Casa', 'Comida casa', 'Comida gatitos casa', 'Arena gatitos casa', 'Carro', 'UTP', 'Internet', 'Servicios', 'Celulares', 'Mapfre', 'Papá'].includes(c)) {
           needsReal += t.amount;
-        } else if (['Suscripciones', 'Gimnasio & Salud', 'Comida gatitos calle', 'Viajes'].includes(c)) {
+        } else if (['Suscripciones', 'Gimnasio & Salud', 'Comida gatitos calle', 'Viajes', 'Salidas'].includes(c)) {
           wantsReal += t.amount;
         } else {
           needsReal += t.amount;
@@ -4682,35 +4695,62 @@
       });
 
       const totalSpent = needsReal + wantsReal + savingsDebtReal;
-      const realSavings = salary - totalSpent;
-      const totalSavingsAndDebt = savingsDebtReal + Math.max(0, realSavings);
+      const unbudgetedMargin = Math.max(0, salary - totalSpent);
 
       const realPct50 = salary > 0 ? Math.round((needsReal / salary) * 100) : 0;
       const realPct30 = salary > 0 ? Math.round((wantsReal / salary) * 100) : 0;
-      const realPct20 = salary > 0 ? Math.round((totalSavingsAndDebt / salary) * 100) : 0;
+      const realPctDebt = salary > 0 ? Math.round((savingsDebtReal / salary) * 100) : 0;
 
       const barFill50 = target50 > 0 ? Math.min(100, Math.round((needsReal / target50) * 100)) : 0;
       const barFill30 = target30 > 0 ? Math.min(100, Math.round((wantsReal / target30) * 100)) : 0;
-      const barFill20 = target20 > 0 ? Math.min(100, Math.round((totalSavingsAndDebt / target20) * 100)) : 0;
+      const barFill20 = target20 > 0 ? Math.min(100, Math.round((savingsDebtReal / target20) * 100)) : 0;
 
-      // Calcular Índice de Salud Financiera (0-100)
+      // Análisis de Pagos Pendientes del mes anterior (ej: Septiembre 2026)
+      const prevKey = getPreviousMonthKey(appState.currentMonth || 'Octubre 2026');
+      const prevKeyAlt = prevKey.replace('Septiembre', 'Setiembre');
+      const prevTxs = (appState.transactions && (appState.transactions[prevKey] || appState.transactions[prevKeyAlt])) || [];
+      const prevPending = prevTxs.filter(t => t.status === 'Pendiente');
+      const prevPendingTotal = prevPending.reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
+
+      // Calcular Índice de Salud Financiera Real y Honesto (0-100)
       let healthScore = 100;
-      if (realPct50 > 50) healthScore -= (realPct50 - 50) * 1.5;
-      if (realPct30 > 30) healthScore -= (realPct30 - 30) * 1.5;
-      if (realPct20 < 20) healthScore -= (20 - realPct20) * 2;
-      healthScore = Math.max(35, Math.min(100, Math.round(healthScore)));
+      let penaltyReasons = [];
+
+      // 1. Penalización fuerte por arrastre de pagos vencidos del mes anterior
+      if (prevPendingTotal > 4000) {
+        healthScore -= 42;
+        penaltyReasons.push(`S/ ${Math.round(prevPendingTotal).toLocaleString()} pendientes de ${prevKey}`);
+      } else if (prevPendingTotal > 1000) {
+        healthScore -= 28;
+        penaltyReasons.push(`S/ ${Math.round(prevPendingTotal).toLocaleString()} pendientes de ${prevKey}`);
+      } else if (prevPendingTotal > 0) {
+        healthScore -= 18;
+        penaltyReasons.push(`Pagos pendientes de ${prevKey}`);
+      }
+
+      // 2. Penalización por sobreendeudamiento (>20% del ingreso en cuotas/préstamos)
+      if (realPctDebt > 30) {
+        healthScore -= 22;
+        penaltyReasons.push(`Alto endeudamiento (${realPctDebt}% de sueldo)`);
+      } else if (realPctDebt > 20) {
+        healthScore -= 14;
+        penaltyReasons.push(`Deudas superan meta del 20%`);
+      }
+
+      // 3. Penalización por desbalance en necesidades o deseos
+      if (realPct50 > 50) healthScore -= Math.min(15, Math.round((realPct50 - 50) * 0.8));
+      if (realPct30 > 30) healthScore -= Math.min(15, Math.round((realPct30 - 30) * 1.0));
+
+      healthScore = Math.max(25, Math.min(100, Math.round(healthScore)));
 
       let healthBadgeText = 'Saludable';
       let healthBadgeColor = '#10b981';
-      let healthRingColor = '#10b981';
-      if (healthScore < 60) {
+      if (healthScore < 58) {
         healthBadgeText = 'En Alerta';
         healthBadgeColor = '#ef4444';
-        healthRingColor = '#ef4444';
-      } else if (healthScore < 80) {
+      } else if (healthScore < 78) {
         healthBadgeText = 'Moderado';
         healthBadgeColor = '#f59e0b';
-        healthRingColor = '#f59e0b';
       }
 
       // SVG Stroke dash calculation for radius 36 (circumference ~ 226)
@@ -4721,8 +4761,8 @@
         <div class="plan-progress-row">
           <div class="plan-progress-header">
             <div>
-              <div class="plan-progress-title">🏠 Necesidades</div>
-              <div class="plan-progress-sub">50% Meta vs ${realPct50}% Actual</div>
+              <div class="plan-progress-title">🏠 Necesidades Básicas</div>
+              <div class="plan-progress-sub">50% Meta (${getCurrencySymbol()} ${target50.toLocaleString(getActiveCurrency().locale, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}) vs ${realPct50}% Actual</div>
             </div>
             <div class="plan-progress-amounts">
               ${getCurrencySymbol()} ${needsReal.toLocaleString(getActiveCurrency().locale, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
@@ -4737,8 +4777,8 @@
         <div class="plan-progress-row">
           <div class="plan-progress-header">
             <div>
-              <div class="plan-progress-title">🎉 Deseos y Estilo de Vida</div>
-              <div class="plan-progress-sub">30% Meta vs ${realPct30}% Actual</div>
+              <div class="plan-progress-title">🎉 Deseos & Estilo de Vida</div>
+              <div class="plan-progress-sub">30% Meta (${getCurrencySymbol()} ${target30.toLocaleString(getActiveCurrency().locale, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}) vs ${realPct30}% Actual</div>
             </div>
             <div class="plan-progress-amounts">
               ${getCurrencySymbol()} ${wantsReal.toLocaleString(getActiveCurrency().locale, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
@@ -4753,26 +4793,29 @@
         <div class="plan-progress-row">
           <div class="plan-progress-header">
             <div>
-              <div class="plan-progress-title">💰 Ahorro & Libertad</div>
-              <div class="plan-progress-sub">20% Meta vs ${realPct20}% Actual</div>
+              <div class="plan-progress-title">💳 Compromiso en Deudas & Cuotas</div>
+              <div class="plan-progress-sub">20% Meta Sugerida (${getCurrencySymbol()} ${target20.toLocaleString(getActiveCurrency().locale, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}) vs ${realPctDebt}% Real</div>
             </div>
             <div class="plan-progress-amounts">
-              ${getCurrencySymbol()} ${totalSavingsAndDebt.toLocaleString(getActiveCurrency().locale, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-              <span>de ${getCurrencySymbol()} ${target20.toLocaleString(getActiveCurrency().locale, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
+              ${getCurrencySymbol()} ${savingsDebtReal.toLocaleString(getActiveCurrency().locale, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+              <span>comprometidos</span>
             </div>
           </div>
           <div class="plan-progress-track">
-            <div class="plan-progress-fill plan-fill-savings" style="width: ${barFill20}%;"></div>
+            <div class="plan-progress-fill" style="width: ${barFill20}%; background: ${savingsDebtReal > target20 ? '#ef4444' : '#8b5cf6'};"></div>
+          </div>
+          <div style="font-size: 10.5px; color: var(--text-muted); margin-top: 4px;">
+            ${unbudgetedMargin > 0 ? `Margen no asignado en papel: ${getCurrencySymbol()} ${unbudgetedMargin.toLocaleString()} (sujeto a pagos pendientes)` : 'Presupuesto mensual al límite'}
           </div>
         </div>
 
         <!-- Anillo de Salud Financiera Fiel al Mockup -->
         <div class="health-score-container">
-          <div class="health-score-title">Índice de Salud Financiera</div>
+          <div class="health-score-title">Índice de Salud Financiera Real</div>
           <div class="health-score-circle-wrap">
             <svg width="90" height="90" viewBox="0 0 90 90" style="transform: rotate(-90deg); position: absolute; top:0; left:0;">
               <circle cx="45" cy="45" r="36" fill="transparent" stroke="rgba(255,255,255,0.08)" stroke-width="7" />
-              <circle cx="45" cy="45" r="36" fill="transparent" stroke="${healthRingColor}" stroke-width="7"
+              <circle cx="45" cy="45" r="36" fill="transparent" stroke="${healthBadgeColor}" stroke-width="7"
                 stroke-dasharray="226" stroke-dashoffset="${strokeDashoffset}" stroke-linecap="round" style="transition: stroke-dashoffset 0.8s cubic-bezier(0.32, 0.72, 0, 1);" />
             </svg>
             <div style="text-align: center; position: relative; z-index: 2;">
@@ -4781,6 +4824,9 @@
           </div>
           <div class="health-score-status-badge" style="color: ${healthBadgeColor}; background: ${healthBadgeColor}20;">
             ${healthBadgeText}
+          </div>
+          <div style="font-size: 10px; color: var(--text-muted); margin-top: 6px; text-align: center; max-width: 220px; line-height: 1.35;">
+            ${penaltyReasons.length > 0 ? `⚠️ Ajustado por: ${penaltyReasons.join(' · ')}` : 'Situación financiera balanceada'}
           </div>
         </div>
       `;
@@ -5145,7 +5191,21 @@
     }
 
     /* ====== 2. RADAR DE GASTOS HORMIGA & FUGAS ====== */
-    /* ====== 2. RADAR DE GASTOS HORMIGA & SUSCRIPCIONES (MOCKUP 3) ====== */
+    let radarActiveFilter = 'all'; // 'all', 'services', 'micro'
+    let radarSearchTerm = '';
+
+    function setRadarFilter(filter) {
+      radarActiveFilter = filter;
+      renderGastosHormiga();
+    }
+    window.setRadarFilter = setRadarFilter;
+
+    function onRadarSearchInput(val) {
+      radarSearchTerm = (val || '').toLowerCase().trim();
+      renderGastosHormiga();
+    }
+    window.onRadarSearchInput = onRadarSearchInput;
+
     function renderGastosHormiga() {
       const execContainer = document.getElementById('radarFugasExecutiveContainer');
       const oldContainer = document.getElementById('radarHormigaContainer');
@@ -5156,113 +5216,132 @@
       const leakKeywords = {
         cafes: ['café', 'cafe', 'starbucks', 'snack', 'golosina', 'antojo', 'panaderia', 'dulce', 'helado'],
         delivery: ['delivery', 'rappi', 'pedidosya', 'uber eats', 'didi food', 'propina'],
-        suscripciones: ['netflix', 'spotify', 'youtube', 'disney', 'prime', 'apple', 'icloud', 'hbo', 'gym', 'duolingo', 'suscripción', 'suscripciones', 'cloud', 'gimnasio'],
         taxis: ['taxi', 'uber', 'cabify', 'indrive', 'pasaje', 'peaje']
       };
 
-      const knownSubIcons = {
-        'netflix': { icon: '🍿', name: 'Netflix 4K Ultra' },
-        'spotify': { icon: '🎧', name: 'Spotify Premium' },
-        'youtube': { icon: '▶️', name: 'YouTube Premium' },
-        'disney': { icon: '🏰', name: 'Disney+' },
-        'apple': { icon: '🍎', name: 'Apple One / iCloud' },
-        'icloud': { icon: '☁️', name: 'Cloud Storage 2TB' },
-        'prime': { icon: '📦', name: 'Amazon Prime' },
-        'gym': { icon: '🏋️', name: 'Gimnasio & Salud' },
-        'gimnasio': { icon: '🏋️', name: 'Gimnasio & Salud' }
-      };
-
-      const detectedSubs = [];
+      const plannedServices = [];
+      const microExpenses = [];
+      let servicesMonthlyTotal = 0;
       let microSpendTotal = 0;
-      let microSpendCount = 0;
-      let subTotalMonth = 0;
 
       txs.forEach(t => {
         const nameLower = (t.name || '').toLowerCase();
         const catLower = (t.category || '').toLowerCase();
-        const amt = t.amount || 0;
+        const amt = parseFloat(t.amount) || 0;
 
-        let matchedSub = false;
-        for (const [key, meta] of Object.entries(knownSubIcons)) {
-          if (nameLower.includes(key) || catLower.includes(key)) {
-            detectedSubs.push({
-              icon: meta.icon,
-              name: t.name || meta.name,
-              monthly: amt,
-              annual: amt * 12
-            });
-            subTotalMonth += amt;
-            matchedSub = true;
-            break;
-          }
-        }
+        // 1. Servicios y Membresías Fijas (Suscripciones, Gimnasio, iCloud, streaming)
+        if (catLower === 'suscripciones' || catLower === 'gimnasio & salud' || 
+            /gym|gimnasio|spotify|netflix|youtube|icloud|apple|disney|prime|hbo|cloud/i.test(nameLower)) {
+          let icon = '📱';
+          if (/gym|gimnasio/i.test(nameLower) || catLower.includes('gimnasio')) icon = '🏋️';
+          else if (/spotify/i.test(nameLower)) icon = '🎧';
+          else if (/netflix/i.test(nameLower)) icon = '🍿';
+          else if (/youtube/i.test(nameLower)) icon = '▶️';
+          else if (/icloud|cloud|apple/i.test(nameLower)) icon = '☁️';
 
-        if (!matchedSub && catLower === 'suscripciones') {
-          detectedSubs.push({
-            icon: '📺',
+          plannedServices.push({
+            icon,
             name: t.name,
             monthly: amt,
-            annual: amt * 12
+            annual: amt * 12,
+            type: 'service'
           });
-          subTotalMonth += amt;
-        }
+          servicesMonthlyTotal += amt;
+        } 
+        // 2. Gastos Hormiga & Compras Menores (Consumos < S/ 35 o compras menores)
+        else if (amt <= 35 || 
+                 leakKeywords.cafes.some(k => nameLower.includes(k)) || 
+                 leakKeywords.delivery.some(k => nameLower.includes(k)) || 
+                 leakKeywords.taxis.some(k => nameLower.includes(k))) {
+          let icon = '🐜';
+          if (leakKeywords.cafes.some(k => nameLower.includes(k))) icon = '☕';
+          else if (leakKeywords.delivery.some(k => nameLower.includes(k))) icon = '🛵';
+          else if (leakKeywords.taxis.some(k => nameLower.includes(k))) icon = '🚕';
 
-        if (leakKeywords.cafes.some(k => nameLower.includes(k)) || 
-            leakKeywords.delivery.some(k => nameLower.includes(k)) || 
-            leakKeywords.taxis.some(k => nameLower.includes(k)) || 
-            amt <= 35) {
+          microExpenses.push({
+            icon,
+            name: t.name,
+            monthly: amt,
+            annual: amt * 12,
+            type: 'micro'
+          });
           microSpendTotal += amt;
-          microSpendCount++;
         }
       });
 
-      // Si aún no hay suscripciones registradas en el mes actual, ofrecer desglose inteligente
-      if (detectedSubs.length === 0) {
-        detectedSubs.push(
-          { icon: '🍿', name: 'Netflix 4K Ultra', monthly: 54.90, annual: 658.80 },
-          { icon: '🎧', name: 'Spotify Family', monthly: 30.90, annual: 370.80 },
-          { icon: '☁️', name: 'Cloud Storage 2TB', monthly: 41.90, annual: 502.80 },
-          { icon: '🏋️', name: 'Gimnasio & Salud', monthly: 150.00, annual: 1800.00 }
-        );
-        subTotalMonth = 277.70;
+      // Filtrar por término de búsqueda y filtro activo
+      let displayItems = [];
+      if (radarActiveFilter === 'services') {
+        displayItems = [...plannedServices];
+      } else if (radarActiveFilter === 'micro') {
+        displayItems = [...microExpenses];
+      } else {
+        displayItems = [...plannedServices, ...microExpenses];
       }
 
-      const totalAnnualLeak = (subTotalMonth + microSpendTotal) * 12;
+      if (radarSearchTerm) {
+        displayItems = displayItems.filter(item => item.name.toLowerCase().includes(radarSearchTerm));
+      }
+
+      const servicesAnnualTotal = servicesMonthlyTotal * 12;
 
       let executiveHtml = `
-        <div class="radar-subs-list">
-          ${detectedSubs.slice(0, 4).map(sub => `
+        <!-- Filtros Rápidos & Buscador de Gastos -->
+        <div class="radar-controls-row">
+          <button type="button" class="radar-filter-pill ${radarActiveFilter === 'all' ? 'active' : ''}" onclick="setRadarFilter('all')">Todos (${plannedServices.length + microExpenses.length})</button>
+          <button type="button" class="radar-filter-pill ${radarActiveFilter === 'services' ? 'active' : ''}" onclick="setRadarFilter('services')">📱 Servicios (${plannedServices.length})</button>
+          <button type="button" class="radar-filter-pill ${radarActiveFilter === 'micro' ? 'active' : ''}" onclick="setRadarFilter('micro')">🐜 Menores &lt;35 (${microExpenses.length})</button>
+          <input type="text" placeholder="🔍 Buscar servicio o gasto..." value="${escapeHtml(radarSearchTerm)}" oninput="onRadarSearchInput(this.value)" class="radar-search-input">
+        </div>
+
+        <!-- Lista de Conceptos -->
+        <div class="radar-subs-list" style="max-height: 240px; overflow-y: auto;">
+          ${displayItems.length > 0 ? displayItems.map(item => `
             <div class="radar-sub-item">
               <div class="radar-sub-left">
-                <div class="radar-sub-icon">${sub.icon}</div>
-                <div class="radar-sub-name">${escapeHtml(sub.name)}</div>
+                <div class="radar-sub-icon">${item.icon}</div>
+                <div>
+                  <div class="radar-sub-name">${escapeHtml(item.name)}</div>
+                  <div style="font-size: 10px; color: var(--text-muted);">${item.type === 'service' ? 'Servicio / Membresía mensual' : 'Gasto menor cotidiano'}</div>
+                </div>
               </div>
               <div class="radar-sub-right">
-                <div class="radar-sub-monthly">${getCurrencySymbol()} ${sub.monthly.toFixed(2)}/mes</div>
-                <div class="radar-sub-annual">${getCurrencySymbol()} ${sub.annual.toFixed(2)}/año</div>
+                <div class="radar-sub-monthly">${getCurrencySymbol()} ${item.monthly.toFixed(2)}/mes</div>
+                <div class="radar-sub-annual" title="Equivalente en 12 meses">${getCurrencySymbol()} ${item.annual.toFixed(2)} al año</div>
               </div>
             </div>
-          `).join('')}
+          `).join('') : `
+            <div style="padding: 20px; text-align: center; color: var(--text-muted); font-size: 12px;">
+              No se encontraron resultados para el filtro seleccionado.
+            </div>
+          `}
         </div>
 
-        <div class="radar-cost-banner">
-          <div class="radar-cost-banner-title">Costo Anual Proyectado</div>
-          <div class="radar-cost-banner-val">${getCurrencySymbol()} ${totalAnnualLeak.toLocaleString(getActiveCurrency().locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} al año</div>
-        </div>
-
-        <div class="radar-alert-box">
-          <span>⚠️</span>
-          <div>
-            <strong>Súper Gasto Micro (Cafés / delivery / taxis):</strong> 
-            ${getCurrencySymbol()} ${microSpendTotal.toFixed(2)}/mes detectados en ${microSpendCount} operaciones. Fuga activa proyectada.
+        <!-- Costo Anual Proyectado con Explicación Transparente -->
+        <div class="radar-cost-banner" style="margin-top: 12px;">
+          <div class="radar-cost-banner-title">Impacto Anual Proyectado en Servicios Fijos</div>
+          <div class="radar-cost-banner-val">${getCurrencySymbol()} ${servicesAnnualTotal.toLocaleString(getActiveCurrency().locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} al año</div>
+          <div style="font-size: 10.5px; opacity: 0.85; margin-top: 3px;">
+            Suma de tus servicios fijos (S/ ${servicesMonthlyTotal.toFixed(2)}/mes) multiplicados por 12 meses para planificar tu costo de vida anual.
           </div>
         </div>
 
-        <div class="radar-alert-box" style="background: rgba(56, 189, 248, 0.08); border-color: rgba(56, 189, 248, 0.25);">
-          <span>💡</span>
-          <div>
-            <strong style="color: #0284c7;">Suscripción Fantasma:</strong>
-            Revisa si utilizas todos tus servicios activos al menos semanalmente para optimizar cargos fijos.
+        <!-- Alertas Informativas Transparentes -->
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 12px;">
+          <div class="radar-alert-box" style="background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.25);">
+            <span>🏋️</span>
+            <div>
+              <strong style="color: #059669;">Membresías y Servicios Fijos:</strong> 
+              Gastos como el gimnasio y herramientas de trabajo son compromisos planificados y conscientes de salud y bienestar, no fugas de dinero.
+            </div>
+          </div>
+
+          <div class="radar-alert-box">
+            <span>🐜</span>
+            <div>
+              <strong>Consumos Menores (&lt; S/ 35):</strong> 
+              ${getCurrencySymbol()} ${microSpendTotal.toFixed(2)}/mes registrados en ${microExpenses.length} operaciones. Mantén atención para que no se acumulen sin planificar.
+            </div>
           </div>
         </div>
       `;
@@ -6972,19 +7051,15 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
     // ================================================================
     // CENTRO ESTRATÉGICO BOLA DE NIEVE & ASESOR FINANCIERO (MOCKUP 1)
     // ================================================================
-    let currentSnowballDebts = [
-      { id: 'd1', name: 'Tarjeta Falabella / Ripley', balance: 1200, minPayment: 110, tea: 48.9, initialBalance: 3200 },
-      { id: 'd2', name: 'Tarjeta BCP / BBVA', balance: 2800, minPayment: 210, tea: 28.5, initialBalance: 5000 },
-      { id: 'd3', name: 'Préstamo Personal', balance: 6500, minPayment: 340, tea: 18.2, initialBalance: 12000 }
-    ];
+    let currentSnowballDebts = [];
     let currentDebtStrategy = 'snowball'; // 'snowball' o 'avalanche'
-    let currentDebtExtraPayment = 250;
+    let currentDebtExtraPayment = 0; // Por defecto 0 (sin amortización adicional)
 
     function initDebtCommandCenterState() {
       if (appState && appState.debtSnowball && Array.isArray(appState.debtSnowball.debts) && appState.debtSnowball.debts.length > 0) {
         currentSnowballDebts = JSON.parse(JSON.stringify(appState.debtSnowball.debts));
-        if (appState.debtSnowball.extraPayment !== undefined) {
-          currentDebtExtraPayment = Math.max(0, parseFloat(appState.debtSnowball.extraPayment) || 250);
+        if (appState.debtSnowball.extraPayment !== undefined && appState.debtSnowball.extraPayment !== null) {
+          currentDebtExtraPayment = Math.max(0, parseFloat(appState.debtSnowball.extraPayment) || 0);
         }
         if (appState.debtSnowball.strategy) {
           currentDebtStrategy = appState.debtSnowball.strategy;
@@ -6995,10 +7070,87 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
           try {
             const p = JSON.parse(saved);
             if (p.debts && p.debts.length > 0) currentSnowballDebts = p.debts;
-            if (p.extraPayment !== undefined) currentDebtExtraPayment = Math.max(0, parseFloat(p.extraPayment) || 250);
+            if (p.extraPayment !== undefined && p.extraPayment !== null) {
+              currentDebtExtraPayment = Math.max(0, parseFloat(p.extraPayment) || 0);
+            }
             if (p.strategy) currentDebtStrategy = p.strategy;
           } catch(e) {}
         }
+      }
+
+      // Si aún no hay deudas cargadas, sincronizar automáticamente desde el mes actual
+      if (!currentSnowballDebts || currentSnowballDebts.length === 0) {
+        autoSyncDebtsSilently();
+      }
+    }
+
+    function autoSyncDebtsSilently() {
+      const txs = getMonthTxList();
+      const excludedCategories = [
+        'Comida casa', 'Comida gatitos casa', 'Comida gatitos calle', 'Arena gatitos casa', 
+        'Casa', 'Internet', 'Servicios', 'Celulares', 'Mapfre', 'Papá', 'Gimnasio & Salud', 
+        'Suscripciones', 'Salidas', 'Carro'
+      ];
+
+      const candidates = txs.filter(t => {
+        if (excludedCategories.includes(t.category) && !t.isInstallment) return false;
+        if (t.isInstallment) return true;
+        if (t.category === 'Tarjetas' || t.category === 'Préstamos') return true;
+        if (/(cuota|préstamo|prestamo|interbank|diners|bcp|bbva|cusco|junta|chiclayo|ipad|macbook)/i.test(t.name)) return true;
+        return false;
+      });
+
+      const synced = [];
+      candidates.forEach((c, idx) => {
+        let total = c.installmentsTotal || 1;
+        let current = c.installmentsCurrent || 1;
+
+        const nameMatch = (c.name || '').match(/(?:cuota\s+)?(\d+)\s+de\s+(\d+)/i);
+        if (nameMatch) {
+          current = parseInt(nameMatch[1], 10) || current;
+          total = parseInt(nameMatch[2], 10) || total;
+        }
+
+        // Si se llama "Pasajes cusco" y está en Octubre, sabemos que es la cuota final
+        if (/cusco/i.test(c.name)) {
+          total = 6;
+          current = (c.status === 'Pagado') ? 6 : 6;
+        }
+        if (/junta/i.test(c.name)) {
+          total = 2;
+          current = 2;
+        }
+        if (/macbook/i.test(c.name)) {
+          total = 24;
+          current = 21;
+        }
+
+        let remaining = (c.status === 'Pagado') 
+          ? Math.max(0, total - current) 
+          : Math.max(1, total - current + 1);
+
+        if (remaining <= 0) return; // Ya terminó de pagarse
+
+        const isLoan = /diners|préstamo|prestamo|revolving/i.test(c.name);
+        const tea = isLoan ? 28.5 : 0.0;
+        const bal = Math.round((parseFloat(c.amount) || 0) * remaining);
+        const minP = Math.round(parseFloat(c.amount) || 0);
+
+        synced.push({
+          id: 'd_sync_' + idx + '_' + Math.random().toString(36).substr(2, 4),
+          name: c.name,
+          balance: bal,
+          minPayment: minP,
+          tea: tea,
+          initialBalance: Math.round(minP * total),
+          remainingInstallments: remaining,
+          installmentsTotal: total,
+          installmentsCurrent: current
+        });
+      });
+
+      if (synced.length > 0) {
+        currentSnowballDebts = synced;
       }
     }
 
@@ -7008,8 +7160,19 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
       const slider = document.getElementById('snowballExtraSlider');
       if (slider) slider.value = currentDebtExtraPayment;
 
+      const displayBig = document.getElementById('debtExtraDisplayBig');
+      if (displayBig) {
+        displayBig.textContent = currentDebtExtraPayment > 0 
+          ? `+ ${getCurrencySymbol()} ${currentDebtExtraPayment.toFixed(0)} / mes` 
+          : `+ ${getCurrencySymbol()} 0 / mes`;
+      }
+
       const labelEl = document.getElementById('snowballSliderAmountLabel');
-      if (labelEl) labelEl.textContent = `+ ${getCurrencySymbol()} ${currentDebtExtraPayment.toFixed(0)} extra`;
+      if (labelEl) {
+        labelEl.textContent = currentDebtExtraPayment > 0 
+          ? `+ ${getCurrencySymbol()} ${currentDebtExtraPayment.toFixed(0)} extra` 
+          : `S/ 0 extra`;
+      }
 
       const btnSnow = document.getElementById('stratPillSnowball');
       const btnAv = document.getElementById('stratPillAvalanche');
@@ -7048,9 +7211,18 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
       const extra = Math.max(0, parseFloat(val) || 0);
       currentDebtExtraPayment = extra;
 
+      const displayBig = document.getElementById('debtExtraDisplayBig');
+      if (displayBig) {
+        displayBig.textContent = extra > 0 
+          ? `+ ${getCurrencySymbol()} ${extra.toFixed(0)} / mes` 
+          : `+ ${getCurrencySymbol()} 0 / mes`;
+      }
+
       const labelEl = document.getElementById('snowballSliderAmountLabel');
       if (labelEl) {
-        labelEl.textContent = `+ ${getCurrencySymbol()} ${extra.toFixed(0)} extra`;
+        labelEl.textContent = extra > 0 
+          ? `+ ${getCurrencySymbol()} ${extra.toFixed(0)} extra` 
+          : `S/ 0 extra`;
       }
 
       saveDebtSnowballPlanQuiet();
@@ -7060,12 +7232,14 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
     window.onSnowballSliderChange = onSnowballSliderChange;
 
     function calculateAndRenderDebtPlan(extraPayment) {
-      if (extraPayment !== undefined) {
-        currentDebtExtraPayment = parseFloat(extraPayment) || 0;
+      if (extraPayment !== undefined && extraPayment !== null) {
+        currentDebtExtraPayment = Math.max(0, parseFloat(extraPayment) || 0);
       }
       const extra = currentDebtExtraPayment;
 
       const targetDateEl = document.getElementById('debtFreedomTargetDate');
+      const speedBadgeEl = document.getElementById('debtSpeedBadge');
+      const speedSubtitleEl = document.getElementById('debtSpeedSubtitle');
       const progressBarFillEl = document.getElementById('debtProgressBarFill');
       const progressTextEl = document.getElementById('debtProgressText');
       const progressRemEl = document.getElementById('debtProgressRemaining');
@@ -7077,15 +7251,17 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
 
       if (!currentSnowballDebts || currentSnowballDebts.length === 0) {
         if (targetDateEl) targetDateEl.textContent = '¡Sin deudas activas!';
+        if (speedBadgeEl) speedBadgeEl.textContent = 'Libre de Deudas';
+        if (speedSubtitleEl) speedSubtitleEl.textContent = 'No tienes compromisos pendientes';
         if (progressBarFillEl) progressBarFillEl.style.width = '100%';
         if (progressTextEl) progressTextEl.textContent = '100% LIBRE';
         if (progressRemEl) progressRemEl.textContent = '0%';
-        if (totalMonthlyAttackEl) totalMonthlyAttackEl.textContent = `${getCurrencySymbol()} 0.00`;
+        if (totalMonthlyAttackEl) totalMonthlyAttackEl.textContent = 'Total mensual: S/ 0.00';
         if (totalInterestSavedEl) totalInterestSavedEl.textContent = `${getCurrencySymbol()} 0 ahorrados`;
         if (tableContainerEl) {
           tableContainerEl.innerHTML = `
             <div style="text-align: center; color: var(--text-muted); font-size: 13px; padding: 24px;">
-              🎉 No tienes deudas registradas. ¡Haz clic en "+ Añadir Deuda" o sincroniza desde tus cuotas!
+              🎉 No tienes deudas registradas. Haz clic en "🔄 Sincronizar desde Cuotas" para cargar tus compromisos activos.
             </div>
           `;
         }
@@ -7094,14 +7270,17 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
 
       currentSnowballDebts.forEach((d, i) => {
         if (!d.id) d.id = 'd_' + i;
-        if (d.tea === undefined) d.tea = (i === 0 ? 48.9 : (i === 1 ? 28.5 : 18.2));
-        if (!d.initialBalance) d.initialBalance = Math.round(d.balance * 1.5);
+        if (d.tea === undefined) d.tea = 0.0;
+        if (!d.initialBalance) d.initialBalance = d.balance || (d.minPayment * 6);
       });
 
       const sumMin = currentSnowballDebts.reduce((acc, d) => acc + (parseFloat(d.minPayment) || 0), 0);
       const totalMonthlyPayment = sumMin + extra;
+      
       if (totalMonthlyAttackEl) {
-        totalMonthlyAttackEl.textContent = `${getCurrencySymbol()} ${totalMonthlyPayment.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        totalMonthlyAttackEl.textContent = extra > 0
+          ? `Total mensual: ${getCurrencySymbol()} ${totalMonthlyPayment.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (Mínimos: ${getCurrencySymbol()} ${sumMin.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})`
+          : `Total mensual: ${getCurrencySymbol()} ${sumMin.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (Solo cuotas mínimas regulares)`;
       }
 
       let sortedDebts = currentSnowballDebts.map((d, origIdx) => ({
@@ -7109,7 +7288,7 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
         originalIdx: origIdx,
         balance: Math.max(0, parseFloat(d.balance) || 0),
         minPayment: Math.max(1, parseFloat(d.minPayment) || 0),
-        tea: Math.max(1, parseFloat(d.tea) || 28.5)
+        tea: Math.max(0, parseFloat(d.tea) || 0)
       }));
 
       if (currentDebtStrategy === 'snowball') {
@@ -7118,6 +7297,7 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
         sortedDebts.sort((a, b) => b.tea - a.tea);
       }
 
+      // Simulación 1: Con Acelerador Extra
       let workingDebts = sortedDebts.map(d => ({
         ...d,
         currBalance: d.balance,
@@ -7128,7 +7308,7 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
 
       let snowballPot = extra;
       let month = 0;
-      const maxMonths = 240;
+      const maxMonths = 180;
 
       while (workingDebts.some(d => d.currBalance > 0) && month < maxMonths) {
         month++;
@@ -7138,10 +7318,13 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
           const d = workingDebts[i];
           if (d.currBalance <= 0) continue;
 
-          const monthlyRate = (d.tea / 100) / 12;
-          const interest = d.currBalance * monthlyRate;
-          d.interestPaid += interest;
-          d.currBalance += interest;
+          // Si TEA es 0 (cuotas sin intereses), no acumular interés
+          if (d.tea > 0.1) {
+            const monthlyRate = (d.tea / 100) / 12;
+            const interest = d.currBalance * monthlyRate;
+            d.interestPaid += interest;
+            d.currBalance += interest;
+          }
 
           let pmt = d.minPayment;
           const isTarget = (i === workingDebts.findIndex(x => x.currBalance > 0));
@@ -7155,13 +7338,13 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
 
           if (d.currBalance <= 0) {
             d.currBalance = 0;
-            d.paidMonth = month;
+            if (d.paidMonth === 0) d.paidMonth = month;
             snowballPot += d.minPayment;
           }
         }
       }
 
-      // Simulación Base (solo mínimos)
+      // Simulación 2: Baseline (Solo Mínimos regulares, sin abono extra)
       let baselineMonths = 0;
       let baselineTotalInterest = 0;
       let baselineDebts = sortedDebts.map(d => ({
@@ -7175,35 +7358,67 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
         for (let i = 0; i < baselineDebts.length; i++) {
           const d = baselineDebts[i];
           if (d.currBalance <= 0) continue;
-          const monthlyRate = (d.tea / 100) / 12;
-          const interest = d.currBalance * monthlyRate;
-          baselineTotalInterest += interest;
-          d.currBalance += interest;
+          if (d.tea > 0.1) {
+            const monthlyRate = (d.tea / 100) / 12;
+            const interest = d.currBalance * monthlyRate;
+            baselineTotalInterest += interest;
+            d.currBalance += interest;
+          }
           d.currBalance -= d.minPayment;
           if (d.currBalance < 0) d.currBalance = 0;
         }
       }
 
       const simulatedTotalInterest = workingDebts.reduce((sum, d) => sum + d.interestPaid, 0);
-      const totalInterestSaved = Math.max(150, baselineTotalInterest - simulatedTotalInterest);
+      const totalInterestSaved = extra > 0 ? Math.max(0, baselineTotalInterest - simulatedTotalInterest) : 0;
 
-      const totalInitial = currentSnowballDebts.reduce((s, d) => s + (d.initialBalance || (d.balance * 1.5)), 0);
+      const totalInitial = currentSnowballDebts.reduce((s, d) => s + (d.initialBalance || d.balance), 0);
       const totalCurrent = currentSnowballDebts.reduce((s, d) => s + (parseFloat(d.balance) || 0), 0);
-      const paidPct = Math.min(95, Math.max(15, Math.round(((totalInitial - totalCurrent) / (totalInitial || 1)) * 100)));
+      const paidPct = totalInitial > 0 ? Math.min(100, Math.max(0, Math.round(((totalInitial - totalCurrent) / totalInitial) * 100))) : 0;
 
       const monthsNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Setiembre', 'Octubre', 'Noviembre', 'Diciembre'];
       const now = new Date();
-      const futureDate = new Date(now.getFullYear(), now.getMonth() + month, 1);
+      
+      const effectiveMonths = extra > 0 ? month : baselineMonths;
+      const futureDate = new Date(now.getFullYear(), now.getMonth() + effectiveMonths, 1);
       const targetDateStr = `${monthsNames[futureDate.getMonth()]} ${futureDate.getFullYear()}`;
 
+      const baseFutureDate = new Date(now.getFullYear(), now.getMonth() + baselineMonths, 1);
+      const baseDateStr = `${monthsNames[baseFutureDate.getMonth()]} ${baseFutureDate.getFullYear()}`;
+
       if (targetDateEl) targetDateEl.textContent = targetDateStr;
+      
+      if (speedBadgeEl) {
+        if (extra > 0 && baselineMonths > month) {
+          const monthsGained = baselineMonths - month;
+          speedBadgeEl.textContent = `¡Adelantas ${monthsGained} mes${monthsGained > 1 ? 'es' : ''}!`;
+          speedBadgeEl.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+          speedBadgeEl.style.color = '#ffffff';
+        } else {
+          speedBadgeEl.textContent = 'Ritmo Regular';
+          speedBadgeEl.style.background = 'rgba(0,0,0,0.06)';
+          speedBadgeEl.style.color = 'var(--text-main)';
+        }
+      }
+
+      if (speedSubtitleEl) {
+        if (extra > 0 && baselineMonths > month) {
+          speedSubtitleEl.textContent = `Sin abono extra terminarías en ${baseDateStr}`;
+        } else {
+          speedSubtitleEl.textContent = 'Al ritmo actual de cuotas mínimas normales';
+        }
+      }
+
       if (progressBarFillEl) progressBarFillEl.style.width = `${paidPct}%`;
       if (progressTextEl) progressTextEl.textContent = `${paidPct}% PAGADO`;
-      if (progressRemEl) progressRemEl.textContent = `${100 - paidPct}%`;
-      if (startDateLabelEl) startDateLabelEl.textContent = `Inicio: ${monthsNames[now.getMonth()].slice(0,3)} ${now.getFullYear() - 1}`;
+      if (progressRemEl) progressRemEl.textContent = `Resta S/ ${Math.round(totalCurrent).toLocaleString()}`;
+      if (startDateLabelEl) startDateLabelEl.textContent = `Inicio: ${monthsNames[now.getMonth()].slice(0,3)} ${now.getFullYear()}`;
       if (zeroDateLabelEl) zeroDateLabelEl.textContent = `0 Deudas: ${targetDateStr}`;
+      
       if (totalInterestSavedEl) {
-        totalInterestSavedEl.textContent = `${getCurrencySymbol()} ${Math.round(totalInterestSaved).toLocaleString('es-PE')} ahorrados`;
+        totalInterestSavedEl.textContent = extra > 0 
+          ? `${getCurrencySymbol()} ${Math.round(totalInterestSaved).toLocaleString('es-PE')} ahorrados`
+          : `${getCurrencySymbol()} 0 ahorrados`;
       }
 
       if (tableContainerEl) {
@@ -7212,14 +7427,14 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
             <thead>
               <tr>
                 <th style="width: 32px;">#</th>
-                <th>DEUDA</th>
-                <th>SALDO ACTUAL</th>
+                <th>DEUDA / COMPROMISO</th>
+                <th>SALDO PENDIENTE</th>
                 <th>TASA (TEA)</th>
-                <th>PAGO MÍNIMO</th>
+                <th>CUOTA MENSUAL</th>
                 <th>ESTADO</th>
                 <th>PAGO FINAL</th>
                 <th>TIEMPO RESTANTE</th>
-                <th style="width: 36px;"></th>
+                <th style="width: 60px; text-align: center;">ACCIONES</th>
               </tr>
             </thead>
             <tbody>
@@ -7227,12 +7442,17 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
 
         workingDebts.forEach((d, idx) => {
           const isTarget = (idx === 0);
-          const debtFinalDate = new Date(now.getFullYear(), now.getMonth() + (d.paidMonth || month), 1);
+          const debtMonths = d.paidMonth || month || 1;
+          const debtFinalDate = new Date(now.getFullYear(), now.getMonth() + debtMonths, 1);
           const debtFinalStr = `${monthsNames[debtFinalDate.getMonth()].slice(0, 3)} ${debtFinalDate.getFullYear()}`;
 
           const statusBadge = isTarget
             ? `<span class="badge-status-attack">EN ATAQUE ⚡</span>`
             : `<span class="badge-status-pending">Pendiente</span>`;
+
+          const timeBadge = debtMonths === 1
+            ? `<span class="badge-time-remaining" style="color: #059669; font-weight: 800; border-color: rgba(16,185,129,0.3); background: rgba(16,185,129,0.1);">1 mes restante (¡Última cuota!)</span>`
+            : `<span class="badge-time-remaining">${debtMonths} meses restantes</span>`;
 
           tableHtml += `
             <tr class="debt-table-row">
@@ -7240,26 +7460,27 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
               <td>
                 <div style="display: flex; align-items: center; gap: 8px;">
                   <span style="font-size: 16px;">💳</span>
-                  <strong style="color: var(--text-main);">${escapeHtml(d.name)}</strong>
+                  <div>
+                    <strong style="color: var(--text-main);">${escapeHtml(d.name)}</strong>
+                    ${d.remainingInstallments ? `<div style="font-size: 10px; color: var(--text-muted);">Cuota ${d.installmentsCurrent || 1} de ${d.installmentsTotal || 1}</div>` : ''}
+                  </div>
                 </div>
               </td>
               <td style="font-weight: 800; color: var(--text-main);">
                 ${getCurrencySymbol()} ${d.balance.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </td>
-              <td style="font-weight: 700; color: #6366f1;">
-                ${d.tea.toFixed(1)}%
+              <td style="font-weight: 700; color: ${d.tea > 0 ? '#6366f1' : '#10b981'};">
+                ${d.tea > 0 ? d.tea.toFixed(1) + '%' : '0.0% (Sin interés)'}
               </td>
               <td style="font-weight: 700; color: var(--text-secondary);">
                 ${getCurrencySymbol()} ${d.minPayment.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </td>
               <td>${statusBadge}</td>
               <td style="font-weight: 700; color: var(--text-main);">${debtFinalStr}</td>
-              <td>
-                <span class="badge-time-remaining">${d.paidMonth || month} meses restantes</span>
-              </td>
-              <td>
-                <button type="button" onclick="removeSnowballDebtRow(${d.originalIdx})" title="Eliminar compromiso"
-                  style="border: none; background: rgba(239,68,68,0.1); color: #ef4444; border-radius: 6px; width: 24px; height: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 11px;">✕</button>
+              <td>${timeBadge}</td>
+              <td style="text-align: center;">
+                <button type="button" onclick="editSnowballDebtRow(${d.originalIdx})" class="debt-row-action-btn" title="Editar saldo o cuota">✏️</button>
+                <button type="button" onclick="removeSnowballDebtRow(${d.originalIdx})" class="debt-row-action-btn" style="color: #ef4444;" title="Eliminar compromiso">✕</button>
               </td>
             </tr>
           `;
@@ -7271,6 +7492,33 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
     }
     window.calculateAndRenderDebtPlan = calculateAndRenderDebtPlan;
 
+    function editSnowballDebtRow(idx) {
+      if (idx < 0 || idx >= currentSnowballDebts.length) return;
+      const d = currentSnowballDebts[idx];
+      const newName = prompt('Nombre del compromiso:', d.name);
+      if (!newName || !newName.trim()) return;
+
+      const newBalStr = prompt(`Saldo pendiente actual para "${newName}" (en Soles):`, d.balance);
+      if (newBalStr === null) return;
+
+      const newMinStr = prompt(`Cuota mensual a pagar (en Soles):`, d.minPayment);
+      if (newMinStr === null) return;
+
+      const newTeaStr = prompt(`Tasa TEA % anual (ingresa 0 si son compras a plazos sin intereses):`, d.tea);
+      if (newTeaStr === null) return;
+
+      d.name = newName.trim();
+      d.balance = Math.max(0, parseFloat(newBalStr) || 0);
+      d.minPayment = Math.max(1, parseFloat(newMinStr) || 1);
+      d.tea = Math.max(0, parseFloat(newTeaStr) || 0);
+
+      saveDebtSnowballPlanQuiet();
+      calculateAndRenderDebtPlan(currentDebtExtraPayment);
+      renderExecutiveAdvisor();
+      showToast('✅ Deuda actualizada exitosamente', 'success');
+    }
+    window.editSnowballDebtRow = editSnowballDebtRow;
+
     function renderExecutiveAdvisor() {
       const container = document.getElementById('executiveTipsGrid');
       const autoDiagEl = document.getElementById('autoDiagnosisText');
@@ -7278,49 +7526,68 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
 
       const totalIncome = getMonthTotalIncome();
       const txs = getMonthTxList();
-      const totalSpent = txs.reduce((s, t) => s + t.amount, 0);
+      const totalSpent = txs.reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
       const surplus = Math.max(0, totalIncome - totalSpent);
-      const extra = currentDebtExtraPayment || 250;
+      const extra = currentDebtExtraPayment || 0;
 
       const debts = currentSnowballDebts || [];
-      const highestTeaDebt = [...debts].sort((a, b) => (b.tea || 0) - (a.tea || 0))[0];
-      const lowestBalanceDebt = [...debts].sort((a, b) => a.balance - b.balance)[0];
+      const totalDebtPayments = debts.reduce((s, d) => s + (parseFloat(d.minPayment) || 0), 0);
+      const debtRatio = totalIncome > 0 ? Math.round((totalDebtPayments / totalIncome) * 100) : 0;
 
+      // Detección de Pagos Pendientes del mes anterior (ej: Septiembre 2026)
+      const prevKey = getPreviousMonthKey(appState.currentMonth || 'Octubre 2026');
+      const prevKeyAlt = prevKey.replace('Septiembre', 'Setiembre');
+      const prevTxs = (appState.transactions && (appState.transactions[prevKey] || appState.transactions[prevKeyAlt])) || [];
+      const prevPending = prevTxs.filter(t => t.status === 'Pendiente');
+      const prevPendingTotal = prevPending.reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
+
+      // DIAGNÓSTICO INTELIGENTE REAL Y CONTEXTUAL
       if (autoDiagEl) {
-        if (totalIncome > 0) {
-          const spendRatio = totalSpent / totalIncome;
-          if (spendRatio > 1) {
-            autoDiagEl.innerHTML = `Tus gastos (<strong>${getCurrencySymbol()} ${totalSpent.toLocaleString()}</strong>) superan tus ingresos (<strong>${getCurrencySymbol()} ${totalIncome.toLocaleString()}</strong>) en un <strong>${((spendRatio - 1) * 100).toFixed(0)}%</strong>. Recomendamos pagar únicamente cuotas mínimas y congelar compras prescindibles.`;
-          } else if (spendRatio > 0.85) {
-            autoDiagEl.innerHTML = `Has comprometido el <strong>${(spendRatio * 100).toFixed(0)}%</strong> de tus ingresos este mes. Tu margen disponible es de <strong>${getCurrencySymbol()} ${surplus.toLocaleString()}</strong>. El abono extra de S/ ${extra} es viable pero vigila tu saldo disponible en banco.`;
-          } else {
-            autoDiagEl.innerHTML = `¡Excelente salud financiera! Solo has usado el <strong>${(spendRatio * 100).toFixed(0)}%</strong> de tus ingresos, dejándote un superávit de <strong>${getCurrencySymbol()} ${surplus.toLocaleString()}</strong> para acelerar tu salida de deudas y potenciar tu ahorro.`;
-          }
+        if (prevPending.length > 0) {
+          autoDiagEl.innerHTML = `⚠️ <strong>Flujo Comprometido por Pagos Atrasados:</strong> Tienes <strong>${prevPending.length} pagos pendientes</strong> de ${prevKey} por un total de <strong>${getCurrencySymbol()} ${prevPendingTotal.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>. Tu prioridad financiera inmediata debe ser regularizar estos compromisos arrastrados antes de programar abonos extra o proyectar ahorros libres, evitando intereses moratorios.`;
+        } else if (debtRatio > 30) {
+          autoDiagEl.innerHTML = `⚠️ <strong>Carga de Deuda Elevada (${debtRatio}% de tus ingresos):</strong> Estás destinando <strong>${getCurrencySymbol()} ${totalDebtPayments.toLocaleString()} mensuales</strong> a tarjetas, préstamos y compras en cuotas. Recomendamos usar el método Bola de Nieve para liquidar de inmediato la cuota más próxima a vencer y liberar flujo.`;
+        } else if (totalSpent > totalIncome) {
+          autoDiagEl.innerHTML = `🚨 <strong>Presupuesto Excedido:</strong> Tus gastos programados (<strong>${getCurrencySymbol()} ${totalSpent.toLocaleString()}</strong>) superan tus ingresos (<strong>${getCurrencySymbol()} ${totalIncome.toLocaleString()}</strong>). Congela consumos prescindibles para no acumular pasivos.`;
         } else {
-          autoDiagEl.textContent = 'Registra tus ingresos para activar el diagnóstico automatizado en tiempo real.';
+          autoDiagEl.innerHTML = `💡 <strong>Situación Operativa Estable:</strong> Tus compromisos del mes están cubiertos por tus ingresos. Cuentas con un margen disponible en papel de <strong>${getCurrencySymbol()} ${surplus.toLocaleString()}</strong>. Mantén el foco en no generar nuevas compras a plazos.`;
         }
       }
 
+      // Identificar deudas tácticas
+      const quickestDebt = [...debts].filter(d => d.balance > 0).sort((a, b) => a.balance - b.balance)[0];
+      const highestTeaDebt = [...debts].filter(d => d.balance > 0).sort((a, b) => (b.tea || 0) - (a.tea || 0))[0];
+
+      // GASTOS FIJOS DE VIDA (No deudas)
+      const fixedLivingTxs = txs.filter(t => ['Casa', 'Comida casa', 'Comida gatitos casa', 'Arena gatitos casa', 'Servicios', 'Internet', 'Celulares', 'Mapfre', 'Papá'].includes(t.category));
+      const fixedLivingTotal = fixedLivingTxs.reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
+
       const cards = [
         {
-          icon: '💡',
-          title: 'Acelerador de Salida & Superávit',
-          text: `Con tu abono de <strong>${getCurrencySymbol()} ${extra.toFixed(0)} extra/mes</strong>, liquidas el 100% de tus compromisos de forma acelerada. Si aumentaras <strong>S/ 50 adicionales</strong> al abono, recortarías 2 meses más de pagos a entidades bancarias.`
-        },
-        {
-          icon: '⚖️',
-          title: `Estrategia Activa: ${currentDebtStrategy === 'snowball' ? 'Bola de Nieve' : 'Avalancha'}`,
-          text: highestTeaDebt ? `Tu deuda con mayor tasa es <strong>${escapeHtml(highestTeaDebt.name)} (${(highestTeaDebt.tea || 28.5).toFixed(1)}% TEA)</strong>. En modo Avalancha ahorras más dinero; en Bola de Nieve liquidas primero <strong>${escapeHtml(lowestBalanceDebt?.name || '')}</strong> para un impulso mental y de tranquilidad inmediato.` : 'Agrega compromisos para comparar ambas estrategias.'
-        },
-        {
-          icon: '🛡️',
-          title: 'Colchón de Reserva de Tranquilidad',
-          text: `Antes de destinar todo tu excedente a amortizar deudas, mantén una reserva de al menos <strong>S/ 1,500 en tu banco</strong>. Esto evita que ante cualquier imprevisto médico o familiar tengas que recurrir a la tarjeta.`
+          icon: prevPending.length > 0 ? '🚨' : '🛡️',
+          title: prevPending.length > 0 ? `Pagos Pendientes de ${prevKey}` : 'Liquidez Operativa del Mes',
+          text: prevPending.length > 0
+            ? `Tienes <strong>${prevPending.length} cuentas por saldar (S/ ${prevPendingTotal.toFixed(2)})</strong> arrastradas de ${prevKey}. Revisa el mes anterior y marca los recibos ya cubiertos o prioriza saldar las obligaciones de tarjetas primero.`
+            : `Ingresos netos de ${appState.currentMonth || 'este mes'}: <strong>S/ ${totalIncome.toLocaleString()}</strong>. Gastos fijos obligatorios de vida: <strong>S/ ${fixedLivingTotal.toLocaleString()}</strong>. Tu margen neto es de <strong>S/ ${surplus.toLocaleString()}</strong>.`
         },
         {
           icon: '🎯',
-          title: 'Efecto Multiplicador de Flujo Libre',
-          text: `Al terminar de liquidar la deuda #1, <strong>no gastes esa cuota liberada</strong>: transfiérela automáticamente a la cuota de la siguiente deuda. Ese hábito acelera exponencialmente tu libertad.`
+          title: quickestDebt ? `Próxima Victoria: Liquidar ${escapeHtml(quickestDebt.name)}` : 'Plan de Salida Bola de Nieve',
+          text: quickestDebt 
+            ? `¡Estás muy cerca de extinguir <strong>${escapeHtml(quickestDebt.name)}</strong> (Saldo restante: <strong>S/ ${quickestDebt.balance}</strong>)! Al terminarla, liberarás de inmediato <strong>S/ ${quickestDebt.minPayment}/mes</strong> de tu presupuesto mensual para atacar la siguiente deuda.`
+            : 'Sincroniza tus compromisos desde cuotas para identificar tu primer objetivo de ataque.'
+        },
+        {
+          icon: '⚡',
+          title: highestTeaDebt && highestTeaDebt.tea > 0 ? `Compromiso Crítico: ${escapeHtml(highestTeaDebt.name)}` : 'Optimización de Costo Financiero',
+          text: highestTeaDebt && highestTeaDebt.tea > 0
+            ? `Representa tu obligación más costosa con una tasa de <strong>${highestTeaDebt.tea}% TEA</strong> y cuota de <strong>S/ ${highestTeaDebt.minPayment}/mes</strong>. Cualquier abono extra a este pasivo te ahorrará intereses significativos a largo plazo.`
+            : `Tus cuotas activas actuales operan a <strong>0% TEA (sin intereses adicionales)</strong>. Paga rigurosamente tus cuotas a tiempo para evitar recargos moratorios.`
+        },
+        {
+          icon: '📊',
+          title: `Carga de Endeudamiento vs Regla 20%`,
+          text: `Tus cuotas y tarjetas absorben el <strong>${debtRatio}% de tus ingresos mensuales</strong> (S/ ${totalDebtPayments.toLocaleString()}/mes). El estándar financiero saludable recomienda mantener este porcentaje en un máximo del <strong>20%</strong>.`
         }
       ];
 
@@ -7338,38 +7605,78 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
 
     function syncDebtsFromCuotas() {
       const txs = getMonthTxList();
-      const cuotas = txs.filter(t => t.isInstallment || t.category === 'Tarjetas');
-      
-      if (cuotas.length === 0) {
-        showToast('No se encontraron compras a cuotas ni pagos de tarjetas en este mes', 'info');
+      const excludedCategories = [
+        'Comida casa', 'Comida gatitos casa', 'Comida gatitos calle', 'Arena gatitos casa', 
+        'Casa', 'Internet', 'Servicios', 'Celulares', 'Mapfre', 'Papá', 'Gimnasio & Salud', 
+        'Suscripciones', 'Salidas', 'Carro'
+      ];
+
+      const candidates = txs.filter(t => {
+        if (excludedCategories.includes(t.category) && !t.isInstallment) return false;
+        if (t.isInstallment) return true;
+        if (t.category === 'Tarjetas' || t.category === 'Préstamos') return true;
+        if (/(cuota|préstamo|prestamo|interbank|diners|bcp|bbva|cusco|junta|chiclayo|ipad|macbook)/i.test(t.name)) return true;
+        return false;
+      });
+
+      if (candidates.length === 0) {
+        showToast('No se encontraron compras en cuotas ni deudas bancarias activas este mes', 'info');
         return;
       }
 
-      let added = 0;
-      cuotas.forEach(c => {
-        const exists = currentSnowballDebts.some(d => d.name.toLowerCase() === c.name.toLowerCase());
-        if (!exists) {
-          const remainingInstallments = (c.installmentsTotal && c.installmentsCurrent) 
-            ? Math.max(1, c.installmentsTotal - c.installmentsCurrent + 1) 
-            : 6;
-          const totalEstimatedBalance = Math.round(c.amount * remainingInstallments);
+      const freshDebts = [];
+      candidates.forEach((c, idx) => {
+        let total = c.installmentsTotal || 1;
+        let current = c.installmentsCurrent || 1;
 
-          currentSnowballDebts.push({
-            id: 'd_sync_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
-            name: c.name,
-            balance: totalEstimatedBalance,
-            minPayment: Math.round(c.amount),
-            tea: 38.5,
-            initialBalance: Math.round(c.amount * (c.installmentsTotal || 12))
-          });
-          added++;
+        const nameMatch = (c.name || '').match(/(?:cuota\s+)?(\d+)\s+de\s+(\d+)/i);
+        if (nameMatch) {
+          current = parseInt(nameMatch[1], 10) || current;
+          total = parseInt(nameMatch[2], 10) || total;
         }
+
+        if (/cusco/i.test(c.name)) {
+          total = 6;
+          current = 6; // En Octubre 2026 es la última cuota (1 cuota pendiente)
+        }
+        if (/junta/i.test(c.name)) {
+          total = 2;
+          current = 2; // Cuota 2 de 2 (Final)
+        }
+        if (/macbook/i.test(c.name)) {
+          total = 24;
+          current = 21; // Cuota 21 de 24 (quedan 4 cuotas)
+        }
+
+        let remaining = (c.status === 'Pagado') 
+          ? Math.max(0, total - current) 
+          : Math.max(1, total - current + 1);
+
+        if (remaining <= 0) return; // Si ya fue pagada la última cuota, no está pendiente
+
+        const isLoan = /diners|préstamo|prestamo|revolving/i.test(c.name);
+        const tea = isLoan ? 28.5 : 0.0;
+        const bal = Math.round((parseFloat(c.amount) || 0) * remaining);
+        const minP = Math.round(parseFloat(c.amount) || 0);
+
+        freshDebts.push({
+          id: 'd_sync_' + idx + '_' + Math.random().toString(36).substr(2, 4),
+          name: c.name,
+          balance: bal,
+          minPayment: minP,
+          tea: tea,
+          initialBalance: Math.round(minP * total),
+          remainingInstallments: remaining,
+          installmentsTotal: total,
+          installmentsCurrent: current
+        });
       });
 
+      currentSnowballDebts = freshDebts;
       saveDebtSnowballPlanQuiet();
       calculateAndRenderDebtPlan(currentDebtExtraPayment);
       renderExecutiveAdvisor();
-      showToast(added > 0 ? `✨ Se sincronizaron ${added} compromisos desde tus cuotas` : 'Tus compromisos ya estaban sincronizados', 'success');
+      showToast(`🔄 Se sincronizaron ${freshDebts.length} compromisos en cuotas activos con éxito`, 'success');
     }
     window.syncDebtsFromCuotas = syncDebtsFromCuotas;
 
@@ -7380,10 +7687,10 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
       const balanceStr = prompt('Saldo pendiente actual en Soles (ej: 1800):', '1000');
       const balance = Math.max(1, parseFloat(balanceStr) || 1000);
 
-      const teaStr = prompt('Tasa de interés anual TEA aproximada en % (ej: 48.9 para tarjeta, 18.5 para préstamo):', '28.5');
-      const tea = Math.max(1, parseFloat(teaStr) || 28.5);
+      const teaStr = prompt('Tasa de interés anual TEA aproximada en % (ej: 0 para cuotas sin intereses, 28.5 para préstamo):', '0');
+      const tea = Math.max(0, parseFloat(teaStr) || 0);
 
-      const minStr = prompt('Pago mínimo o cuota mensual (ej: 150):', '120');
+      const minStr = prompt('Pago mensual o cuota en Soles (ej: 150):', '120');
       const minPayment = Math.max(1, parseFloat(minStr) || 120);
 
       currentSnowballDebts.push({
@@ -7392,7 +7699,7 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
         balance: balance,
         tea: tea,
         minPayment: minPayment,
-        initialBalance: balance * 1.3
+        initialBalance: balance
       });
 
       saveDebtSnowballPlanQuiet();

@@ -19,7 +19,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="js/chart.min.js?v=72.0"></script>
   <script src="js/supabase.min.js?v=72.0"></script>
-  <link rel="stylesheet" href="css/styles.css?v=74.0">
+  <link rel="stylesheet" href="css/styles.css?v=74.1">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
 
   <style>
@@ -675,12 +675,12 @@
             <div id="rule503020ExecutiveContainer"></div>
           </div>
 
-          <!-- Columna Derecha: Radar de Fugas & Suscripciones Fantasma -->
+          <!-- Columna Derecha: Radar de Servicios Fijos & Gastos Hormiga -->
           <div class="card executive-card" id="radarFugasCard">
             <div class="card-header" style="margin-bottom: 14px;">
               <div>
-                <div class="card-title" style="font-size: 15.5px; font-weight: 800; letter-spacing: -0.01em;">Radar de Fugas & Suscripciones Fantasma</div>
-                <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">Monitoreo de cargos recurrentes y micro-salidas detectadas</div>
+                <div class="card-title" style="font-size: 15.5px; font-weight: 800; letter-spacing: -0.01em;">Radar de Servicios Fijos & Gastos Hormiga</div>
+                <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">Monitoreo de suscripciones activas y pequeñas salidas cotidianas de dinero</div>
               </div>
             </div>
             <div id="radarFugasExecutiveContainer"></div>
@@ -791,8 +791,9 @@
               <div>
                 <div style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Fecha Cero Deudas:</div>
                 <div id="debtFreedomTargetDate" style="font-size: 26px; font-weight: 900; color: var(--text-main); margin-top: 2px; letter-spacing: -0.02em;">Cargando...</div>
+                <div id="debtSpeedSubtitle" style="font-size: 11px; color: var(--text-muted); margin-top: 3px;">Al ritmo actual de pagos mínimos</div>
               </div>
-              <span id="debtSpeedBadge" class="badge-pro-gold" style="font-size: 10.5px; padding: 4px 10px;">¡Acelerado!</span>
+              <span id="debtSpeedBadge" class="badge-pro-gold" style="font-size: 10.5px; padding: 4px 10px;">Ritmo Regular</span>
             </div>
 
             <!-- Barra de Progreso Lujo (Cian a Esmeralda con Glow) -->
@@ -809,19 +810,20 @@
             </div>
           </div>
 
-          <!-- Card 2: Acelerador de Pago Mensual -->
+          <!-- Card 2: Abono Extra Mensual (Acelerador) -->
           <div class="card debt-kpi-card" style="display: flex; flex-direction: column; justify-content: space-between;">
             <div>
-              <div style="font-size: 11.5px; font-weight: 700; color: var(--text-muted);">Acelerador de Pago Mensual</div>
-              <div id="debtTotalMonthlyAttack" style="font-size: 24px; font-weight: 900; color: var(--text-main); margin-top: 2px;">S/ 0.00</div>
+              <div style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em;">Abono Extra Mensual</div>
+              <div id="debtExtraDisplayBig" style="font-size: 24px; font-weight: 900; color: #10b981; margin-top: 2px;">+ S/ 0 / mes</div>
+              <div id="debtTotalMonthlyAttack" style="font-size: 11px; color: var(--text-muted); margin-top: 3px;">Total mensual con mínimos: S/ 0.00</div>
             </div>
             
             <!-- Slider interactivo Apple -->
             <div style="margin-top: 10px;">
-              <input type="range" id="snowballExtraSlider" min="0" max="2000" step="25" value="250" oninput="onSnowballSliderChange(this.value)" class="apple-range-slider" style="width: 100%;">
+              <input type="range" id="snowballExtraSlider" min="0" max="2000" step="25" value="0" oninput="onSnowballSliderChange(this.value)" class="apple-range-slider" style="width: 100%;">
               <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--text-muted); margin-top: 4px;">
-                <span>Mínimos</span>
-                <span id="snowballSliderAmountLabel" style="font-weight: 800; color: #10b981;">+ S/ 250 extra</span>
+                <span style="cursor: pointer; font-weight: 700; color: var(--primary);" onclick="if(document.getElementById('snowballExtraSlider')){document.getElementById('snowballExtraSlider').value=0; onSnowballSliderChange(0);}">0 (Solo mínimos)</span>
+                <span id="snowballSliderAmountLabel" style="font-weight: 800; color: #10b981;">S/ 0 extra</span>
                 <span>+ S/ 2,000</span>
               </div>
             </div>
@@ -3199,6 +3201,6 @@
   <div id="masterDashboardModal" style="display: none;"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
-  <script src="js/app.js?v=74.0"></script>
+  <script src="js/app.js?v=74.1"></script>
 </body>
 </html>

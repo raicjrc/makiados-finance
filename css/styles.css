@@ -7259,3 +7259,77 @@
     .executive-tip-text strong {
       color: var(--text-main);
     }
+
+    /* Radar Filters & Search */
+    .radar-controls-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .radar-filter-pill {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 5px 12px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: rgba(0, 0, 0, 0.03);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    body.theme-twilight .radar-filter-pill {
+      background: rgba(255, 255, 255, 0.04);
+      border-color: rgba(255, 255, 255, 0.08);
+      color: var(--text-secondary);
+    }
+    .radar-filter-pill.active {
+      background: var(--text-main);
+      color: var(--card-bg, #ffffff);
+      border-color: var(--text-main);
+    }
+    body.theme-twilight .radar-filter-pill.active {
+      background: #ffffff;
+      color: #0f172a;
+      border-color: #ffffff;
+    }
+    .radar-search-input {
+      font-size: 12px;
+      padding: 6px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,0.02);
+      color: var(--text-main);
+      outline: none;
+      flex: 1;
+      min-width: 140px;
+      transition: border-color 0.2s;
+    }
+    body.theme-twilight .radar-search-input {
+      background: rgba(255, 255, 255, 0.04);
+      border-color: rgba(255, 255, 255, 0.1);
+      color: #f8fafc;
+    }
+    .radar-search-input:focus {
+      border-color: var(--primary);
+    }
+
+    /* Debt Action Buttons */
+    .debt-row-action-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      padding: 4px;
+      opacity: 0.7;
+      border-radius: 6px;
+      transition: all 0.15s;
+    }
+    .debt-row-action-btn:hover {
+      opacity: 1;
+      background: rgba(0, 0, 0, 0.06);
+    }
+    body.theme-twilight .debt-row-action-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
