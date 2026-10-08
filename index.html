@@ -19,7 +19,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="js/chart.min.js?v=72.0"></script>
   <script src="js/supabase.min.js?v=72.0"></script>
-  <link rel="stylesheet" href="css/styles.css?v=75.1">
+  <link rel="stylesheet" href="css/styles.css?v=75.2">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
 
   <style>
@@ -999,11 +999,14 @@
             </div>
           </div>
           <div class="fh-header-actions">
+            <button type="button" class="btn btn-primary fh-btn" onclick="openManualSubModal()" style="background: linear-gradient(135deg, #059669, #10b981); color: #ffffff; font-weight: 800; border: none; box-shadow: 0 4px 14px rgba(5, 150, 105, 0.35);">
+              <span>⚡ + Registrar Pago Yape/Plin</span>
+            </button>
             <button type="button" class="btn btn-secondary fh-btn" onclick="loadMasterDashboardData(true)" title="Recargar métricas desde Supabase en vivo">
               <span id="masterRefreshSpinner">🔄</span>
               <span>Sincronizar</span>
             </button>
-            <button type="button" class="btn btn-primary fh-btn" onclick="switchTab('inicio')" title="Volver a tu panel personal de finanzas">
+            <button type="button" class="btn btn-secondary fh-btn" onclick="switchTab('inicio')" title="Volver a tu panel personal de finanzas">
               <span>← Volver a Mis Finanzas</span>
             </button>
           </div>
@@ -1156,12 +1159,9 @@
             <input type="text" id="masterSearchInput" class="master-search-input" placeholder="🔍 Buscar por correo o nombre de usuario..." oninput="filterMasterSubscribers()">
             <div class="master-filter-group">
               <button type="button" class="master-filter-chip active" id="mFilterAll" onclick="setMasterFilter('all')">Todos (<span id="countMAll">0</span>)</button>
-              <button type="button" class="master-filter-chip" id="mFilterLife" onclick="setMasterFilter('pro_lifetime')">👑 Vitalicios (<span id="countMLife">0</span>)</button>
-              <button type="button" class="master-filter-chip" id="mFilterMonth" onclick="setMasterFilter('pro_monthly')">📅 Mensuales (<span id="countMMonth">0</span>)</button>
-              <button type="button" class="master-filter-chip" id="mFilterExpiring" onclick="setMasterFilter('expiring')" style="border-color: rgba(245, 158, 11, 0.4); color: #d97706;">🟡 Por Vencer (<span id="countMExpiring">0</span>)</button>
-              <button type="button" class="master-filter-chip" id="mFilterExpired" onclick="setMasterFilter('expired')" style="border-color: rgba(239, 68, 68, 0.4); color: #ef4444;">🔴 Vencidos (<span id="countMExpired">0</span>)</button>
-              <button type="button" class="master-filter-chip" id="mFilterFree" onclick="setMasterFilter('free')">🆓 Free (<span id="countMFree">0</span>)</button>
-              <button type="button" class="master-filter-chip" id="mFilterInactive" onclick="setMasterFilter('inactive')" style="border-color: rgba(239, 68, 68, 0.35); color: #ef4444;">⚠️ Inactivos +7d (<span id="countMInactive">0</span>)</button>
+              <button type="button" class="master-filter-chip" id="mFilterActive" onclick="setMasterFilter('active')" style="color: #059669; border-color: rgba(16, 185, 129, 0.4);">🟢 Al Día (<span id="countMActive">0</span>)</button>
+              <button type="button" class="master-filter-chip" id="mFilterDue" onclick="setMasterFilter('due')" style="color: #dc2626; border-color: rgba(239, 68, 68, 0.4);">🚨 Por Cobrar (<span id="countMDue">0</span>)</button>
+              <button type="button" class="master-filter-chip" id="mFilterFree" onclick="setMasterFilter('free')" style="color: #6366f1; border-color: rgba(99, 102, 241, 0.4);">🎯 Leads Free (<span id="countMFree">0</span>)</button>
             </div>
           </div>
 
@@ -1171,12 +1171,11 @@
               <table class="master-table">
                 <thead>
                   <tr>
-                    <th style="min-width: 210px;">Usuario / Correo</th>
-                    <th style="min-width: 130px;">Plan Actual</th>
-                    <th style="min-width: 155px;">Vencimiento / Renovación</th>
-                    <th style="min-width: 145px;">Última Conexión</th>
-                    <th style="min-width: 105px;">Aporte Total</th>
-                    <th style="min-width: 230px; text-align: right;">Acciones & Gestión</th>
+                    <th style="min-width: 220px;">Cliente / Contacto</th>
+                    <th style="min-width: 140px;">Plan Actual</th>
+                    <th style="min-width: 150px;">Vencimiento</th>
+                    <th style="min-width: 110px;">LTV Cobrado</th>
+                    <th style="min-width: 190px; text-align: right;">Gestión Rápida</th>
                   </tr>
                 </thead>
                 <tbody id="masterSubscribersTableBody">
@@ -2907,6 +2906,80 @@
     </div>
   </div>
 
+  <!-- MODAL: REGISTRAR PAGO MANUAL YAPE / PLIN (CEO EXECUTIVE) -->
+  <div class="glass-backdrop" id="manualSubModal" style="display: none; z-index: 10007;" onclick="if(event.target === this) closeModal('manualSubModal')">
+    <div class="glass-modal-container" style="max-width: 440px; width: 92%; padding: 24px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid rgba(0,0,0,0.06);">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 22px;">⚡</span>
+          <span style="font-size: 16px; font-weight: 800; color: var(--text-main);">Registrar Pago Yape / Plin</span>
+        </div>
+        <button type="button" onclick="closeModal('manualSubModal')" style="background: rgba(0,0,0,0.06); border: none; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 13px; cursor: pointer; color: #64748b;">✕</button>
+      </div>
+
+      <p style="font-size: 12px; color: var(--text-muted); margin: 0 0 16px 0; line-height: 1.4;">
+        Activa la suscripción PRO en 1 clic para clientes que te transfirieron directamente por billetera digital o banco.
+      </p>
+
+      <form onsubmit="handleManualSubModalSubmit(event)">
+        <div style="margin-bottom: 14px;">
+          <label style="display: block; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px;">Correo del Cliente *</label>
+          <input type="email" id="modalManualEmail" class="form-control" placeholder="cliente@ejemplo.com" required style="width: 100%; font-size: 13px; font-weight: 600;">
+        </div>
+
+        <div style="margin-bottom: 14px;">
+          <label style="display: block; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px;">Plan a Activar *</label>
+          <select id="modalManualPlan" class="form-control" style="width: 100%; font-size: 13px; font-weight: 700;">
+            <option value="pro_lifetime">👑 PRO Vitalicio (S/ 19.90 - Pago Único)</option>
+            <option value="pro_monthly">📅 PRO Mensual (S/ 4.90 - +30 Días)</option>
+            <option value="free">⚪ Plan Gratuito (Revocar PRO)</option>
+          </select>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+          <label style="display: block; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px;">Medio de Pago</label>
+          <select id="modalManualMethod" class="form-control" style="width: 100%; font-size: 13px; font-weight: 600;">
+            <option value="yape">🟣 Yape</option>
+            <option value="plin">🔵 Plin</option>
+            <option value="transferencia">🏦 Transferencia BCP / BBVA / Interbank</option>
+            <option value="efectivo">💵 Efectivo / Otro</option>
+          </select>
+        </div>
+
+        <div style="display: flex; gap: 8px; justify-content: flex-end;">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('manualSubModal')" style="padding: 10px 16px; font-size: 12px; font-weight: 700; border-radius: 10px;">
+            Cancelar
+          </button>
+          <button type="submit" id="modalManualSubmitBtn" class="btn btn-primary" style="background: linear-gradient(135deg, #059669, #10b981); color: #ffffff; padding: 10px 18px; font-size: 12.5px; font-weight: 800; border-radius: 10px; border: none; box-shadow: 0 4px 14px rgba(5,150,105,0.35);">
+            ✓ Activar Suscripción
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: GESTIÓN RÁPIDA DE USUARIO (DROPDOWN MODAL) -->
+  <div class="glass-backdrop" id="masterUserActionsModal" style="display: none; z-index: 10008;" onclick="if(event.target === this) closeModal('masterUserActionsModal')">
+    <div class="glass-modal-container" style="max-width: 400px; width: 92%; padding: 22px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid rgba(0,0,0,0.06);">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 18px;">⚙️</span>
+          <span id="userActionsModalTitle" style="font-size: 15px; font-weight: 800; color: var(--text-main);">Gestión de Usuario</span>
+        </div>
+        <button type="button" onclick="closeModal('masterUserActionsModal')" style="background: rgba(0,0,0,0.06); border: none; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 13px; cursor: pointer; color: #64748b;">✕</button>
+      </div>
+
+      <div style="background: rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.06); border-radius: 12px; padding: 10px 12px; margin-bottom: 14px;">
+        <div id="userActionsModalName" style="font-size: 13.5px; font-weight: 800; color: var(--text-main);">Nombre</div>
+        <div id="userActionsModalEmail" style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">correo@ejemplo.com</div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 8px;" id="userActionsButtonsContainer">
+        <!-- Rellenado dinámicamente -->
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL: TÉRMINOS Y CONDICIONES & POLÍTICAS DE PRIVACIDAD (APPLE GRADE FROSTED) -->
   <div class="glass-backdrop" id="legalModal" style="z-index: 100010;" onclick="if(event.target === this) closeModal('legalModal')">
     <div class="legal-modal-container">
@@ -3305,6 +3378,6 @@
   <div id="masterDashboardModal" style="display: none;"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
-  <script src="js/app.js?v=75.1"></script>
+  <script src="js/app.js?v=75.2"></script>
 </body>
 </html>

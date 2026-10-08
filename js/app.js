@@ -9510,11 +9510,13 @@ function calculateMasterKPIs() {
   masterSetText('masterRiskSub', risk === 0 ? 'Sin cuentas en riesgo 🎉' : `${total > 0 ? Math.round((risk / total) * 100) : 0}% sin conexión +7 días`);
 
   masterSetText('countMAll', total);
+  masterSetText('countMActive', paid);
+  masterSetText('countMDue', expired + expiring);
+  masterSetText('countMFree', free);
   masterSetText('countMLife', life);
   masterSetText('countMMonth', month);
   masterSetText('countMExpiring', expiring);
   masterSetText('countMExpired', expired);
-  masterSetText('countMFree', free);
   masterSetText('countMInactive', risk);
 }
 
@@ -9915,12 +9917,9 @@ function setMasterFilter(filter) {
   masterCurrentFilter = filter;
   document.querySelectorAll('.master-filter-chip').forEach(c => c.classList.remove('active'));
   const activeBtn = document.getElementById(
-    filter === 'pro_lifetime' ? 'mFilterLife' :
-    (filter === 'pro_monthly' ? 'mFilterMonth' :
-    (filter === 'expiring' ? 'mFilterExpiring' :
-    (filter === 'expired' ? 'mFilterExpired' :
-    (filter === 'free' ? 'mFilterFree' :
-    (filter === 'inactive' ? 'mFilterInactive' : 'mFilterAll')))))
+    filter === 'active' ? 'mFilterActive' :
+    (filter === 'due' ? 'mFilterDue' :
+    (filter === 'free' ? 'mFilterFree' : 'mFilterAll'))
   );
   if (activeBtn) activeBtn.classList.add('active');
   renderMasterSubscribers();
@@ -9944,20 +9943,24 @@ function renderMasterSubscribers() {
     if (!matchesQuery) return false;
 
     const plan = getMasterPlanKey(item);
-    if (masterCurrentFilter === 'pro_lifetime') return plan === 'life' || plan === 'founder';
-    if (masterCurrentFilter === 'pro_monthly') return plan === 'month';
-    if (masterCurrentFilter === 'expiring') return plan !== 'founder' && getSubscriberExpirationInfo(item).isExpiring;
-    if (masterCurrentFilter === 'expired') return plan !== 'founder' && getSubscriberExpirationInfo(item).isExpired;
-    if (masterCurrentFilter === 'free') return plan === 'free';
-    if (masterCurrentFilter === 'inactive') return plan !== 'founder' && getUserLastConnectionInfo(item).isInactive;
-    return true;
+    const expInfo = getSubscriberExpirationInfo(item);
+    if (masterCurrentFilter === 'active') {
+      return plan === 'founder' || plan === 'life' || (plan === 'month' && !expInfo.isExpired);
+    }
+    if (masterCurrentFilter === 'due') {
+      return plan !== 'founder' && (expInfo.isExpired || expInfo.isExpiring);
+    }
+    if (masterCurrentFilter === 'free') {
+      return plan === 'free';
+    }
+    return true; // 'all'
   });
 
   if (list.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="6" style="text-align: center; padding: 28px; color: var(--text-muted); font-size: 12px;">
-          No se encontraron usuarios con el filtro seleccionado.
+        <td colspan="5" style="text-align: center; padding: 36px 16px; color: var(--text-muted); font-size: 13px;">
+          No se encontraron usuarios en esta categoría.
         </td>
       </tr>`;
     return;
@@ -9984,7 +9987,7 @@ function renderMasterSubscribers() {
     let planBadge = '<span class="master-user-badge-free">🆓 Gratuito</span>';
     let revenueEst = 'S/ 0.00';
     if (isCesar) {
-      planBadge = '<span class="master-user-badge-pro-life" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(217, 119, 6, 0.35)); border-color: #f59e0b; font-weight: 800;">👑 PRO Vitalicio (Fundador)</span>';
+      planBadge = '<span class="master-user-badge-pro-life" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(217, 119, 6, 0.35)); border-color: #f59e0b; font-weight: 800;">👑 PRO Vitalicio</span>';
       revenueEst = 'Fundador CEO';
     } else if (isLife) {
       planBadge = '<span class="master-user-badge-pro-life">👑 PRO Vitalicio</span>';
@@ -10005,6 +10008,40 @@ function renderMasterSubscribers() {
     const uid = escapeHtml(item.user_id || '');
     const em = escapeHtml(email);
 
+    // Acción rápida inteligente según el estado del cliente
+    let actionHtml = '';
+    if (isCesar) {
+      actionHtml = `<span style="font-size: 11px; font-weight: 800; color: #d97706; background: rgba(245, 158, 11, 0.12); padding: 5px 12px; border-radius: 9px; display: inline-flex; align-items: center; gap: 4px;">👑 Fundador</span>`;
+    } else if (expInfo.isExpired || expInfo.isExpiring) {
+      actionHtml = `
+        <div style="display: flex; gap: 6px; align-items: center; justify-content: flex-end;">
+          <button type="button" class="btn btn-primary" onclick="openExecutiveWhatsAppAction('collection', '${em}', '${escapeHtml(cleanName)}', '${expInfo.shortDate || ''}')" style="background: #25d366; border: none; font-size: 11.5px; font-weight: 800; padding: 6px 12px; border-radius: 9px; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 2px 8px rgba(37, 211, 102, 0.25); color: #ffffff;" title="Enviar recordatorio cordial de pago por WhatsApp">
+            <span>💬 Cobrar WhatsApp</span>
+          </button>
+          <button type="button" class="btn btn-secondary" onclick="openMasterUserActionsModal('${uid}', '${em}', '${escapeHtml(cleanName)}', '${plan}')" style="padding: 6px 10px; font-size: 13px; font-weight: 800; border-radius: 9px;" title="Más opciones de gestión">
+            ⋮
+          </button>
+        </div>`;
+    } else if (plan === 'free') {
+      actionHtml = `
+        <div style="display: flex; gap: 6px; align-items: center; justify-content: flex-end;">
+          <button type="button" class="btn btn-primary" onclick="openExecutiveWhatsAppAction('promo', '${em}', '${escapeHtml(cleanName)}')" style="background: linear-gradient(135deg, #6366f1, #4f46e5); border: none; font-size: 11.5px; font-weight: 800; padding: 6px 12px; border-radius: 9px; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25); color: #ffffff;" title="Ofrecer promoción PRO a este usuario">
+            <span>🎁 Ofrecer PRO</span>
+          </button>
+          <button type="button" class="btn btn-secondary" onclick="openMasterUserActionsModal('${uid}', '${em}', '${escapeHtml(cleanName)}', '${plan}')" style="padding: 6px 10px; font-size: 13px; font-weight: 800; border-radius: 9px;" title="Más opciones de gestión">
+            ⋮
+          </button>
+        </div>`;
+    } else {
+      actionHtml = `
+        <div style="display: flex; gap: 6px; align-items: center; justify-content: flex-end;">
+          <span style="font-size: 11px; font-weight: 700; color: #059669; background: rgba(16, 185, 129, 0.12); padding: 5px 10px; border-radius: 8px;">✓ Al Día</span>
+          <button type="button" class="btn btn-secondary" onclick="openMasterUserActionsModal('${uid}', '${em}', '${escapeHtml(cleanName)}', '${plan}')" style="padding: 6px 10px; font-size: 13px; font-weight: 800; border-radius: 9px;" title="Más opciones de gestión">
+            ⋮
+          </button>
+        </div>`;
+    }
+
     html += `
       <tr>
         <td>
@@ -10023,18 +10060,8 @@ function renderMasterSubscribers() {
         </td>
         <td>${planBadge}</td>
         <td>${expInfo.html}</td>
-        <td>${actInfo.html}</td>
         <td style="font-weight: 800; color: var(--text-main);">${revenueEst}</td>
-        <td>
-          <div style="display: flex; gap: 5px; align-items: center; justify-content: flex-end; flex-wrap: wrap;">
-            ${!isLife ? `<button type="button" class="master-action-btn-pill master-action-btn-life" onclick="setMasterUserPlan('${uid}', '${em}', 'pro_lifetime')" title="Activar PRO Vitalicio S/ 19.90">👑 Vitalicio</button>` : ''}
-            ${!isCesar ? `<button type="button" class="master-action-btn-pill master-action-btn-renew" onclick="renewMasterUser30Days('${uid}', '${em}')" title="Extender o renovar 30 días de PRO (S/ 4.90)">⚡ +30 Días</button>` : ''}
-            ${!isMonth && !isCesar ? `<button type="button" class="master-action-btn-pill master-action-btn-month" onclick="setMasterUserPlan('${uid}', '${em}', 'pro_monthly')" title="Activar PRO Mensual S/ 4.90">📅 Mensual</button>` : ''}
-            ${(isLife || isMonth) && !isCesar ? `<button type="button" class="master-action-btn-pill master-action-btn-free" onclick="setMasterUserPlan('${uid}', '${em}', 'free')" title="Bajar a cuenta gratuita">⚪ Free</button>` : ''}
-            ${!isCesar ? `<button type="button" class="master-action-btn-winback" onclick="openWinBackModal('${em}', '${escapeHtml(cleanName)}', ${actInfo.daysInactive || 0})" title="Campaña Win-Back WhatsApp / Correo" style="background: rgba(37, 211, 102, 0.12); color: #16a34a; border: 1.5px solid rgba(37, 211, 102, 0.4); font-weight: 800; font-size: 11px; padding: 4px 8px; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">💬 Win-Back</button>` : ''}
-            ${!isCesar ? `<button type="button" class="master-action-btn-delete" onclick="confirmDeleteMasterUser('${uid}', '${em}', '${escapeHtml(cleanName)}')" title="Eliminar usuario permanentemente" aria-label="Eliminar usuario">🗑️</button>` : ''}
-          </div>
-        </td>
+        <td>${actionHtml}</td>
       </tr>`;
   });
 
@@ -10826,6 +10853,100 @@ function sendWinBackViaEmail() {
 }
 
 // ================================================================
+// ACCIONES EJECUTIVAS WHATSAPP & SUSCRIPCIONES (HUB DE FUNDADOR v75.2)
+// ================================================================
+function openExecutiveWhatsAppAction(type, email, name, detail) {
+  currentWinBackEmail = email || '';
+  currentWinBackName = name || 'amigo';
+  const cleanFirst = currentWinBackName.split(' ')[0];
+  const curMonth = (appState && appState.currentMonth) || 'este mes';
+
+  let msg = '';
+  if (type === 'collection') {
+    msg = `¡Hola ${cleanFirst}! 👋 Te saluda César de AliviaFin.\n\nTe escribo con un recordatorio cordial de que tu suscripción PRO mensual venció ${detail ? 'el ' + detail : 'hace unos días'}.\n\nPara renovarla por 30 días más y seguir disfrutando del Simulador de Cuotas, Bola de Nieve y finanzas al día en ${curMonth}, puedes transferir S/ 4.90 por Yape o Plin al:\n📱 993 993 993 (César Risso)\n\nUna vez transferido me confirmas por aquí y te reactivo al instante. ¡Muchas gracias! 🚀`;
+  } else if (type === 'promo') {
+    msg = `¡Hola ${cleanFirst}! 👋 Te saluda César de AliviaFin.\n\nNoté que estás usando activamente la versión gratuita de la app y quería ofrecerte una promo especial exclusiva:\n\n🔥 PRO Vitalicio por S/ 19.90 (un solo pago de por vida, sin mensualidades).\n\nIncluye Bola de Nieve automática, proyección de compras en cuotas y respaldos automáticos.\n\nPuedes activarlo vía Yape o Plin. ¿Te gustaría aprovecharla? ¡Quedo atento!`;
+  } else {
+    msg = `¡Hola ${cleanFirst}! 👋 Te escribe César de AliviaFin.\n\nNotamos que no ingresas a la app hace unos días y queremos que tus finanzas de ${curMonth} queden 100% al día y sin estrés.\n\n¿Tuviste alguna duda con tus gastos o te gustaría probar alguna función en especial? ¡Aquí estoy para apoyarte directamente! 🚀\n\n👉 Accede directo a: https://aliviafin.vercel.app`;
+  }
+
+  const recipEl = document.getElementById('winBackRecipient');
+  const txtEl = document.getElementById('winBackTextarea');
+  if (recipEl) recipEl.textContent = `${currentWinBackName} (${email})`;
+  if (txtEl) txtEl.value = msg;
+
+  openModalById('winBackModal');
+}
+
+function openManualSubModal() {
+  const emailInput = document.getElementById('modalManualEmail');
+  if (emailInput) emailInput.value = '';
+  openModalById('manualSubModal');
+}
+
+async function handleManualSubModalSubmit(e) {
+  if (e && e.preventDefault) e.preventDefault();
+  const email = (document.getElementById('modalManualEmail')?.value || '').trim().toLowerCase();
+  const plan = document.getElementById('modalManualPlan')?.value || 'pro_lifetime';
+  const method = document.getElementById('modalManualMethod')?.value || 'yape';
+
+  if (!email) {
+    showToast('Ingresa un correo electrónico', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('modalManualSubmitBtn');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = '⏳ Activando…';
+  }
+
+  try {
+    await setMasterUserPlan(null, email, plan);
+    closeModal('manualSubModal');
+    showToast(`✅ Suscripción (${plan}) activada para ${email} vía ${method.toUpperCase()}`, 'success');
+  } catch (err) {
+    showToast('Error al activar suscripción: ' + (err.message || err), 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = '✓ Activar Suscripción';
+    }
+  }
+}
+
+function openMasterUserActionsModal(uid, email, name, plan) {
+  const modal = document.getElementById('masterUserActionsModal');
+  const nameEl = document.getElementById('userActionsModalName');
+  const emailEl = document.getElementById('userActionsModalEmail');
+  const cont = document.getElementById('userActionsButtonsContainer');
+  if (!modal || !cont) return;
+
+  if (nameEl) nameEl.textContent = name || 'Usuario';
+  if (emailEl) emailEl.textContent = email;
+
+  const isLife = plan === 'life' || plan === 'founder';
+  const isMonth = plan === 'month';
+
+  let btns = '';
+  btns += `<button type="button" class="btn btn-secondary" onclick="renewMasterUser30Days('${uid}', '${email}'); closeModal('masterUserActionsModal');" style="width: 100%; justify-content: flex-start; padding: 10px 14px; font-weight: 700; font-size: 12.5px; border-radius: 10px; text-align: left;">⚡ Renovar o Extender +30 Días (S/ 4.90)</button>`;
+  if (!isLife) {
+    btns += `<button type="button" class="btn btn-secondary" onclick="setMasterUserPlan('${uid}', '${email}', 'pro_lifetime'); closeModal('masterUserActionsModal');" style="width: 100%; justify-content: flex-start; padding: 10px 14px; font-weight: 700; font-size: 12.5px; border-radius: 10px; color: #d97706; text-align: left;">👑 Activar PRO Vitalicio (S/ 19.90)</button>`;
+  }
+  if (!isMonth) {
+    btns += `<button type="button" class="btn btn-secondary" onclick="setMasterUserPlan('${uid}', '${email}', 'pro_monthly'); closeModal('masterUserActionsModal');" style="width: 100%; justify-content: flex-start; padding: 10px 14px; font-weight: 700; font-size: 12.5px; border-radius: 10px; text-align: left;">📅 Activar PRO Mensual (S/ 4.90)</button>`;
+  }
+  if (isLife || isMonth) {
+    btns += `<button type="button" class="btn btn-secondary" onclick="setMasterUserPlan('${uid}', '${email}', 'free'); closeModal('masterUserActionsModal');" style="width: 100%; justify-content: flex-start; padding: 10px 14px; font-weight: 700; font-size: 12.5px; border-radius: 10px; text-align: left;">⚪ Bajar a Plan Gratuito (Revocar PRO)</button>`;
+  }
+  btns += `<button type="button" class="btn btn-secondary" onclick="promptEditUserNickname('${email}'); closeModal('masterUserActionsModal');" style="width: 100%; justify-content: flex-start; padding: 10px 14px; font-weight: 700; font-size: 12.5px; border-radius: 10px; text-align: left;">✏️ Editar Nombre o Apodo</button>`;
+  btns += `<button type="button" class="btn btn-secondary" onclick="confirmDeleteMasterUser('${uid}', '${email}', '${escapeHtml(name)}'); closeModal('masterUserActionsModal');" style="width: 100%; justify-content: flex-start; padding: 10px 14px; font-weight: 700; font-size: 12.5px; border-radius: 10px; color: #dc2626; border-color: rgba(239, 68, 68, 0.3); text-align: left;">🗑️ Eliminar Usuario Permanentemente</button>`;
+
+  cont.innerHTML = btns;
+  openModalById('masterUserActionsModal');
+}
+
+// ================================================================
 // NOTIFICACIONES PWA / RECORDATORIO DE CIERRE DE MES (v69.5)
 // ================================================================
 function toggleMonthEndNotification(enabled) {
@@ -10907,3 +11028,7 @@ window.toggleMonthEndNotification = toggleMonthEndNotification;
 window.checkMonthEndNotification = checkMonthEndNotification;
 window.updateAllProBadgesAndBanners = updateAllProBadgesAndBanners;
 window.getSubscriptionDetails = getSubscriptionDetails;
+window.openExecutiveWhatsAppAction = openExecutiveWhatsAppAction;
+window.openManualSubModal = openManualSubModal;
+window.handleManualSubModalSubmit = handleManualSubModalSubmit;
+window.openMasterUserActionsModal = openMasterUserActionsModal;
