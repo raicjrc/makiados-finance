@@ -7274,6 +7274,8 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
         const bal = Math.round((parseFloat(c.amount) || 0) * remaining);
         const minP = Math.round(parseFloat(c.amount) || 0);
 
+        current = Math.min(total, Math.max(1, total - remaining + 1));
+
         synced.push({
           id: 'd_sync_' + idx + '_' + Math.random().toString(36).substr(2, 4),
           name: c.name,
@@ -7531,18 +7533,25 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
       const monthsNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Setiembre', 'Octubre', 'Noviembre', 'Diciembre'];
       const now = new Date();
       
-      const effectiveMonths = extra > 0 ? month : baselineMonths;
+      const maxNaturalMonths = Math.max(...sortedDebts.map(d => {
+        return (typeof d.remainingInstallments === 'number' && d.remainingInstallments > 0)
+          ? d.remainingInstallments
+          : Math.max(1, Math.ceil(d.balance / d.minPayment));
+      }));
+
+      const effectiveBaselineMonths = Math.max(baselineMonths, maxNaturalMonths);
+      const effectiveMonths = extra > 0 ? Math.min(month, effectiveBaselineMonths) : effectiveBaselineMonths;
       const futureDate = new Date(now.getFullYear(), now.getMonth() + effectiveMonths, 1);
       const targetDateStr = `${monthsNames[futureDate.getMonth()]} ${futureDate.getFullYear()}`;
 
-      const baseFutureDate = new Date(now.getFullYear(), now.getMonth() + baselineMonths, 1);
+      const baseFutureDate = new Date(now.getFullYear(), now.getMonth() + effectiveBaselineMonths, 1);
       const baseDateStr = `${monthsNames[baseFutureDate.getMonth()]} ${baseFutureDate.getFullYear()}`;
 
       if (targetDateEl) targetDateEl.textContent = targetDateStr;
       
       if (speedBadgeEl) {
-        if (extra > 0 && baselineMonths > month) {
-          const monthsGained = baselineMonths - month;
+        if (extra > 0 && effectiveBaselineMonths > effectiveMonths) {
+          const monthsGained = effectiveBaselineMonths - effectiveMonths;
           speedBadgeEl.textContent = `¡Adelantas ${monthsGained} mes${monthsGained > 1 ? 'es' : ''}!`;
           speedBadgeEl.style.background = 'linear-gradient(135deg, #10b981, #059669)';
           speedBadgeEl.style.color = '#ffffff';
@@ -7554,10 +7563,10 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
       }
 
       if (speedSubtitleEl) {
-        if (extra > 0 && baselineMonths > month) {
+        if (extra > 0 && effectiveBaselineMonths > effectiveMonths) {
           speedSubtitleEl.textContent = `Sin abono extra terminarías en ${baseDateStr}`;
         } else {
-          speedSubtitleEl.textContent = 'Al ritmo actual de cuotas mínimas normales';
+          speedSubtitleEl.textContent = 'Al ritmo actual de cuotas normales';
         }
       }
 
@@ -7594,7 +7603,26 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
 
         workingDebts.forEach((d, idx) => {
           const isTarget = (idx === 0);
-          const debtMonths = d.paidMonth || month || 1;
+
+          // CÁLCULO EXACTO DEL TIEMPO RESTANTE POR DEUDA:
+          // 1. Duración natural según sus cuotas pendientes registradas o saldo / cuota mensual
+          const remInstallments = (typeof d.remainingInstallments === 'number' && d.remainingInstallments > 0)
+            ? d.remainingInstallments
+            : Math.max(1, Math.ceil(d.balance / d.minPayment));
+
+          // 2. Si hay abono extra del acelerador Y es la deuda objetivo en ataque:
+          let debtMonths = remInstallments;
+          if (extra > 0 && isTarget) {
+            debtMonths = Math.max(1, Math.min(remInstallments, Math.ceil(d.balance / (d.minPayment + extra))));
+          }
+
+          // 3. Normalización estricta de cuotas para evitar "Cuota 10 de 6":
+          const totInst = d.installmentsTotal || (remInstallments > 6 ? 12 : 6);
+          const currInst = Math.min(totInst, Math.max(1, totInst - remInstallments + 1));
+          d.installmentsTotal = totInst;
+          d.installmentsCurrent = currInst;
+          d.remainingInstallments = remInstallments;
+
           const debtFinalDate = new Date(now.getFullYear(), now.getMonth() + debtMonths, 1);
           const debtFinalStr = `${monthsNames[debtFinalDate.getMonth()].slice(0, 3)} ${debtFinalDate.getFullYear()}`;
 
@@ -7614,7 +7642,7 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
                   <span style="font-size: 16px;">💳</span>
                   <div>
                     <strong style="color: var(--text-main);">${escapeHtml(d.name)}</strong>
-                    ${d.remainingInstallments ? `<div style="font-size: 10px; color: var(--text-muted); margin-top: 2px;">Cuota ${d.installmentsCurrent || 1} de ${d.installmentsTotal || 1} <span style="color: #6366f1; font-weight: 700;">(${d.remainingInstallments} pendientes)</span></div>` : ''}
+                    <div style="font-size: 10px; color: var(--text-muted); margin-top: 2px;">Cuota ${currInst} de ${totInst} <span style="color: #6366f1; font-weight: 700;">(${remInstallments} ${remInstallments === 1 ? 'pendiente' : 'pendientes'})</span></div>
                   </div>
                 </div>
               </td>
@@ -7937,6 +7965,8 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
         const tea = (typeof c.tea === 'number') ? c.tea : (isLoan ? 28.5 : 0.0);
         const bal = Math.round((parseFloat(c.amount) || 0) * remaining);
         const minP = Math.round(parseFloat(c.amount) || 0);
+
+        current = Math.min(total, Math.max(1, total - remaining + 1));
 
         freshDebts.push({
           id: 'd_sync_' + idx + '_' + Math.random().toString(36).substr(2, 4),
