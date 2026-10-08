@@ -7184,6 +7184,22 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
           } catch(e) {}
         }
       }
+      // Sincronizar en vivo los valores actualizados de cuotas y saldos desde Movimientos
+      if (currentSnowballDebts && currentSnowballDebts.length > 0) {
+        const curTxs = getMonthTxList();
+        currentSnowballDebts.forEach(d => {
+          const dKey = getNormalizedNameKey(d.name);
+          const matchedTx = curTxs.find(t => getNormalizedNameKey(t.name) === dKey);
+          if (matchedTx && matchedTx.isInstallment) {
+            d.installmentsTotal = matchedTx.installmentsTotal || d.installmentsTotal || 12;
+            d.installmentsCurrent = matchedTx.installmentsCurrent || d.installmentsCurrent || 1;
+            d.remainingInstallments = (typeof matchedTx.remainingInstallments === 'number') ? matchedTx.remainingInstallments : Math.max(1, d.installmentsTotal - d.installmentsCurrent + 1);
+            d.minPayment = Math.max(1, parseFloat(matchedTx.amount) || d.minPayment || 60);
+            d.balance = Math.round(d.remainingInstallments * d.minPayment);
+            if (typeof matchedTx.tea === 'number') d.tea = matchedTx.tea;
+          }
+        });
+      }
 
       // Si aún no hay deudas cargadas, sincronizar automáticamente desde el mes actual
       if (!currentSnowballDebts || currentSnowballDebts.length === 0) {
@@ -7405,13 +7421,27 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
           : `Total mensual: ${getCurrencySymbol()} ${sumMin.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (Solo cuotas mínimas regulares)`;
       }
 
-      let sortedDebts = currentSnowballDebts.map((d, origIdx) => ({
-        ...d,
-        originalIdx: origIdx,
-        balance: Math.max(0, parseFloat(d.balance) || 0),
-        minPayment: Math.max(1, parseFloat(d.minPayment) || 0),
-        tea: Math.max(0, parseFloat(d.tea) || 0)
-      }));
+      let sortedDebts = currentSnowballDebts.map((d, origIdx) => {
+        let minP = Math.max(1, parseFloat(d.minPayment) || 0);
+        let rem = d.remainingInstallments;
+        let bal = Math.max(0, parseFloat(d.balance) || 0);
+
+        if (rem && rem > 0) {
+          const expectedBal = Math.round(rem * minP);
+          if (bal === 0 || Math.abs(bal - expectedBal) > 2) {
+            bal = expectedBal;
+            d.balance = bal;
+          }
+        }
+
+        return {
+          ...d,
+          originalIdx: origIdx,
+          balance: bal,
+          minPayment: minP,
+          tea: Math.max(0, parseFloat(d.tea) || 0)
+        };
+      });
 
       if (currentDebtStrategy === 'snowball') {
         sortedDebts.sort((a, b) => a.balance - b.balance);
@@ -7614,32 +7644,144 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
     }
     window.calculateAndRenderDebtPlan = calculateAndRenderDebtPlan;
 
+    function syncEditDebtFields(source) {
+      const totalEl = document.getElementById('editDebtInstallmentsTotal');
+      const currEl = document.getElementById('editDebtInstallmentsCurrent');
+      const remEl = document.getElementById('editDebtInstallmentsRemaining');
+      const minEl = document.getElementById('editDebtMinPayment');
+      const balEl = document.getElementById('editDebtBalance');
+      const hintEl = document.getElementById('editDebtSummaryHint');
+      if (!totalEl || !currEl || !remEl) return;
+
+      let total = parseInt(totalEl.value, 10);
+      if (isNaN(total) || total < 1) total = 1;
+
+      let current = parseInt(currEl.value, 10);
+      if (isNaN(current) || current < 1) current = 1;
+
+      let remaining = parseInt(remEl.value, 10);
+      if (isNaN(remaining) || remaining < 1) remaining = 1;
+
+      if (source === 'remaining') {
+        if (remaining > total) total = remaining;
+        totalEl.value = total;
+        current = Math.max(1, total - remaining + 1);
+        currEl.value = current;
+      } else if (source === 'current') {
+        if (current > total) total = current;
+        totalEl.value = total;
+        remaining = Math.max(1, total - current + 1);
+        remEl.value = remaining;
+      } else {
+        // source === 'total' or 'minPayment'
+        if (current > total) current = total;
+        currEl.value = current;
+        remaining = Math.max(1, total - current + 1);
+        remEl.value = remaining;
+      }
+
+      const minP = Math.max(0, parseFloat(minEl?.value) || 0);
+      const calculatedBalance = Math.round(remaining * minP * 100) / 100;
+      if (balEl && (source !== 'balance')) {
+        balEl.value = calculatedBalance;
+      }
+
+      if (hintEl) {
+        hintEl.innerHTML = `💡 Pagando <b>Cuota ${current} de ${total}</b> • Faltan <b>${remaining} cuotas</b> por pagar (Saldo pendiente: <b>${getCurrencySymbol()} ${calculatedBalance.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</b>)`;
+      }
+    }
+    window.syncEditDebtFields = syncEditDebtFields;
+
     function editSnowballDebtRow(idx) {
       if (idx < 0 || idx >= currentSnowballDebts.length) return;
       const d = currentSnowballDebts[idx];
-      const newName = prompt('Nombre del compromiso:', d.name);
-      if (!newName || !newName.trim()) return;
 
-      const newBalStr = prompt(`Saldo pendiente actual para "${newName}" (en Soles):`, d.balance);
-      if (newBalStr === null) return;
+      const origIdxEl = document.getElementById('editDebtOrigIdx');
+      const nameEl = document.getElementById('editDebtName');
+      const totEl = document.getElementById('editDebtInstallmentsTotal');
+      const curEl = document.getElementById('editDebtInstallmentsCurrent');
+      const remEl = document.getElementById('editDebtInstallmentsRemaining');
+      const minEl = document.getElementById('editDebtMinPayment');
+      const balEl = document.getElementById('editDebtBalance');
+      const teaEl = document.getElementById('editDebtTea');
 
-      const newMinStr = prompt(`Cuota mensual a pagar (en Soles):`, d.minPayment);
-      if (newMinStr === null) return;
+      if (!origIdxEl || !nameEl) return;
 
-      const newTeaStr = prompt(`Tasa TEA % anual (ingresa 0 si son compras a plazos sin intereses):`, d.tea);
-      if (newTeaStr === null) return;
+      origIdxEl.value = idx;
+      nameEl.value = d.name || '';
 
-      d.name = newName.trim();
-      d.balance = Math.max(0, parseFloat(newBalStr) || 0);
-      d.minPayment = Math.max(1, parseFloat(newMinStr) || 1);
-      d.tea = Math.max(0, parseFloat(newTeaStr) || 0);
+      const total = d.installmentsTotal || 12;
+      let current = d.installmentsCurrent || 1;
+      let remaining = d.remainingInstallments || Math.max(1, total - current + 1);
+      const minP = Math.max(1, parseFloat(d.minPayment) || 60);
+      let bal = Math.max(0, parseFloat(d.balance) || (remaining * minP));
+      if (bal === 0 || Math.abs(bal - (remaining * minP)) > 2) {
+        bal = Math.round(remaining * minP);
+      }
+      const tea = (typeof d.tea === 'number') ? d.tea : 0;
 
-      saveDebtSnowballPlanQuiet();
-      calculateAndRenderDebtPlan(currentDebtExtraPayment);
-      renderExecutiveAdvisor();
-      showToast('✅ Deuda actualizada exitosamente', 'success');
+      if (totEl) totEl.value = total;
+      if (curEl) curEl.value = current;
+      if (remEl) remEl.value = remaining;
+      if (minEl) minEl.value = minP;
+      if (balEl) balEl.value = bal;
+      if (teaEl) teaEl.value = tea;
+
+      syncEditDebtFields('remaining');
+      openModalById('editDebtModal');
     }
     window.editSnowballDebtRow = editSnowballDebtRow;
+
+    function handleSaveDebtFromModal(e) {
+      e.preventDefault();
+      const origIdx = parseInt(document.getElementById('editDebtOrigIdx').value, 10);
+      if (isNaN(origIdx) || origIdx < 0 || origIdx >= currentSnowballDebts.length) return;
+
+      const d = currentSnowballDebts[origIdx];
+      const name = (document.getElementById('editDebtName')?.value || d.name).trim();
+      const total = parseInt(document.getElementById('editDebtInstallmentsTotal')?.value, 10) || 1;
+      const current = parseInt(document.getElementById('editDebtInstallmentsCurrent')?.value, 10) || 1;
+      const remaining = parseInt(document.getElementById('editDebtInstallmentsRemaining')?.value, 10) || 1;
+      const minP = Math.max(1, parseFloat(document.getElementById('editDebtMinPayment')?.value) || 1);
+      const bal = Math.max(0, parseFloat(document.getElementById('editDebtBalance')?.value) || (remaining * minP));
+      const tea = Math.max(0, parseFloat(document.getElementById('editDebtTea')?.value) || 0);
+
+      const oldName = d.name;
+      d.name = name;
+      d.installmentsTotal = total;
+      d.installmentsCurrent = current;
+      d.remainingInstallments = remaining;
+      d.minPayment = minP;
+      d.balance = bal;
+      d.initialBalance = Math.round(minP * total);
+      d.tea = tea;
+
+      // Sincronizar automáticamente con el gasto correspondiente en Movimientos
+      const curMonth = appState.currentMonth;
+      const curTxs = appState.transactions[curMonth] || [];
+      const oldNormKey = getNormalizedNameKey(oldName);
+      const newNormKey = getNormalizedNameKey(name);
+
+      const tx = curTxs.find(t => getNormalizedNameKey(t.name) === oldNormKey || getNormalizedNameKey(t.name) === newNormKey);
+      if (tx) {
+        tx.name = name;
+        tx.amount = minP;
+        tx.isInstallment = true;
+        tx.installmentsTotal = total;
+        tx.installmentsCurrent = current;
+        tx.remainingInstallments = remaining;
+        tx.tea = tea;
+        saveState();
+      }
+
+      saveDebtSnowballPlanQuiet();
+      closeModal('editDebtModal');
+      calculateAndRenderDebtPlan(currentDebtExtraPayment);
+      renderExecutiveAdvisor();
+      if (typeof renderAll === 'function') renderAll();
+      showToast('✅ Compromiso de deuda actualizado exitosamente', 'success');
+    }
+    window.handleSaveDebtFromModal = handleSaveDebtFromModal;
 
     function renderExecutiveAdvisor() {
       const container = document.getElementById('executiveTipsGrid');
