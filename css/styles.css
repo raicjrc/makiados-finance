@@ -2182,6 +2182,32 @@
       box-sizing: border-box;
     }
 
+    /* Garantizar texto oscuro y legible al 100% en inputs dentro de la tarjeta blanca de login */
+    .login-card input,
+    .login-card .form-control,
+    #loginModalScreen input,
+    #loginModalScreen .form-control {
+      background-color: #ffffff !important;
+      color: #0f172a !important;
+      -webkit-text-fill-color: #0f172a !important;
+      border: 1.5px solid #cbd5e1 !important;
+      font-size: 14px !important;
+    }
+    .login-card input::placeholder,
+    .login-card .form-control::placeholder,
+    #loginModalScreen input::placeholder {
+      color: #94a3b8 !important;
+      -webkit-text-fill-color: #94a3b8 !important;
+    }
+    .login-card input:focus,
+    .login-card .form-control:focus,
+    #loginModalScreen input:focus {
+      border-color: #10b981 !important;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2) !important;
+      color: #0f172a !important;
+      -webkit-text-fill-color: #0f172a !important;
+    }
+
     /* Marca Móvil (Visible en celulares) */
     .login-mobile-brand {
       display: none;

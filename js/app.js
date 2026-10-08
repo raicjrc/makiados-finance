@@ -1122,12 +1122,16 @@
       // 4. Detección inteligente de errores tipográficos en los principales proveedores
       const typoSuggestions = {
         'gmai.com': 'gmail.com',
+        'gmiak.com': 'gmail.com',
+        'gmaik.com': 'gmail.com',
         'gamil.com': 'gmail.com',
         'gmial.com': 'gmail.com',
         'gmaill.com': 'gmail.com',
         'gmaul.com': 'gmail.com',
         'gmai.co': 'gmail.com',
         'gmeil.com': 'gmail.com',
+        'gmil.com': 'gmail.com',
+        'gnail.com': 'gmail.com',
         'hotmial.com': 'hotmail.com',
         'hotmai.com': 'hotmail.com',
         'hotmil.com': 'hotmail.com',
@@ -1150,31 +1154,69 @@
         };
       }
 
+      // Detección general por patrón si se parece a gmail/hotmail/outlook
+      if (/^g(?:m|n)[a-z0-9]{1,4}\.(?:com|co|es|net)$/i.test(domain) && domain !== 'gmail.com') {
+        return {
+          valid: false,
+          error: `Parece que escribiste '@${domain}'. ¿Quisiste decir '@gmail.com'? Corrígelo para recibir tus accesos.`
+        };
+      }
+      if (/^hotm[a-z0-9]{1,4}\.(?:com|es|net)$/i.test(domain) && domain !== 'hotmail.com' && domain !== 'hotmail.es') {
+        return {
+          valid: false,
+          error: `Parece que escribiste '@${domain}'. ¿Quisiste decir '@hotmail.com'? Corrígelo para recibir tus accesos.`
+        };
+      }
+      if (/^outl[a-z0-9]{1,4}\.(?:com|es|net)$/i.test(domain) && domain !== 'outlook.com') {
+        return {
+          valid: false,
+          error: `Parece que escribiste '@${domain}'. ¿Quisiste decir '@outlook.com'? Corrígelo para recibir tus accesos.`
+        };
+      }
+
       return { valid: true, email };
     }
     window.validateSafeEmail = validateSafeEmail;
 
     // REGISTRO con Supabase Auth
     async function handleRegisterSubmit(e) {
-      e.preventDefault();
-      const name  = document.getElementById('registerName').value.trim();
-      const rawEmail = document.getElementById('registerEmail').value;
-      const pass  = document.getElementById('registerPassword').value;
+      if (e && e.preventDefault) e.preventDefault();
+      const name  = document.getElementById('registerName') ? document.getElementById('registerName').value.trim() : '';
+      const rawEmail = document.getElementById('registerEmail') ? document.getElementById('registerEmail').value : '';
+      const pass  = document.getElementById('registerPassword') ? document.getElementById('registerPassword').value : '';
       const btn   = document.getElementById('registerSubmitBtn');
       const errEl = document.getElementById('registerErrorMsg');
       const okEl  = document.getElementById('registerSuccessMsg');
 
-      errEl.style.display = 'none';
-      okEl.style.display = 'none';
+      if (errEl) errEl.style.display = 'none';
+      if (okEl) okEl.style.display = 'none';
+
+      if (!name) {
+        if (errEl) {
+          errEl.textContent = '🚨 Por favor ingresa tu nombre completo.';
+          errEl.style.display = 'block';
+        }
+        return;
+      }
 
       // BLINDAJE PREVIO: Validación estricta anti-errores y anti-rebotes
       const emailValidation = validateSafeEmail(rawEmail);
       if (!emailValidation.valid) {
-        errEl.textContent = '🚨 ' + emailValidation.error;
-        errEl.style.display = 'block';
+        if (errEl) {
+          errEl.textContent = '🚨 ' + emailValidation.error;
+          errEl.style.display = 'block';
+        }
         return;
       }
       const email = emailValidation.email;
+
+      if (!pass || pass.length < 6) {
+        if (errEl) {
+          errEl.textContent = '🚨 Por favor ingresa una contraseña de al menos 6 caracteres.';
+          errEl.style.display = 'block';
+        }
+        return;
+      }
 
       btn.disabled = true;
       btn.textContent = '⏳ Creando cuenta...';
@@ -1220,6 +1262,26 @@
         errEl.style.display = 'block';
       }
     }
+
+    function onRegisterEmailBlur() {
+      const emailInput = document.getElementById('registerEmail');
+      const errEl = document.getElementById('registerErrorMsg');
+      if (!emailInput) return;
+      const val = emailInput.value.trim();
+      if (!val || !val.includes('@')) return;
+      const check = validateSafeEmail(val);
+      if (!check.valid) {
+        if (errEl) {
+          errEl.textContent = '🚨 ' + check.error;
+          errEl.style.display = 'block';
+        }
+      } else {
+        if (errEl && errEl.textContent.includes('¿Quisiste decir')) {
+          errEl.style.display = 'none';
+        }
+      }
+    }
+    window.onRegisterEmailBlur = onRegisterEmailBlur;
 
     // ================================================================
     // RECUPERACIÓN DE CONTRASEÑA & AUTH SOCIAL (v63.0)
