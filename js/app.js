@@ -8966,112 +8966,82 @@ async function loadMasterDashboardData(force = false) {
   masterLoading = true;
   masterSetText('masterRefreshSpinner', '⏳');
 
+  // Carga instantánea de caché local (0 ms para que no quede en blanco o cargando)
+  if (!masterSubscribersData || masterSubscribersData.length === 0) {
+    try {
+      const cached = localStorage.getItem('aliviafin_cached_master_subs');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          masterSubscribersData = parsed;
+          renderFounderModule();
+        }
+      }
+    } catch (e) {}
+  }
+
   try {
-    // 1) Suscriptores: RPC enriquecida (auth.users) o tabla estándar como respaldo
+    // Ejecución paralela de alta velocidad de todas las consultas
+    const [rpcRes, fallbackSubsRes, rawSubsRes, stRes, pingsRes, fbRes, recRes] = await Promise.allSettled([
+      supabaseClient.rpc('get_admin_subscribers'),
+      supabaseClient.from('user_subscriptions').select('*').order('created_at', { ascending: false }),
+      supabaseClient.from('user_subscriptions').select('user_id, email, expires_at, trial_ends_at'),
+      supabaseClient.from('finanzas_state').select('id,updated_at').order('updated_at', { ascending: false }).limit(300),
+      supabaseClient.from('app_feedback').select('user_id,user_email,message,created_at').eq('type', 'heartbeat').order('created_at', { ascending: false }).limit(1000),
+      supabaseClient.from('app_feedback').select('*').neq('type', 'heartbeat').order('created_at', { ascending: false }).limit(300),
+      supabaseClient.from('app_reclamaciones').select('*').order('created_at', { ascending: false })
+    ]);
+
+    // 1) Suscriptores: RPC o fallback
     let subs = null;
     masterRpcAvailable = false;
-    try {
-      const { data, error } = await supabaseClient.rpc('get_admin_subscribers');
-      if (!error && Array.isArray(data)) {
-        subs = data;
-        masterRpcAvailable = true;
-      }
-    } catch (e) { /* RPC aún no instalada: se usa el respaldo */ }
-
-    if (!subs) {
-      const { data, error } = await supabaseClient
-        .from('user_subscriptions')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (!error && Array.isArray(data)) subs = data;
+    if (rpcRes.status === 'fulfilled' && !rpcRes.value.error && Array.isArray(rpcRes.value.data) && rpcRes.value.data.length > 0) {
+      subs = rpcRes.value.data;
+      masterRpcAvailable = true;
+    } else if (fallbackSubsRes.status === 'fulfilled' && !fallbackSubsRes.value.error && Array.isArray(fallbackSubsRes.value.data)) {
+      subs = fallbackSubsRes.value.data;
     }
+
     if (subs) {
       masterSubscribersData = subs;
-      // Enriquecer con expires_at de user_subscriptions si la RPC no devolvió esa columna
+      // Enriquecer con expires_at si es necesario
+      if (rawSubsRes.status === 'fulfilled' && !rawSubsRes.value.error && Array.isArray(rawSubsRes.value.data)) {
+        const expMap = new Map();
+        rawSubsRes.value.data.forEach(r => {
+          const exp = r.expires_at || r.trial_ends_at;
+          if (exp) {
+            if (r.user_id) expMap.set(r.user_id, exp);
+            if (r.email) expMap.set(r.email.toLowerCase(), exp);
+          }
+        });
+        masterSubscribersData.forEach(s => {
+          if (!s.expires_at) {
+            s.expires_at = expMap.get(s.user_id) || (s.email ? expMap.get(s.email.toLowerCase()) : null);
+          }
+        });
+      }
       try {
-        const { data: rawSubs } = await supabaseClient
-          .from('user_subscriptions')
-          .select('user_id, email, expires_at, trial_ends_at');
-        if (Array.isArray(rawSubs)) {
-          const expMap = new Map();
-          rawSubs.forEach(r => {
-            const exp = r.expires_at || r.trial_ends_at;
-            if (exp) {
-              if (r.user_id) expMap.set(r.user_id, exp);
-              if (r.email) expMap.set(r.email.toLowerCase(), exp);
-            }
-          });
-          masterSubscribersData.forEach(s => {
-            if (!s.expires_at) {
-              s.expires_at = expMap.get(s.user_id) || (s.email ? expMap.get(s.email.toLowerCase()) : null);
-            }
-          });
-        }
-      } catch (e) {
-        console.warn('Nota de enriquecimiento expires_at:', e);
-      }
-    }
-
-    // 2) Telemetría nativa directa desde finanzas_state (respaldos diarios y estados en la nube)
-    // Esto garantiza que CUALQUIER usuario que use la app o sincronice se detecte al 100% sin depender de SQL extra
-    let stateActivityRows = [];
-    try {
-      const { data: stData, error: stErr } = await supabaseClient
-        .from('finanzas_state')
-        .select('id,updated_at')
-        .order('updated_at', { ascending: false })
-        .limit(500);
-      if (!stErr && Array.isArray(stData)) {
-        stateActivityRows = stData;
-      }
-    } catch (e) {
-      console.warn('Nota de lectura en finanzas_state:', e);
-    }
-
-    // 3) Telemetría secundaria: pings de los últimos 30 días (paginado, tope 6.000 filas)
-    masterTelemetryError = null;
-    const since = new Date(Date.now() - 30 * 86400000).toISOString();
-    const pings = [];
-    for (let page = 0; page < 6; page++) {
-      const from = page * 1000;
-      const { data, error } = await supabaseClient
-        .from('app_feedback')
-        .select('user_id,user_email,message,created_at')
-        .eq('type', 'heartbeat')
-        .gte('created_at', since)
-        .order('created_at', { ascending: false })
-        .range(from, from + 999);
-      if (error || !Array.isArray(data)) {
-        if (error) console.warn('Pings app_feedback nota:', error.message);
-        break;
-      }
-      pings.push(...data);
-      if (data.length < 1000) break;
-    }
-    if (pings.length === 0) {
-      try {
-        const { data: fbAll, error: fbErr2 } = await supabaseClient
-          .from('app_feedback')
-          .select('user_id,user_email,message,created_at')
-          .eq('type', 'heartbeat')
-          .order('created_at', { ascending: false })
-          .limit(1000);
-        if (!fbErr2 && Array.isArray(fbAll) && fbAll.length > 0) {
-          pings.push(...fbAll);
-          masterTelemetryError = null;
-        }
+        localStorage.setItem('aliviafin_cached_master_subs', JSON.stringify(masterSubscribersData));
       } catch (e) {}
+    }
+
+    // 2) Telemetría nativa directa desde finanzas_state
+    let stateActivityRows = [];
+    if (stRes.status === 'fulfilled' && !stRes.value.error && Array.isArray(stRes.value.data)) {
+      stateActivityRows = stRes.value.data;
+    }
+
+    // 3) Telemetría de pings
+    let pings = [];
+    if (pingsRes.status === 'fulfilled' && !pingsRes.value.error && Array.isArray(pingsRes.value.data)) {
+      pings = pingsRes.value.data;
     }
     masterHeartbeats = pings;
 
-    // 4) Feedback real + marcadores de usuarios eliminados
-    const { data: fbData, error: fbErr } = await supabaseClient
-      .from('app_feedback')
-      .select('*')
-      .neq('type', 'heartbeat')
-      .order('created_at', { ascending: false })
-      .limit(500);
-    if (!fbErr && Array.isArray(fbData)) {
+    // 4) Feedback y marcadores de eliminados
+    let fbData = [];
+    if (fbRes.status === 'fulfilled' && !fbRes.value.error && Array.isArray(fbRes.value.data)) {
+      fbData = fbRes.value.data;
       masterDeletedMarkers = new Map();
       fbData.filter(i => i.type === 'user_deleted').forEach(m => {
         const k = (m.user_email || '').toLowerCase().trim();
@@ -9080,17 +9050,12 @@ async function loadMasterDashboardData(force = false) {
       masterFeedbackData = fbData.filter(i => i.type !== 'user_deleted' && i.type !== 'libro_reclamaciones' && i.type !== 'solicitud_reembolso' && i.type !== 'account_deletion_churn');
     }
 
-    // 5) Cargar Hojas de Reclamación formales (Libro Indecopi)
+    // 5) Reclamaciones
     let reclamacionesList = [];
-    try {
-      const { data: recData, error: recErr } = await supabaseClient
-        .from('app_reclamaciones')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (!recErr && Array.isArray(recData)) {
-        reclamacionesList = recData;
-      }
-    } catch (e) {}
+    if (recRes.status === 'fulfilled' && !recRes.value.error && Array.isArray(recRes.value.data)) {
+      reclamacionesList = recRes.value.data;
+    }
+
 
     // Respaldo de reclamaciones desde app_feedback y localStorage
     if (Array.isArray(fbData)) {
@@ -10060,6 +10025,7 @@ function renderMasterSubscribers() {
         </td>
         <td>${planBadge}</td>
         <td>${expInfo.html}</td>
+        <td>${actInfo.html}</td>
         <td style="font-weight: 800; color: var(--text-main);">${revenueEst}</td>
         <td>${actionHtml}</td>
       </tr>`;
@@ -10269,13 +10235,13 @@ async function deleteMasterUser(userId, email, cleanName) {
 
     // 2) Respaldo: borrado directo de la suscripción, estado y telemetría por user_id y correo
     if (userId) {
-      await supabaseClient.from('user_subscriptions').delete().eq('user_id', userId).catch(() => {});
-      await supabaseClient.from('finanzas_state').delete().eq('id', 'state_' + userId).catch(() => {});
-      await supabaseClient.from('app_feedback').delete().eq('user_id', userId).catch(() => {});
+      try { await supabaseClient.from('user_subscriptions').delete().eq('user_id', userId); } catch (e) {}
+      try { await supabaseClient.from('finanzas_state').delete().eq('id', 'state_' + userId); } catch (e) {}
+      try { await supabaseClient.from('app_feedback').delete().eq('user_id', userId); } catch (e) {}
     }
     if (email && email.includes('@')) {
-      await supabaseClient.from('user_subscriptions').delete().eq('email', email).catch(() => {});
-      await supabaseClient.from('app_feedback').delete().eq('user_email', email).catch(() => {});
+      try { await supabaseClient.from('user_subscriptions').delete().eq('email', email); } catch (e) {}
+      try { await supabaseClient.from('app_feedback').delete().eq('user_email', email); } catch (e) {}
     }
 
     // 3) Marcador en la nube: mantiene el panel limpio en cualquier dispositivo
@@ -10929,18 +10895,18 @@ function openMasterUserActionsModal(uid, email, name, plan) {
   const isMonth = plan === 'month';
 
   let btns = '';
-  btns += `<button type="button" class="btn btn-secondary" onclick="renewMasterUser30Days('${uid}', '${email}'); closeModal('masterUserActionsModal');" style="width: 100%; justify-content: flex-start; padding: 10px 14px; font-weight: 700; font-size: 12.5px; border-radius: 10px; text-align: left;">⚡ Renovar o Extender +30 Días (S/ 4.90)</button>`;
+  btns += `<button type="button" class="btn btn-secondary" onclick="renewMasterUser30Days('${uid}', '${email}'); closeModal('masterUserActionsModal');" style="width: 100%; justify-content: flex-start; padding: 12px 16px; font-weight: 800; font-size: 13px; border-radius: 12px; text-align: left; background: #ffffff !important; border: 1.5px solid #cbd5e1 !important; color: #0f172a !important; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">⚡ Renovar o Extender +30 Días (S/ 4.90)</button>`;
   if (!isLife) {
-    btns += `<button type="button" class="btn btn-secondary" onclick="setMasterUserPlan('${uid}', '${email}', 'pro_lifetime'); closeModal('masterUserActionsModal');" style="width: 100%; justify-content: flex-start; padding: 10px 14px; font-weight: 700; font-size: 12.5px; border-radius: 10px; color: #d97706; text-align: left;">👑 Activar PRO Vitalicio (S/ 19.90)</button>`;
+    btns += `<button type="button" class="btn btn-secondary" onclick="setMasterUserPlan('${uid}', '${email}', 'pro_lifetime'); closeModal('masterUserActionsModal');" style="width: 100%; justify-content: flex-start; padding: 12px 16px; font-weight: 800; font-size: 13px; border-radius: 12px; text-align: left; background: #fffbeb !important; border: 1.5px solid #fde68a !important; color: #b45309 !important; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">👑 Activar PRO Vitalicio (S/ 19.90)</button>`;
   }
   if (!isMonth) {
-    btns += `<button type="button" class="btn btn-secondary" onclick="setMasterUserPlan('${uid}', '${email}', 'pro_monthly'); closeModal('masterUserActionsModal');" style="width: 100%; justify-content: flex-start; padding: 10px 14px; font-weight: 700; font-size: 12.5px; border-radius: 10px; text-align: left;">📅 Activar PRO Mensual (S/ 4.90)</button>`;
+    btns += `<button type="button" class="btn btn-secondary" onclick="setMasterUserPlan('${uid}', '${email}', 'pro_monthly'); closeModal('masterUserActionsModal');" style="width: 100%; justify-content: flex-start; padding: 12px 16px; font-weight: 800; font-size: 13px; border-radius: 12px; text-align: left; background: #ffffff !important; border: 1.5px solid #cbd5e1 !important; color: #0f172a !important; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">📅 Activar PRO Mensual (S/ 4.90)</button>`;
   }
   if (isLife || isMonth) {
-    btns += `<button type="button" class="btn btn-secondary" onclick="setMasterUserPlan('${uid}', '${email}', 'free'); closeModal('masterUserActionsModal');" style="width: 100%; justify-content: flex-start; padding: 10px 14px; font-weight: 700; font-size: 12.5px; border-radius: 10px; text-align: left;">⚪ Bajar a Plan Gratuito (Revocar PRO)</button>`;
+    btns += `<button type="button" class="btn btn-secondary" onclick="setMasterUserPlan('${uid}', '${email}', 'free'); closeModal('masterUserActionsModal');" style="width: 100%; justify-content: flex-start; padding: 12px 16px; font-weight: 800; font-size: 13px; border-radius: 12px; text-align: left; background: #ffffff !important; border: 1.5px solid #cbd5e1 !important; color: #475569 !important; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">⚪ Bajar a Plan Gratuito (Revocar PRO)</button>`;
   }
-  btns += `<button type="button" class="btn btn-secondary" onclick="promptEditUserNickname('${email}'); closeModal('masterUserActionsModal');" style="width: 100%; justify-content: flex-start; padding: 10px 14px; font-weight: 700; font-size: 12.5px; border-radius: 10px; text-align: left;">✏️ Editar Nombre o Apodo</button>`;
-  btns += `<button type="button" class="btn btn-secondary" onclick="confirmDeleteMasterUser('${uid}', '${email}', '${escapeHtml(name)}'); closeModal('masterUserActionsModal');" style="width: 100%; justify-content: flex-start; padding: 10px 14px; font-weight: 700; font-size: 12.5px; border-radius: 10px; color: #dc2626; border-color: rgba(239, 68, 68, 0.3); text-align: left;">🗑️ Eliminar Usuario Permanentemente</button>`;
+  btns += `<button type="button" class="btn btn-secondary" onclick="promptEditUserNickname('${email}'); closeModal('masterUserActionsModal');" style="width: 100%; justify-content: flex-start; padding: 12px 16px; font-weight: 800; font-size: 13px; border-radius: 12px; text-align: left; background: #ffffff !important; border: 1.5px solid #cbd5e1 !important; color: #0f172a !important; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">✏️ Editar Nombre o Apodo</button>`;
+  btns += `<button type="button" class="btn btn-secondary" onclick="confirmDeleteMasterUser('${uid}', '${email}', '${escapeHtml(name)}'); closeModal('masterUserActionsModal');" style="width: 100%; justify-content: flex-start; padding: 12px 16px; font-weight: 800; font-size: 13px; border-radius: 12px; text-align: left; color: #dc2626 !important; background: #fef2f2 !important; border: 1.5px solid #fca5a5 !important; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">🗑️ Eliminar Usuario Permanentemente</button>`;
 
   cont.innerHTML = btns;
   openModalById('masterUserActionsModal');

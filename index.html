@@ -19,7 +19,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="js/chart.min.js?v=72.0"></script>
   <script src="js/supabase.min.js?v=72.0"></script>
-  <link rel="stylesheet" href="css/styles.css?v=75.2">
+  <link rel="stylesheet" href="css/styles.css?v=75.3">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
 
   <style>
@@ -1171,11 +1171,12 @@
               <table class="master-table">
                 <thead>
                   <tr>
-                    <th style="min-width: 220px;">Cliente / Contacto</th>
-                    <th style="min-width: 140px;">Plan Actual</th>
-                    <th style="min-width: 150px;">Vencimiento</th>
-                    <th style="min-width: 110px;">LTV Cobrado</th>
-                    <th style="min-width: 190px; text-align: right;">Gestión Rápida</th>
+                    <th style="min-width: 210px;">Cliente / Contacto</th>
+                    <th style="min-width: 130px;">Plan Actual</th>
+                    <th style="min-width: 140px;">Vencimiento</th>
+                    <th style="min-width: 135px;">Última Conexión</th>
+                    <th style="min-width: 105px;">LTV Cobrado</th>
+                    <th style="min-width: 180px; text-align: right;">Gestión Rápida</th>
                   </tr>
                 </thead>
                 <tbody id="masterSubscribersTableBody">
@@ -1186,26 +1187,6 @@
                   </tr>
                 </tbody>
               </table>
-            </div>
-          </div>
-
-          <!-- Box de Activación Manual por Correo -->
-          <div class="master-manual-add-box">
-            <div style="font-size: 22px;">⚡</div>
-            <div style="flex: 1; min-width: 200px;">
-              <div style="font-size: 13px; font-weight: 800; color: var(--text-main);">Activar Suscripción Manual (Yape / Plin / Transferencia)</div>
-              <div style="font-size: 11.5px; color: var(--text-muted);">Ingresa el correo del cliente que te transfirió para activarle PRO en 1 clic.</div>
-            </div>
-            <div style="display: flex; gap: 8px; flex-wrap: wrap; width: 100%; max-width: 540px;">
-              <input type="email" id="masterManualEmail" placeholder="correo@ejemplo.com" style="flex: 1; min-width: 180px; padding: 8px 12px; border-radius: 10px; border: 1.5px solid var(--border-color, #cbd5e1); font-size: 12px; font-weight: 700;">
-              <select id="masterManualPlan" style="padding: 8px 10px; border-radius: 10px; border: 1.5px solid var(--border-color, #cbd5e1); font-size: 12px; font-weight: 700; background: var(--card-bg, #ffffff); color: var(--text-main);">
-                <option value="pro_lifetime">👑 PRO Vitalicio (S/ 19.90)</option>
-                <option value="pro_monthly">📅 PRO Mensual (S/ 4.90)</option>
-                <option value="free">🆓 Gratuito (Free)</option>
-              </select>
-              <button type="button" class="btn btn-primary" onclick="handleMasterManualActivate()" style="padding: 8px 16px; font-size: 12px; font-weight: 800; border-radius: 10px; white-space: nowrap;">
-                Guardar
-              </button>
             </div>
           </div>
         </div>
@@ -2960,18 +2941,18 @@
 
   <!-- MODAL: GESTIÓN RÁPIDA DE USUARIO (DROPDOWN MODAL) -->
   <div class="glass-backdrop" id="masterUserActionsModal" style="display: none; z-index: 10008;" onclick="if(event.target === this) closeModal('masterUserActionsModal')">
-    <div class="glass-modal-container" style="max-width: 400px; width: 92%; padding: 22px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid rgba(0,0,0,0.06);">
+    <div class="glass-modal-container" style="max-width: 420px; width: 92%; padding: 24px; background: #ffffff !important; border: 1.5px solid #cbd5e1 !important; border-radius: 20px; box-shadow: 0 25px 60px rgba(0,0,0,0.4);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0;">
         <div style="display: flex; align-items: center; gap: 8px;">
-          <span style="font-size: 18px;">⚙️</span>
-          <span id="userActionsModalTitle" style="font-size: 15px; font-weight: 800; color: var(--text-main);">Gestión de Usuario</span>
+          <span style="font-size: 20px;">⚙️</span>
+          <span id="userActionsModalTitle" style="font-size: 16px; font-weight: 800; color: #0f172a;">Gestión de Usuario</span>
         </div>
-        <button type="button" onclick="closeModal('masterUserActionsModal')" style="background: rgba(0,0,0,0.06); border: none; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 13px; cursor: pointer; color: #64748b;">✕</button>
+        <button type="button" onclick="closeModal('masterUserActionsModal')" style="background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 13px; cursor: pointer; color: #475569; font-weight: 800;">✕</button>
       </div>
 
-      <div style="background: rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.06); border-radius: 12px; padding: 10px 12px; margin-bottom: 14px;">
-        <div id="userActionsModalName" style="font-size: 13.5px; font-weight: 800; color: var(--text-main);">Nombre</div>
-        <div id="userActionsModalEmail" style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">correo@ejemplo.com</div>
+      <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 12px 14px; margin-bottom: 16px;">
+        <div id="userActionsModalName" style="font-size: 15px; font-weight: 800; color: #0f172a;">Nombre</div>
+        <div id="userActionsModalEmail" style="font-size: 12px; color: #64748b; font-weight: 600; margin-top: 2px;">correo@ejemplo.com</div>
       </div>
 
       <div style="display: flex; flex-direction: column; gap: 8px;" id="userActionsButtonsContainer">
@@ -3378,6 +3359,6 @@
   <div id="masterDashboardModal" style="display: none;"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
-  <script src="js/app.js?v=75.2"></script>
+  <script src="js/app.js?v=75.3"></script>
 </body>
 </html>
