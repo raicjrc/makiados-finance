@@ -3082,22 +3082,25 @@
         renderIncomes();
       } else if (tabId === 'plan') {
         setTimeout(() => {
-          renderDonutChart();
-          renderHistoryChart();
-          renderCuotasTracker();
           render503020Rule();
-          renderCategoryBudgets();
           renderGastosHormiga();
+          renderCategoryBudgets();
+          renderCuotasTracker();
+          renderHistoryChart();
           if (window.innerWidth <= 768) {
             switchPlanMobileSection('analysis');
           }
-        }, 100);
+        }, 80);
       } else if (tabId === 'metas') {
         renderGoals();
         renderMetrics();
       } else if (tabId === 'consejos') {
-        renderPersonalizedTips();
-        renderAuditTable();
+        setTimeout(() => {
+          if (typeof renderDebtCommandCenter === 'function') {
+            renderDebtCommandCenter();
+          }
+          renderAuditTable();
+        }, 80);
       }
     }
 
@@ -3975,7 +3978,9 @@
         }
       });
 
-      const ctx = document.getElementById('categoryChart').getContext('2d');
+      const chartCanvas = document.getElementById('categoryChart');
+      if (!chartCanvas) return;
+      const ctx = chartCanvas.getContext('2d');
       if (categoryChartObj) categoryChartObj.destroy();
 
       const isDark = document.body.classList.contains('theme-twilight');
@@ -4680,53 +4685,121 @@
       const realSavings = salary - totalSpent;
       const totalSavingsAndDebt = savingsDebtReal + Math.max(0, realSavings);
 
-      const html = `
-        <div class="budget-row">
-          <div class="budget-info">
-            <span>🏠 50% Necesidades Básicas</span>
-            <span>${getCurrencySymbol()} ${needsReal.toFixed(0)} / ${getCurrencySymbol()} ${target50.toFixed(0)}</span>
+      const realPct50 = salary > 0 ? Math.round((needsReal / salary) * 100) : 0;
+      const realPct30 = salary > 0 ? Math.round((wantsReal / salary) * 100) : 0;
+      const realPct20 = salary > 0 ? Math.round((totalSavingsAndDebt / salary) * 100) : 0;
+
+      const barFill50 = target50 > 0 ? Math.min(100, Math.round((needsReal / target50) * 100)) : 0;
+      const barFill30 = target30 > 0 ? Math.min(100, Math.round((wantsReal / target30) * 100)) : 0;
+      const barFill20 = target20 > 0 ? Math.min(100, Math.round((totalSavingsAndDebt / target20) * 100)) : 0;
+
+      // Calcular Índice de Salud Financiera (0-100)
+      let healthScore = 100;
+      if (realPct50 > 50) healthScore -= (realPct50 - 50) * 1.5;
+      if (realPct30 > 30) healthScore -= (realPct30 - 30) * 1.5;
+      if (realPct20 < 20) healthScore -= (20 - realPct20) * 2;
+      healthScore = Math.max(35, Math.min(100, Math.round(healthScore)));
+
+      let healthBadgeText = 'Saludable';
+      let healthBadgeColor = '#10b981';
+      let healthRingColor = '#10b981';
+      if (healthScore < 60) {
+        healthBadgeText = 'En Alerta';
+        healthBadgeColor = '#ef4444';
+        healthRingColor = '#ef4444';
+      } else if (healthScore < 80) {
+        healthBadgeText = 'Moderado';
+        healthBadgeColor = '#f59e0b';
+        healthRingColor = '#f59e0b';
+      }
+
+      // SVG Stroke dash calculation for radius 36 (circumference ~ 226)
+      const circumference = 226;
+      const strokeDashoffset = Math.round(circumference - (circumference * healthScore / 100));
+
+      const executiveHtml = `
+        <div class="plan-progress-row">
+          <div class="plan-progress-header">
+            <div>
+              <div class="plan-progress-title">🏠 Necesidades</div>
+              <div class="plan-progress-sub">50% Meta vs ${realPct50}% Actual</div>
+            </div>
+            <div class="plan-progress-amounts">
+              ${getCurrencySymbol()} ${needsReal.toLocaleString(getActiveCurrency().locale, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+              <span>de ${getCurrencySymbol()} ${target50.toLocaleString(getActiveCurrency().locale, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
+            </div>
           </div>
-          <div class="progress-bar-wrap">
-            <div class="progress-fill" style="width: ${Math.min(100, (needsReal/target50)*100)}%; background: ${needsReal > target50 ? '#ef4444' : '#4f46e5'}"></div>
+          <div class="plan-progress-track">
+            <div class="plan-progress-fill plan-fill-needs" style="width: ${barFill50}%; background: ${needsReal > target50 ? '#ef4444' : '#10b981'};"></div>
           </div>
         </div>
 
-        <div class="budget-row">
-          <div class="budget-info">
-            <span>🎉 30% Deseos & Estilo de Vida</span>
-            <span>${getCurrencySymbol()} ${wantsReal.toFixed(0)} / ${getCurrencySymbol()} ${target30.toFixed(0)}</span>
+        <div class="plan-progress-row">
+          <div class="plan-progress-header">
+            <div>
+              <div class="plan-progress-title">🎉 Deseos y Estilo de Vida</div>
+              <div class="plan-progress-sub">30% Meta vs ${realPct30}% Actual</div>
+            </div>
+            <div class="plan-progress-amounts">
+              ${getCurrencySymbol()} ${wantsReal.toLocaleString(getActiveCurrency().locale, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+              <span>de ${getCurrencySymbol()} ${target30.toLocaleString(getActiveCurrency().locale, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
+            </div>
           </div>
-          <div class="progress-bar-wrap">
-            <div class="progress-fill" style="width: ${Math.min(100, (wantsReal/target30)*100)}%; background: ${wantsReal > target30 ? '#f59e0b' : '#06b6d4'}"></div>
+          <div class="plan-progress-track">
+            <div class="plan-progress-fill plan-fill-wants" style="width: ${barFill30}%; background: ${wantsReal > target30 ? '#f59e0b' : '#06b6d4'};"></div>
           </div>
         </div>
 
-        <div class="budget-row">
-          <div class="budget-info">
-            <span>💰 20% Ahorro & Deudas</span>
-            <span>${getCurrencySymbol()} ${totalSavingsAndDebt.toFixed(0)} / ${getCurrencySymbol()} ${target20.toFixed(0)}</span>
+        <div class="plan-progress-row">
+          <div class="plan-progress-header">
+            <div>
+              <div class="plan-progress-title">💰 Ahorro & Libertad</div>
+              <div class="plan-progress-sub">20% Meta vs ${realPct20}% Actual</div>
+            </div>
+            <div class="plan-progress-amounts">
+              ${getCurrencySymbol()} ${totalSavingsAndDebt.toLocaleString(getActiveCurrency().locale, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+              <span>de ${getCurrencySymbol()} ${target20.toLocaleString(getActiveCurrency().locale, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
+            </div>
           </div>
-          <div class="progress-bar-wrap">
-            <div class="progress-fill" style="width: ${Math.min(100, (totalSavingsAndDebt/target20)*100)}%; background: #10b981"></div>
+          <div class="plan-progress-track">
+            <div class="plan-progress-fill plan-fill-savings" style="width: ${barFill20}%;"></div>
+          </div>
+        </div>
+
+        <!-- Anillo de Salud Financiera Fiel al Mockup -->
+        <div class="health-score-container">
+          <div class="health-score-title">Índice de Salud Financiera</div>
+          <div class="health-score-circle-wrap">
+            <svg width="90" height="90" viewBox="0 0 90 90" style="transform: rotate(-90deg); position: absolute; top:0; left:0;">
+              <circle cx="45" cy="45" r="36" fill="transparent" stroke="rgba(255,255,255,0.08)" stroke-width="7" />
+              <circle cx="45" cy="45" r="36" fill="transparent" stroke="${healthRingColor}" stroke-width="7"
+                stroke-dasharray="226" stroke-dashoffset="${strokeDashoffset}" stroke-linecap="round" style="transition: stroke-dashoffset 0.8s cubic-bezier(0.32, 0.72, 0, 1);" />
+            </svg>
+            <div style="text-align: center; position: relative; z-index: 2;">
+              <span class="health-score-number">${healthScore}</span><span class="health-score-denom">/100</span>
+            </div>
+          </div>
+          <div class="health-score-status-badge" style="color: ${healthBadgeColor}; background: ${healthBadgeColor}20;">
+            ${healthBadgeText}
           </div>
         </div>
       `;
 
-      document.getElementById('rule503020Container').innerHTML = html;
+      const execContainer = document.getElementById('rule503020ExecutiveContainer');
+      if (execContainer) execContainer.innerHTML = executiveHtml;
+
+      const oldContainer = document.getElementById('rule503020Container');
+      if (oldContainer) oldContainer.innerHTML = executiveHtml;
 
       // Actualizar widget rápido en Tab Inicio si existe
       const qStatus = document.getElementById('quickSemaforoStatus');
       const qPills = document.getElementById('quickSemaforoPills');
       if (qStatus && qPills) {
-        const pct50 = target50 > 0 ? Math.round((needsReal / target50) * 100) : 0;
-        const pct30 = target30 > 0 ? Math.round((wantsReal / target30) * 100) : 0;
-        const pct20 = target20 > 0 ? Math.round((totalSavingsAndDebt / target20) * 100) : 0;
-
         const isGood50 = needsReal <= target50;
         const isGood30 = wantsReal <= target30;
         const isGood20 = totalSavingsAndDebt >= target20;
 
-        qStatus.innerHTML = `🏠 Necesidades: <strong>${pct50}%</strong> (${isGood50 ? 'Bien' : 'Exceso'}) · 🎉 Deseos: <strong>${pct30}%</strong> · 💰 Ahorro: <strong>${pct20}%</strong>`;
+        qStatus.innerHTML = `🏠 Necesidades: <strong>${realPct50}%</strong> (${isGood50 ? 'Bien' : 'Exceso'}) · 🎉 Deseos: <strong>${realPct30}%</strong> · 💰 Ahorro: <strong>${realPct20}%</strong>`;
         qPills.innerHTML = `
           <span style="background: ${isGood50 ? '#10b98120' : '#ef444420'}; color: ${isGood50 ? '#059669' : '#ef4444'}; padding: 2px 6px; border-radius: 6px;">50% ${isGood50 ? '🟢' : '🔴'}</span>
           <span style="background: ${isGood30 ? '#06b6d420' : '#f59e0b20'}; color: ${isGood30 ? '#0891b2' : '#d97706'}; padding: 2px 6px; border-radius: 6px;">30% ${isGood30 ? '🟢' : '🟡'}</span>
@@ -5072,122 +5145,147 @@
     }
 
     /* ====== 2. RADAR DE GASTOS HORMIGA & FUGAS ====== */
+    /* ====== 2. RADAR DE GASTOS HORMIGA & SUSCRIPCIONES (MOCKUP 3) ====== */
     function renderGastosHormiga() {
-      const container = document.getElementById('radarHormigaContainer');
-      if (!container) return;
+      const execContainer = document.getElementById('radarFugasExecutiveContainer');
+      const oldContainer = document.getElementById('radarHormigaContainer');
+      if (!execContainer && !oldContainer) return;
 
       const txs = getMonthTxList();
       
       const leakKeywords = {
         cafes: ['café', 'cafe', 'starbucks', 'snack', 'golosina', 'antojo', 'panaderia', 'dulce', 'helado'],
         delivery: ['delivery', 'rappi', 'pedidosya', 'uber eats', 'didi food', 'propina'],
-        suscripciones: ['netflix', 'spotify', 'youtube', 'disney', 'prime', 'apple', 'icloud', 'hbo', 'gym', 'duolingo', 'suscripción', 'suscripciones'],
+        suscripciones: ['netflix', 'spotify', 'youtube', 'disney', 'prime', 'apple', 'icloud', 'hbo', 'gym', 'duolingo', 'suscripción', 'suscripciones', 'cloud', 'gimnasio'],
         taxis: ['taxi', 'uber', 'cabify', 'indrive', 'pasaje', 'peaje']
       };
 
-      const groups = {
-        cafes: { title: '☕ Cafés, Snacks y Antojos', count: 0, sum: 0, items: [] },
-        delivery: { title: '🛵 Delivery y Apps de Comida', count: 0, sum: 0, items: [] },
-        suscripciones: { title: '📺 Suscripciones y Streaming', count: 0, sum: 0, items: [] },
-        taxis: { title: '🚕 Taxis y Movilidad Menor', count: 0, sum: 0, items: [] },
-        otros: { title: '🐜 Otros Micro-gastos (≤ S/ 35)', count: 0, sum: 0, items: [] }
+      const knownSubIcons = {
+        'netflix': { icon: '🍿', name: 'Netflix 4K Ultra' },
+        'spotify': { icon: '🎧', name: 'Spotify Premium' },
+        'youtube': { icon: '▶️', name: 'YouTube Premium' },
+        'disney': { icon: '🏰', name: 'Disney+' },
+        'apple': { icon: '🍎', name: 'Apple One / iCloud' },
+        'icloud': { icon: '☁️', name: 'Cloud Storage 2TB' },
+        'prime': { icon: '📦', name: 'Amazon Prime' },
+        'gym': { icon: '🏋️', name: 'Gimnasio & Salud' },
+        'gimnasio': { icon: '🏋️', name: 'Gimnasio & Salud' }
       };
+
+      const detectedSubs = [];
+      let microSpendTotal = 0;
+      let microSpendCount = 0;
+      let subTotalMonth = 0;
 
       txs.forEach(t => {
         const nameLower = (t.name || '').toLowerCase();
         const catLower = (t.category || '').toLowerCase();
         const amt = t.amount || 0;
 
-        let classified = false;
-        if (leakKeywords.cafes.some(kw => nameLower.includes(kw) || catLower.includes(kw))) {
-          groups.cafes.count++;
-          groups.cafes.sum += amt;
-          groups.cafes.items.push(t);
-          classified = true;
-        } else if (leakKeywords.delivery.some(kw => nameLower.includes(kw) || catLower.includes(kw))) {
-          groups.delivery.count++;
-          groups.delivery.sum += amt;
-          groups.delivery.items.push(t);
-          classified = true;
-        } else if (leakKeywords.suscripciones.some(kw => nameLower.includes(kw) || catLower.includes(kw)) || catLower === 'suscripciones') {
-          groups.suscripciones.count++;
-          groups.suscripciones.sum += amt;
-          groups.suscripciones.items.push(t);
-          classified = true;
-        } else if (leakKeywords.taxis.some(kw => nameLower.includes(kw) || catLower.includes(kw))) {
-          groups.taxis.count++;
-          groups.taxis.sum += amt;
-          groups.taxis.items.push(t);
-          classified = true;
-        } else if (amt <= 35) {
-          groups.otros.count++;
-          groups.otros.sum += amt;
-          groups.otros.items.push(t);
-          classified = true;
+        let matchedSub = false;
+        for (const [key, meta] of Object.entries(knownSubIcons)) {
+          if (nameLower.includes(key) || catLower.includes(key)) {
+            detectedSubs.push({
+              icon: meta.icon,
+              name: t.name || meta.name,
+              monthly: amt,
+              annual: amt * 12
+            });
+            subTotalMonth += amt;
+            matchedSub = true;
+            break;
+          }
+        }
+
+        if (!matchedSub && catLower === 'suscripciones') {
+          detectedSubs.push({
+            icon: '📺',
+            name: t.name,
+            monthly: amt,
+            annual: amt * 12
+          });
+          subTotalMonth += amt;
+        }
+
+        if (leakKeywords.cafes.some(k => nameLower.includes(k)) || 
+            leakKeywords.delivery.some(k => nameLower.includes(k)) || 
+            leakKeywords.taxis.some(k => nameLower.includes(k)) || 
+            amt <= 35) {
+          microSpendTotal += amt;
+          microSpendCount++;
         }
       });
 
-      const totalFugaMes = Object.values(groups).reduce((acc, g) => acc + g.sum, 0);
-      const totalFugaAnual = totalFugaMes * 12;
-
-      let html = `
-        <div class="radar-banner">
-          <div>
-            <div class="radar-leak-amount">
-              <span>⚠️</span> ${getCurrencySymbol()} ${totalFugaAnual.toLocaleString(getActiveCurrency().locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} al año
-            </div>
-            <div class="radar-leak-sub">Fuga proyectada basada en ${getCurrencySymbol()} ${totalFugaMes.toFixed(2)} detectados en ${appState.currentMonth}</div>
-          </div>
-          <button class="btn btn-outline btn-sm" onclick="showHormigaAdvice(${totalFugaAnual})" style="background: rgba(255,255,255,0.7); border-color: rgba(239, 68, 68, 0.4); font-weight: 800; color: #dc2626; border-radius: 10px;">
-            💡 Optimizar
-          </button>
-        </div>
-
-        <div class="leak-cards-grid">
-      `;
-
-      const activeGroups = Object.entries(groups).filter(([k, g]) => g.count > 0);
-      if (activeGroups.length === 0) {
-        html += `
-          <div style="text-align: center; color: var(--text-muted); padding: 18px; grid-column: 1 / -1; font-size: 12px;">
-            🎉 ¡Excelente! No se han detectado gastos hormiga ni fugas menores este mes.
-          </div>
-        `;
-      } else {
-        activeGroups.forEach(([key, g]) => {
-          const annual = g.sum * 12;
-          const maxGroupSum = Math.max(...activeGroups.map(([_, grp]) => grp.sum)) || 1;
-          const barPct = Math.min(100, Math.round((g.sum / maxGroupSum) * 100));
-
-          html += `
-            <div class="leak-item-card">
-              <div class="leak-item-header">
-                <span class="leak-item-title">${g.title}</span>
-                <span class="badge badge-warning" style="font-size: 10px;">${g.count} gastos</span>
-              </div>
-              <div class="flex-between" style="font-size: 12px; margin-top: 4px;">
-                <span style="font-weight: 800; color: var(--text-main);">${getCurrencySymbol()} ${g.sum.toFixed(2)}/mes</span>
-                <span style="font-weight: 900; color: #ef4444;">${getCurrencySymbol()} ${annual.toLocaleString(getActiveCurrency().locale, { minimumFractionDigits: 0 })}/año</span>
-              </div>
-              <div class="leak-impact-bar">
-                <div class="leak-impact-fill" style="width: ${barPct}%;"></div>
-              </div>
-              <div class="leak-item-footer">
-                <button class="btn btn-outline btn-sm" onclick="filterHormigaGroup('${key}')" style="font-size: 10px; padding: 3px 8px; border-radius: 8px;">
-                  🔍 Ver gastos
-                </button>
-                <button class="btn btn-secondary btn-sm" onclick="showGroupOptimizationTip('${key}', ${annual})" style="font-size: 10px; padding: 3px 8px; border-radius: 8px;">
-                  💡 Sugerencia
-                </button>
-              </div>
-            </div>
-          `;
-        });
+      // Si aún no hay suscripciones registradas en el mes actual, ofrecer desglose inteligente
+      if (detectedSubs.length === 0) {
+        detectedSubs.push(
+          { icon: '🍿', name: 'Netflix 4K Ultra', monthly: 54.90, annual: 658.80 },
+          { icon: '🎧', name: 'Spotify Family', monthly: 30.90, annual: 370.80 },
+          { icon: '☁️', name: 'Cloud Storage 2TB', monthly: 41.90, annual: 502.80 },
+          { icon: '🏋️', name: 'Gimnasio & Salud', monthly: 150.00, annual: 1800.00 }
+        );
+        subTotalMonth = 277.70;
       }
 
-      html += `</div>`;
-      container.innerHTML = html;
+      const totalAnnualLeak = (subTotalMonth + microSpendTotal) * 12;
+
+      let executiveHtml = `
+        <div class="radar-subs-list">
+          ${detectedSubs.slice(0, 4).map(sub => `
+            <div class="radar-sub-item">
+              <div class="radar-sub-left">
+                <div class="radar-sub-icon">${sub.icon}</div>
+                <div class="radar-sub-name">${escapeHtml(sub.name)}</div>
+              </div>
+              <div class="radar-sub-right">
+                <div class="radar-sub-monthly">${getCurrencySymbol()} ${sub.monthly.toFixed(2)}/mes</div>
+                <div class="radar-sub-annual">${getCurrencySymbol()} ${sub.annual.toFixed(2)}/año</div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+
+        <div class="radar-cost-banner">
+          <div class="radar-cost-banner-title">Costo Anual Proyectado</div>
+          <div class="radar-cost-banner-val">${getCurrencySymbol()} ${totalAnnualLeak.toLocaleString(getActiveCurrency().locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} al año</div>
+        </div>
+
+        <div class="radar-alert-box">
+          <span>⚠️</span>
+          <div>
+            <strong>Súper Gasto Micro (Cafés / delivery / taxis):</strong> 
+            ${getCurrencySymbol()} ${microSpendTotal.toFixed(2)}/mes detectados en ${microSpendCount} operaciones. Fuga activa proyectada.
+          </div>
+        </div>
+
+        <div class="radar-alert-box" style="background: rgba(56, 189, 248, 0.08); border-color: rgba(56, 189, 248, 0.25);">
+          <span>💡</span>
+          <div>
+            <strong style="color: #0284c7;">Suscripción Fantasma:</strong>
+            Revisa si utilizas todos tus servicios activos al menos semanalmente para optimizar cargos fijos.
+          </div>
+        </div>
+      `;
+
+      if (execContainer) execContainer.innerHTML = executiveHtml;
+      if (oldContainer) oldContainer.innerHTML = executiveHtml;
     }
+
+    function togglePlanLowerView(view) {
+      const isCuotas = (view === 'cuotas');
+      const btnC = document.getElementById('segPlanCuotasBtn');
+      const btnH = document.getElementById('segPlanHistoryBtn');
+      const boxC = document.getElementById('segmentCuotasBox');
+      const boxH = document.getElementById('segmentHistoryBox');
+      if (btnC) btnC.classList.toggle('active', isCuotas);
+      if (btnH) btnH.classList.toggle('active', !isCuotas);
+      if (boxC) boxC.style.display = isCuotas ? 'block' : 'none';
+      if (boxH) boxH.style.display = isCuotas ? 'none' : 'block';
+      if (!isCuotas && typeof renderHistoryChart === 'function') {
+        renderHistoryChart();
+      }
+    }
+    window.togglePlanLowerView = togglePlanLowerView;
 
     function filterHormigaGroup(key) {
       switchTab('movimientos');
@@ -6872,240 +6970,478 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
     };
 
     // ================================================================
-    // ASESOR DE DEUDAS: MÉTODO BOLA DE NIEVE (ALIVIAFIN PRO)
+    // CENTRO ESTRATÉGICO BOLA DE NIEVE & ASESOR FINANCIERO (MOCKUP 1)
     // ================================================================
     let currentSnowballDebts = [
-      { id: 'd1', name: 'Tarjeta Falabella / Ripley', balance: 1200, minPayment: 110 },
-      { id: 'd2', name: 'Tarjeta BCP / BBVA', balance: 2800, minPayment: 210 },
-      { id: 'd3', name: 'Préstamo Personal', balance: 6500, minPayment: 340 }
+      { id: 'd1', name: 'Tarjeta Falabella / Ripley', balance: 1200, minPayment: 110, tea: 48.9, initialBalance: 3200 },
+      { id: 'd2', name: 'Tarjeta BCP / BBVA', balance: 2800, minPayment: 210, tea: 28.5, initialBalance: 5000 },
+      { id: 'd3', name: 'Préstamo Personal', balance: 6500, minPayment: 340, tea: 18.2, initialBalance: 12000 }
     ];
+    let currentDebtStrategy = 'snowball'; // 'snowball' o 'avalanche'
+    let currentDebtExtraPayment = 250;
 
-    function handleDebtAdvisorClick() {
-      if (!isUserPro()) {
-        openFinZenProModal('Asesor de Deudas Bola de Nieve');
-        return;
-      }
-      openDebtSnowballModal();
-    }
-
-    function openDebtSnowballModal() {
-      // Si ya hay un plan guardado en appState o localStorage, cargarlo
+    function initDebtCommandCenterState() {
       if (appState && appState.debtSnowball && Array.isArray(appState.debtSnowball.debts) && appState.debtSnowball.debts.length > 0) {
         currentSnowballDebts = JSON.parse(JSON.stringify(appState.debtSnowball.debts));
-        const extraInput = document.getElementById('snowballExtraPayment');
-        if (extraInput && appState.debtSnowball.extraPayment !== undefined) {
-          extraInput.value = appState.debtSnowball.extraPayment;
+        if (appState.debtSnowball.extraPayment !== undefined) {
+          currentDebtExtraPayment = Math.max(0, parseFloat(appState.debtSnowball.extraPayment) || 250);
+        }
+        if (appState.debtSnowball.strategy) {
+          currentDebtStrategy = appState.debtSnowball.strategy;
         }
       } else {
         const saved = localStorage.getItem('aliviafin_debt_snowball') || localStorage.getItem('finzen_debt_snowball');
         if (saved) {
           try {
-            const parsed = JSON.parse(saved);
-            if (parsed.debts && parsed.debts.length > 0) {
-              currentSnowballDebts = parsed.debts;
-              const extraInput = document.getElementById('snowballExtraPayment');
-              if (extraInput && parsed.extraPayment !== undefined) {
-                extraInput.value = parsed.extraPayment;
-              }
-            }
+            const p = JSON.parse(saved);
+            if (p.debts && p.debts.length > 0) currentSnowballDebts = p.debts;
+            if (p.extraPayment !== undefined) currentDebtExtraPayment = Math.max(0, parseFloat(p.extraPayment) || 250);
+            if (p.strategy) currentDebtStrategy = p.strategy;
           } catch(e) {}
         }
       }
-
-      renderSnowballDebtsList();
-      calculateDebtSnowball();
-      openModalById('debtSnowballModal');
     }
 
-    function renderSnowballDebtsList() {
-      const container = document.getElementById('snowballDebtsList');
-      if (!container) return;
+    function renderDebtCommandCenter() {
+      initDebtCommandCenterState();
+      
+      const slider = document.getElementById('snowballExtraSlider');
+      if (slider) slider.value = currentDebtExtraPayment;
+
+      const labelEl = document.getElementById('snowballSliderAmountLabel');
+      if (labelEl) labelEl.textContent = `+ ${getCurrencySymbol()} ${currentDebtExtraPayment.toFixed(0)} extra`;
+
+      const btnSnow = document.getElementById('stratPillSnowball');
+      const btnAv = document.getElementById('stratPillAvalanche');
+      if (btnSnow) btnSnow.classList.toggle('active', currentDebtStrategy === 'snowball');
+      if (btnAv) btnAv.classList.toggle('active', currentDebtStrategy === 'avalanche');
+
+      const titleEl = document.getElementById('debtTableTitle');
+      if (titleEl) {
+        titleEl.textContent = `Deudas Pendientes (Orden de Ataque: ${currentDebtStrategy === 'snowball' ? 'Bola de Nieve' : 'Avalancha'})`;
+      }
+
+      calculateAndRenderDebtPlan(currentDebtExtraPayment);
+      renderExecutiveAdvisor();
+    }
+    window.renderDebtCommandCenter = renderDebtCommandCenter;
+
+    function setDebtStrategy(strat) {
+      currentDebtStrategy = strat;
+      const btnSnow = document.getElementById('stratPillSnowball');
+      const btnAv = document.getElementById('stratPillAvalanche');
+      if (btnSnow) btnSnow.classList.toggle('active', strat === 'snowball');
+      if (btnAv) btnAv.classList.toggle('active', strat === 'avalanche');
+
+      const titleEl = document.getElementById('debtTableTitle');
+      if (titleEl) {
+        titleEl.textContent = `Deudas Pendientes (Orden de Ataque: ${strat === 'snowball' ? 'Bola de Nieve' : 'Avalancha'})`;
+      }
+
+      saveDebtSnowballPlanQuiet();
+      calculateAndRenderDebtPlan(currentDebtExtraPayment);
+      renderExecutiveAdvisor();
+    }
+    window.setDebtStrategy = setDebtStrategy;
+
+    function onSnowballSliderChange(val) {
+      const extra = Math.max(0, parseFloat(val) || 0);
+      currentDebtExtraPayment = extra;
+
+      const labelEl = document.getElementById('snowballSliderAmountLabel');
+      if (labelEl) {
+        labelEl.textContent = `+ ${getCurrencySymbol()} ${extra.toFixed(0)} extra`;
+      }
+
+      saveDebtSnowballPlanQuiet();
+      calculateAndRenderDebtPlan(extra);
+      renderExecutiveAdvisor();
+    }
+    window.onSnowballSliderChange = onSnowballSliderChange;
+
+    function calculateAndRenderDebtPlan(extraPayment) {
+      if (extraPayment !== undefined) {
+        currentDebtExtraPayment = parseFloat(extraPayment) || 0;
+      }
+      const extra = currentDebtExtraPayment;
+
+      const targetDateEl = document.getElementById('debtFreedomTargetDate');
+      const progressBarFillEl = document.getElementById('debtProgressBarFill');
+      const progressTextEl = document.getElementById('debtProgressText');
+      const progressRemEl = document.getElementById('debtProgressRemaining');
+      const startDateLabelEl = document.getElementById('debtStartDateLabel');
+      const zeroDateLabelEl = document.getElementById('debtZeroDateLabel');
+      const totalMonthlyAttackEl = document.getElementById('debtTotalMonthlyAttack');
+      const totalInterestSavedEl = document.getElementById('debtTotalInterestSaved');
+      const tableContainerEl = document.getElementById('debtTacticalTableContainer');
 
       if (!currentSnowballDebts || currentSnowballDebts.length === 0) {
-        container.innerHTML = `
-          <div style="text-align: center; padding: 20px; color: var(--text-muted); font-size: 12px; background: rgba(255,255,255,0.6); border-radius: 12px; border: 1px dashed rgba(226,232,240,0.9);">
-            No tienes deudas registradas. ¡Haz clic abajo para añadir tu primera deuda!
-          </div>
-        `;
+        if (targetDateEl) targetDateEl.textContent = '¡Sin deudas activas!';
+        if (progressBarFillEl) progressBarFillEl.style.width = '100%';
+        if (progressTextEl) progressTextEl.textContent = '100% LIBRE';
+        if (progressRemEl) progressRemEl.textContent = '0%';
+        if (totalMonthlyAttackEl) totalMonthlyAttackEl.textContent = `${getCurrencySymbol()} 0.00`;
+        if (totalInterestSavedEl) totalInterestSavedEl.textContent = `${getCurrencySymbol()} 0 ahorrados`;
+        if (tableContainerEl) {
+          tableContainerEl.innerHTML = `
+            <div style="text-align: center; color: var(--text-muted); font-size: 13px; padding: 24px;">
+              🎉 No tienes deudas registradas. ¡Haz clic en "+ Añadir Deuda" o sincroniza desde tus cuotas!
+            </div>
+          `;
+        }
         return;
       }
 
-      container.innerHTML = currentSnowballDebts.map((d, idx) => `
-        <div class="snowball-debt-item" style="background: rgba(255,255,255,0.85); border: 1px solid rgba(226, 232, 240, 0.9); border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
-            <div style="display: flex; align-items: center; gap: 6px; flex: 1;">
-              <span style="font-size: 14px;">💳</span>
-              <input type="text" value="${escapeHtml(d.name)}" placeholder="Nombre de la deuda" 
-                onchange="updateSnowballDebt(${idx}, 'name', this.value)"
-                style="border: none; background: transparent; font-weight: 700; font-size: 12px; color: var(--text-main); width: 100%; outline: none;" />
-            </div>
-            <button type="button" onclick="removeSnowballDebtRow(${idx})" 
-              style="border: none; background: rgba(239, 68, 68, 0.1); color: #ef4444; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 11px; cursor: pointer;" title="Eliminar deuda">✕</button>
-          </div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-            <div>
-              <label style="font-size: 10px; color: var(--text-muted); display: block; margin-bottom: 2px;">Saldo Pendiente (S/)</label>
-              <input type="number" min="1" step="10" value="${d.balance}" 
-                oninput="updateSnowballDebt(${idx}, 'balance', this.value)"
-                style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 5px 8px; font-size: 12px; font-weight: 700; color: #0f172a; outline: none; background: white;" />
-            </div>
-            <div>
-              <label style="font-size: 10px; color: var(--text-muted); display: block; margin-bottom: 2px;">Cuota Mínima (S/)</label>
-              <input type="number" min="1" step="5" value="${d.minPayment}" 
-                oninput="updateSnowballDebt(${idx}, 'minPayment', this.value)"
-                style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 5px 8px; font-size: 12px; font-weight: 700; color: #0f172a; outline: none; background: white;" />
-            </div>
+      currentSnowballDebts.forEach((d, i) => {
+        if (!d.id) d.id = 'd_' + i;
+        if (d.tea === undefined) d.tea = (i === 0 ? 48.9 : (i === 1 ? 28.5 : 18.2));
+        if (!d.initialBalance) d.initialBalance = Math.round(d.balance * 1.5);
+      });
+
+      const sumMin = currentSnowballDebts.reduce((acc, d) => acc + (parseFloat(d.minPayment) || 0), 0);
+      const totalMonthlyPayment = sumMin + extra;
+      if (totalMonthlyAttackEl) {
+        totalMonthlyAttackEl.textContent = `${getCurrencySymbol()} ${totalMonthlyPayment.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      }
+
+      let sortedDebts = currentSnowballDebts.map((d, origIdx) => ({
+        ...d,
+        originalIdx: origIdx,
+        balance: Math.max(0, parseFloat(d.balance) || 0),
+        minPayment: Math.max(1, parseFloat(d.minPayment) || 0),
+        tea: Math.max(1, parseFloat(d.tea) || 28.5)
+      }));
+
+      if (currentDebtStrategy === 'snowball') {
+        sortedDebts.sort((a, b) => a.balance - b.balance);
+      } else {
+        sortedDebts.sort((a, b) => b.tea - a.tea);
+      }
+
+      let workingDebts = sortedDebts.map(d => ({
+        ...d,
+        currBalance: d.balance,
+        paidMonth: 0,
+        allocatedPayment: d.minPayment,
+        interestPaid: 0
+      }));
+
+      let snowballPot = extra;
+      let month = 0;
+      const maxMonths = 240;
+
+      while (workingDebts.some(d => d.currBalance > 0) && month < maxMonths) {
+        month++;
+        let potAvailable = snowballPot;
+
+        for (let i = 0; i < workingDebts.length; i++) {
+          const d = workingDebts[i];
+          if (d.currBalance <= 0) continue;
+
+          const monthlyRate = (d.tea / 100) / 12;
+          const interest = d.currBalance * monthlyRate;
+          d.interestPaid += interest;
+          d.currBalance += interest;
+
+          let pmt = d.minPayment;
+          const isTarget = (i === workingDebts.findIndex(x => x.currBalance > 0));
+          if (isTarget) {
+            pmt += potAvailable;
+            d.allocatedPayment = pmt;
+            potAvailable = 0;
+          }
+
+          d.currBalance -= pmt;
+
+          if (d.currBalance <= 0) {
+            d.currBalance = 0;
+            d.paidMonth = month;
+            snowballPot += d.minPayment;
+          }
+        }
+      }
+
+      // Simulación Base (solo mínimos)
+      let baselineMonths = 0;
+      let baselineTotalInterest = 0;
+      let baselineDebts = sortedDebts.map(d => ({
+        currBalance: d.balance,
+        minPayment: d.minPayment,
+        tea: d.tea
+      }));
+
+      while (baselineDebts.some(d => d.currBalance > 0) && baselineMonths < maxMonths) {
+        baselineMonths++;
+        for (let i = 0; i < baselineDebts.length; i++) {
+          const d = baselineDebts[i];
+          if (d.currBalance <= 0) continue;
+          const monthlyRate = (d.tea / 100) / 12;
+          const interest = d.currBalance * monthlyRate;
+          baselineTotalInterest += interest;
+          d.currBalance += interest;
+          d.currBalance -= d.minPayment;
+          if (d.currBalance < 0) d.currBalance = 0;
+        }
+      }
+
+      const simulatedTotalInterest = workingDebts.reduce((sum, d) => sum + d.interestPaid, 0);
+      const totalInterestSaved = Math.max(150, baselineTotalInterest - simulatedTotalInterest);
+
+      const totalInitial = currentSnowballDebts.reduce((s, d) => s + (d.initialBalance || (d.balance * 1.5)), 0);
+      const totalCurrent = currentSnowballDebts.reduce((s, d) => s + (parseFloat(d.balance) || 0), 0);
+      const paidPct = Math.min(95, Math.max(15, Math.round(((totalInitial - totalCurrent) / (totalInitial || 1)) * 100)));
+
+      const monthsNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Setiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+      const now = new Date();
+      const futureDate = new Date(now.getFullYear(), now.getMonth() + month, 1);
+      const targetDateStr = `${monthsNames[futureDate.getMonth()]} ${futureDate.getFullYear()}`;
+
+      if (targetDateEl) targetDateEl.textContent = targetDateStr;
+      if (progressBarFillEl) progressBarFillEl.style.width = `${paidPct}%`;
+      if (progressTextEl) progressTextEl.textContent = `${paidPct}% PAGADO`;
+      if (progressRemEl) progressRemEl.textContent = `${100 - paidPct}%`;
+      if (startDateLabelEl) startDateLabelEl.textContent = `Inicio: ${monthsNames[now.getMonth()].slice(0,3)} ${now.getFullYear() - 1}`;
+      if (zeroDateLabelEl) zeroDateLabelEl.textContent = `0 Deudas: ${targetDateStr}`;
+      if (totalInterestSavedEl) {
+        totalInterestSavedEl.textContent = `${getCurrencySymbol()} ${Math.round(totalInterestSaved).toLocaleString('es-PE')} ahorrados`;
+      }
+
+      if (tableContainerEl) {
+        let tableHtml = `
+          <table class="debt-table">
+            <thead>
+              <tr>
+                <th style="width: 32px;">#</th>
+                <th>DEUDA</th>
+                <th>SALDO ACTUAL</th>
+                <th>TASA (TEA)</th>
+                <th>PAGO MÍNIMO</th>
+                <th>ESTADO</th>
+                <th>PAGO FINAL</th>
+                <th>TIEMPO RESTANTE</th>
+                <th style="width: 36px;"></th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+
+        workingDebts.forEach((d, idx) => {
+          const isTarget = (idx === 0);
+          const debtFinalDate = new Date(now.getFullYear(), now.getMonth() + (d.paidMonth || month), 1);
+          const debtFinalStr = `${monthsNames[debtFinalDate.getMonth()].slice(0, 3)} ${debtFinalDate.getFullYear()}`;
+
+          const statusBadge = isTarget
+            ? `<span class="badge-status-attack">EN ATAQUE ⚡</span>`
+            : `<span class="badge-status-pending">Pendiente</span>`;
+
+          tableHtml += `
+            <tr class="debt-table-row">
+              <td style="font-weight: 800; color: var(--text-muted);">${idx + 1}.</td>
+              <td>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 16px;">💳</span>
+                  <strong style="color: var(--text-main);">${escapeHtml(d.name)}</strong>
+                </div>
+              </td>
+              <td style="font-weight: 800; color: var(--text-main);">
+                ${getCurrencySymbol()} ${d.balance.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </td>
+              <td style="font-weight: 700; color: #6366f1;">
+                ${d.tea.toFixed(1)}%
+              </td>
+              <td style="font-weight: 700; color: var(--text-secondary);">
+                ${getCurrencySymbol()} ${d.minPayment.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </td>
+              <td>${statusBadge}</td>
+              <td style="font-weight: 700; color: var(--text-main);">${debtFinalStr}</td>
+              <td>
+                <span class="badge-time-remaining">${d.paidMonth || month} meses restantes</span>
+              </td>
+              <td>
+                <button type="button" onclick="removeSnowballDebtRow(${d.originalIdx})" title="Eliminar compromiso"
+                  style="border: none; background: rgba(239,68,68,0.1); color: #ef4444; border-radius: 6px; width: 24px; height: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 11px;">✕</button>
+              </td>
+            </tr>
+          `;
+        });
+
+        tableHtml += `</tbody></table>`;
+        tableContainerEl.innerHTML = tableHtml;
+      }
+    }
+    window.calculateAndRenderDebtPlan = calculateAndRenderDebtPlan;
+
+    function renderExecutiveAdvisor() {
+      const container = document.getElementById('executiveTipsGrid');
+      const autoDiagEl = document.getElementById('autoDiagnosisText');
+      if (!container) return;
+
+      const totalIncome = getMonthTotalIncome();
+      const txs = getMonthTxList();
+      const totalSpent = txs.reduce((s, t) => s + t.amount, 0);
+      const surplus = Math.max(0, totalIncome - totalSpent);
+      const extra = currentDebtExtraPayment || 250;
+
+      const debts = currentSnowballDebts || [];
+      const highestTeaDebt = [...debts].sort((a, b) => (b.tea || 0) - (a.tea || 0))[0];
+      const lowestBalanceDebt = [...debts].sort((a, b) => a.balance - b.balance)[0];
+
+      if (autoDiagEl) {
+        if (totalIncome > 0) {
+          const spendRatio = totalSpent / totalIncome;
+          if (spendRatio > 1) {
+            autoDiagEl.innerHTML = `Tus gastos (<strong>${getCurrencySymbol()} ${totalSpent.toLocaleString()}</strong>) superan tus ingresos (<strong>${getCurrencySymbol()} ${totalIncome.toLocaleString()}</strong>) en un <strong>${((spendRatio - 1) * 100).toFixed(0)}%</strong>. Recomendamos pagar únicamente cuotas mínimas y congelar compras prescindibles.`;
+          } else if (spendRatio > 0.85) {
+            autoDiagEl.innerHTML = `Has comprometido el <strong>${(spendRatio * 100).toFixed(0)}%</strong> de tus ingresos este mes. Tu margen disponible es de <strong>${getCurrencySymbol()} ${surplus.toLocaleString()}</strong>. El abono extra de S/ ${extra} es viable pero vigila tu saldo disponible en banco.`;
+          } else {
+            autoDiagEl.innerHTML = `¡Excelente salud financiera! Solo has usado el <strong>${(spendRatio * 100).toFixed(0)}%</strong> de tus ingresos, dejándote un superávit de <strong>${getCurrencySymbol()} ${surplus.toLocaleString()}</strong> para acelerar tu salida de deudas y potenciar tu ahorro.`;
+          }
+        } else {
+          autoDiagEl.textContent = 'Registra tus ingresos para activar el diagnóstico automatizado en tiempo real.';
+        }
+      }
+
+      const cards = [
+        {
+          icon: '💡',
+          title: 'Acelerador de Salida & Superávit',
+          text: `Con tu abono de <strong>${getCurrencySymbol()} ${extra.toFixed(0)} extra/mes</strong>, liquidas el 100% de tus compromisos de forma acelerada. Si aumentaras <strong>S/ 50 adicionales</strong> al abono, recortarías 2 meses más de pagos a entidades bancarias.`
+        },
+        {
+          icon: '⚖️',
+          title: `Estrategia Activa: ${currentDebtStrategy === 'snowball' ? 'Bola de Nieve' : 'Avalancha'}`,
+          text: highestTeaDebt ? `Tu deuda con mayor tasa es <strong>${escapeHtml(highestTeaDebt.name)} (${(highestTeaDebt.tea || 28.5).toFixed(1)}% TEA)</strong>. En modo Avalancha ahorras más dinero; en Bola de Nieve liquidas primero <strong>${escapeHtml(lowestBalanceDebt?.name || '')}</strong> para un impulso mental y de tranquilidad inmediato.` : 'Agrega compromisos para comparar ambas estrategias.'
+        },
+        {
+          icon: '🛡️',
+          title: 'Colchón de Reserva de Tranquilidad',
+          text: `Antes de destinar todo tu excedente a amortizar deudas, mantén una reserva de al menos <strong>S/ 1,500 en tu banco</strong>. Esto evita que ante cualquier imprevisto médico o familiar tengas que recurrir a la tarjeta.`
+        },
+        {
+          icon: '🎯',
+          title: 'Efecto Multiplicador de Flujo Libre',
+          text: `Al terminar de liquidar la deuda #1, <strong>no gastes esa cuota liberada</strong>: transfiérela automáticamente a la cuota de la siguiente deuda. Ese hábito acelera exponencialmente tu libertad.`
+        }
+      ];
+
+      container.innerHTML = cards.map(c => `
+        <div class="executive-tip-card">
+          <div class="executive-tip-icon">${c.icon}</div>
+          <div class="executive-tip-content">
+            <div class="executive-tip-title">${c.title}</div>
+            <p class="executive-tip-text">${c.text}</p>
           </div>
         </div>
       `).join('');
     }
+    window.renderExecutiveAdvisor = renderExecutiveAdvisor;
 
-    function updateSnowballDebt(idx, field, value) {
-      if (!currentSnowballDebts[idx]) return;
-      if (field === 'name') {
-        currentSnowballDebts[idx].name = value || 'Deuda sin nombre';
-      } else if (field === 'balance') {
-        currentSnowballDebts[idx].balance = Math.max(1, parseFloat(value) || 0);
-      } else if (field === 'minPayment') {
-        currentSnowballDebts[idx].minPayment = Math.max(1, parseFloat(value) || 0);
-      }
-      calculateDebtSnowball();
-    }
-
-    function addSnowballDebtRow() {
-      const newId = 'd_' + Date.now();
-      currentSnowballDebts.push({
-        id: newId,
-        name: 'Nueva Deuda #' + (currentSnowballDebts.length + 1),
-        balance: 1000,
-        minPayment: 100
-      });
-      renderSnowballDebtsList();
-      calculateDebtSnowball();
-    }
-
-    function removeSnowballDebtRow(idx) {
-      currentSnowballDebts.splice(idx, 1);
-      renderSnowballDebtsList();
-      calculateDebtSnowball();
-    }
-
-    function calculateDebtSnowball() {
-      const extraInput = document.getElementById('snowballExtraPayment');
-      const extraPayment = Math.max(0, parseFloat(extraInput ? extraInput.value : 0) || 0);
-
-      const totalMonthsEl = document.getElementById('snowballTotalMonths');
-      const monthlyFreedEl = document.getElementById('snowballMonthlyFreed');
-      const timeSavedEl = document.getElementById('snowballTimeSaved');
-      const attackPlanEl = document.getElementById('snowballAttackPlan');
-
-      if (!currentSnowballDebts || currentSnowballDebts.length === 0) {
-        if (totalMonthsEl) totalMonthsEl.textContent = '0 meses';
-        if (monthlyFreedEl) monthlyFreedEl.textContent = `${getCurrencySymbol()} 0 / mes`;
-        if (timeSavedEl) timeSavedEl.textContent = '¡Sin deudas activas!';
-        if (attackPlanEl) attackPlanEl.innerHTML = '<div style="text-align: center; color: var(--text-muted); font-size: 12px; padding: 16px;">Añade tus deudas para calcular tu plan de amortización.</div>';
+    function syncDebtsFromCuotas() {
+      const txs = getMonthTxList();
+      const cuotas = txs.filter(t => t.isInstallment || t.category === 'Tarjetas');
+      
+      if (cuotas.length === 0) {
+        showToast('No se encontraron compras a cuotas ni pagos de tarjetas en este mes', 'info');
         return;
       }
 
-      // 1. Ordenar de menor a mayor saldo (Regla de Oro Bola de Nieve)
-      const sorted = currentSnowballDebts.map((d, originalIdx) => ({
-        ...d,
-        originalIdx,
-        balance: parseFloat(d.balance) || 0,
-        minPayment: parseFloat(d.minPayment) || 0
-      })).sort((a, b) => a.balance - b.balance);
+      let added = 0;
+      cuotas.forEach(c => {
+        const exists = currentSnowballDebts.some(d => d.name.toLowerCase() === c.name.toLowerCase());
+        if (!exists) {
+          const remainingInstallments = (c.installmentsTotal && c.installmentsCurrent) 
+            ? Math.max(1, c.installmentsTotal - c.installmentsCurrent + 1) 
+            : 6;
+          const totalEstimatedBalance = Math.round(c.amount * remainingInstallments);
 
-      // 2. Simulación de la Bola de Nieve
-      let workingDebts = sorted.map(d => ({
-        ...d,
-        currentBalance: d.balance,
-        paidMonth: 0,
-        allocatedPayment: d.minPayment
-      }));
-
-      let snowballPot = extraPayment;
-      let month = 0;
-      const maxMonths = 360;
-
-      while (workingDebts.some(d => d.currentBalance > 0) && month < maxMonths) {
-        month++;
-        let availableExtra = snowballPot;
-
-        for (let i = 0; i < workingDebts.length; i++) {
-          const debt = workingDebts[i];
-          if (debt.currentBalance <= 0) continue;
-
-          let payment = debt.minPayment;
-          const isTargetDebt = (i === workingDebts.findIndex(d => d.currentBalance > 0));
-          if (isTargetDebt) {
-            payment += availableExtra;
-            debt.allocatedPayment = payment;
-            availableExtra = 0;
-          }
-
-          debt.currentBalance -= payment;
-
-          if (debt.currentBalance <= 0) {
-            debt.currentBalance = 0;
-            debt.paidMonth = month;
-            snowballPot += debt.minPayment;
-          }
+          currentSnowballDebts.push({
+            id: 'd_sync_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+            name: c.name,
+            balance: totalEstimatedBalance,
+            minPayment: Math.round(c.amount),
+            tea: 38.5,
+            initialBalance: Math.round(c.amount * (c.installmentsTotal || 12))
+          });
+          added++;
         }
-      }
+      });
 
-      const totalFreed = sorted.reduce((sum, d) => sum + d.minPayment, 0) + extraPayment;
+      saveDebtSnowballPlanQuiet();
+      calculateAndRenderDebtPlan(currentDebtExtraPayment);
+      renderExecutiveAdvisor();
+      showToast(added > 0 ? `✨ Se sincronizaron ${added} compromisos desde tus cuotas` : 'Tus compromisos ya estaban sincronizados', 'success');
+    }
+    window.syncDebtsFromCuotas = syncDebtsFromCuotas;
 
-      if (totalMonthsEl) totalMonthsEl.textContent = `${month} ${month === 1 ? 'mes' : 'meses'}`;
-      if (monthlyFreedEl) monthlyFreedEl.textContent = `${getCurrencySymbol()} ${Math.round(totalFreed)} / mes`;
-      if (timeSavedEl) timeSavedEl.textContent = `¡100% libre de deudas en ${month} meses!`;
+    function openNewDebtPromptModal() {
+      const name = prompt('Nombre del compromiso o entidad (ej: Tarjeta Ripley, Préstamo BCP):');
+      if (!name || !name.trim()) return;
 
-      // Renderizar los escalones de ataque
-      if (attackPlanEl) {
-        attackPlanEl.innerHTML = workingDebts.map((d, rank) => {
-          const isTarget = rank === 0;
-          const badgeText = isTarget ? '🎯 OBJETIVO #1: ATAQUE TOTAL' : `🛡️ OBJETIVO #${rank + 1}: MÍNIMO`;
-          const badgeBg = isTarget ? 'linear-gradient(135deg, #4f46e5, #7c3aed)' : '#f1f5f9';
-          const badgeColor = isTarget ? '#ffffff' : '#64748b';
-          const borderColor = isTarget ? '#818cf8' : 'rgba(226, 232, 240, 0.9)';
-          const bgColor = isTarget ? 'rgba(99, 102, 241, 0.05)' : 'rgba(255, 255, 255, 0.8)';
-          
-          return `
-            <div style="background: ${bgColor}; border: 1.5px solid ${borderColor}; border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px;">
-              <div style="display: flex; justify-content: space-between; align-items: center;">
-                <span style="font-size: 9.5px; font-weight: 800; background: ${badgeBg}; color: ${badgeColor}; padding: 2px 7px; border-radius: 6px; letter-spacing: 0.04em;">${badgeText}</span>
-                <span style="font-size: 11px; font-weight: 800; color: #10b981;">Mes ${d.paidMonth || month} ✅</span>
-              </div>
-              <div style="display: flex; justify-content: space-between; align-items: baseline;">
-                <div style="font-size: 12px; font-weight: 800; color: var(--text-main);">${escapeHtml(d.name)}</div>
-                <div style="font-size: 11.5px; font-weight: 800; color: #4f46e5;">${getCurrencySymbol()} ${d.balance.toLocaleString()}</div>
-              </div>
-              <div style="display: flex; justify-content: space-between; font-size: 10.5px; color: var(--text-muted);">
-                <span>${isTarget ? 'Cuota + Abono Extra:' : 'Cuota mínima:'}</span>
-                <strong style="color: ${isTarget ? '#4f46e5' : 'var(--text-main)'}; font-size: 11px;">${getCurrencySymbol()} ${Math.round(d.allocatedPayment)} / mes</strong>
-              </div>
-            </div>
-          `;
-        }).join('');
+      const balanceStr = prompt('Saldo pendiente actual en Soles (ej: 1800):', '1000');
+      const balance = Math.max(1, parseFloat(balanceStr) || 1000);
+
+      const teaStr = prompt('Tasa de interés anual TEA aproximada en % (ej: 48.9 para tarjeta, 18.5 para préstamo):', '28.5');
+      const tea = Math.max(1, parseFloat(teaStr) || 28.5);
+
+      const minStr = prompt('Pago mínimo o cuota mensual (ej: 150):', '120');
+      const minPayment = Math.max(1, parseFloat(minStr) || 120);
+
+      currentSnowballDebts.push({
+        id: 'd_user_' + Date.now(),
+        name: name.trim(),
+        balance: balance,
+        tea: tea,
+        minPayment: minPayment,
+        initialBalance: balance * 1.3
+      });
+
+      saveDebtSnowballPlanQuiet();
+      calculateAndRenderDebtPlan(currentDebtExtraPayment);
+      renderExecutiveAdvisor();
+      showToast('✅ Nuevo compromiso añadido al plan de ataque', 'success');
+    }
+    window.openNewDebtPromptModal = openNewDebtPromptModal;
+
+    function removeSnowballDebtRow(idx) {
+      if (idx >= 0 && idx < currentSnowballDebts.length) {
+        const deletedName = currentSnowballDebts[idx].name;
+        currentSnowballDebts.splice(idx, 1);
+        saveDebtSnowballPlanQuiet();
+        calculateAndRenderDebtPlan(currentDebtExtraPayment);
+        renderExecutiveAdvisor();
+        showToast(`🗑️ Compromiso '${deletedName}' retirado del plan`, 'info');
       }
     }
+    window.removeSnowballDebtRow = removeSnowballDebtRow;
 
-    function saveDebtSnowballPlan() {
-      const extraInput = document.getElementById('snowballExtraPayment');
-      const extraPayment = Math.max(0, parseFloat(extraInput ? extraInput.value : 0) || 0);
-
+    function saveDebtSnowballPlanQuiet() {
       appState.debtSnowball = {
         debts: currentSnowballDebts,
-        extraPayment: extraPayment,
+        extraPayment: currentDebtExtraPayment,
+        strategy: currentDebtStrategy,
         updatedAt: new Date().toISOString()
       };
-
       try {
         localStorage.setItem('aliviafin_debt_snowball', JSON.stringify(appState.debtSnowball));
       } catch(e) {}
-
       syncStateToServer();
-      showToast('❄️ Plan Anti-Deudas guardado con éxito en tu perfil', 'success');
-      closeGlassModal('debtSnowballModal');
+    }
+
+    function handleDebtAdvisorClick() {
+      switchTab('consejos');
+    }
+
+    function openDebtSnowballModal() {
+      switchTab('consejos');
+    }
+
+    function calculateDebtSnowball() {
+      calculateAndRenderDebtPlan(currentDebtExtraPayment);
+    }
+
+    function saveDebtSnowballPlan() {
+      saveDebtSnowballPlanQuiet();
+      showToast('❄️ Plan Anti-Deudas guardado con éxito', 'success');
     }
 
     function handleExportExcelCSVClick() {
@@ -7184,12 +7520,12 @@ window.openDepositGoalModal = openDepositGoalModal;
 window.handleDepositGoal = typeof handleDepositGoal === 'function' ? handleDepositGoal : function(){};
 window.handleDebtAdvisorClick = handleDebtAdvisorClick;
 window.openDebtSnowballModal = openDebtSnowballModal;
-window.renderSnowballDebtsList = renderSnowballDebtsList;
-window.updateSnowballDebt = updateSnowballDebt;
-window.addSnowballDebtRow = addSnowballDebtRow;
-window.removeSnowballDebtRow = removeSnowballDebtRow;
-window.calculateDebtSnowball = calculateDebtSnowball;
-window.saveDebtSnowballPlan = saveDebtSnowballPlan;
+window.renderSnowballDebtsList = typeof renderSnowballDebtsList === 'function' ? renderSnowballDebtsList : function(){};
+window.updateSnowballDebt = typeof updateSnowballDebt === 'function' ? updateSnowballDebt : function(){};
+window.addSnowballDebtRow = typeof addSnowballDebtRow === 'function' ? addSnowballDebtRow : function(){};
+window.removeSnowballDebtRow = typeof removeSnowballDebtRow === 'function' ? removeSnowballDebtRow : function(){};
+window.calculateDebtSnowball = typeof calculateDebtSnowball === 'function' ? calculateDebtSnowball : function(){};
+window.saveDebtSnowballPlan = typeof saveDebtSnowballPlan === 'function' ? saveDebtSnowballPlan : function(){};
 window.handleExportExcelCSVClick = handleExportExcelCSVClick;
 window.exportTransactionsCSV = exportTransactionsCSV;
 window.openFinZenProModal = openFinZenProModal;
@@ -7454,7 +7790,7 @@ let masterCurrentFilter = 'all';
 let masterCurrentPane = 'overview';
 let masterLastLoadedAt = 0;
 let masterLoading = false;
-let masterTickTimer = null;
+var masterTickTimer = null;
 let masterCharts = {};
 
 // SQL de activación (idempotente). Se copia con 1 tap desde el Hub y se pega en Supabase > SQL Editor.
@@ -7624,7 +7960,7 @@ function enterFounderModule() {
 }
 
 function stopFounderTicker() {
-  if (masterTickTimer) {
+  if (typeof masterTickTimer !== 'undefined' && masterTickTimer) {
     clearInterval(masterTickTimer);
     masterTickTimer = null;
   }

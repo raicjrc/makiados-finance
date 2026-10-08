@@ -648,90 +648,87 @@
       <!-- TAB 2: PLAN DE ACCIÓN -->
       <div id="tab-plan" class="tab-content">
         
-        <div class="flex-between mb-2" style="margin-bottom: 10px;">
-          <h2 style="font-size: 16px; font-weight: 800;">Plan de Acción Financiera 2026</h2>
+        <div class="flex-between mb-2" style="margin-bottom: 12px;">
+          <div>
+            <h2 style="font-size: 17px; font-weight: 800; letter-spacing: -0.01em; margin: 0;">Disciplina Financiera 50/30/20 & Radar de Fugas</h2>
+            <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Optimización de presupuesto y control de gastos recurrentes</div>
+          </div>
         </div>
 
         <!-- Segmented Tab Switcher para Móvil en Plan de Acción -->
         <div class="mobile-plan-nav">
-          <button type="button" class="mobile-plan-btn active" id="planTabAnalysis" onclick="switchPlanMobileSection('analysis')">📊 Distribución</button>
-          <button type="button" class="mobile-plan-btn" id="planTabBudgets" onclick="switchPlanMobileSection('budgets')">🎯 Presupuesto</button>
-          <button type="button" class="mobile-plan-btn" id="planTabCuotas" onclick="switchPlanMobileSection('cuotas')">💳 Cuotas</button>
+          <button type="button" class="mobile-plan-btn active" id="planTabAnalysis" onclick="switchPlanMobileSection('analysis')">⚖️ 50/30/20 & Fugas</button>
+          <button type="button" class="mobile-plan-btn" id="planTabBudgets" onclick="switchPlanMobileSection('budgets')">🎯 Presupuestos</button>
+          <button type="button" class="mobile-plan-btn" id="planTabCuotas" onclick="switchPlanMobileSection('cuotas')">💳 Cuotas & Historial</button>
         </div>
 
-        <!-- Fila 1 Desktop (2 Columnas): Donut Chart + Rendimiento 2026 -->
-        <div class="desktop-plan-grid">
-          <!-- Segmented Tab Switcher Grid: Donut Chart vs Cuotas Tracker -->
-          <div class="card plan-card-left">
-            <div class="segmented-switch">
-              <button class="segmented-btn active" id="segBtnChart" onclick="switchSegmentView('chart')">📊 Distribución de Gastos</button>
-              <button class="segmented-btn" id="segBtnCuotas" onclick="switchSegmentView('cuotas')">💳 Cuotas Pendientes</button>
-            </div>
-
-            <div id="segmentChartBox">
-              <div class="chart-container" style="height: 250px; position: relative;">
-                <canvas id="categoryChart"></canvas>
+        <!-- Fila 1 Desktop (2 Columnas): Disciplina 50/30/20 + Radar de Fugas (Fiel al Mockup 3) -->
+        <div class="executive-plan-grid" id="planExecutiveTopGrid">
+          <!-- Columna Izquierda: Disciplina Financiera 50/30/20 & Índice de Salud -->
+          <div class="card executive-card" id="discipline503020Card">
+            <div class="card-header" style="margin-bottom: 14px;">
+              <div>
+                <div class="card-title" style="font-size: 15.5px; font-weight: 800; letter-spacing: -0.01em;">Disciplina Financiera 50/30/20</div>
+                <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">Distribución inteligente de tus ingresos de este mes</div>
               </div>
             </div>
-
-            <div id="segmentCuotasBox" style="display: none;">
-              <div id="cuotasTrackerContainer"></div>
-            </div>
+            <div id="rule503020ExecutiveContainer"></div>
           </div>
 
-          <!-- History & Projections Chart with Period Filters (FIRST) -->
-          <div class="card plan-card-right">
-            <div class="card-header">
-              <div class="card-title">📈 Rendimiento 2026</div>
+          <!-- Columna Derecha: Radar de Fugas & Suscripciones Fantasma -->
+          <div class="card executive-card" id="radarFugasCard">
+            <div class="card-header" style="margin-bottom: 14px;">
+              <div>
+                <div class="card-title" style="font-size: 15.5px; font-weight: 800; letter-spacing: -0.01em;">Radar de Fugas & Suscripciones Fantasma</div>
+                <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">Monitoreo de cargos recurrentes y micro-salidas detectadas</div>
+              </div>
             </div>
-
-            <div class="chip-group" style="margin-bottom: 10px;">
-              <div class="chip active" id="periodFilterALL" onclick="setHistoryPeriodFilter('ALL')">✨ Todo 2026</div>
-              <div class="chip" id="periodFilterCURR" onclick="setHistoryPeriodFilter('CURR')">📍 Mes Actual</div>
-              <div class="chip" id="periodFilterQ3" onclick="setHistoryPeriodFilter('Q3')">Q3 (Jul-Set)</div>
-              <div class="chip" id="periodFilterQ4" onclick="setHistoryPeriodFilter('Q4')">Q4 (Oct-Dic)</div>
-            </div>
-
-            <div class="chart-container" style="height: 200px; position: relative;">
-              <canvas id="historyChart"></canvas>
-            </div>
-            <div id="historyTableContainer" class="mt-4"></div>
+            <div id="radarFugasExecutiveContainer"></div>
           </div>
         </div>
 
-        <!-- Fila 2 Desktop (2 Columnas): 50/30/20 & Hormiga vs Presupuesto por Categoría -->
-        <div class="desktop-plan-grid-2">
-          <!-- Columna Izquierda: Regla 50/30/20 y Radar Hormiga -->
+        <!-- Fila 2 Desktop (2 Columnas): Presupuestos por Categoría + Cuotas / Rendimiento -->
+        <div class="desktop-plan-grid-2" id="planExecutiveBottomGrid">
+          <!-- Columna Izquierda: Presupuesto por Categoría -->
           <div class="plan-subcolumn">
-            <!-- 50/30/20 Rule Card (collapsible) -->
             <div class="card">
-              <div class="card-header" style="cursor: pointer;" onclick="toggleCollapseCard('rule503020Container', 'collapseBtn503020')">
-                <div class="card-title">⚖️ Regla 50/30/20 Aplicada</div>
-                <button type="button" id="collapseBtn503020" style="background:none; border:none; font-size:16px; cursor:pointer; color:var(--text-muted); transition: transform 0.2s;">▼</button>
-              </div>
-              <div id="rule503020Container"></div>
-            </div>
-
-            <!-- Radar de Gastos Hormiga & Fugas de Capital (collapsible) -->
-            <div class="card">
-              <div class="card-header" style="cursor: pointer;" onclick="toggleCollapseCard('radarHormigaContainer', 'collapseBtnHormiga')">
-                <div class="card-title">🐜 Radar de Gastos Hormiga & Fugas</div>
-                <button type="button" id="collapseBtnHormiga" style="background:none; border:none; font-size:16px; cursor:pointer; color:var(--text-muted); transition: transform 0.2s;">▼</button>
-              </div>
-              <div id="radarHormigaContainer"></div>
-            </div>
-          </div>
-
-          <!-- Columna Derecha: Presupuesto por Categoría -->
-          <div class="plan-subcolumn">
-            <!-- Category Budget vs Real Progress (collapsible) -->
-            <div class="card">
-              <div class="card-header" style="cursor: pointer;" onclick="toggleCollapseCard('categoryBudgetsContainer', 'collapseBtnBudgets')">
-                <div class="card-title">🎯 Presupuesto por Categoría</div>
-                <button type="button" class="btn btn-outline btn-sm" onclick="event.stopPropagation(); openCategoryManagerModal();" style="font-size:11px; padding:3px 10px; border-radius:12px; margin-left:auto; margin-right:8px; border-color:#cbd5e1; font-weight:700;">⚙️ Gestionar</button>
-                <button type="button" id="collapseBtnBudgets" style="background:none; border:none; font-size:16px; cursor:pointer; color:var(--text-muted); transition: transform 0.2s;">▼</button>
+              <div class="card-header">
+                <div class="card-title" style="font-size: 15px; font-weight: 800;">🎯 Presupuesto por Categoría</div>
+                <button type="button" class="btn btn-outline btn-sm" onclick="event.stopPropagation(); openCategoryManagerModal();" style="font-size:11px; padding:3px 10px; border-radius:12px; margin-left:auto; border-color:var(--border); font-weight:700;">⚙️ Gestionar</button>
               </div>
               <div id="categoryBudgetsContainer"></div>
+            </div>
+          </div>
+
+          <!-- Columna Derecha: Cuotas Pendientes & Rendimiento Histórico -->
+          <div class="plan-subcolumn">
+            <div class="card plan-card-right">
+              <div class="card-header flex-between" style="margin-bottom: 12px;">
+                <div class="card-title" style="font-size: 15px; font-weight: 800;">💳 Cuotas & Rendimiento 2026</div>
+                <div class="segmented-switch" style="margin: 0;">
+                  <button class="segmented-btn active" id="segPlanCuotasBtn" onclick="togglePlanLowerView('cuotas')">💳 Cuotas</button>
+                  <button class="segmented-btn" id="segPlanHistoryBtn" onclick="togglePlanLowerView('history')">📈 Historial</button>
+                </div>
+              </div>
+
+              <!-- Cuotas Pendientes Box -->
+              <div id="segmentCuotasBox">
+                <div id="cuotasTrackerContainer"></div>
+              </div>
+
+              <!-- Historial & Rendimiento Box -->
+              <div id="segmentHistoryBox" style="display: none;">
+                <div class="chip-group" style="margin-bottom: 10px;">
+                  <div class="chip active" id="periodFilterALL" onclick="setHistoryPeriodFilter('ALL')">✨ Todo 2026</div>
+                  <div class="chip" id="periodFilterCURR" onclick="setHistoryPeriodFilter('CURR')">📍 Mes Actual</div>
+                  <div class="chip" id="periodFilterLAST3" onclick="setHistoryPeriodFilter('LAST3')">⏱️ Últimos 3 Meses</div>
+                </div>
+
+                <div class="chart-container" style="height: 200px; position: relative;">
+                  <canvas id="historyChart"></canvas>
+                </div>
+                <div id="historyTableContainer" class="mt-4"></div>
+              </div>
             </div>
           </div>
         </div>
@@ -760,71 +757,146 @@
         <div id="goalsContainer" class="luxury-goals-grid"></div>
       </div>
 
-      <!-- TAB 4: CONSEJOS Y DEUDAS -->
+      <!-- TAB 4: CONSEJOS Y DEUDAS (CENTRO ESTRATÉGICO BOLA DE NIEVE & ASESOR INTELIGENTE) -->
       <div id="tab-consejos" class="tab-content">
-        <div class="card" style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); color: white; padding: 16px 18px;">
-          <div class="flex-between">
-            <div style="font-size: 15px; font-weight: 800; display: flex; align-items: center; gap: 8px;">
-              <span>🧑‍💼</span> <span>Asesor Financiero Personal</span>
-            </div>
-            <button class="btn-pill primary" onclick="recalculatePlanAndTips()" style="font-size: 11px; padding: 6px 12px;">🔄 Recalcular</button>
-          </div>
-          <div style="font-size: 12px; color: #a5f3fc; margin-top: 4px; font-weight: 600;">Diagnóstico Inteligente & Salud Financiera</div>
-        </div>
-
-        <!-- Diagnóstico Automático del Mes -->
-        <div class="card" style="background: #eff6ff; border-color: #bfdbfe; margin-top: 10px; padding: 12px 14px;">
-          <div class="card-title" style="color: #1e40af; font-size: 12.5px; font-weight: 800; margin-bottom: 4px;">💡 Diagnóstico del Mes</div>
-          <p id="autoDiagnosisText" style="font-size: 12px; color: #1e3a8a; margin: 0; line-height: 1.45;">
-            Cargando análisis...
-          </p>
-        </div>
-
-        <div id="personalizedTipsContainer"></div>
-
-        <!-- Tarjeta PRO: Asesor de Deudas Bola de Nieve -->
-        <div class="card" style="background: linear-gradient(135deg, rgba(79, 70, 229, 0.08), rgba(124, 58, 237, 0.06)); border: 1.5px solid rgba(124, 58, 237, 0.25); border-radius: 16px; padding: 16px; margin-top: 14px;">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 8px;">
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <span style="font-size: 22px;">❄️</span>
+        <!-- HEADER ESTRATÉGICO EJECUTIVO (Fiel al Mockup 1) -->
+        <div class="card executive-header-card" style="border-radius: 20px; padding: 20px 24px; margin-bottom: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span style="font-size: 28px;">📈</span>
               <div>
-                <div style="font-size: 13.5px; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 6px;">
-                  <span>Plan Anti-Deudas: Método Bola de Nieve</span>
-                  <span class="badge-pro-gold" style="font-size: 10px; padding: 2px 6px;">PRO</span>
+                <h2 style="font-size: 19px; font-weight: 800; margin: 0; color: var(--text-main); letter-spacing: -0.02em;">
+                  Plan Estratégico Bola de Nieve & Avalancha
+                </h2>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 3px;">
+                  Liquidación acelerada de pasivos y optimización matemática de tu flujo libre
                 </div>
-                <div style="font-size: 11px; color: var(--primary); font-weight: 600;">Estrategia matemática de liquidación acelerada</div>
+              </div>
+            </div>
+            
+            <!-- Selector de Estrategia (Apple Switcher) -->
+            <div class="strategy-toggle-box">
+              <span style="font-size: 11px; font-weight: 700; color: var(--text-muted); padding: 0 4px 0 8px;">Estrategia:</span>
+              <button type="button" class="strategy-pill active" id="stratPillSnowball" onclick="setDebtStrategy('snowball')">❄️ Bola de Nieve</button>
+              <button type="button" class="strategy-pill" id="stratPillAvalanche" onclick="setDebtStrategy('avalanche')">⚡ Avalancha</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- FILA 1: KPIS EJECUTIVOS (Fecha Cero Deudas, Acelerador, Intereses Ahorrados) -->
+        <div class="debt-kpi-grid">
+          <!-- Card 1: Fecha Cero Deudas -->
+          <div class="card debt-kpi-main-card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+              <div>
+                <div style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Fecha Cero Deudas:</div>
+                <div id="debtFreedomTargetDate" style="font-size: 26px; font-weight: 900; color: var(--text-main); margin-top: 2px; letter-spacing: -0.02em;">Cargando...</div>
+              </div>
+              <span id="debtSpeedBadge" class="badge-pro-gold" style="font-size: 10.5px; padding: 4px 10px;">¡Acelerado!</span>
+            </div>
+
+            <!-- Barra de Progreso Lujo (Cian a Esmeralda con Glow) -->
+            <div class="debt-progress-track">
+              <div id="debtProgressBarFill" class="debt-progress-fill" style="width: 50%;">
+                <span id="debtProgressText" class="debt-progress-label">0% PAGADO</span>
+              </div>
+              <span id="debtProgressRemaining" class="debt-progress-remaining">100%</span>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--text-muted); margin-top: 8px;">
+              <span id="debtStartDateLabel">Inicio: Este Mes</span>
+              <span id="debtZeroDateLabel">0 Deudas: Proyectado</span>
+            </div>
+          </div>
+
+          <!-- Card 2: Acelerador de Pago Mensual -->
+          <div class="card debt-kpi-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+              <div style="font-size: 11.5px; font-weight: 700; color: var(--text-muted);">Acelerador de Pago Mensual</div>
+              <div id="debtTotalMonthlyAttack" style="font-size: 24px; font-weight: 900; color: var(--text-main); margin-top: 2px;">S/ 0.00</div>
+            </div>
+            
+            <!-- Slider interactivo Apple -->
+            <div style="margin-top: 10px;">
+              <input type="range" id="snowballExtraSlider" min="0" max="2000" step="25" value="250" oninput="onSnowballSliderChange(this.value)" class="apple-range-slider" style="width: 100%;">
+              <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--text-muted); margin-top: 4px;">
+                <span>Mínimos</span>
+                <span id="snowballSliderAmountLabel" style="font-weight: 800; color: #10b981;">+ S/ 250 extra</span>
+                <span>+ S/ 2,000</span>
               </div>
             </div>
           </div>
-          <p style="font-size: 11.5px; color: var(--text-muted); line-height: 1.45; margin: 0 0 12px 0;">
-            El método Bola de Nieve ordena tus compromisos de menor a mayor saldo, destinando tu superávit mensual al pago agresivo de la más pequeña mientras cubres los mínimos de las demás. Al liquidar cada deuda, su cuota se suma como efecto avalancha a la siguiente, reduciendo meses de intereses.
-          </p>
-          <button type="button" onclick="handleDebtAdvisorClick()" class="btn btn-primary" style="width: 100%; font-size: 12px; font-weight: 800; background: linear-gradient(135deg, #4f46e5, #7c3aed); border: none; box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35); padding: 10px; display: flex; align-items: center; justify-content: center; gap: 6px;">
-            <span>✨ Ver Plan de Amortización Bola de Nieve</span>
-            <span style="background: rgba(255,255,255,0.2); padding: 1px 6px; border-radius: 6px; font-size: 10px;">PRO 👑</span>
-          </button>
-        </div>
 
-        <!-- Tarjeta: Simulador de Cuotas & Crédito -->
-        <div class="card" style="background: linear-gradient(135deg, rgba(56, 189, 248, 0.08), rgba(2, 132, 199, 0.06)); border: 1.5px solid rgba(56, 189, 248, 0.25); border-radius: 16px; padding: 16px; margin-top: 14px;">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 8px;">
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <span style="font-size: 22px;">💳</span>
-              <div>
-                <div style="font-size: 13.5px; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 6px;">
-                  <span>Simulador de Cuotas & Crédito</span>
-                  <span class="badge-pro-gold" style="font-size: 10px; padding: 2px 6px;">PRO</span>
-                </div>
-                <div style="font-size: 11px; color: #0284c7; font-weight: 600;">Calcula el impacto de compras a plazos en tu flujo mensual</div>
-              </div>
+          <!-- Card 3: Total Intereses Ahorrados -->
+          <div class="card debt-kpi-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+              <div style="font-size: 11.5px; font-weight: 700; color: var(--text-muted);">Total Intereses Ahorrados</div>
+              <div id="debtTotalInterestSaved" style="font-size: 24px; font-weight: 900; color: #10b981; margin-top: 2px;">S/ 0 ahorrados</div>
+            </div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 8px; line-height: 1.4;">
+              Dinero que no pagarás a entidades financieras gracias a la estrategia elegida.
             </div>
           </div>
-          <p style="font-size: 11.5px; color: var(--text-muted); line-height: 1.45; margin: 0 0 12px 0;">
-            Antes de pasar tu tarjeta o adquirir un crédito en cuotas, proyecta cuántos meses comprometerás tu dinero y qué porcentaje de tu sueldo disponible consumirá la cuota mensual.
-          </p>
-          <button type="button" onclick="openInstallmentsSimulatorModal()" class="btn btn-primary" style="width: 100%; font-size: 12px; font-weight: 800; background: linear-gradient(135deg, #0284c7, #0d9488); border: none; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.3); padding: 10px; display: flex; align-items: center; justify-content: center; gap: 6px;">
-            <span>💳 Abrir Simulador de Cuotas & Crédito</span>
-            <span style="background: rgba(255,255,255,0.2); padding: 1px 6px; border-radius: 6px; font-size: 10px;">PRO 👑</span>
+        </div>
+
+        <!-- FILA 2: TABLA TÁCTICA DE COMPROMISOS (ORDEN DE ATAQUE) -->
+        <div class="card executive-card" style="margin-top: 16px;">
+          <div class="flex-between" style="margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+            <div>
+              <div class="card-title" id="debtTableTitle" style="font-size: 15.5px; font-weight: 800;">
+                Deudas Pendientes (Orden de Ataque: Bola de Nieve)
+              </div>
+              <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">
+                Concentra todo el superávit en la deuda #1 mientras cubres los mínimos de las demás
+              </div>
+            </div>
+            
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <button type="button" class="btn btn-outline btn-sm" onclick="syncDebtsFromCuotas()" style="font-size: 11px; padding: 5px 12px; border-radius: 10px; font-weight: 700; border-color: var(--border);">
+                🔄 Sincronizar desde Cuotas
+              </button>
+              <button type="button" class="btn btn-primary btn-sm" onclick="openNewDebtPromptModal()" style="font-size: 11px; padding: 5px 14px; border-radius: 10px; font-weight: 700;">
+                + Añadir Deuda
+              </button>
+            </div>
+          </div>
+
+          <div id="debtTacticalTableContainer" style="overflow-x: auto;">
+            <!-- Renderizado dinámico de la tabla idéntica al mockup -->
+          </div>
+        </div>
+
+        <!-- FILA 3: ASESOR FINANCIERO PERSONAL & RECOMENDACIONES ESTRATÉGICAS -->
+        <div class="card executive-card" style="margin-top: 16px;">
+          <div class="flex-between" style="margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 24px;">🧑‍💼</span>
+              <div>
+                <div class="card-title" style="font-size: 15.5px; font-weight: 800;">Asesor Financiero Personal & Recomendaciones Inteligentes</div>
+                <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">Diagnóstico y consejos estratégicos basados en tu situación real</div>
+              </div>
+            </div>
+            <button class="btn-pill primary" onclick="renderExecutiveAdvisor()" style="font-size: 11px; padding: 5px 12px;">🔄 Actualizar Consejos</button>
+          </div>
+
+          <!-- Diagnóstico Automático Destacado -->
+          <div style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 12px; padding: 12px 14px; margin-bottom: 14px;">
+            <div style="font-size: 11px; font-weight: 800; color: #3b82f6; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 3px;">💡 Diagnóstico de Salud Financiera del Mes</div>
+            <p id="autoDiagnosisText" style="font-size: 12px; color: var(--text-main); margin: 0; line-height: 1.45;">
+              Cargando análisis inteligente...
+            </p>
+          </div>
+
+          <!-- Grid de Consejos Inteligentes -->
+          <div class="executive-tips-grid" id="executiveTipsGrid">
+            <!-- Se llena dinámicamente -->
+          </div>
+        </div>
+
+        <!-- ACCESO RÁPIDO: SIMULADOR DE CUOTAS Y CRÉDITO -->
+        <div style="margin-top: 14px; display: flex; justify-content: flex-end;">
+          <button type="button" onclick="openInstallmentsSimulatorModal()" class="btn-pill" style="font-size: 11.5px; padding: 8px 14px; background: rgba(56, 189, 248, 0.08); color: #0284c7; border: 1px solid rgba(56, 189, 248, 0.25); font-weight: 700; cursor: pointer;">
+            💳 Proyectar Compras a Cuotas Futuras →
           </button>
         </div>
 
