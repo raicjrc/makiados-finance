@@ -1529,9 +1529,9 @@
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         let isRefreshing = false;
-        navigator.serviceWorker.register('./sw.js?v=71.8')
+        navigator.serviceWorker.register('./sw.js?v=74.0')
           .then(reg => {
-            console.log('SW v71.8 registrado:', reg.scope);
+            console.log('SW v74.0 registrado:', reg.scope);
             // Forzar actualización inmediata del SW en todos los dispositivos
             reg.update();
             if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
