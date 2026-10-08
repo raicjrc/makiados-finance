@@ -7187,6 +7187,20 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
       // Sincronizar en vivo los valores actualizados de cuotas y saldos desde Movimientos
       if (currentSnowballDebts && currentSnowballDebts.length > 0) {
         const curTxs = getMonthTxList();
+
+        // PURGAR DE RAÍZ CUALQUIER MOVIMIENTO QUE NO ESTÉ EN CUOTAS Y NO SEA TARJETA O PRÉSTAMO
+        currentSnowballDebts = currentSnowballDebts.filter(d => {
+          const dKey = getNormalizedNameKey(d.name);
+          const matchedTx = curTxs.find(t => getNormalizedNameKey(t.name) === dKey);
+          if (matchedTx) {
+            // Si la transacción en Movimientos existe y el usuario NO marcó cuotas, y no es Tarjetas/Préstamos: ELIMINAR
+            if (!matchedTx.isInstallment && matchedTx.category !== 'Tarjetas' && matchedTx.category !== 'Préstamos') {
+              return false;
+            }
+          }
+          return true;
+        });
+
         currentSnowballDebts.forEach(d => {
           const dKey = getNormalizedNameKey(d.name);
           const matchedTx = curTxs.find(t => getNormalizedNameKey(t.name) === dKey);
@@ -7209,17 +7223,13 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
 
     function autoSyncDebtsSilently() {
       const txs = getMonthTxList();
-      const excludedCategories = [
-        'Comida casa', 'Comida gatitos casa', 'Comida gatitos calle', 'Arena gatitos casa', 
-        'Casa', 'Internet', 'Servicios', 'Celulares', 'Mapfre', 'Papá', 'Gimnasio & Salud', 
-        'Suscripciones', 'Salidas', 'Carro'
-      ];
 
       const candidates = txs.filter(t => {
-        if (excludedCategories.includes(t.category) && !t.isInstallment) return false;
+        // REGLA ESTRICTA: Solo entran a Bola de Nieve compras que el usuario marcó explícitamente en cuotas (isInstallment: true)
+        // O deudas bancarias de categoría Tarjetas o Préstamos.
+        // NUNCA incluir movimientos de categoría "Otros" u otras si NO están marcados en cuotas.
         if (t.isInstallment) return true;
         if (t.category === 'Tarjetas' || t.category === 'Préstamos') return true;
-        if (/(cuota|préstamo|prestamo|interbank|diners|bcp|bbva|cusco|junta|chiclayo|ipad|macbook)/i.test(t.name)) return true;
         return false;
       });
 
@@ -7370,6 +7380,26 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
       renderExecutiveAdvisor();
     }
     window.onSnowballSliderChange = onSnowballSliderChange;
+
+    let debtSearchTerm = '';
+
+    function onDebtSearchInput(val) {
+      debtSearchTerm = (val || '').toLowerCase().trim();
+      const clearBtn = document.getElementById('debtSearchClearBtn');
+      if (clearBtn) clearBtn.style.display = debtSearchTerm ? 'block' : 'none';
+      calculateAndRenderDebtPlan(currentDebtExtraPayment);
+    }
+    window.onDebtSearchInput = onDebtSearchInput;
+
+    function clearDebtSearch() {
+      debtSearchTerm = '';
+      const input = document.getElementById('debtSearchInput');
+      if (input) input.value = '';
+      const clearBtn = document.getElementById('debtSearchClearBtn');
+      if (clearBtn) clearBtn.style.display = 'none';
+      calculateAndRenderDebtPlan(currentDebtExtraPayment);
+    }
+    window.clearDebtSearch = clearDebtSearch;
 
     function calculateAndRenderDebtPlan(extraPayment) {
       if (extraPayment !== undefined && extraPayment !== null) {
@@ -7583,6 +7613,18 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
       }
 
       if (tableContainerEl) {
+        let displayedDebts = [...workingDebts];
+        if (debtSearchTerm) {
+          displayedDebts = displayedDebts.filter(d => (d.name || '').toLowerCase().includes(debtSearchTerm));
+        }
+
+        const countLabel = document.getElementById('debtSearchCountLabel');
+        if (countLabel) {
+          countLabel.textContent = debtSearchTerm
+            ? `Mostrando ${displayedDebts.length} de ${workingDebts.length} deudas`
+            : `${workingDebts.length} deudas registradas`;
+        }
+
         let tableHtml = `
           <table class="debt-table">
             <thead>
@@ -7601,70 +7643,80 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
             <tbody>
         `;
 
-        workingDebts.forEach((d, idx) => {
-          const isTarget = (idx === 0);
-
-          // CÁLCULO EXACTO DEL TIEMPO RESTANTE POR DEUDA:
-          // 1. Duración natural según sus cuotas pendientes registradas o saldo / cuota mensual
-          const remInstallments = (typeof d.remainingInstallments === 'number' && d.remainingInstallments > 0)
-            ? d.remainingInstallments
-            : Math.max(1, Math.ceil(d.balance / d.minPayment));
-
-          // 2. Si hay abono extra del acelerador Y es la deuda objetivo en ataque:
-          let debtMonths = remInstallments;
-          if (extra > 0 && isTarget) {
-            debtMonths = Math.max(1, Math.min(remInstallments, Math.ceil(d.balance / (d.minPayment + extra))));
-          }
-
-          // 3. Normalización estricta de cuotas para evitar "Cuota 10 de 6":
-          const totInst = d.installmentsTotal || (remInstallments > 6 ? 12 : 6);
-          const currInst = Math.min(totInst, Math.max(1, totInst - remInstallments + 1));
-          d.installmentsTotal = totInst;
-          d.installmentsCurrent = currInst;
-          d.remainingInstallments = remInstallments;
-
-          const debtFinalDate = new Date(now.getFullYear(), now.getMonth() + debtMonths, 1);
-          const debtFinalStr = `${monthsNames[debtFinalDate.getMonth()].slice(0, 3)} ${debtFinalDate.getFullYear()}`;
-
-          const statusBadge = isTarget
-            ? `<span class="badge-status-attack">EN ATAQUE ⚡</span>`
-            : `<span class="badge-status-pending">Pendiente</span>`;
-
-          const timeBadge = debtMonths === 1
-            ? `<span class="badge-time-remaining" style="color: #059669; font-weight: 800; border-color: rgba(16,185,129,0.3); background: rgba(16,185,129,0.1);">1 mes restante (¡Última cuota!)</span>`
-            : `<span class="badge-time-remaining">${debtMonths} meses restantes</span>`;
-
+        if (displayedDebts.length === 0) {
           tableHtml += `
-            <tr class="debt-table-row">
-              <td style="font-weight: 800; color: var(--text-muted);">${idx + 1}.</td>
-              <td>
-                <div style="display: flex; align-items: center; gap: 8px;">
-                  <span style="font-size: 16px;">💳</span>
-                  <div>
-                    <strong style="color: var(--text-main);">${escapeHtml(d.name)}</strong>
-                    <div style="font-size: 10px; color: var(--text-muted); margin-top: 2px;">Cuota ${currInst} de ${totInst} <span style="color: #6366f1; font-weight: 700;">(${remInstallments} ${remInstallments === 1 ? 'pendiente' : 'pendientes'})</span></div>
-                  </div>
-                </div>
-              </td>
-              <td style="font-weight: 800; color: var(--text-main);">
-                ${getCurrencySymbol()} ${d.balance.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </td>
-              <td style="font-weight: 700; color: ${d.tea > 0 ? '#6366f1' : '#10b981'};">
-                ${d.tea > 0 ? d.tea.toFixed(1) + '%' : '0.0% (Sin interés)'}
-              </td>
-              <td style="font-weight: 700; color: var(--text-secondary);">
-                ${getCurrencySymbol()} ${d.minPayment.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </td>
-              <td>${statusBadge}</td>
-              <td style="font-weight: 700; color: var(--text-main);">${debtFinalStr}</td>
-              <td>${timeBadge}</td>
-              <td style="text-align: center;">
-                <button type="button" onclick="editSnowballDebtRow(${d.originalIdx})" class="debt-row-action-btn" title="Editar saldo o cuota">✏️</button>
-                <button type="button" onclick="removeSnowballDebtRow(${d.originalIdx})" class="debt-row-action-btn" style="color: #ef4444;" title="Eliminar compromiso">✕</button>
+            <tr>
+              <td colspan="9" style="text-align: center; color: var(--text-muted); font-size: 13px; padding: 28px;">
+                🔍 No se encontraron compromisos que coincidan con "<strong>${escapeHtml(debtSearchTerm)}</strong>".
               </td>
             </tr>
           `;
-        });
+        } else {
+          displayedDebts.forEach((d, idx) => {
+            const isTarget = (idx === 0 && !debtSearchTerm);
+
+            // CÁLCULO EXACTO DEL TIEMPO RESTANTE POR DEUDA:
+            // 1. Duración natural según sus cuotas pendientes registradas o saldo / cuota mensual
+            const remInstallments = (typeof d.remainingInstallments === 'number' && d.remainingInstallments > 0)
+              ? d.remainingInstallments
+              : Math.max(1, Math.ceil(d.balance / d.minPayment));
+
+            // 2. Si hay abono extra del acelerador Y es la deuda objetivo en ataque:
+            let debtMonths = remInstallments;
+            if (extra > 0 && isTarget) {
+              debtMonths = Math.max(1, Math.min(remInstallments, Math.ceil(d.balance / (d.minPayment + extra))));
+            }
+
+            // 3. Normalización estricta de cuotas para evitar "Cuota 10 de 6":
+            const totInst = d.installmentsTotal || (remInstallments > 6 ? 12 : 6);
+            const currInst = Math.min(totInst, Math.max(1, totInst - remInstallments + 1));
+            d.installmentsTotal = totInst;
+            d.installmentsCurrent = currInst;
+            d.remainingInstallments = remInstallments;
+
+            const debtFinalDate = new Date(now.getFullYear(), now.getMonth() + debtMonths, 1);
+            const debtFinalStr = `${monthsNames[debtFinalDate.getMonth()].slice(0, 3)} ${debtFinalDate.getFullYear()}`;
+
+            const statusBadge = isTarget
+              ? `<span class="badge-status-attack">EN ATAQUE ⚡</span>`
+              : `<span class="badge-status-pending">Pendiente</span>`;
+
+            const timeBadge = debtMonths === 1
+              ? `<span class="badge-time-remaining" style="color: #059669; font-weight: 800; border-color: rgba(16,185,129,0.3); background: rgba(16,185,129,0.1);">1 mes restante (¡Última cuota!)</span>`
+              : `<span class="badge-time-remaining">${debtMonths} meses restantes</span>`;
+
+            tableHtml += `
+              <tr class="debt-table-row">
+                <td style="font-weight: 800; color: var(--text-muted);">${idx + 1}.</td>
+                <td>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 16px;">💳</span>
+                    <div>
+                      <strong style="color: var(--text-main);">${escapeHtml(d.name)}</strong>
+                      <div style="font-size: 10px; color: var(--text-muted); margin-top: 2px;">Cuota ${currInst} de ${totInst} <span style="color: #6366f1; font-weight: 700;">(${remInstallments} ${remInstallments === 1 ? 'pendiente' : 'pendientes'})</span></div>
+                    </div>
+                  </div>
+                </td>
+                <td style="font-weight: 800; color: var(--text-main);">
+                  ${getCurrencySymbol()} ${d.balance.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </td>
+                <td style="font-weight: 700; color: ${d.tea > 0 ? '#6366f1' : '#10b981'};">
+                  ${d.tea > 0 ? d.tea.toFixed(1) + '%' : '0.0% (Sin interés)'}
+                </td>
+                <td style="font-weight: 700; color: var(--text-secondary);">
+                  ${getCurrencySymbol()} ${d.minPayment.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </td>
+                <td>${statusBadge}</td>
+                <td style="font-weight: 700; color: var(--text-main);">${debtFinalStr}</td>
+                <td>${timeBadge}</td>
+                <td style="text-align: center;">
+                  <button type="button" onclick="editSnowballDebtRow(${d.originalIdx})" class="debt-row-action-btn" title="Editar saldo o cuota">✏️</button>
+                  <button type="button" onclick="removeSnowballDebtRow(${d.originalIdx})" class="debt-row-action-btn" style="color: #ef4444;" title="Eliminar compromiso">✕</button>
+                </td>
+              </tr>
+            `;
+          });
+        }
 
         tableHtml += `</tbody></table>`;
         tableContainerEl.innerHTML = tableHtml;
@@ -7897,17 +7949,11 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
 
     function syncDebtsFromCuotas() {
       const txs = getMonthTxList();
-      const excludedCategories = [
-        'Comida casa', 'Comida gatitos casa', 'Comida gatitos calle', 'Arena gatitos casa', 
-        'Casa', 'Internet', 'Servicios', 'Celulares', 'Mapfre', 'Papá', 'Gimnasio & Salud', 
-        'Suscripciones', 'Salidas', 'Carro'
-      ];
 
       const candidates = txs.filter(t => {
-        if (excludedCategories.includes(t.category) && !t.isInstallment) return false;
+        // REGLA ESTRICTA: Solo compras marcadas en cuotas (isInstallment: true) o Tarjetas / Préstamos
         if (t.isInstallment) return true;
         if (t.category === 'Tarjetas' || t.category === 'Préstamos') return true;
-        if (/(cuota|préstamo|prestamo|interbank|diners|bcp|bbva|cusco|junta|chiclayo|ipad|macbook)/i.test(t.name)) return true;
         return false;
       });
 
