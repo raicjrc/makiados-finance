@@ -10017,8 +10017,7 @@ async function renewMasterUser30Days(userId, email) {
     const updatePayload = {
       user_id: userId,
       status: 'pro_monthly',
-      expires_at: newExpiresIso,
-      updated_at: new Date().toISOString()
+      expires_at: newExpiresIso
     };
     if (email) updatePayload.email = email;
 
@@ -10026,12 +10025,21 @@ async function renewMasterUser30Days(userId, email) {
       .from('user_subscriptions')
       .upsert(updatePayload, { onConflict: 'user_id' });
 
-    if (error && error.message && error.message.includes('expires_at')) {
-      delete updatePayload.expires_at;
-      const res = await supabaseClient
-        .from('user_subscriptions')
-        .upsert(updatePayload, { onConflict: 'user_id' });
-      error = res.error;
+    if (error && error.message) {
+      if (error.message.includes('updated_at')) {
+        delete updatePayload.updated_at;
+        const res = await supabaseClient
+          .from('user_subscriptions')
+          .upsert(updatePayload, { onConflict: 'user_id' });
+        error = res.error;
+      }
+      if (error && error.message && error.message.includes('expires_at')) {
+        delete updatePayload.expires_at;
+        const res = await supabaseClient
+          .from('user_subscriptions')
+          .upsert(updatePayload, { onConflict: 'user_id' });
+        error = res.error;
+      }
     }
 
     if (error) {
