@@ -7568,3 +7568,148 @@
       color: #fde68a;
       border-color: rgba(245, 158, 11, 0.4);
     }
+
+    /* ================================================================
+       TOUR GUIADO NATIVO VANILLA APPLE (100% OFFLINE, ZERO CDN)
+       ================================================================ */
+    .native-tour-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.72);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 100005;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      padding: 16px;
+      padding-bottom: max(24px, env(safe-area-inset-bottom, 24px));
+      transition: opacity 0.2s ease;
+    }
+    .native-tour-card {
+      background: #ffffff;
+      color: #0f172a;
+      width: 100%;
+      max-width: 420px;
+      border-radius: 24px;
+      padding: 20px 22px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(226, 232, 240, 0.9);
+      animation: nativeTourSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      z-index: 100006;
+    }
+    @keyframes nativeTourSlideUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .native-tour-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .native-tour-step-pill {
+      font-size: 11px;
+      font-weight: 800;
+      color: #0d9488;
+      background: rgba(13, 148, 136, 0.12);
+      padding: 3px 10px;
+      border-radius: 20px;
+      letter-spacing: 0.02em;
+    }
+    .native-tour-close {
+      background: #f1f5f9;
+      border: none;
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: #64748b;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .native-tour-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: #0f172a;
+      margin-bottom: 6px;
+    }
+    .native-tour-desc {
+      font-size: 13px;
+      line-height: 1.5;
+      color: #475569;
+      margin-bottom: 16px;
+    }
+    .native-tour-footer {
+      display: flex;
+      gap: 10px;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .native-tour-btn-prev {
+      padding: 10px 16px !important;
+      font-size: 12.5px !important;
+      font-weight: 700 !important;
+      border-radius: 12px !important;
+      border: 1.5px solid #cbd5e1 !important;
+      background: #ffffff !important;
+      color: #334155 !important;
+    }
+    .native-tour-btn-next {
+      flex: 1;
+      padding: 10px 18px !important;
+      font-size: 12.5px !important;
+      font-weight: 800 !important;
+      border-radius: 12px !important;
+      background: linear-gradient(135deg, #0d9488, #0f766e) !important;
+      color: #ffffff !important;
+      border: none !important;
+      box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3) !important;
+    }
+    .native-tour-target-active {
+      position: relative !important;
+      z-index: 100010 !important;
+      box-shadow: 0 0 0 4px #0d9488, 0 0 35px rgba(13, 148, 136, 0.6) !important;
+      border-radius: 20px !important;
+      transition: box-shadow 0.25s ease !important;
+    }
+
+    /* ================================================================
+       MEJORAS DE USABILIDAD CELULAR (SAFARI IOS & ANDROID)
+       ================================================================ */
+    .quick-expense-sheet {
+      max-height: 92vh !important;
+      overflow-y: auto !important;
+      -webkit-overflow-scrolling: touch !important;
+    }
+    @media (max-height: 680px) {
+      .quick-keypad-grid button.quick-key {
+        padding: 8px 0 !important;
+        font-size: 17px !important;
+      }
+      .quick-categories-grid {
+        gap: 6px !important;
+      }
+      .quick-cat-btn {
+        padding: 8px 6px !important;
+      }
+    }
+    @media (max-width: 768px) {
+      input, select, textarea {
+        font-size: 16px !important;
+      }
+      .privacy-toggle-btn,
+      .theme-toggle-btn,
+      .settings-popover-btn {
+        min-width: 42px;
+        min-height: 42px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+    }

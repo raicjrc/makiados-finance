@@ -19,8 +19,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="js/chart.min.js?v=72.0"></script>
   <script src="js/supabase.min.js?v=72.0"></script>
-  <link rel="stylesheet" href="css/styles.css?v=75.4">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
+  <link rel="stylesheet" href="css/styles.css?v=75.5">
 
   <style>
     /* Estilos Críticos Inmediatos: Garantizan que el login nunca se rompa aun con caché lenta */
@@ -3444,7 +3443,22 @@
   <!-- COMPATIBILIDAD MODAL MASTER: Ahora reemplazado por el Módulo Full-Screen tab-founder -->
   <div id="masterDashboardModal" style="display: none;"></div>
 
-  <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
-  <script src="js/app.js?v=75.4"></script>
+  <!-- COMPONENTE: TOUR GUIADO NATIVO VANILLA APPLE (100% OFFLINE, 0 DEPENDENCIAS) -->
+  <div id="nativeTourBackdrop" class="native-tour-backdrop" style="display: none;" onclick="if(event.target === this) closeNativeTour()">
+    <div id="nativeTourCard" class="native-tour-card">
+      <div class="native-tour-header">
+        <span class="native-tour-step-pill" id="nativeTourStepBadge">Paso 1 de 4</span>
+        <button type="button" class="native-tour-close" onclick="closeNativeTour()" title="Cerrar tour">✕</button>
+      </div>
+      <div class="native-tour-title" id="nativeTourTitle">💵 Disponible en Banco</div>
+      <div class="native-tour-desc" id="nativeTourDesc">Tu saldo en tiempo real. Aquí ves exactamente cuánto dinero te queda en banco, tus ingresos y tus gastos pagados para terminar el mes en verde.</div>
+      <div class="native-tour-footer">
+        <button type="button" id="nativeTourPrevBtn" class="btn btn-secondary native-tour-btn-prev" onclick="nativeTourPrevStep()">← Atrás</button>
+        <button type="button" id="nativeTourNextBtn" class="btn btn-primary native-tour-btn-next" onclick="nativeTourNextStep()">Siguiente →</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/app.js?v=75.5"></script>
 </body>
 </html>

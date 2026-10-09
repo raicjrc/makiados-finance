@@ -7165,108 +7165,128 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
       }
     };
 
+    // ================================================================
+    // TOUR GUIADO NATIVO VANILLA APPLE (100% OFFLINE, ZERO CDN)
+    // ================================================================
+    let nativeTourCurrentStep = 0;
+    const nativeTourSteps = [
+      {
+        targetMobile: '#executiveBalanceCard',
+        targetDesk: '#executiveBalanceCard',
+        tab: 'inicio',
+        title: '💵 Disponible en Banco',
+        desc: 'Tu saldo bancario real al instante. Aquí ves cuánto dinero te queda para terminar el mes en verde, tus ingresos y tus gastos pagados.'
+      },
+      {
+        targetMobile: '#navTabQuickAdd',
+        targetDesk: '.btn-header-expense',
+        tab: 'inicio',
+        title: '⚡ Registrar Gasto al Instante',
+        desc: 'Toca aquí cada vez que hagas una compra o pago. Puedes registrar gastos al contado o compras en cuotas con tarjeta.'
+      },
+      {
+        targetMobile: '#navTabMovimientos',
+        targetDesk: '#deskNavTabMovimientos',
+        tab: 'movimientos',
+        title: '💳 Movimientos & Cuotas',
+        desc: 'Consulta tu lista completa de transacciones, tu Plan 50/30/20 y tus Compras en Cuotas (método Bola de Nieve) para liquidar compromisos.'
+      },
+      {
+        targetMobile: '#btnSettings',
+        targetDesk: '#deskNavTabSettings',
+        tab: 'inicio',
+        title: '⚙️ Ajustes y Tu Sueldo',
+        desc: 'Configura o edita tu sueldo inicial en cualquier momento, ajusta tus categorías de gastos fijos y exporta reportes mensuales.'
+      }
+    ];
+
     function startInteractiveTour() {
       closeAllModals();
-      const driverFactory = (window.driver && window.driver.js && window.driver.js.driver)
-                         || (window.driver && typeof window.driver.driver === 'function' ? window.driver.driver : null)
-                         || (typeof window.driver === 'function' ? window.driver : null);
-
-      if (!driverFactory) {
-        showToast('El componente de tour se está cargando. Reintenta en unos segundos.', 'info');
-        return;
-      }
-
-      if (typeof switchTab === 'function') {
-        switchTab('inicio');
-      }
-
-      const userKey = currentUser ? currentUser.id : 'guest';
-      const isDesk = window.innerWidth >= 1024;
-      const getTarget = (mobileSel, deskSel) => {
-        if (window.innerWidth >= 1024 && deskSel && document.querySelector(deskSel)) {
-          return deskSel;
-        }
-        return mobileSel;
-      };
-
-      setTimeout(() => {
-        try {
-          const driverObj = driverFactory({
-            showProgress: true,
-            animate: true,
-            allowClose: true,
-            doneBtnText: '¡Entendido! 🚀',
-            nextBtnText: 'Siguiente →',
-            prevBtnText: '← Atrás',
-            progressText: '{{current}} de {{total}}',
-            showButtons: ['next', 'previous', 'close'],
-            onCloseClick: () => {
-              localStorage.setItem('finanzas_tour_dismissed_' + userKey, 'true');
-              localStorage.setItem('finanzas_tour_dismissed', 'true');
-              driverObj.destroy();
-            },
-            onDestroyStarted: () => {
-              localStorage.setItem('finanzas_tour_dismissed_' + userKey, 'true');
-              localStorage.setItem('finanzas_tour_dismissed', 'true');
-              driverObj.destroy();
-            },
-            steps: [
-              {
-                element: '#executiveBalanceCard',
-                popover: {
-                  title: '💵 Disponible en Banco',
-                  description: 'Tu termómetro financiero en tiempo real: consulta exactamente cuánto dinero te queda en banco, tus ingresos y tus gastos pagados para terminar el mes en verde.',
-                  side: 'bottom',
-                  align: 'start'
-                }
-              },
-              {
-                element: getTarget('#navTabQuickAdd', '.btn-header-expense'),
-                popover: {
-                  title: '⚡ Registrar Gasto al Instante',
-                  description: 'Toca aquí cada vez que realices una compra o pago. Puedes registrar gastos al contado o compras en cuotas con tarjeta.',
-                  side: isDesk ? 'bottom' : 'top',
-                  align: 'center'
-                }
-              },
-              {
-                element: getTarget('#navTabMovimientos', '#deskNavTabMovimientos'),
-                popover: {
-                  title: '💳 Movimientos & Cuotas',
-                  description: 'Explora tu historial completo de compras, tu Plan 50/30/20 y tus Compras en Cuotas (método Bola de Nieve) para liquidar compromisos.',
-                  side: isDesk ? 'right' : 'top',
-                  align: 'center'
-                }
-              },
-              {
-                element: getTarget('#btnSettings', '#deskNavTabSettings'),
-                popover: {
-                  title: '⚙️ Ajustes y Tu Sueldo',
-                  description: 'Configura o edita tu sueldo inicial, ajusta tus categorías de gastos fijos y exporta tus reportes mensuales.',
-                  side: 'bottom',
-                  align: 'center'
-                }
-              }
-            ]
-          });
-
-          window.currentAliviaFinTour = driverObj;
-          window.currentFinZenTour = driverObj;
-          driverObj.drive();
-        } catch (err) {
-          console.warn('Error al iniciar driver.js:', err);
-        }
-      }, 200);
+      nativeTourCurrentStep = 0;
+      showNativeTourStep(0);
     }
 
-    window.closeTour = function() {
+    function showNativeTourStep(stepIdx) {
+      if (stepIdx < 0 || stepIdx >= nativeTourSteps.length) {
+        closeNativeTour();
+        return;
+      }
+      nativeTourCurrentStep = stepIdx;
+      const step = nativeTourSteps[stepIdx];
+
+      if (step.tab && typeof switchTab === 'function') {
+        switchTab(step.tab);
+      }
+
+      document.querySelectorAll('.native-tour-target-active').forEach(el => {
+        el.classList.remove('native-tour-target-active');
+      });
+
+      const isDesk = window.innerWidth >= 1024;
+      const sel = isDesk ? (step.targetDesk || step.targetMobile) : (step.targetMobile || step.targetDesk);
+      const targetEl = sel ? document.querySelector(sel) : null;
+
+      if (targetEl) {
+        targetEl.classList.add('native-tour-target-active');
+        try {
+          targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } catch (e) {}
+      }
+
+      const badgeEl = document.getElementById('nativeTourStepBadge');
+      const titleEl = document.getElementById('nativeTourTitle');
+      const descEl = document.getElementById('nativeTourDesc');
+      const prevBtn = document.getElementById('nativeTourPrevBtn');
+      const nextBtn = document.getElementById('nativeTourNextBtn');
+      const backdrop = document.getElementById('nativeTourBackdrop');
+
+      if (badgeEl) badgeEl.textContent = `Paso ${stepIdx + 1} de ${nativeTourSteps.length}`;
+      if (titleEl) titleEl.textContent = step.title;
+      if (descEl) descEl.textContent = step.desc;
+
+      if (prevBtn) {
+        prevBtn.style.display = stepIdx === 0 ? 'none' : 'block';
+      }
+      if (nextBtn) {
+        nextBtn.textContent = stepIdx === nativeTourSteps.length - 1 ? '¡Comenzar a Usar! 🚀' : 'Siguiente →';
+      }
+
+      if (backdrop) backdrop.style.display = 'flex';
+    }
+
+    function nativeTourNextStep() {
+      if (nativeTourCurrentStep >= nativeTourSteps.length - 1) {
+        closeNativeTour();
+      } else {
+        showNativeTourStep(nativeTourCurrentStep + 1);
+      }
+    }
+
+    function nativeTourPrevStep() {
+      if (nativeTourCurrentStep > 0) {
+        showNativeTourStep(nativeTourCurrentStep - 1);
+      }
+    }
+
+    function closeNativeTour() {
+      document.querySelectorAll('.native-tour-target-active').forEach(el => {
+        el.classList.remove('native-tour-target-active');
+      });
+      const backdrop = document.getElementById('nativeTourBackdrop');
+      if (backdrop) backdrop.style.display = 'none';
+
       const userKey = currentUser ? currentUser.id : 'guest';
       localStorage.setItem('finanzas_tour_dismissed_' + userKey, 'true');
       localStorage.setItem('finanzas_tour_dismissed', 'true');
-      if (typeof switchTab === 'function') {
-        switchTab('inicio');
-      }
-    };
+
+      if (typeof switchTab === 'function') switchTab('inicio');
+    }
+
+    window.startInteractiveTour = startInteractiveTour;
+    window.nativeTourNextStep = nativeTourNextStep;
+    window.nativeTourPrevStep = nativeTourPrevStep;
+    window.closeNativeTour = closeNativeTour;
+    window.closeTour = closeNativeTour;
 
     // ================================================================
     // CENTRO ESTRATÉGICO BOLA DE NIEVE & ASESOR FINANCIERO (MOCKUP 1)
