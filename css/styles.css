@@ -334,10 +334,13 @@
         flex-shrink: 0;
       }
       .month-selector select {
-        padding: 3px 5px;
-        font-size: 10.5px;
-        min-height: 30px;
-        max-width: 90px;
+        padding: 4px 8px;
+        font-size: 12.5px !important;
+        font-weight: 800;
+        min-height: 34px;
+        min-width: 108px;
+        max-width: 130px;
+        width: auto;
       }
       .theme-toggle-btn, .settings-popover-btn {
         width: 30px;
@@ -7702,7 +7705,7 @@
       }
     }
     @media (max-width: 768px) {
-      input, select, textarea {
+      input, textarea, select:not(#monthSelect) {
         font-size: 16px !important;
       }
       .privacy-toggle-btn,
