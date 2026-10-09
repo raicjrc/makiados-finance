@@ -5098,11 +5098,11 @@
           <div class="plan-progress-header">
             <div>
               <div class="plan-progress-title">🏠 Necesidades Básicas</div>
-              <div class="plan-progress-sub">50% Meta (${getCurrencySymbol()} ${target50.toLocaleString(getActiveCurrency().locale, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}) vs ${realPct50}% Actual</div>
+              <div class="plan-progress-sub">Tope 50% (${getCurrencySymbol()} ${target50.toLocaleString(getActiveCurrency().locale, { minimumFractionDigits: 0, maximumFractionDigits: 0 })})</div>
             </div>
             <div class="plan-progress-amounts">
-              ${getCurrencySymbol()} ${needsReal.toLocaleString(getActiveCurrency().locale, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-              <span>de ${getCurrencySymbol()} ${target50.toLocaleString(getActiveCurrency().locale, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
+              <strong>${getCurrencySymbol()} ${needsReal.toLocaleString(getActiveCurrency().locale, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</strong>
+              <span class="plan-pct-badge" style="background: ${needsReal > target50 ? 'rgba(239, 68, 68, 0.12)' : 'rgba(16, 185, 129, 0.12)'}; color: ${needsReal > target50 ? '#dc2626' : '#059669'}; font-weight: 800; padding: 2px 7px; border-radius: 6px; font-size: 11px;">${realPct50}%</span>
             </div>
           </div>
           <div class="plan-progress-track">
@@ -5114,11 +5114,11 @@
           <div class="plan-progress-header">
             <div>
               <div class="plan-progress-title">🎉 Deseos & Estilo de Vida</div>
-              <div class="plan-progress-sub">30% Meta (${getCurrencySymbol()} ${target30.toLocaleString(getActiveCurrency().locale, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}) vs ${realPct30}% Actual</div>
+              <div class="plan-progress-sub">Tope 30% (${getCurrencySymbol()} ${target30.toLocaleString(getActiveCurrency().locale, { minimumFractionDigits: 0, maximumFractionDigits: 0 })})</div>
             </div>
             <div class="plan-progress-amounts">
-              ${getCurrencySymbol()} ${wantsReal.toLocaleString(getActiveCurrency().locale, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-              <span>de ${getCurrencySymbol()} ${target30.toLocaleString(getActiveCurrency().locale, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
+              <strong>${getCurrencySymbol()} ${wantsReal.toLocaleString(getActiveCurrency().locale, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</strong>
+              <span class="plan-pct-badge" style="background: ${wantsReal > target30 ? 'rgba(245, 158, 11, 0.12)' : 'rgba(6, 182, 212, 0.12)'}; color: ${wantsReal > target30 ? '#d97706' : '#0891b2'}; font-weight: 800; padding: 2px 7px; border-radius: 6px; font-size: 11px;">${realPct30}%</span>
             </div>
           </div>
           <div class="plan-progress-track">
@@ -5130,39 +5130,31 @@
           <div class="plan-progress-header">
             <div>
               <div class="plan-progress-title">💳 Compromiso en Deudas & Cuotas</div>
-              <div class="plan-progress-sub">20% Meta Sugerida (${getCurrencySymbol()} ${target20.toLocaleString(getActiveCurrency().locale, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}) vs ${realPctDebt}% Real</div>
+              <div class="plan-progress-sub">Tope 20% (${getCurrencySymbol()} ${target20.toLocaleString(getActiveCurrency().locale, { minimumFractionDigits: 0, maximumFractionDigits: 0 })})</div>
             </div>
             <div class="plan-progress-amounts">
-              ${getCurrencySymbol()} ${savingsDebtReal.toLocaleString(getActiveCurrency().locale, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-              <span>comprometidos</span>
+              <strong>${getCurrencySymbol()} ${savingsDebtReal.toLocaleString(getActiveCurrency().locale, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</strong>
+              <span class="plan-pct-badge" style="background: ${savingsDebtReal > target20 ? 'rgba(239, 68, 68, 0.12)' : 'rgba(139, 92, 246, 0.12)'}; color: ${savingsDebtReal > target20 ? '#dc2626' : '#7c3aed'}; font-weight: 800; padding: 2px 7px; border-radius: 6px; font-size: 11px;">${realPctDebt}%</span>
             </div>
           </div>
           <div class="plan-progress-track">
             <div class="plan-progress-fill" style="width: ${barFill20}%; background: ${savingsDebtReal > target20 ? '#ef4444' : '#8b5cf6'};"></div>
           </div>
-          <div style="font-size: 10.5px; color: var(--text-muted); margin-top: 4px;">
-            ${unbudgetedMargin > 0 ? `Margen no asignado en papel: ${getCurrencySymbol()} ${unbudgetedMargin.toLocaleString()} (sujeto a pagos pendientes)` : 'Presupuesto mensual al límite'}
-          </div>
         </div>
 
-        <!-- Anillo de Salud Financiera Fiel al Mockup -->
-        <div class="health-score-container">
-          <div class="health-score-title">Índice de Salud Financiera Real</div>
-          <div class="health-score-circle-wrap">
-            <svg width="90" height="90" viewBox="0 0 90 90" style="transform: rotate(-90deg); position: absolute; top:0; left:0;">
-              <circle cx="45" cy="45" r="36" fill="transparent" stroke="rgba(255,255,255,0.08)" stroke-width="7" />
-              <circle cx="45" cy="45" r="36" fill="transparent" stroke="${healthBadgeColor}" stroke-width="7"
-                stroke-dasharray="226" stroke-dashoffset="${strokeDashoffset}" stroke-linecap="round" style="transition: stroke-dashoffset 0.8s cubic-bezier(0.32, 0.72, 0, 1);" />
-            </svg>
-            <div style="text-align: center; position: relative; z-index: 2;">
-              <span class="health-score-number">${healthScore}</span><span class="health-score-denom">/100</span>
+        <!-- Indicador Ejecutivo de Salud Financiera Compacto -->
+        <div style="margin-top: 14px; padding: 12px 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 38px; height: 38px; border-radius: 10px; background: ${healthBadgeColor}15; color: ${healthBadgeColor}; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 14.5px; flex-shrink: 0;">
+              ${healthScore}
+            </div>
+            <div>
+              <div style="font-size: 12px; font-weight: 800; color: #0f172a;">Índice de Salud Financiera</div>
+              <div style="font-size: 11px; color: ${healthBadgeColor}; font-weight: 700;">${healthBadgeText}</div>
             </div>
           </div>
-          <div class="health-score-status-badge" style="color: ${healthBadgeColor}; background: ${healthBadgeColor}20;">
-            ${healthBadgeText}
-          </div>
-          <div style="font-size: 10px; color: var(--text-muted); margin-top: 6px; text-align: center; max-width: 220px; line-height: 1.35;">
-            ${penaltyReasons.length > 0 ? `⚠️ Ajustado por: ${penaltyReasons.join(' · ')}` : 'Situación financiera balanceada'}
+          <div style="font-size: 11px; color: #64748b; font-weight: 600; text-align: right; max-width: 140px; line-height: 1.25;">
+            ${penaltyReasons.length > 0 ? penaltyReasons[0] : 'Presupuesto balanceado'}
           </div>
         </div>
       `;
