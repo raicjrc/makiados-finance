@@ -135,6 +135,10 @@
       return getActiveCurrency().code;
     }
 
+    function roundCurrency(amount) {
+      return Math.round((Number(amount || 0) + Number.EPSILON) * 100) / 100;
+    }
+
     function updateCurrencyDOMElements() {
       const sym = getCurrencySymbol();
       const code = getCurrencyCode();
@@ -3744,10 +3748,10 @@
         const totalPaid = txs.filter(t => (t.status || 'Pagado') === 'Pagado').reduce((sum, item) => sum + item.amount, 0);
         const monthIncomes = appState.incomes ? (appState.incomes[targetMonth] || []) : [];
         const totalReceived = monthIncomes.filter(i => (i.status || 'Pendiente') === 'Recibido').reduce((s, i) => s + i.amount, 0);
-        return totalReceived - totalPaid;
+        return roundCurrency(totalReceived - totalPaid);
       }
       
-      // Acumulado desde Agosto 2026
+      // Acumulado desde Agosto 2026 con aritmética protegida a centavos
       let accumulatedBalance = 0;
       for (let i = startIndex; i <= targetIndex; i++) {
         const m = allMonthsOrder[i];
@@ -3755,9 +3759,9 @@
         const totalPaid = txs.filter(t => (t.status || 'Pagado') === 'Pagado').reduce((sum, item) => sum + item.amount, 0);
         const monthIncomes = appState.incomes ? (appState.incomes[m] || []) : [];
         const totalReceived = monthIncomes.filter(inc => (inc.status || 'Pendiente') === 'Recibido').reduce((s, inc) => s + inc.amount, 0);
-        accumulatedBalance += (totalReceived - totalPaid);
+        accumulatedBalance = roundCurrency(accumulatedBalance + (totalReceived - totalPaid));
       }
-      return accumulatedBalance;
+      return roundCurrency(accumulatedBalance);
     }
 
     function animateNumber(element, targetVal, duration = 280, isCurrency = false) {
@@ -3797,12 +3801,12 @@
       const prevClosingBalance = prevMonth ? getAccumulatedBalance(prevMonth) : 0;
       
       const currentMonthTxs = appState.transactions[targetMonth] || [];
-      const totalPaid = currentMonthTxs.filter(t => (t.status || 'Pagado') === 'Pagado').reduce((sum, item) => sum + item.amount, 0);
+      const totalPaid = roundCurrency(currentMonthTxs.filter(t => (t.status || 'Pagado') === 'Pagado').reduce((sum, item) => sum + item.amount, 0));
       
       const monthIncomes = appState.incomes ? (appState.incomes[targetMonth] || []) : [];
-      const totalReceived = monthIncomes.filter(inc => (inc.status || 'Pendiente') === 'Recibido').reduce((s, inc) => s + inc.amount, 0);
+      const totalReceived = roundCurrency(monthIncomes.filter(inc => (inc.status || 'Pendiente') === 'Recibido').reduce((s, inc) => s + inc.amount, 0));
       
-      const currentMonthFlow = totalReceived - totalPaid;
+      const currentMonthFlow = roundCurrency(totalReceived - totalPaid);
       const currentBalance = getAccumulatedBalance(targetMonth);
 
       return {

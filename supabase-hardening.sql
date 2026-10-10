@@ -122,6 +122,7 @@ ALTER TABLE public.app_feedback ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Cualquiera puede insertar feedback" ON public.app_feedback;
 DROP POLICY IF EXISTS "Solo admin puede leer feedback" ON public.app_feedback;
 DROP POLICY IF EXISTS "Admin gestiona feedback" ON public.app_feedback;
+DROP POLICY IF EXISTS "Insertar feedback (acotado)" ON public.app_feedback;
 
 CREATE POLICY "Insertar feedback (acotado)" ON public.app_feedback
   FOR INSERT
@@ -236,5 +237,29 @@ BEGIN
     GRANT EXECUTE ON FUNCTION public.delete_user_by_admin(text,text) TO authenticated;
   END IF;
 END $$;
+
+-- 7. finanzas_state (Blindaje de datos financieros personales) -------
+CREATE TABLE IF NOT EXISTS public.finanzas_state (
+  id text PRIMARY KEY,
+  data jsonb NOT NULL,
+  updated_at timestamptz DEFAULT now()
+);
+ALTER TABLE public.finanzas_state ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Acceso familia" ON public.finanzas_state;
+DROP POLICY IF EXISTS "Usuario solo ve sus propios datos" ON public.finanzas_state;
+
+CREATE POLICY "Usuario solo ve sus propios datos" ON public.finanzas_state
+  FOR ALL TO authenticated
+  USING (
+    id = concat('state_', auth.uid()::text)
+    OR id LIKE concat('backup_', left(auth.uid()::text, 8), '%')
+    OR public.is_admin()
+  )
+  WITH CHECK (
+    id = concat('state_', auth.uid()::text)
+    OR id LIKE concat('backup_', left(auth.uid()::text, 8), '%')
+    OR public.is_admin()
+  );
 
 COMMIT;

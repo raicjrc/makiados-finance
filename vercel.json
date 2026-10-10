@@ -1,6 +1,8 @@
 {
   "cleanUrls": true,
   "rewrites": [
+    { "source": "/landing", "destination": "/landing.html" },
+    { "source": "/inicio", "destination": "/landing.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
