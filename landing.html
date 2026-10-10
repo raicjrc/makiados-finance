@@ -1651,8 +1651,8 @@
               <li>✔ <strong>Simulador inteligente de cuotas de tarjeta</strong></li>
               <li>✔ <strong>Radar de gastos fijos y suscripciones</strong></li>
               <li>✔ <strong>Metas de ahorro y presupuestos dinámicos</strong></li>
-              <li>✔ <strong>Soporte prioritario por WhatsApp</strong></li>
-              <li>✔ <strong>Garantía de satisfacción de 7 días</strong></li>
+              <li>✔ <strong>Actualizaciones continuas y nuevas funciones</strong></li>
+              <li>✔ <strong>Sin contratos: Cancela cuando quieras</strong></li>
             </ul>
 
             <button type="button" class="btn btn-primary" onclick="openPlanModal('Vitalicia Anual', '19.90', 'al año')" style="width: 100%;">
@@ -1853,15 +1853,10 @@
     }
 
     // GESTIÓN DE MODAL DE PAGO / SUSCRIPCIÓN
-    let selectedPlanForWa = '';
     function openPlanModal(name, price, period) {
-      selectedPlanForWa = `${name} (S/ ${price} ${period})`;
       document.getElementById('planModalTitle').textContent = `Activar ${name}`;
       document.getElementById('planModalPrice').textContent = `S/ ${price}`;
       document.getElementById('planModalPeriod').textContent = `/ ${period}`;
-      
-      const waMsg = encodeURIComponent(`Hola César, quiero activar mi suscripción a AliviaFin: ${selectedPlanForWa}.`);
-      document.getElementById('planModalWaBtn').href = `https://wa.me/51914688135?text=${waMsg}`;
 
       const modal = document.getElementById('planModalOverlay');
       modal.style.display = 'flex';
@@ -1895,7 +1890,7 @@
         termsContent.style.display = 'none';
         claimsContent.style.display = 'block';
       } else {
-        title.textContent = '⚖️ Términos, Privacidad & Garantías';
+        title.textContent = '⚖️ Términos y Privacidad';
         termsContent.style.display = 'block';
         claimsContent.style.display = 'none';
       }
@@ -1935,7 +1930,7 @@
         </div>
 
         <!-- Pill de número -->
-        <div style="display: flex; align-items: center; justify-content: space-between; background: #ffffff; padding: 8px 14px; border-radius: 12px; border: 1px solid #cbd5e1; margin-bottom: 12px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; background: #ffffff; padding: 8px 14px; border-radius: 12px; border: 1px solid #cbd5e1; margin-bottom: 14px;">
           <div style="text-align: left;">
             <div style="font-size: 9.5px; font-weight: 800; color: #7c3aed; text-transform: uppercase;">Yape / Plin</div>
             <div style="font-size: 15px; font-weight: 900; color: #0f172a; font-family: 'JetBrains Mono', monospace;">914 688 135</div>
@@ -1946,19 +1941,14 @@
           </button>
         </div>
 
-        <!-- Botón notificar WhatsApp -->
-        <a id="planModalWaBtn" href="#" target="_blank" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 14px; background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
-          <span>📲 Notificar Pago a César por WhatsApp</span>
+        <!-- Botón confirmar en app -->
+        <a href="index.html" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 14px; background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+          <span>✅ Continuar a la App para Registrarme</span>
         </a>
       </div>
 
-      <!-- Opción alternativa: ir a la app primero -->
-      <a href="index.html" class="btn btn-ghost" style="width: 100%; padding: 11px; font-size: 13px;">
-        O regístrate primero en la App →
-      </a>
-
-      <div style="font-size: 11px; color: #94a3b8; margin-top: 12px;">
-        🔒 Garantía total de devolución de 7 días sin preguntas
+      <div style="font-size: 11.5px; color: #64748b; line-height: 1.5;">
+        ✨ Puedes usar tu cuenta gratuita primero y activar el plan cuando lo decidas sin penalidades.
       </div>
     </div>
   </div>
@@ -1976,11 +1966,11 @@
         <h4 style="color: #0f172a; font-size: 15px; margin: 12px 0 6px;">1. Privacidad y Seguridad (Zero-Knowledge)</h4>
         <p>AliviaFin no solicita, almacena ni requiere credenciales de banca por internet. Cada usuario es dueño absoluto de sus registros y sus datos están cifrados y aislados en la nube bajo su identificador personal.</p>
 
-        <h4 style="color: #0f172a; font-size: 15px; margin: 16px 0 6px;">2. Garantía de Satisfacción Total (7 Días)</h4>
-        <p>Si durante los primeros 7 días de tu suscripción AliviaFin no cumple con tus expectativas de orden financiero, te reembolsamos el 100% de tu dinero por el mismo medio en que pagaste (Yape, Plin o tarjeta), sin preguntas.</p>
+        <h4 style="color: #0f172a; font-size: 15px; margin: 16px 0 6px;">2. Cancelación y Planes</h4>
+        <p>Los planes pueden ser cancelados en cualquier momento sin penalidades ni cargos forzosos. El usuario dispone de la versión gratuita para evaluar la plataforma antes de cualquier contratación.</p>
 
-        <h4 style="color: #0f172a; font-size: 15px; margin: 16px 0 6px;">3. Soporte y Contacto</h4>
-        <p>El soporte es atendido directamente por el fundador a través de WhatsApp oficial para resolver cualquier duda o necesidad sobre tu cuenta.</p>
+        <h4 style="color: #0f172a; font-size: 15px; margin: 16px 0 6px;">3. Soporte y Asistencia</h4>
+        <p>La asistencia al usuario se canaliza a través del buzón de soporte integrado en la propia aplicación web.</p>
       </div>
 
       <!-- Contenido Libro de Reclamaciones -->
@@ -1988,13 +1978,12 @@
         <p style="margin-bottom: 14px;">Conforme a lo establecido en el Código de Protección y Defensa del Consumidor (Ley N° 29571) de la República del Perú, ponemos a disposición de nuestros usuarios este canal de atención:</p>
         
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px; margin-bottom: 16px;">
-          <div><strong>Razón / Responsable:</strong> César Risso</div>
           <div><strong>Servicio:</strong> AliviaFin (Plataforma Web PWA)</div>
-          <div><strong>Canal de Reclamos:</strong> WhatsApp directo (+51 914 688 135)</div>
+          <div><strong>Canal de Atención:</strong> Buzón de Soporte dentro de la App</div>
           <div><strong>Tiempo de respuesta:</strong> Máximo 48 horas hábiles</div>
         </div>
 
-        <p>Para ingresar un reclamo formal o queja sobre tu suscripción, puedes escribirnos con el detalle de tu caso a nuestro canal directo para atenderte prioritariamente.</p>
+        <p>Para ingresar un reclamo formal o queja sobre tu cuenta, puedes enviarlo directamente desde la sección de ajustes de la aplicación para atenderte de manera prioritaria.</p>
       </div>
 
       <div style="margin-top: 24px; text-align: center;">
