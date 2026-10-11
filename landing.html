@@ -1116,6 +1116,338 @@
       font-size: 12px;
     }
 
+    /* ANIMACIONES Y MICRO-MOVIMIENTO DINÁMICO FINTECH */
+    @keyframes floatSlow {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-10px) rotate(0.6deg); }
+    }
+    @keyframes floatSlowReverse {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(9px) rotate(-0.6deg); }
+    }
+    @keyframes pulseAura {
+      0%, 100% { opacity: 0.35; transform: scale(1); }
+      50% { opacity: 0.68; transform: scale(1.12); }
+    }
+    @keyframes marqueeScroll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+    /* PRUEBA SOCIAL HERO */
+    .social-proof-hero {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 28px;
+      padding: 6px 16px;
+      background: rgba(255, 255, 255, 0.85);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .avatar-stack {
+      display: flex;
+      align-items: center;
+    }
+    .avatar-item {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      border: 2px solid #ffffff;
+      margin-left: -8px;
+      font-size: 10px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+    }
+    .avatar-item:first-child { margin-left: 0; }
+    .stars-group {
+      color: #f59e0b;
+      font-size: 13px;
+      letter-spacing: 1px;
+    }
+    .social-proof-text {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+    .social-proof-text strong {
+      color: var(--text-main);
+    }
+
+    /* ESCENARIO DEL MOCKUP CON AMBIENTE Y PÍLDORAS */
+    .mockup-stage {
+      position: relative;
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    .ambient-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(65px);
+      pointer-events: none;
+      z-index: 0;
+      animation: pulseAura 8s ease-in-out infinite alternate;
+    }
+    .ambient-orb-1 {
+      width: 380px;
+      height: 380px;
+      background: rgba(16, 185, 129, 0.22);
+      top: -30px;
+      left: -60px;
+    }
+    .ambient-orb-2 {
+      width: 340px;
+      height: 340px;
+      background: rgba(5, 150, 105, 0.16);
+      bottom: -20px;
+      right: -50px;
+      animation-delay: -3.5s;
+    }
+    .floating-pill {
+      position: absolute;
+      z-index: 15;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border: 1px solid rgba(226, 232, 240, 0.95);
+      border-radius: 18px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 16px 36px -6px rgba(15, 23, 42, 0.14), 0 0 1px 1px rgba(0,0,0,0.02);
+      transition: all 0.3s ease;
+      cursor: default;
+    }
+    .floating-pill:hover {
+      transform: scale(1.05) translateY(-3px) !important;
+      box-shadow: 0 20px 45px -5px rgba(5, 150, 105, 0.22);
+    }
+    .pill-left {
+      left: -24px;
+      top: 22%;
+      animation: floatSlow 5s ease-in-out infinite;
+    }
+    .pill-right {
+      right: -24px;
+      top: 30%;
+      animation: floatSlowReverse 5.5s ease-in-out infinite;
+    }
+    .pill-bottom {
+      right: 2%;
+      bottom: 6%;
+      animation: floatSlow 6s ease-in-out infinite;
+      animation-delay: -2s;
+    }
+    .pill-badge-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+    .pill-badge-icon.yape { background: #7c3aed; color: white; }
+    .pill-badge-icon.bcp { background: #002a6c; color: white; }
+    .pill-badge-icon.save { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
+    .pill-text-block {
+      text-align: left;
+    }
+    .pill-text-title {
+      font-size: 12.5px;
+      font-weight: 800;
+      color: var(--text-main);
+      line-height: 1.2;
+    }
+    .pill-text-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .pill-status-check {
+      background: #ecfdf5;
+      color: #059669;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 900;
+      border: 1px solid #a7f3d0;
+    }
+
+    /* MARQUESINA CONTINUA DE PAGOS EN PERÚ */
+    .marquee-section {
+      padding: 26px 0 34px;
+      background: linear-gradient(180deg, #f8fafc 0%, #ffffff 50%, #f8fafc 100%);
+      border-top: 1px solid var(--border-light);
+      border-bottom: 1px solid var(--border-light);
+      overflow: hidden;
+      position: relative;
+    }
+    .marquee-label {
+      text-align: center;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+    }
+    .marquee-wrapper {
+      display: flex;
+      width: max-content;
+      animation: marqueeScroll 24s linear infinite;
+    }
+    .marquee-wrapper:hover {
+      animation-play-state: paused;
+    }
+    .marquee-track {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 0 10px;
+    }
+    .marquee-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 18px;
+      border-radius: 999px;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-main);
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
+      white-space: nowrap;
+    }
+
+    /* CALCULADORA INTERACTIVA DE AHORRO Y FUGA */
+    .calculator-section {
+      padding: 80px 0;
+      background: #ffffff;
+      border-top: 1px solid var(--border-light);
+      border-bottom: 1px solid var(--border-light);
+      position: relative;
+    }
+    .calc-card {
+      max-width: 920px;
+      margin: 0 auto;
+      background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
+      border: 2px solid var(--primary-border);
+      border-radius: 28px;
+      padding: 38px 34px;
+      box-shadow: 0 24px 60px -10px rgba(5, 150, 105, 0.12), 0 0 1px 1px rgba(0,0,0,0.02);
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 36px;
+      align-items: center;
+    }
+    .calc-slider-group {
+      margin-bottom: 24px;
+    }
+    .calc-slider-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+    .calc-val-pill {
+      background: #ffffff;
+      padding: 4px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--primary-border);
+      color: var(--primary);
+      font-size: 14px;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      box-shadow: 0 2px 6px rgba(5, 150, 105, 0.1);
+    }
+    .calc-range-input {
+      width: 100%;
+      height: 8px;
+      border-radius: 8px;
+      background: #e2e8f0;
+      outline: none;
+      -webkit-appearance: none;
+      cursor: pointer;
+    }
+    .calc-range-input::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--primary);
+      border: 3px solid #ffffff;
+      box-shadow: 0 2px 8px rgba(5, 150, 105, 0.4);
+      cursor: pointer;
+      transition: transform 0.1s ease;
+    }
+    .calc-range-input::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+    }
+    .calc-result-box {
+      background: #ffffff;
+      border-radius: 22px;
+      padding: 26px 22px;
+      border: 1px solid var(--border);
+      box-shadow: 0 10px 28px rgba(15, 23, 42, 0.05);
+      text-align: center;
+    }
+    .calc-result-label {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #dc2626;
+      background: #fef2f2;
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 999px;
+      margin-bottom: 8px;
+    }
+    .calc-result-number {
+      font-size: 38px;
+      font-weight: 900;
+      color: #0f172a;
+      letter-spacing: -0.03em;
+      font-family: var(--font-mono);
+      margin-bottom: 4px;
+      line-height: 1.1;
+    }
+    .calc-result-sub {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      margin-bottom: 18px;
+    }
+    .calc-roi-badge {
+      background: #ecfdf5;
+      border: 1px solid #a7f3d0;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #047857;
+      margin-bottom: 18px;
+      line-height: 1.4;
+    }
+
     /* RESPONSIVE */
     @media (max-width: 900px) {
       .nav-links { display: none; }
@@ -1123,6 +1455,8 @@
       .features-grid { grid-template-columns: 1fr; }
       .platforms-grid { grid-template-columns: repeat(2, 1fr); }
       .price-card.featured { transform: none; }
+      .calc-card { grid-template-columns: 1fr; padding: 26px 20px; }
+      .pill-left, .pill-right, .pill-bottom { display: none; }
     }
   </style>
 </head>
@@ -1138,6 +1472,7 @@
 
       <nav class="nav-links">
         <a href="#demo" class="nav-link">Demo en Vivo</a>
+        <a href="#calculadora" class="nav-link">Calculadora de Ahorro</a>
         <a href="#beneficios" class="nav-link">Beneficios</a>
         <a href="#funciones" class="nav-link">Funciones</a>
         <a href="#multiplataforma" class="nav-link">Multiplataforma</a>
@@ -1179,6 +1514,20 @@
           </a>
         </div>
 
+        <!-- PRUEBA SOCIAL HERO -->
+        <div class="social-proof-hero">
+          <div class="avatar-stack">
+            <div class="avatar-item" style="background: #10b981;">CR</div>
+            <div class="avatar-item" style="background: #3b82f6;">GR</div>
+            <div class="avatar-item" style="background: #f59e0b;">MA</div>
+            <div class="avatar-item" style="background: #8b5cf6;">LR</div>
+          </div>
+          <div class="stars-group">★★★★★</div>
+          <div class="social-proof-text">
+            <strong>4.9/5</strong> · Más de 1,400 peruanos y parejas organizando su dinero
+          </div>
+        </div>
+
         <div class="trust-bar">
           <div class="trust-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
@@ -1206,8 +1555,44 @@
           </div>
         </div>
 
-        <!-- CONTENEDOR DEL DEMO INTERACTIVO -->
-        <div class="mockup-wrapper">
+        <!-- ESCENARIO DINÁMICO DEL DEMO -->
+        <div class="mockup-stage">
+          <!-- Esferas de luz ambientales que respiran suavemente -->
+          <div class="ambient-orb ambient-orb-1"></div>
+          <div class="ambient-orb ambient-orb-2"></div>
+
+          <!-- Píldora Flotante Izquierda: Registro Diario Rápido Yape -->
+          <div class="floating-pill pill-left">
+            <div class="pill-badge-icon yape">🟣</div>
+            <div class="pill-text-block">
+              <div class="pill-text-title">Almuerzo Menú</div>
+              <div class="pill-text-sub">S/ 16.00 · Yape</div>
+            </div>
+            <div class="pill-status-check">✓</div>
+          </div>
+
+          <!-- Píldora Flotante Derecha: Compra con Tarjeta en Cuotas BCP -->
+          <div class="floating-pill pill-right">
+            <div class="pill-badge-icon bcp">💳</div>
+            <div class="pill-text-block">
+              <div class="pill-text-title">Supermercado</div>
+              <div class="pill-text-sub">S/ 215.50 · 1 cuota</div>
+            </div>
+            <div class="pill-status-check">✓</div>
+          </div>
+
+          <!-- Píldora Flotante Abajo: Ahorro Mensual Cumplido -->
+          <div class="floating-pill pill-bottom">
+            <div class="pill-badge-icon save">📈</div>
+            <div class="pill-text-block">
+              <div class="pill-text-title">Ahorro de Octubre</div>
+              <div class="pill-text-sub">+S/ 450.00 en camino</div>
+            </div>
+            <div class="pill-status-check">✓</div>
+          </div>
+
+          <!-- CONTENEDOR DEL DEMO INTERACTIVO -->
+          <div class="mockup-wrapper">
           
           <!-- 1. VISTA CELULAR (DEFAULT) -->
           <div class="demo-mobile-frame" id="demoMobileFrame">
@@ -1421,8 +1806,103 @@
             </div>
           </div>
 
+          </div><!-- fin mockup-wrapper -->
+        </div><!-- fin mockup-stage -->
+
+      </div><!-- fin container hero -->
+    </section>
+
+    <!-- CINTA MARQUESINA DE MEDIOS DE PAGO PERUANOS (MOVIMIENTO CONTINUO) -->
+    <div class="marquee-section">
+      <div class="marquee-label">⚡ 100% COMPATIBLE CON TUS MÉTODOS DE PAGO EN PERÚ · SIN CONECTAR BANCOS</div>
+      <div class="marquee-wrapper">
+        <div class="marquee-track">
+          <div class="marquee-pill"><span style="background: #7c3aed; color: white; width: 22px; height: 22px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900;">Y</span> Yape</div>
+          <div class="marquee-pill"><span style="background: #00bcd4; color: white; width: 22px; height: 22px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900;">P</span> Plin</div>
+          <div class="marquee-pill"><span style="background: #002a6c; color: white; width: 22px; height: 22px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900;">B</span> BCP</div>
+          <div class="marquee-pill"><span style="background: #004481; color: white; width: 22px; height: 22px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900;">BB</span> BBVA</div>
+          <div class="marquee-pill"><span style="background: #009944; color: white; width: 22px; height: 22px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900;">IB</span> Interbank</div>
+          <div class="marquee-pill"><span style="background: #ec111a; color: white; width: 22px; height: 22px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900;">S</span> Scotiabank</div>
+          <div class="marquee-pill">💳 Tarjetas de Crédito y Débito</div>
+          <div class="marquee-pill">💵 Efectivo y Cajero</div>
+          <div class="marquee-pill">🔒 100% Privado (Cero contraseñas bancarias)</div>
+        </div>
+        <!-- Duplicado idéntico para loop infinito sin cortes -->
+        <div class="marquee-track">
+          <div class="marquee-pill"><span style="background: #7c3aed; color: white; width: 22px; height: 22px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900;">Y</span> Yape</div>
+          <div class="marquee-pill"><span style="background: #00bcd4; color: white; width: 22px; height: 22px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900;">P</span> Plin</div>
+          <div class="marquee-pill"><span style="background: #002a6c; color: white; width: 22px; height: 22px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900;">B</span> BCP</div>
+          <div class="marquee-pill"><span style="background: #004481; color: white; width: 22px; height: 22px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900;">BB</span> BBVA</div>
+          <div class="marquee-pill"><span style="background: #009944; color: white; width: 22px; height: 22px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900;">IB</span> Interbank</div>
+          <div class="marquee-pill"><span style="background: #ec111a; color: white; width: 22px; height: 22px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900;">S</span> Scotiabank</div>
+          <div class="marquee-pill">💳 Tarjetas de Crédito y Débito</div>
+          <div class="marquee-pill">💵 Efectivo y Cajero</div>
+          <div class="marquee-pill">🔒 100% Privado (Cero contraseñas bancarias)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CALCULADORA INTERACTIVA DE AHORRO Y FUGA DE DINERO -->
+    <section class="calculator-section" id="calculadora">
+      <div class="container">
+        <div class="section-header" style="text-align: center; margin-bottom: 40px;">
+          <div class="section-eyebrow" style="color: var(--primary); font-weight: 800; text-transform: uppercase; font-size: 12px; letter-spacing: 0.08em; margin-bottom: 8px;">Simulador en Tiempo Real</div>
+          <h2 class="section-title" style="font-size: clamp(26px, 4vw, 38px); font-weight: 800; color: var(--text-main); margin-bottom: 12px;">¿Cuánto dinero pierdes al mes sin darte cuenta?</h2>
+          <p class="section-desc" style="max-width: 660px; margin: 0 auto; color: var(--text-muted); font-size: 15px;">
+            Las compras impulsivas y los gastos no registrados drenan entre el 10% y el 20% de tus ingresos. Mueve los controles y descubre cuánto puedes recuperar:
+          </p>
         </div>
 
+        <div class="calc-card">
+          <!-- Columna Izquierda: Sliders -->
+          <div>
+            <div class="calc-slider-group">
+              <div class="calc-slider-header">
+                <span>Tu ingreso mensual aproximado:</span>
+                <span class="calc-val-pill" id="calcIncomeDisplay">S/ 3,500</span>
+              </div>
+              <input type="range" id="calcIncomeSlider" class="calc-range-input" min="1500" max="15000" step="100" value="3500" oninput="updateSavingsCalc()">
+              <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-top: 6px; font-weight: 600;">
+                <span>S/ 1,500</span>
+                <span>S/ 8,000</span>
+                <span>S/ 15,000+</span>
+              </div>
+            </div>
+
+            <div class="calc-slider-group" style="margin-bottom: 10px;">
+              <div class="calc-slider-header">
+                <span>Gastos hormiga o compras imprevistas:</span>
+                <span class="calc-val-pill" id="calcLeakPercentDisplay">15%</span>
+              </div>
+              <input type="range" id="calcLeakSlider" class="calc-range-input" min="5" max="30" step="1" value="15" oninput="updateSavingsCalc()">
+              <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-top: 6px; font-weight: 600;">
+                <span>5% (Mínimo)</span>
+                <span>15% (Promedio)</span>
+                <span>30% (Desorden)</span>
+              </div>
+            </div>
+            
+            <p style="font-size: 12px; color: var(--text-muted); line-height: 1.5; margin-top: 14px;">
+              💡 <em>Al registrar tus compras en 5 segundos al día con AliviaFin, tomas consciencia inmediata y frenas esta fuga desde tu primer día.</em>
+            </p>
+          </div>
+
+          <!-- Columna Derecha: Tarjeta de Resultado Dinámico -->
+          <div class="calc-result-box">
+            <span class="calc-result-label">⚠️ Dinero que se fuga cada mes</span>
+            <div class="calc-result-number" id="calcMonthlyLeakDisplay">S/ 525.00</div>
+            <div class="calc-result-sub" id="calcAnnualLeakDisplay">Equivale a <strong>S/ 6,300.00</strong> perdidos al año</div>
+
+            <div class="calc-roi-badge" id="calcRoiText">
+              ✨ <strong>AliviaFin cuesta solo S/ 4.90/mes</strong><br>
+              ¡Recuperas 107 veces tu inversión el primer mes!
+            </div>
+
+            <a href="#precios" class="btn btn-primary" style="width: 100%; padding: 13px; font-size: 14px;">
+              <span>Recuperar Mi Dinero Ahora →</span>
+            </a>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -1902,6 +2382,26 @@
     function closeLegalModal() {
       document.getElementById('legalModalOverlay').style.display = 'none';
       document.body.style.overflow = '';
+    }
+
+    // CALCULADORA INTERACTIVA DE AHORRO Y FUGA
+    function updateSavingsCalc() {
+      const incomeSlider = document.getElementById('calcIncomeSlider');
+      const leakSlider = document.getElementById('calcLeakSlider');
+      if (!incomeSlider || !leakSlider) return;
+
+      const income = parseFloat(incomeSlider.value);
+      const leakPercent = parseFloat(leakSlider.value);
+
+      const monthlyLeak = Math.round((income * (leakPercent / 100)) * 100) / 100;
+      const annualLeak = Math.round((monthlyLeak * 12) * 100) / 100;
+      const roiMultiplier = Math.round(monthlyLeak / 4.90);
+
+      document.getElementById('calcIncomeDisplay').textContent = 'S/ ' + income.toLocaleString('es-PE');
+      document.getElementById('calcLeakPercentDisplay').textContent = leakPercent + '%';
+      document.getElementById('calcMonthlyLeakDisplay').textContent = 'S/ ' + monthlyLeak.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      document.getElementById('calcAnnualLeakDisplay').innerHTML = `Equivale a <strong>S/ ${annualLeak.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong> perdidos al año`;
+      document.getElementById('calcRoiText').innerHTML = `✨ <strong>AliviaFin cuesta solo S/ 4.90/mes</strong><br>¡Recuperas ${roiMultiplier} veces tu inversión el primer mes!`;
     }
   </script>
 
