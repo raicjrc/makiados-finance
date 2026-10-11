@@ -1855,7 +1855,9 @@
         }
       }
 
-      const newHash = JSON.stringify(remoteData.transactions) +
+      const newHash = String(remoteData._lastSaved || 0) +
+                      String(remoteData.initialBalance || 0) +
+                      JSON.stringify(remoteData.transactions) +
                       JSON.stringify(remoteData.savingsGoals) +
                       JSON.stringify(remoteData.extraIncomes) +
                       JSON.stringify(remoteData.incomes) +
@@ -2153,22 +2155,8 @@
       }
     });
 
-    // Forzar reload de datos al volver al foco y verificar si cambió el mes calendario en segundo plano
-    document.addEventListener('visibilitychange', () => {
-      if (!document.hidden) {
-        const calMonth = getCurrentCalendarMonthName();
-        const sessionOverride = sessionStorage.getItem('aliviafin_session_month');
-        if (!sessionOverride && appState && appState.currentMonth !== calMonth) {
-          appState.currentMonth = getEffectiveCurrentMonth(appState.currentMonth);
-          ensureMonthTransactions(appState.currentMonth);
-          ensureMonthIncomes(appState.currentMonth);
-          renderAll();
-        }
-        lastKnownServerDataHash = '';
-        loadStateFromServer(3);
-      }
-    });
-    window.addEventListener('focus', () => {
+    // Forzar reload de datos al volver al foco / desbloquear pantalla (iOS Safari PWA & Mac)
+    function handleAppWakeup() {
       const calMonth = getCurrentCalendarMonthName();
       const sessionOverride = sessionStorage.getItem('aliviafin_session_month');
       if (!sessionOverride && appState && appState.currentMonth !== calMonth) {
@@ -2178,7 +2166,23 @@
         renderAll();
       }
       lastKnownServerDataHash = '';
+      updateSyncIndicator('syncing', '🔄 Sincronizando...');
       loadStateFromServer(3);
+      if (typeof setupRealtimeSync === 'function') {
+        setupRealtimeSync();
+      }
+    }
+
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) {
+        handleAppWakeup();
+      }
+    });
+    window.addEventListener('focus', () => {
+      handleAppWakeup();
+    });
+    window.addEventListener('pageshow', () => {
+      handleAppWakeup();
     });
 
     function saveLocalState() {
