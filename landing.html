@@ -1117,224 +1117,6 @@
     }
 
     /* ANIMACIONES Y MICRO-MOVIMIENTO DINÁMICO FINTECH */
-    @keyframes floatSlow {
-      0%, 100% { transform: translateY(0px) rotate(0deg); }
-      50% { transform: translateY(-10px) rotate(0.6deg); }
-    }
-    @keyframes floatSlowReverse {
-      0%, 100% { transform: translateY(0px) rotate(0deg); }
-      50% { transform: translateY(9px) rotate(-0.6deg); }
-    }
-    @keyframes pulseAura {
-      0%, 100% { opacity: 0.35; transform: scale(1); }
-      50% { opacity: 0.68; transform: scale(1.12); }
-    }
-    @keyframes marqueeScroll {
-      0% { transform: translateX(0); }
-      100% { transform: translateX(-50%); }
-    }
-
-    /* PRUEBA SOCIAL HERO */
-    .social-proof-hero {
-      display: inline-flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 28px;
-      padding: 6px 16px;
-      background: rgba(255, 255, 255, 0.85);
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      backdrop-filter: blur(12px);
-      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-    .avatar-stack {
-      display: flex;
-      align-items: center;
-    }
-    .avatar-item {
-      width: 26px;
-      height: 26px;
-      border-radius: 50%;
-      border: 2px solid #ffffff;
-      margin-left: -8px;
-      font-size: 10px;
-      font-weight: 800;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-    }
-    .avatar-item:first-child { margin-left: 0; }
-    .stars-group {
-      color: #f59e0b;
-      font-size: 13px;
-      letter-spacing: 1px;
-    }
-    .social-proof-text {
-      font-size: 12.5px;
-      font-weight: 600;
-      color: var(--text-secondary);
-    }
-    .social-proof-text strong {
-      color: var(--text-main);
-    }
-
-    /* ESCENARIO DEL MOCKUP CON AMBIENTE Y PÍLDORAS */
-    .mockup-stage {
-      position: relative;
-      max-width: 960px;
-      margin: 0 auto;
-    }
-    .ambient-orb {
-      position: absolute;
-      border-radius: 50%;
-      filter: blur(65px);
-      pointer-events: none;
-      z-index: 0;
-      animation: pulseAura 8s ease-in-out infinite alternate;
-    }
-    .ambient-orb-1 {
-      width: 380px;
-      height: 380px;
-      background: rgba(16, 185, 129, 0.22);
-      top: -30px;
-      left: -60px;
-    }
-    .ambient-orb-2 {
-      width: 340px;
-      height: 340px;
-      background: rgba(5, 150, 105, 0.16);
-      bottom: -20px;
-      right: -50px;
-      animation-delay: -3.5s;
-    }
-    .floating-pill {
-      position: absolute;
-      z-index: 15;
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(20px) saturate(180%);
-      -webkit-backdrop-filter: blur(20px) saturate(180%);
-      border: 1px solid rgba(226, 232, 240, 0.95);
-      border-radius: 18px;
-      padding: 10px 14px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      box-shadow: 0 16px 36px -6px rgba(15, 23, 42, 0.14), 0 0 1px 1px rgba(0,0,0,0.02);
-      transition: all 0.3s ease;
-      cursor: default;
-    }
-    .floating-pill:hover {
-      transform: scale(1.05) translateY(-3px) !important;
-      box-shadow: 0 20px 45px -5px rgba(5, 150, 105, 0.22);
-    }
-    .pill-left {
-      left: -24px;
-      top: 22%;
-      animation: floatSlow 5s ease-in-out infinite;
-    }
-    .pill-right {
-      right: -24px;
-      top: 30%;
-      animation: floatSlowReverse 5.5s ease-in-out infinite;
-    }
-    .pill-bottom {
-      right: 2%;
-      bottom: 6%;
-      animation: floatSlow 6s ease-in-out infinite;
-      animation-delay: -2s;
-    }
-    .pill-badge-icon {
-      width: 34px;
-      height: 34px;
-      border-radius: 11px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 15px;
-      font-weight: 800;
-      flex-shrink: 0;
-    }
-    .pill-badge-icon.yape { background: #7c3aed; color: white; }
-    .pill-badge-icon.bcp { background: #002a6c; color: white; }
-    .pill-badge-icon.save { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
-    .pill-text-block {
-      text-align: left;
-    }
-    .pill-text-title {
-      font-size: 12.5px;
-      font-weight: 800;
-      color: var(--text-main);
-      line-height: 1.2;
-    }
-    .pill-text-sub {
-      font-size: 11px;
-      color: var(--text-muted);
-      font-weight: 600;
-    }
-    .pill-status-check {
-      background: #ecfdf5;
-      color: #059669;
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 11px;
-      font-weight: 900;
-      border: 1px solid #a7f3d0;
-    }
-
-    /* MARQUESINA CONTINUA DE PAGOS EN PERÚ */
-    .marquee-section {
-      padding: 26px 0 34px;
-      background: linear-gradient(180deg, #f8fafc 0%, #ffffff 50%, #f8fafc 100%);
-      border-top: 1px solid var(--border-light);
-      border-bottom: 1px solid var(--border-light);
-      overflow: hidden;
-      position: relative;
-    }
-    .marquee-label {
-      text-align: center;
-      font-size: 11px;
-      font-weight: 800;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      margin-bottom: 14px;
-    }
-    .marquee-wrapper {
-      display: flex;
-      width: max-content;
-      animation: marqueeScroll 24s linear infinite;
-    }
-    .marquee-wrapper:hover {
-      animation-play-state: paused;
-    }
-    .marquee-track {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-      padding: 0 10px;
-    }
-    .marquee-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 18px;
-      border-radius: 999px;
-      background: #ffffff;
-      border: 1px solid var(--border);
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--text-main);
-      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
-      white-space: nowrap;
-    }
-
     /* CALCULADORA INTERACTIVA DE AHORRO Y FUGA */
     .calculator-section {
       padding: 80px 0;
@@ -1456,7 +1238,6 @@
       .platforms-grid { grid-template-columns: repeat(2, 1fr); }
       .price-card.featured { transform: none; }
       .calc-card { grid-template-columns: 1fr; padding: 26px 20px; }
-      .pill-left, .pill-right, .pill-bottom { display: none; }
     }
   </style>
 </head>
@@ -1471,11 +1252,8 @@
       </a>
 
       <nav class="nav-links">
-        <a href="#demo" class="nav-link">Demo en Vivo</a>
-        <a href="#calculadora" class="nav-link">Calculadora de Ahorro</a>
         <a href="#beneficios" class="nav-link">Beneficios</a>
         <a href="#funciones" class="nav-link">Funciones</a>
-        <a href="#multiplataforma" class="nav-link">Multiplataforma</a>
         <a href="#precios" class="nav-link">Precios</a>
         <a href="#faq" class="nav-link">Preguntas</a>
       </nav>
@@ -1514,20 +1292,6 @@
           </a>
         </div>
 
-        <!-- PRUEBA SOCIAL HERO -->
-        <div class="social-proof-hero">
-          <div class="avatar-stack">
-            <div class="avatar-item" style="background: #10b981;">CR</div>
-            <div class="avatar-item" style="background: #3b82f6;">GR</div>
-            <div class="avatar-item" style="background: #f59e0b;">MA</div>
-            <div class="avatar-item" style="background: #8b5cf6;">LR</div>
-          </div>
-          <div class="stars-group">★★★★★</div>
-          <div class="social-proof-text">
-            <strong>4.9/5</strong> · Más de 1,400 peruanos y parejas organizando su dinero
-          </div>
-        </div>
-
         <div class="trust-bar">
           <div class="trust-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
@@ -1555,44 +1319,8 @@
           </div>
         </div>
 
-        <!-- ESCENARIO DINÁMICO DEL DEMO -->
-        <div class="mockup-stage">
-          <!-- Esferas de luz ambientales que respiran suavemente -->
-          <div class="ambient-orb ambient-orb-1"></div>
-          <div class="ambient-orb ambient-orb-2"></div>
-
-          <!-- Píldora Flotante Izquierda: Registro Diario Rápido Yape -->
-          <div class="floating-pill pill-left">
-            <div class="pill-badge-icon yape">🟣</div>
-            <div class="pill-text-block">
-              <div class="pill-text-title">Almuerzo Menú</div>
-              <div class="pill-text-sub">S/ 16.00 · Yape</div>
-            </div>
-            <div class="pill-status-check">✓</div>
-          </div>
-
-          <!-- Píldora Flotante Derecha: Compra con Tarjeta en Cuotas BCP -->
-          <div class="floating-pill pill-right">
-            <div class="pill-badge-icon bcp">💳</div>
-            <div class="pill-text-block">
-              <div class="pill-text-title">Supermercado</div>
-              <div class="pill-text-sub">S/ 215.50 · 1 cuota</div>
-            </div>
-            <div class="pill-status-check">✓</div>
-          </div>
-
-          <!-- Píldora Flotante Abajo: Ahorro Mensual Cumplido -->
-          <div class="floating-pill pill-bottom">
-            <div class="pill-badge-icon save">📈</div>
-            <div class="pill-text-block">
-              <div class="pill-text-title">Ahorro de Octubre</div>
-              <div class="pill-text-sub">+S/ 450.00 en camino</div>
-            </div>
-            <div class="pill-status-check">✓</div>
-          </div>
-
-          <!-- CONTENEDOR DEL DEMO INTERACTIVO -->
-          <div class="mockup-wrapper">
+        <!-- CONTENEDOR DEL DEMO INTERACTIVO (100% FIEL A LA APP REAL) -->
+        <div class="mockup-wrapper" style="margin-top: 10px;">
           
           <!-- 1. VISTA CELULAR (DEFAULT) -->
           <div class="demo-mobile-frame" id="demoMobileFrame">
@@ -1604,9 +1332,15 @@
             <div class="mobile-app-header">
               <div class="mobile-brand-tag">
                 <img src="logo.png" alt="logo" onerror="this.src='apple-touch-icon.png'">
-                <span>aliviafin</span>
+                <div style="display: flex; flex-direction: column; align-items: flex-start; line-height: 1.15;">
+                  <span style="font-size: 15px; font-weight: 800; color: #0f172a;">aliviafin</span>
+                  <span style="font-size: 10px; color: #059669; font-weight: 700;">🟢 Sincronizado</span>
+                </div>
               </div>
-              <span style="font-size: 11px; font-weight: 700; color: #059669; background: #ecfdf5; padding: 3px 8px; border-radius: 6px;">Octubre 2026</span>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="font-size: 11.5px; font-weight: 700; color: #0f172a; background: #f1f5f9; padding: 4px 8px; border-radius: 8px; border: 1px solid #e2e8f0;">Octubre 2026</span>
+                <span style="font-size: 13px; background: #f1f5f9; padding: 3px 6px; border-radius: 8px; border: 1px solid #e2e8f0;">👁️</span>
+              </div>
             </div>
 
             <div style="padding: 16px;">
@@ -1624,45 +1358,45 @@
 
                 <div class="demo-metrics-cluster">
                   <div class="demo-metric-pill">
-                    <span class="demo-metric-label">Ingresos</span>
+                    <span class="demo-metric-label">Ingresos Percibidos</span>
                     <span class="demo-metric-val income">S/ 5,200.00</span>
                   </div>
                   <div class="demo-metric-pill">
-                    <span class="demo-metric-label">Gastos</span>
+                    <span class="demo-metric-label">Gastos Totales</span>
                     <span class="demo-metric-val expense" id="mobileSpentDisplay">S/ 1,750.00</span>
                   </div>
                 </div>
               </div>
 
               <!-- Gasto Rápido Interactivo -->
-              <div class="demo-section-title">Pruébalo: Toca un gasto para descontar en vivo</div>
+              <div class="demo-section-title">Gasto Rápido (Toca para probar en vivo):</div>
               <div class="demo-quick-grid">
-                <button class="demo-quick-btn" onclick="triggerDemoExpense('Almuerzo', 25.00, '🍔')">
-                  <span class="demo-btn-icon">🍔</span>
+                <button class="demo-quick-btn" onclick="triggerDemoExpense('Almuerzo Menú', 25.00, '🍱')">
+                  <span class="demo-btn-icon">🍱</span>
                   <span class="demo-btn-label">Almuerzo</span>
                   <span class="demo-btn-sub">S/ 25.00</span>
                 </button>
-                <button class="demo-quick-btn" onclick="triggerDemoExpense('Café', 12.00, '☕')">
+                <button class="demo-quick-btn" onclick="triggerDemoExpense('Café', 8.00, '☕')">
                   <span class="demo-btn-icon">☕</span>
                   <span class="demo-btn-label">Café</span>
-                  <span class="demo-btn-sub">S/ 12.00</span>
+                  <span class="demo-btn-sub">S/ 8.00</span>
                 </button>
-                <button class="demo-quick-btn" onclick="triggerDemoExpense('Taxi Yape', 18.00, '🚕')">
+                <button class="demo-quick-btn" onclick="triggerDemoExpense('Pasaje / Taxi', 15.00, '🚕')">
                   <span class="demo-btn-icon">🚕</span>
-                  <span class="demo-btn-label">Taxi Yape</span>
-                  <span class="demo-btn-sub">S/ 18.00</span>
+                  <span class="demo-btn-label">Pasaje</span>
+                  <span class="demo-btn-sub">S/ 15.00</span>
                 </button>
               </div>
 
               <!-- Actividad Reciente -->
-              <div class="demo-section-title">Actividad Reciente</div>
+              <div class="demo-section-title">Últimos Movimientos</div>
               <div id="mobileRecentFeed">
                 <div class="demo-tx-item">
                   <div class="demo-tx-left">
                     <div class="demo-tx-icon">⚡</div>
                     <div>
                       <div class="demo-tx-name">Servicio Luz</div>
-                      <div class="demo-tx-cat">Servicios Fijos · Pagado</div>
+                      <div class="demo-tx-cat">Servicios Fijos · Pagado hoy</div>
                     </div>
                   </div>
                   <div class="demo-tx-amount">- S/ 85.00</div>
@@ -1671,21 +1405,51 @@
                   <div class="demo-tx-left">
                     <div class="demo-tx-icon">🛒</div>
                     <div>
-                      <div class="demo-tx-name">Supermercado</div>
+                      <div class="demo-tx-name">Supermercado Metro</div>
                       <div class="demo-tx-cat">Alimentación · Pagado</div>
                     </div>
                   </div>
                   <div class="demo-tx-amount">- S/ 142.50</div>
                 </div>
+                <div class="demo-tx-item">
+                  <div class="demo-tx-left">
+                    <div class="demo-tx-icon">📱</div>
+                    <div>
+                      <div class="demo-tx-name">Plan Móvil Entel</div>
+                      <div class="demo-tx-cat">Telefonía · Pagado</div>
+                    </div>
+                  </div>
+                  <div class="demo-tx-amount">- S/ 39.90</div>
+                </div>
               </div>
+            </div>
 
-              <div class="demo-hint-box">
-                👆 Toca los botones de arriba para ver cómo se actualiza en vivo
+            <!-- Barra de navegación inferior móvil idéntica a la real -->
+            <div style="display: flex; justify-content: space-around; background: #ffffff; border-top: 1px solid #e2e8f0; padding: 10px 4px; font-size: 10px; font-weight: 700; color: #64748b;">
+              <div style="display: flex; flex-direction: column; align-items: center; gap: 2px; color: #059669;">
+                <span style="font-size: 16px;">📊</span>
+                <span>Inicio</span>
+              </div>
+              <div style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
+                <span style="font-size: 16px;">💳</span>
+                <span>Gastos</span>
+              </div>
+              <div style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
+                <span style="font-size: 16px;">📅</span>
+                <span>Calendario</span>
+              </div>
+              <div style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
+                <span style="font-size: 16px;">🎯</span>
+                <span>Metas</span>
+              </div>
+              <div style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
+                <span style="font-size: 16px;">⚙️</span>
+                <span>Ajustes</span>
               </div>
             </div>
           </div>
 
-          <!-- 2. VISTA NAVEGADOR WEB (DESKTOP WINDOW) -->
+          <!-- 2. VISTA NAVEGADOR WEB (DESKTOP WINDOW IDÉNTICA A LA APP REAL) -->
           <div class="demo-desktop-frame" id="demoDesktopFrame">
             <!-- Barra superior del navegador -->
             <div class="browser-toolbar">
@@ -1695,152 +1459,118 @@
                 <div class="browser-dot" style="background: #22c55e;"></div>
               </div>
               <div class="browser-address-bar">
-                <span>🔒 https://app.aliviafin.com/dashboard</span>
+                <span>🔒 https://aliviafin.vercel.app/</span>
               </div>
             </div>
 
-            <!-- Interfaz Desktop de la App -->
-            <div class="desktop-app-layout">
-              <!-- Sidebar -->
-              <div class="desktop-sidebar">
-                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 24px; padding-left: 6px;">
-                  <img src="logo.png" alt="logo" width="24" height="24" style="border-radius: 6px;" onerror="this.src='apple-touch-icon.png'">
-                  <strong style="font-size: 15px; color: var(--text-main);">AliviaFin</strong>
-                </div>
-
-                <div class="desktop-sidebar-item active">
-                  <span>📊</span> <span>Resumen</span>
-                </div>
-                <div class="desktop-sidebar-item">
-                  <span>💳</span> <span>Movimientos</span>
-                </div>
-                <div class="desktop-sidebar-item">
-                  <span>📈</span> <span>Simulador Cuotas</span>
-                </div>
-                <div class="desktop-sidebar-item">
-                  <span>🎯</span> <span>Metas de Ahorro</span>
-                </div>
-                <div class="desktop-sidebar-item">
-                  <span>⚙️</span> <span>Ajustes</span>
+            <!-- Header Real de la App Desktop -->
+            <div style="background: #ffffff; border-bottom: 1px solid #e2e8f0; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <img src="logo.png" alt="logo" width="32" height="32" style="border-radius: 8px;" onerror="this.src='apple-touch-icon.png'">
+                <div>
+                  <strong style="font-size: 16px; color: #0f172a; letter-spacing: -0.02em;">aliviafin</strong>
+                  <div style="font-size: 10.5px; color: #059669; font-weight: 700;">🟢 Sincronizado</div>
                 </div>
               </div>
 
-              <!-- Contenido Principal Desktop -->
-              <div class="desktop-main-content">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
-                  <div>
-                    <h2 style="font-size: 18px; font-weight: 800; color: var(--text-main);">Panel de Control</h2>
-                    <span style="font-size: 12px; color: var(--text-muted);">Mes en curso · Octubre 2026</span>
-                  </div>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <button type="button" style="background: #ecfdf5; border: 1px solid #a7f3d0; color: #059669; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                  <span>⚡</span> Gasto
+                </button>
+                <button type="button" style="background: #f0fdf4; border: 1px solid #bbf7d0; color: #16a34a; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                  <span>💵</span> Ingreso
+                </button>
+                <div style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; color: #0f172a;">
+                  Octubre 2026
+                </div>
+                <div style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 6px 10px; border-radius: 8px; font-size: 13px;">
+                  👁️
+                </div>
+              </div>
+            </div>
+
+            <!-- Contenido Principal Desktop -->
+            <div style="padding: 24px; background: #f8fafc;">
+              <!-- Tarjeta de Saldo Desktop -->
+              <div class="demo-exec-card" style="margin-bottom: 20px;">
+                <div class="demo-exec-top">
+                  <span class="demo-exec-label">Disponible en banco</span>
                   <div class="demo-live-badge">
                     <span class="demo-pulse-dot"></span>
-                    <span>Sincronizado en la Nube</span>
+                    <span>En Vivo</span>
                   </div>
                 </div>
 
-                <!-- Tarjeta de Saldo Desktop -->
-                <div class="demo-exec-card">
-                  <div class="demo-exec-top">
-                    <span class="demo-exec-label">Disponible total en banco</span>
-                    <span style="font-size: 11px; font-weight: 700; color: #059669;">0 descuadres de céntimos</span>
+                <div class="demo-balance-amount" id="desktopBalanceDisplay">S/ 3,450.00</div>
+
+                <div class="demo-metrics-cluster">
+                  <div class="demo-metric-pill">
+                    <span class="demo-metric-label">Ingresos Percibidos</span>
+                    <span class="demo-metric-val income">S/ 5,200.00</span>
                   </div>
+                  <div class="demo-metric-pill">
+                    <span class="demo-metric-label">Gastos Totales</span>
+                    <span class="demo-metric-val expense" id="desktopSpentDisplay">S/ 1,750.00</span>
+                  </div>
+                </div>
+              </div>
 
-                  <div class="demo-balance-amount" id="desktopBalanceDisplay">S/ 3,450.00</div>
+              <!-- Botones de Acción Rápida Desktop -->
+              <div class="demo-section-title">Registro Rápido (Toca un botón para ver cómo descuenta):</div>
+              <div class="demo-quick-grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 20px;">
+                <button class="demo-quick-btn" onclick="triggerDemoExpense('Almuerzo Menú', 25.00, '🍱')">
+                  <span class="demo-btn-icon">🍱</span>
+                  <span class="demo-btn-label">Almuerzo</span>
+                  <span class="demo-btn-sub">S/ 25.00</span>
+                </button>
+                <button class="demo-quick-btn" onclick="triggerDemoExpense('Café', 8.00, '☕')">
+                  <span class="demo-btn-icon">☕</span>
+                  <span class="demo-btn-label">Café</span>
+                  <span class="demo-btn-sub">S/ 8.00</span>
+                </button>
+                <button class="demo-quick-btn" onclick="triggerDemoExpense('Pasaje / Taxi', 15.00, '🚕')">
+                  <span class="demo-btn-icon">🚕</span>
+                  <span class="demo-btn-label">Pasaje</span>
+                  <span class="demo-btn-sub">S/ 15.00</span>
+                </button>
+                <button class="demo-quick-btn" onclick="triggerDemoExpense('Supermercado', 65.00, '🛒')">
+                  <span class="demo-btn-icon">🛒</span>
+                  <span class="demo-btn-label">Compras</span>
+                  <span class="demo-btn-sub">S/ 65.00</span>
+                </button>
+              </div>
 
-                  <div class="demo-metrics-cluster">
-                    <div class="demo-metric-pill">
-                      <span class="demo-metric-label">Ingresos Percibidos</span>
-                      <span class="demo-metric-val income">S/ 5,200.00</span>
+              <!-- Historial Desktop -->
+              <div class="demo-section-title">Últimos Movimientos del Mes</div>
+              <div id="desktopRecentFeed">
+                <div class="demo-tx-item">
+                  <div class="demo-tx-left">
+                    <div class="demo-tx-icon">⚡</div>
+                    <div>
+                      <div class="demo-tx-name">Servicio Luz</div>
+                      <div class="demo-tx-cat">Servicios Fijos · Pagado hoy</div>
                     </div>
-                    <div class="demo-metric-pill">
-                      <span class="demo-metric-label">Gastos Totales</span>
-                      <span class="demo-metric-val expense" id="desktopSpentDisplay">S/ 1,750.00</span>
+                  </div>
+                  <div class="demo-tx-amount">- S/ 85.00</div>
+                </div>
+                <div class="demo-tx-item">
+                  <div class="demo-tx-left">
+                    <div class="demo-tx-icon">🛒</div>
+                    <div>
+                      <div class="demo-tx-name">Supermercado Metro</div>
+                      <div class="demo-tx-cat">Alimentación · Pagado</div>
                     </div>
                   </div>
-                </div>
-
-                <!-- Botones de Acción Rápida Desktop -->
-                <div class="demo-section-title">Registro Rápido en 1 Clic</div>
-                <div class="demo-quick-grid" style="grid-template-columns: repeat(4, 1fr);">
-                  <button class="demo-quick-btn" onclick="triggerDemoExpense('Almuerzo', 25.00, '🍔')">
-                    <span class="demo-btn-icon">🍔</span>
-                    <span class="demo-btn-label">Almuerzo</span>
-                    <span class="demo-btn-sub">S/ 25.00</span>
-                  </button>
-                  <button class="demo-quick-btn" onclick="triggerDemoExpense('Café', 12.00, '☕')">
-                    <span class="demo-btn-icon">☕</span>
-                    <span class="demo-btn-label">Café</span>
-                    <span class="demo-btn-sub">S/ 12.00</span>
-                  </button>
-                  <button class="demo-quick-btn" onclick="triggerDemoExpense('Taxi Yape', 18.00, '🚕')">
-                    <span class="demo-btn-icon">🚕</span>
-                    <span class="demo-btn-label">Taxi Yape</span>
-                    <span class="demo-btn-sub">S/ 18.00</span>
-                  </button>
-                  <button class="demo-quick-btn" onclick="triggerDemoExpense('Supermercado', 65.00, '🛒')">
-                    <span class="demo-btn-icon">🛒</span>
-                    <span class="demo-btn-label">Compras</span>
-                    <span class="demo-btn-sub">S/ 65.00</span>
-                  </button>
-                </div>
-
-                <!-- Historial Desktop -->
-                <div class="demo-section-title">Últimos Movimientos Registrados</div>
-                <div id="desktopRecentFeed">
-                  <div class="demo-tx-item">
-                    <div class="demo-tx-left">
-                      <div class="demo-tx-icon">⚡</div>
-                      <div>
-                        <div class="demo-tx-name">Servicio Luz</div>
-                        <div class="demo-tx-cat">Servicios Fijos · Pagado hoy</div>
-                      </div>
-                    </div>
-                    <div class="demo-tx-amount">- S/ 85.00</div>
-                  </div>
-                </div>
-
-                <div class="demo-hint-box">
-                  💡 En la versión de escritorio puedes gestionar tus finanzas en pantalla completa con la misma fluidez.
+                  <div class="demo-tx-amount">- S/ 142.50</div>
                 </div>
               </div>
             </div>
           </div>
 
-          </div><!-- fin mockup-wrapper -->
-        </div><!-- fin mockup-stage -->
+        </div><!-- fin mockup-wrapper -->
 
       </div><!-- fin container hero -->
     </section>
-
-    <!-- CINTA MARQUESINA DE MEDIOS DE PAGO PERUANOS (MOVIMIENTO CONTINUO) -->
-    <div class="marquee-section">
-      <div class="marquee-label">⚡ 100% COMPATIBLE CON TUS MÉTODOS DE PAGO EN PERÚ · SIN CONECTAR BANCOS</div>
-      <div class="marquee-wrapper">
-        <div class="marquee-track">
-          <div class="marquee-pill"><span style="background: #7c3aed; color: white; width: 22px; height: 22px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900;">Y</span> Yape</div>
-          <div class="marquee-pill"><span style="background: #00bcd4; color: white; width: 22px; height: 22px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900;">P</span> Plin</div>
-          <div class="marquee-pill"><span style="background: #002a6c; color: white; width: 22px; height: 22px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900;">B</span> BCP</div>
-          <div class="marquee-pill"><span style="background: #004481; color: white; width: 22px; height: 22px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900;">BB</span> BBVA</div>
-          <div class="marquee-pill"><span style="background: #009944; color: white; width: 22px; height: 22px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900;">IB</span> Interbank</div>
-          <div class="marquee-pill"><span style="background: #ec111a; color: white; width: 22px; height: 22px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900;">S</span> Scotiabank</div>
-          <div class="marquee-pill">💳 Tarjetas de Crédito y Débito</div>
-          <div class="marquee-pill">💵 Efectivo y Cajero</div>
-          <div class="marquee-pill">🔒 100% Privado (Cero contraseñas bancarias)</div>
-        </div>
-        <!-- Duplicado idéntico para loop infinito sin cortes -->
-        <div class="marquee-track">
-          <div class="marquee-pill"><span style="background: #7c3aed; color: white; width: 22px; height: 22px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900;">Y</span> Yape</div>
-          <div class="marquee-pill"><span style="background: #00bcd4; color: white; width: 22px; height: 22px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900;">P</span> Plin</div>
-          <div class="marquee-pill"><span style="background: #002a6c; color: white; width: 22px; height: 22px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900;">B</span> BCP</div>
-          <div class="marquee-pill"><span style="background: #004481; color: white; width: 22px; height: 22px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900;">BB</span> BBVA</div>
-          <div class="marquee-pill"><span style="background: #009944; color: white; width: 22px; height: 22px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900;">IB</span> Interbank</div>
-          <div class="marquee-pill"><span style="background: #ec111a; color: white; width: 22px; height: 22px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900;">S</span> Scotiabank</div>
-          <div class="marquee-pill">💳 Tarjetas de Crédito y Débito</div>
-          <div class="marquee-pill">💵 Efectivo y Cajero</div>
-          <div class="marquee-pill">🔒 100% Privado (Cero contraseñas bancarias)</div>
-        </div>
-      </div>
-    </div>
 
     <!-- CALCULADORA INTERACTIVA DE AHORRO Y FUGA DE DINERO -->
     <section class="calculator-section" id="calculadora">
@@ -2109,6 +1839,9 @@
             <button type="button" class="btn btn-ghost" onclick="openPlanModal('Plan Mensual', '4.90', 'al mes')" style="width: 100%;">
               Elegir Mensual
             </button>
+            <div style="margin-top: 10px; font-size: 11px; color: #64748b; text-align: center;">
+              Pago directo vía <strong>Yape</strong> o <strong>Plin</strong> (Sin tarjeta)
+            </div>
           </div>
 
           <!-- 3. Plan Vitalicio Anual (El más popular) -->
@@ -2139,11 +1872,12 @@
               Obtener Plan Anual
             </button>
 
-            <div class="price-methods-hint">
-              <span>Pagos con:</span>
-              <strong style="color: #059669;">Yape</strong> · 
-              <strong style="color: #2563eb;">Plin</strong> · 
-              <span>Tarjetas</span>
+            <div class="price-methods-hint" style="margin-top: 14px; font-size: 12px; color: var(--text-muted); text-align: center; background: #f8fafc; padding: 10px; border-radius: 12px; border: 1px solid var(--border);">
+              <div>📲 <strong>Adquisición del plan exclusivamente por:</strong></div>
+              <div style="font-weight: 800; font-size: 13.5px; margin-top: 2px;">
+                <span style="color: #7c3aed;">Yape</span> o <span style="color: #00bcd4;">Plin</span>
+              </div>
+              <div style="font-size: 11px; color: #64748b; margin-top: 2px;">(Transferencia directa · No disponible con tarjeta)</div>
             </div>
           </div>
         </div>
@@ -2180,11 +1914,11 @@
 
         <div class="faq-item">
           <div class="faq-question" onclick="toggleFaq(this)">
-            <span>¿Cómo se paga con Yape o Plin?</span>
+            <span>¿Cómo se realiza el pago del plan?</span>
             <span class="faq-icon">▼</span>
           </div>
           <div class="faq-answer">
-            Pensando en la comodidad local, puedes abonar tu suscripción directamente transfiriendo mediante código QR o número de Yape y Plin, además de aceptar tarjetas de débito y crédito.
+            Pensando en la seguridad y comodidad en Perú, la adquisición del plan se realiza directamente transfiriendo por <strong>Yape</strong> o <strong>Plin</strong> a nuestro número oficial de contacto. No solicitamos ni almacenamos datos de tarjetas en la web.
           </div>
         </div>
 
@@ -2197,20 +1931,6 @@
             La app cuenta con funcionamiento offline. Puedes registrar tu gasto en el momento sin conexión y se sincronizará automáticamente cuando vuelvas a tener señal.
           </div>
         </div>
-      </div>
-    </section>
-
-    <!-- BANNER FINAL -->
-    <section class="container">
-      <div class="cta-banner">
-        <h2 class="cta-title">Empieza a sentir paz mental con tu dinero hoy</h2>
-        <p class="cta-desc">
-          Únete a quienes ya tienen claridad absoluta sobre sus finanzas en solo 5 segundos al día.
-        </p>
-        <a href="index.html" class="btn btn-primary btn-lg">
-          Probar AliviaFin Gratis
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-        </a>
       </div>
     </section>
   </main>
@@ -2449,6 +2169,9 @@
 
       <div style="font-size: 11.5px; color: #64748b; line-height: 1.5;">
         ✨ Puedes usar tu cuenta gratuita primero y activar el plan cuando lo decidas sin penalidades.
+        <div style="margin-top: 6px; font-weight: 600; color: #475569;">
+          ⚠️ La activación de planes se procesa únicamente vía transferencia por <strong>Yape</strong> o <strong>Plin</strong> (no aceptamos tarjetas de crédito o débito).
+        </div>
       </div>
     </div>
   </div>
