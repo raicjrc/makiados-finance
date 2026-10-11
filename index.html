@@ -517,6 +517,9 @@
                 <canvas id="desktopCashflowChart"></canvas>
               </div>
             </div>
+
+            <!-- SLOT DINÁMICO IZQUIERDO: Reubica Distribución de Gastos aquí cuando hay Vencimientos activos -->
+            <div id="desktopCategorySlotLeft"></div>
           </div>
 
           <!-- Columna Lateral / Derecha (Desktop): Movimientos Recientes & Distribución -->
@@ -543,28 +546,31 @@
               <!-- Renders dynamically via renderUpcomingDueDates() -->
             </div>
 
-            <!-- 2. Desglose de Gastos por Categoría (Donut & Ranking) -->
-            <div class="card executive-chart-card desktop-only" style="margin-top: 14px;">
-              <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <div>
-                  <div class="card-title" style="font-size: 13.5px; font-weight: 800; display: flex; align-items: center; gap: 6px;">
-                    <span>🍩</span>
-                    <span>Distribución de Gastos del Mes</span>
+            <!-- SLOT DINÁMICO DERECHO: Posición natural cuando NO hay vencimientos -->
+            <div id="desktopCategorySlotRight">
+              <!-- 2. Desglose de Gastos por Categoría (Donut & Ranking) -->
+              <div id="desktopCategoryDistributionCard" class="card executive-chart-card desktop-only" style="margin-top: 14px;">
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                  <div>
+                    <div class="card-title" style="font-size: 13.5px; font-weight: 800; display: flex; align-items: center; gap: 6px;">
+                      <span>🍩</span>
+                      <span>Distribución de Gastos del Mes</span>
+                    </div>
+                    <div style="font-size: 11px; color: var(--text-muted); font-weight: 600; margin-top: 2px;">
+                      Concentración de capital por categoría
+                    </div>
                   </div>
-                  <div style="font-size: 11px; color: var(--text-muted); font-weight: 600; margin-top: 2px;">
-                    Concentración de capital por categoría
+                  <button type="button" onclick="switchTab('plan')" style="background: none; border: none; font-size: 11px; font-weight: 800; color: var(--primary); cursor: pointer; padding: 2px 4px;">
+                    Ver Plan 50/30/20 ↗
+                  </button>
+                </div>
+                <div class="desktop-donut-wrapper" style="display: flex; align-items: center; gap: 20px; min-height: 170px;">
+                  <div style="width: 170px; height: 170px; position: relative; flex-shrink: 0;">
+                    <canvas id="desktopCategoryChart"></canvas>
                   </div>
-                </div>
-                <button type="button" onclick="switchTab('plan')" style="background: none; border: none; font-size: 11px; font-weight: 800; color: var(--primary); cursor: pointer; padding: 2px 4px;">
-                  Ver Plan 50/30/20 ↗
-                </button>
-              </div>
-              <div class="desktop-donut-wrapper" style="display: flex; align-items: center; gap: 20px; min-height: 170px;">
-                <div style="width: 170px; height: 170px; position: relative; flex-shrink: 0;">
-                  <canvas id="desktopCategoryChart"></canvas>
-                </div>
-                <div id="desktopCategoryLegend" class="desktop-donut-legend" style="flex: 1; min-width: 0;">
-                  <!-- Renderizado dinámico vía renderDesktopExecutiveCharts() -->
+                  <div id="desktopCategoryLegend" class="desktop-donut-legend" style="flex: 1; min-width: 0;">
+                    <!-- Renderizado dinámico vía renderDesktopExecutiveCharts() -->
+                  </div>
                 </div>
               </div>
             </div>
@@ -3463,6 +3469,6 @@
     </div>
   </div>
 
-  <script src="js/app.js?v=76.1"></script>
+  <script src="js/app.js?v=76.2"></script>
 </body>
 </html>

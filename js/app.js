@@ -2156,21 +2156,25 @@
     });
 
     // Forzar reload de datos al volver al foco / desbloquear pantalla (iOS Safari PWA & Mac)
+    let wakeupDebounceTimer = null;
     function handleAppWakeup() {
-      const calMonth = getCurrentCalendarMonthName();
-      const sessionOverride = sessionStorage.getItem('aliviafin_session_month');
-      if (!sessionOverride && appState && appState.currentMonth !== calMonth) {
-        appState.currentMonth = getEffectiveCurrentMonth(appState.currentMonth);
-        ensureMonthTransactions(appState.currentMonth);
-        ensureMonthIncomes(appState.currentMonth);
-        renderAll();
-      }
-      lastKnownServerDataHash = '';
-      updateSyncIndicator('syncing', '🔄 Sincronizando...');
-      loadStateFromServer(3);
-      if (typeof setupRealtimeSync === 'function') {
-        setupRealtimeSync();
-      }
+      if (wakeupDebounceTimer) clearTimeout(wakeupDebounceTimer);
+      wakeupDebounceTimer = setTimeout(() => {
+        const calMonth = getCurrentCalendarMonthName();
+        const sessionOverride = sessionStorage.getItem('aliviafin_session_month');
+        if (!sessionOverride && appState && appState.currentMonth !== calMonth) {
+          appState.currentMonth = getEffectiveCurrentMonth(appState.currentMonth);
+          ensureMonthTransactions(appState.currentMonth);
+          ensureMonthIncomes(appState.currentMonth);
+          renderAll();
+        }
+        lastKnownServerDataHash = '';
+        updateSyncIndicator('syncing', '🔄 Sincronizando...');
+        loadStateFromServer(3);
+        if (typeof setupRealtimeSync === 'function') {
+          setupRealtimeSync();
+        }
+      }, 60);
     }
 
     document.addEventListener('visibilitychange', () => {
@@ -2182,6 +2186,15 @@
       handleAppWakeup();
     });
     window.addEventListener('pageshow', () => {
+      handleAppWakeup();
+    });
+    // Compatibilidad Android Chrome / Samsung Internet (Page Lifecycle API)
+    document.addEventListener('resume', () => {
+      handleAppWakeup();
+    });
+    // Recuperación instantánea cuando Android o iOS recupera conexión a internet
+    window.addEventListener('online', () => {
+      console.log('📶 Conexión recuperada (online). Sincronizando datos...');
       handleAppWakeup();
     });
 
@@ -2744,6 +2757,27 @@
     }
 
     // ================================================================
+    // REBALANCEO DINÁMICO DE SIMETRÍA EN DESKTOP (OPCIÓN 1)
+    // Mueve la tarjeta de Distribución de Gastos a la izquierda cuando
+    // hay próximos vencimientos activos para mantener simetría visual perfecta.
+    // ================================================================
+    function rebalanceDesktopDashboardLayout(hasUpcomingBills) {
+      if (window.innerWidth <= 768) return; // En móvil se preserva el flujo vertical nativo
+      const distCard = document.getElementById('desktopCategoryDistributionCard');
+      const slotLeft = document.getElementById('desktopCategorySlotLeft');
+      const slotRight = document.getElementById('desktopCategorySlotRight');
+      if (!distCard || !slotLeft || !slotRight) return;
+
+      const targetSlot = hasUpcomingBills ? slotLeft : slotRight;
+      if (distCard.parentElement !== targetSlot) {
+        targetSlot.appendChild(distCard);
+        if (typeof desktopCategoryChartObj !== 'undefined' && desktopCategoryChartObj) {
+          try { desktopCategoryChartObj.resize(); } catch(e) {}
+        }
+      }
+    }
+
+    // ================================================================
     // RADAR DE PRÓXIMOS VENCIMIENTOS (APPLE FINTECH CARD v67.0)
     // ================================================================
     function renderUpcomingDueDates() {
@@ -2759,6 +2793,7 @@
       const pendingTxs = txs.filter(t => (t.status || 'Pagado') === 'Pendiente');
 
       if (pendingTxs.length === 0) {
+        rebalanceDesktopDashboardLayout(false);
         container.innerHTML = `
           <div class="upcoming-bills-card" style="margin-bottom: 14px; padding: 12px 16px;">
             <div class="upcoming-bills-zen">
@@ -2785,6 +2820,7 @@
       const upcoming = withDue.filter(t => t.daysDiff <= 5);
 
       if (upcoming.length === 0) {
+        rebalanceDesktopDashboardLayout(false);
         const future = withDue.filter(t => t.daysDiff > 5).sort((a, b) => a.daysDiff - b.daysDiff);
         const nextIn = future.length > 0 ? ` · Próximo pago en ${future[0].daysDiff} días (${escapeHtml(future[0].name)})` : '';
         container.innerHTML = `
@@ -2797,6 +2833,9 @@
         `;
         return;
       }
+
+      // Si hay vencimientos urgentes, rebalancear inmediatamente a la izquierda
+      rebalanceDesktopDashboardLayout(true);
 
       // Ordenar por urgencia: días menores primero
       upcoming.sort((a, b) => a.daysDiff - b.daysDiff);
