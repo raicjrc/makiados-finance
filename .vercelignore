@@ -9,3 +9,4 @@ database*.json
 parsed_data.json
 scratch.js
 tests/
+node_modules/

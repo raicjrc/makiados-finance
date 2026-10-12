@@ -5835,6 +5835,7 @@
 
     function renderPersonalizedTips() {
       const container = document.getElementById('personalizedTipsContainer');
+      if (!container) return;
       const txs = getMonthTxList();
       const totalIncome = getMonthTotalIncome();
       const totalSpent = txs.reduce((s, t) => s + t.amount, 0);
@@ -6670,6 +6671,33 @@
       document.head.appendChild(script);
     }
 
+    function normalizeExpenseCategory(rawCat, name) {
+      if (!rawCat && !name) return 'Otros';
+      const c = (rawCat || '').trim();
+      const n = (name || '').trim();
+      const combined = `${c} ${n}`.toLowerCase();
+
+      // 1. Coincidencia exacta con categorías oficiales
+      if (typeof CATEGORIES !== 'undefined' && CATEGORIES) {
+        for (const officialCat of Object.keys(CATEGORIES)) {
+          if (officialCat.toLowerCase() === c.toLowerCase()) return officialCat;
+        }
+      }
+
+      // 2. Mapeo inteligente por semántica de gastos en Perú y Latam
+      if (/alquiler|hipoteca|renta|departamento|casa|depa|condominio|arbitrio/i.test(combined)) return 'Vivienda';
+      if (/luz|agua|sedapal|enel|pluz|gas|calidda|internet|fibra|win/i.test(combined)) return 'Servicios';
+      if (/comida|supermercado|metro|plaza vea|tottus|vivanda|mercado|almuerzo|cena|viveres|abarrotes/i.test(combined)) return 'Alimentación';
+      if (/gasolina|combustible|grifo|repsol|primax|pasaje|metropolitano|corredor|taxi|uber|didi|cabify/i.test(combined)) return 'Transporte';
+      if (/farmacia|inkafarma|mifarma|medico|doctor|clinica|hospital|seguro|salud|medicamento|gym|gimnasio/i.test(combined)) return 'Salud';
+      if (/colegio|universidad|pension|utp|pucp|upc|instituto|curso|diplomado|estudio/i.test(combined)) return 'Educación';
+      if (/netflix|spotify|disney|prime|max|youtube|cine|planet|entretenimiento|juegos|playstation|steam/i.test(combined)) return 'Entretenimiento';
+      if (/celular|movil|entel|claro|movistar|bitel|plan movil/i.test(combined)) return 'Celular';
+      if (/tarjeta|visa|mastercard|diners|bcp|bbva|interbank|scotiabank|prestamo|credito|deuda|cuota/i.test(combined)) return 'Tarjetas';
+
+      return 'Otros';
+    }
+
     function downloadExpenseTemplateExcel() {
       showToast('⏳ Preparando plantilla Excel...', 'info');
       loadXLSXLibrary(() => {
@@ -6693,6 +6721,24 @@
             { wch: 20 }  // Día de vencimiento
           ];
           XLSX.utils.book_append_sheet(wb, ws, 'Gastos Fijos');
+
+          // Hoja 2: Guía de categorías y ayuda para el usuario
+          const catRows = [
+            ['Categoría Permitida', 'Sinónimos y Ejemplos Habituales'],
+            ['Vivienda', 'Alquiler, hipoteca, mantenimiento, departamento'],
+            ['Servicios', 'Luz, agua, gas natural, internet de fibra óptica'],
+            ['Alimentación', 'Supermercado, comida de casa, víveres, mercado'],
+            ['Transporte', 'Gasolina, transporte público, pasajes, taxis, Uber'],
+            ['Salud', 'Farmacias, seguros de salud, citas médicas, gimnasio'],
+            ['Educación', 'Colegios, universidades, institutos, cursos, libros'],
+            ['Entretenimiento', 'Netflix, Spotify, cine, salidas, ocio'],
+            ['Celular', 'Planes móviles (Claro, Movistar, Entel, Bitel)'],
+            ['Tarjetas', 'Pago de tarjetas de crédito o cuotas de compras'],
+            ['Otros', 'Cualquier otro compromiso o gasto mensual']
+          ];
+          const wsCat = XLSX.utils.aoa_to_sheet(catRows);
+          wsCat['!cols'] = [{ wch: 22 }, { wch: 55 }];
+          XLSX.utils.book_append_sheet(wb, wsCat, 'Categorías Permitidas');
           
           // Generar buffer XLSX binario nativo
           const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
@@ -6705,7 +6751,7 @@
           link.click();
           document.body.removeChild(link);
           URL.revokeObjectURL(url);
-          showToast('📥 Plantilla Excel (.xlsx) descargada correctamente.', 'success');
+          showToast('📥 Plantilla Excel (.xlsx) con guía de categorías descargada.', 'success');
         } catch(err) {
           console.error('Error generando XLSX:', err);
           downloadExpenseTemplateCSV(); // Fallback a CSV
@@ -6828,7 +6874,9 @@
         if (!row || row.length === 0) continue;
 
         const name = String(row[0] || '').trim();
-        const cat = String(row[1] || 'Otros').trim();
+        const rawCat = String(row[1] || '').trim();
+        const cat = normalizeExpenseCategory(rawCat, name);
+
         let amtRaw = row[2];
         if (typeof amtRaw === 'string') {
           amtRaw = parseFloat(amtRaw.replace(/[^\d.-]/g, '')) || 0;
@@ -6845,11 +6893,11 @@
 
       updateWizardExpenseCount();
 
-      const totalRowsInFile = rows.length - startIndex;
-      if (!isPro && totalRowsInFile > 11) {
-        showToast(`✅ Se cargaron 11 gastos (límite de la versión gratuita). Pasa a Pro para ilimitados.`, 'info');
+      const remainingAvailable = maxAllowed - addedCount;
+      if (!isPro && addedCount >= 11) {
+        showToast(`✅ Se cargaron los 11 gastos (tope de la versión gratuita). Pasa a Pro para gastos ilimitados.`, 'info');
       } else {
-        showToast(`✅ Se cargaron ${addedCount} gastos desde tu archivo Excel`, 'success');
+        showToast(`✅ Se cargaron ${addedCount} gastos desde tu Excel. (Te quedan ${remainingAvailable} disponibles)`, 'success');
       }
     }
 
