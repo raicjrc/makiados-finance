@@ -55,16 +55,16 @@ test('"Sugerencias rápidas de 1 clic" removed from Step 2', () => {
   }
 });
 
-// 5. Check Free limit counter & Excel CSV buttons in Step 2
-test('Free limit counter and CSV import/export present', () => {
+// 5. Check Free limit counter & Excel import/export buttons in Step 2
+test('Free limit counter and Excel import/export present', () => {
   if (!indexHtml.includes('id="wExpenseCount"')) {
     throw new Error('wExpenseCount counter missing');
   }
-  if (!indexHtml.includes('downloadExpenseTemplateCSV()')) {
-    throw new Error('downloadExpenseTemplateCSV button missing');
+  if (!indexHtml.includes('downloadExpenseTemplateExcel()') && !indexHtml.includes('downloadExpenseTemplateCSV()')) {
+    throw new Error('Excel template download button missing');
   }
-  if (!indexHtml.includes('triggerImportExpensesCSV()')) {
-    throw new Error('triggerImportExpensesCSV button missing');
+  if (!indexHtml.includes('triggerImportExpensesExcel()') && !indexHtml.includes('triggerImportExpensesCSV()')) {
+    throw new Error('Excel import button missing');
   }
 });
 
@@ -89,11 +89,24 @@ test('Income cluster pill and settings button allow editing salary directly', ()
 });
 
 // 8. Check JS syntax and script version bump
-test('app.js has zero syntax errors and index.html is on v76.4', () => {
+test('app.js has zero syntax errors and index.html is on v76.5', () => {
   const { execSync } = require('child_process');
   execSync('node -c js/app.js');
-  if (!indexHtml.includes('js/app.js?v=76.4')) {
-    throw new Error('index.html does not reference v76.4');
+  if (!indexHtml.includes('js/app.js?v=76.5')) {
+    throw new Error('index.html does not reference v76.5');
+  }
+});
+
+// 9. Check Excel .xlsx template download and import
+test('Native Excel .xlsx generator and smart importer present', () => {
+  if (!appJs.includes('downloadExpenseTemplateExcel')) {
+    throw new Error('downloadExpenseTemplateExcel missing in app.js');
+  }
+  if (!appJs.includes('loadXLSXLibrary')) {
+    throw new Error('loadXLSXLibrary missing in app.js');
+  }
+  if (!indexHtml.includes('downloadExpenseTemplateExcel()')) {
+    throw new Error('downloadExpenseTemplateExcel button missing in index.html');
   }
 });
 

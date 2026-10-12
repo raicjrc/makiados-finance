@@ -2462,15 +2462,16 @@
             
             <button type="button" id="btnAddWizardExpense" class="btn btn-secondary" onclick="addWizardExpenseRow()" style="width: 100%; font-size: 11px; padding: 8px; margin-top: 4px;">➕ Agregar Otro Gasto Fijo</button>
 
-            <!-- Carga masiva y descarga de plantilla Excel -->
+            <!-- Carga masiva y descarga de plantilla Excel (.xlsx) -->
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;">
-              <button type="button" class="btn btn-secondary" onclick="downloadExpenseTemplateCSV()" style="font-size: 11px; padding: 7px; display: inline-flex; align-items: center; justify-content: center; gap: 5px;" title="Descargar archivo modelo para llenar tus gastos en Excel">
-                <span>📥</span> <span>Plantilla Excel</span>
+              <button type="button" class="btn btn-secondary" onclick="downloadExpenseTemplateExcel()" style="font-size: 11px; padding: 7px; display: inline-flex; align-items: center; justify-content: center; gap: 5px; font-weight: 600;" title="Descargar plantilla Excel (.xlsx) para completar tus gastos">
+                <span>📊</span> <span>Plantilla Excel (.xlsx)</span>
               </button>
-              <button type="button" class="btn btn-secondary" onclick="triggerImportExpensesCSV()" style="font-size: 11px; padding: 7px; display: inline-flex; align-items: center; justify-content: center; gap: 5px;" title="Subir archivo Excel o CSV con tus gastos para llenarlos al instante">
-                <span>📤</span> <span>Cargar Excel / CSV</span>
+              <button type="button" class="btn btn-secondary" onclick="triggerImportExpensesExcel()" style="font-size: 11px; padding: 7px; display: inline-flex; align-items: center; justify-content: center; gap: 5px; font-weight: 600;" title="Subir tu archivo Excel (.xlsx o .csv) para cargar tus gastos al instante">
+                <span>📤</span> <span>Cargar Excel</span>
               </button>
-              <input type="file" id="wCsvFileInput" accept=".csv,text/csv,.txt" style="display: none;" onchange="handleImportExpensesCSV(event)">
+              <input type="file" id="wExcelFileInput" accept=".xlsx, .xls, .csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel, text/csv" style="display: none;" onchange="handleImportExpensesExcel(event)">
+              <input type="file" id="wCsvFileInput" accept=".xlsx, .xls, .csv" style="display: none;" onchange="handleImportExpensesExcel(event)">
             </div>
           </div>
         </div>
@@ -3451,6 +3452,6 @@
     </div>
   </div>
 
-  <script src="js/app.js?v=76.4"></script>
+  <script src="js/app.js?v=76.5"></script>
 </body>
 </html>

@@ -6644,8 +6644,77 @@
     }
 
     // ================================================================
-    // PLANTILLA EXCEL Y CARGA MASIVA DE GASTOS FIJOS
+    // MOTOR EXCEL (.xlsx) Y CARGA MASIVA DE GASTOS FIJOS
     // ================================================================
+    function loadXLSXLibrary(onReady, onError) {
+      if (typeof XLSX !== 'undefined') {
+        if (onReady) onReady();
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = 'js/xlsx.full.min.js?v=76.5';
+      script.onload = () => {
+        if (onReady) onReady();
+      };
+      script.onerror = () => {
+        // Fallback a CDN de alta disponibilidad si fuera necesario
+        const fallback = document.createElement('script');
+        fallback.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+        fallback.onload = () => { if (onReady) onReady(); };
+        fallback.onerror = () => {
+          if (onError) onError();
+          else showToast('❌ No se pudo cargar el motor de Excel. Inténtalo de nuevo.', 'error');
+        };
+        document.head.appendChild(fallback);
+      };
+      document.head.appendChild(script);
+    }
+
+    function downloadExpenseTemplateExcel() {
+      showToast('⏳ Preparando plantilla Excel...', 'info');
+      loadXLSXLibrary(() => {
+        try {
+          const wb = XLSX.utils.book_new();
+          const rows = [
+            ['Concepto / Gasto', 'Categoría', 'Monto (S/)', 'Día de Vencimiento'],
+            ['Alquiler / Hipoteca', 'Vivienda', 650.00, 30],
+            ['Servicios (Luz / Agua)', 'Servicios', 120.00, 15],
+            ['Internet Fibra', 'Servicios', 60.00, 28],
+            ['Plan Móvil', 'Celular', 39.90, 15],
+            ['Gimnasio', 'Salud', 100.00, 5],
+            ['Netflix / Streaming', 'Entretenimiento', 45.00, 20]
+          ];
+          const ws = XLSX.utils.aoa_to_sheet(rows);
+          // Ancho de columnas ergonómico
+          ws['!cols'] = [
+            { wch: 26 }, // Concepto
+            { wch: 18 }, // Categoría
+            { wch: 14 }, // Monto
+            { wch: 20 }  // Día de vencimiento
+          ];
+          XLSX.utils.book_append_sheet(wb, ws, 'Gastos Fijos');
+          
+          // Generar buffer XLSX binario nativo
+          const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+          const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = 'plantilla_gastos_aliviafin.xlsx';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+          showToast('📥 Plantilla Excel (.xlsx) descargada correctamente.', 'success');
+        } catch(err) {
+          console.error('Error generando XLSX:', err);
+          downloadExpenseTemplateCSV(); // Fallback a CSV
+        }
+      }, () => {
+        downloadExpenseTemplateCSV();
+      });
+    }
+
     function downloadExpenseTemplateCSV() {
       const csvHeader = 'Concepto,Categoria,Monto,DiaVencimiento\n';
       const csvRows = [
@@ -6654,85 +6723,138 @@
         'Internet Fibra,Servicios,60.00,28',
         'Plan Movil,Celular,39.90,15'
       ].join('\n');
-      const csvContent = '\uFEFF' + csvHeader + csvRows; // UTF-8 BOM para que Excel en Windows/Mac reconozca tildes y caracteres latinos
+      const csvContent = '\uFEFF' + csvHeader + csvRows;
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.setAttribute('href', url);
-      link.setAttribute('download', 'aliviafin_plantilla_gastos.csv');
+      link.href = url;
+      link.download = 'plantilla_gastos_aliviafin.csv';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      showToast('📥 Plantilla Excel descargada. Puedes abrirla, llenarla y subirla.', 'success');
+      showToast('📥 Plantilla descargada.', 'success');
     }
 
-    function triggerImportExpensesCSV() {
-      const fileInput = document.getElementById('wCsvFileInput');
+    function triggerImportExpensesExcel() {
+      const fileInput = document.getElementById('wExcelFileInput') || document.getElementById('wCsvFileInput');
       if (fileInput) {
         fileInput.value = '';
         fileInput.click();
       }
     }
 
-    function handleImportExpensesCSV(event) {
+    function triggerImportExpensesCSV() {
+      triggerImportExpensesExcel();
+    }
+
+    function handleImportExpensesExcel(event) {
       const file = event.target.files && event.target.files[0];
       if (!file) return;
 
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        try {
-          const content = e.target.result;
-          const lines = content.split(/\r?\n/).filter(line => line.trim().length > 0);
-          if (lines.length <= 1) {
-            showToast('⚠️ El archivo está vacío o solo contiene encabezados', 'warning');
-            return;
-          }
+      const fileName = file.name.toLowerCase();
+      const isExcelFile = fileName.endsWith('.xlsx') || fileName.endsWith('.xls');
 
-          const container = document.getElementById('wFixedExpensesContainer');
-          if (!container) return;
+      if (isExcelFile) {
+        showToast('⏳ Leyendo archivo Excel...', 'info');
+        loadXLSXLibrary(() => {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            try {
+              const data = new Uint8Array(e.target.result);
+              const workbook = XLSX.read(data, { type: 'array' });
+              const firstSheetName = workbook.SheetNames[0];
+              const worksheet = workbook.Sheets[firstSheetName];
+              const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
-          // Limpiar filas por defecto
-          container.innerHTML = '';
+              if (!rows || rows.length <= 1) {
+                showToast('⚠️ El archivo Excel está vacío o solo contiene encabezados', 'warning');
+                return;
+              }
 
-          let addedCount = 0;
-          const isPro = isUserPro();
-          const maxAllowed = isPro ? 100 : 11;
-
-          // Ignorar la fila de encabezados si contiene palabras como 'concepto' o 'nombre'
-          const startIndex = /concepto|nombre|item/i.test(lines[0]) ? 1 : 0;
-
-          for (let i = startIndex; i < lines.length; i++) {
-            if (addedCount >= maxAllowed) break;
-
-            // Soporta separación por coma (,) o punto y coma (;) típica de Excel en español
-            const separator = lines[i].includes(';') ? ';' : ',';
-            const parts = lines[i].split(separator).map(p => p.trim().replace(/^["']|["']$/g, ''));
-
-            const name = parts[0] || '';
-            const cat = parts[1] || 'Otros';
-            const amt = parseFloat(parts[2]?.replace(',', '.')) || 0;
-            const due = parts[3] || '15';
-
-            if (name) {
-              addWizardExpenseRow(name, amt, cat, due);
-              addedCount++;
+              processImportedExpenseRows(rows, true);
+            } catch(err) {
+              console.error('Error parseando XLSX:', err);
+              showToast('❌ Error al leer el archivo Excel. Verifica el formato.', 'error');
             }
-          }
+          };
+          reader.readAsArrayBuffer(file);
+        });
+      } else {
+        // Archivo CSV o texto
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          try {
+            const content = e.target.result;
+            const lines = content.split(/\r?\n/).filter(line => line.trim().length > 0);
+            if (lines.length <= 1) {
+              showToast('⚠️ El archivo está vacío o solo contiene encabezados', 'warning');
+              return;
+            }
 
-          updateWizardExpenseCount();
+            const rows = lines.map(line => {
+              const sep = line.includes(';') ? ';' : ',';
+              return line.split(sep).map(p => p.trim().replace(/^["']|["']$/g, ''));
+            });
 
-          if (!isPro && lines.length - startIndex > 11) {
-            showToast(`✅ Se cargaron 11 gastos (límite de la versión gratuita). Pasa a Pro para ilimitados.`, 'info');
-          } else {
-            showToast(`✅ Se cargaron ${addedCount} gastos desde tu archivo Excel`, 'success');
+            processImportedExpenseRows(rows, false);
+          } catch(err) {
+            console.error('Error parseando CSV:', err);
+            showToast('❌ Error al leer el archivo CSV.', 'error');
           }
-        } catch(err) {
-          console.error('Error al procesar archivo CSV:', err);
-          showToast('❌ Error al leer el archivo. Verifica el formato de la plantilla.', 'error');
+        };
+        reader.readAsText(file, 'UTF-8');
+      }
+    }
+
+    function processImportedExpenseRows(rows) {
+      const container = document.getElementById('wFixedExpensesContainer');
+      if (!container) return;
+
+      container.innerHTML = '';
+
+      let addedCount = 0;
+      const isPro = isUserPro();
+      const maxAllowed = isPro ? 100 : 11;
+
+      // Detectar encabezado
+      const firstRowStr = (rows[0] || []).join(' ').toLowerCase();
+      const startIndex = /concepto|nombre|item|gasto|categor/i.test(firstRowStr) ? 1 : 0;
+
+      for (let i = startIndex; i < rows.length; i++) {
+        if (addedCount >= maxAllowed) break;
+
+        const row = rows[i];
+        if (!row || row.length === 0) continue;
+
+        const name = String(row[0] || '').trim();
+        const cat = String(row[1] || 'Otros').trim();
+        let amtRaw = row[2];
+        if (typeof amtRaw === 'string') {
+          amtRaw = parseFloat(amtRaw.replace(/[^\d.-]/g, '')) || 0;
+        } else {
+          amtRaw = Number(amtRaw) || 0;
         }
-      };
-      reader.readAsText(file, 'UTF-8');
+        const due = String(row[3] || '15').trim();
+
+        if (name && amtRaw >= 0) {
+          addWizardExpenseRow(name, amtRaw, cat, due);
+          addedCount++;
+        }
+      }
+
+      updateWizardExpenseCount();
+
+      const totalRowsInFile = rows.length - startIndex;
+      if (!isPro && totalRowsInFile > 11) {
+        showToast(`✅ Se cargaron 11 gastos (límite de la versión gratuita). Pasa a Pro para ilimitados.`, 'info');
+      } else {
+        showToast(`✅ Se cargaron ${addedCount} gastos desde tu archivo Excel`, 'success');
+      }
+    }
+
+    function handleImportExpensesCSV(event) {
+      handleImportExpensesExcel(event);
     }
 
     function confirmDismissWizard() {
@@ -8538,6 +8660,9 @@ window.openOnboardingWizard = openOnboardingWizard;
 window.completeOnboardingWizard = completeOnboardingWizard;
 window.dismissOnboardingWizard = dismissOnboardingWizard;
 window.confirmDismissWizard = confirmDismissWizard;
+window.downloadExpenseTemplateExcel = downloadExpenseTemplateExcel;
+window.triggerImportExpensesExcel = triggerImportExpensesExcel;
+window.handleImportExpensesExcel = handleImportExpensesExcel;
 window.downloadExpenseTemplateCSV = downloadExpenseTemplateCSV;
 window.triggerImportExpensesCSV = triggerImportExpensesCSV;
 window.handleImportExpensesCSV = handleImportExpensesCSV;
