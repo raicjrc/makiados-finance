@@ -88,6 +88,15 @@ test('Income cluster pill and settings button allow editing salary directly', ()
   }
 });
 
+// 8. Check JS syntax and script version bump
+test('app.js has zero syntax errors and index.html is on v76.4', () => {
+  const { execSync } = require('child_process');
+  execSync('node -c js/app.js');
+  if (!indexHtml.includes('js/app.js?v=76.4')) {
+    throw new Error('index.html does not reference v76.4');
+  }
+});
+
 console.log(`\n================================`);
 console.log(`Results: ${tests.filter(t => t.passed).length} / ${tests.length} passed.`);
 if (tests.some(t => !t.passed)) {

@@ -6472,8 +6472,6 @@
     // ================================================================
     let wizardCurrentStep = 1;
 
-    let wizardCurrentStep = 1;
-
     function openOnboardingWizard(force = false) {
       const userKey = currentUser ? currentUser.id : 'guest';
       const isAlreadySetup = localStorage.getItem('finanzas_setup_completed_' + userKey) === 'true';
