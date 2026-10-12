@@ -2833,6 +2833,11 @@
       .w-card-pay-wrap { grid-area: pay; }
       .w-card-del { grid-area: del; justify-self: flex-end; }
 
+      .wizard-dynamic-row input,
+      .wizard-dynamic-row select {
+        font-size: 16px !important;
+      }
+
       .wizard-step-label {
         font-size: 9px;
       }
