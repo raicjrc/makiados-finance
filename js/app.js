@@ -6472,7 +6472,26 @@
     // ================================================================
     let wizardCurrentStep = 1;
 
+    let wizardCurrentStep = 1;
+
     function openOnboardingWizard(force = false) {
+      const userKey = currentUser ? currentUser.id : 'guest';
+      const isAlreadySetup = localStorage.getItem('finanzas_setup_completed_' + userKey) === 'true';
+
+      // Si ya está configurado y el usuario no forzó deliberadamente, no abrir
+      if (!force && isAlreadySetup) {
+        return;
+      }
+
+      // Si forzó pero ya tiene transacciones, confirmar para seguridad
+      const curMonth = appState.currentMonth || getCurrentCalendarMonthName();
+      const hasExistingTxs = appState.transactions && appState.transactions[curMonth] && appState.transactions[curMonth].length > 0;
+      if (force && hasExistingTxs) {
+        if (!confirm('⚠️ Tu cuenta ya tiene transacciones registradas. Tus datos existentes se conservarán y solo se agregarán los nuevos gastos fijos. ¿Deseas continuar?')) {
+          return;
+        }
+      }
+
       wizardCurrentStep = 1;
       goToWizardStep(1);
 
@@ -6497,27 +6516,23 @@
         addWizardExpenseRow('Internet Fibra', 60, 'Servicios', '28');
       }
 
-      // Pre-cargar o inicializar tarjetas si está vacío
-      const cardsContainer = document.getElementById('wCardsContainer');
-      if (cardsContainer && cardsContainer.children.length === 0) {
-        addWizardCardRow('Tarjeta Principal (BCP / BBVA / Interbank)', '15', '30');
-      }
+      updateWizardExpenseCount();
 
       closeModal('settingsModal');
       openModalById('onboardingWizardModal');
     }
 
     function goToWizardStep(step) {
-      if (step < 1 || step > 4) return;
+      if (step < 1 || step > 3) return;
       wizardCurrentStep = step;
 
       const progressLine = document.getElementById('wizardProgressLine');
       if (progressLine) {
-        const percentages = { 1: '0%', 2: '33%', 3: '66%', 4: '100%' };
+        const percentages = { 1: '0%', 2: '50%', 3: '100%' };
         progressLine.style.width = percentages[step] || '0%';
       }
 
-      for (let s = 1; s <= 4; s++) {
+      for (let s = 1; s <= 3; s++) {
         const dot = document.getElementById(`wStepDot${s}`);
         const slide = document.getElementById(`wSlide${s}`);
         if (dot) {
@@ -6543,14 +6558,14 @@
       if (btnPrev) {
         if (step === 1) {
           btnPrev.textContent = 'Saltar Tutorial';
-          btnPrev.onclick = () => dismissOnboardingWizard(true);
+          btnPrev.onclick = () => confirmDismissWizard();
         } else {
           btnPrev.textContent = `⬅️ Paso ${step - 1}`;
           btnPrev.onclick = () => goToWizardStep(step - 1);
         }
       }
       if (btnNext) {
-        if (step === 4) {
+        if (step === 3) {
           btnNext.textContent = '🎉 ¡Finalizar y Entrar a mi App! 🚀';
           btnNext.style.background = 'linear-gradient(135deg, #10b981, #059669)';
           btnNext.style.borderColor = '#10b981';
@@ -6566,6 +6581,30 @@
       // Desplazar el cuerpo hacia arriba suavemente al cambiar de paso
       const body = document.querySelector('.wizard-modal-body');
       if (body) body.scrollTop = 0;
+    }
+
+    function updateWizardExpenseCount() {
+      const container = document.getElementById('wFixedExpensesContainer');
+      const countEl = document.getElementById('wExpenseCount');
+      const addBtn = document.getElementById('btnAddWizardExpense');
+      if (!container) return;
+
+      const currentRows = container.querySelectorAll('.wizard-dynamic-row').length;
+      if (countEl) countEl.textContent = currentRows;
+
+      if (!isUserPro() && currentRows >= 11) {
+        if (addBtn) {
+          addBtn.disabled = true;
+          addBtn.style.opacity = '0.6';
+          addBtn.textContent = '🔒 Límite de 11 gastos alcanzado (Plan Gratuito)';
+        }
+      } else {
+        if (addBtn) {
+          addBtn.disabled = false;
+          addBtn.style.opacity = '1';
+          addBtn.textContent = '➕ Agregar Otro Gasto Fijo';
+        }
+      }
     }
 
     function addWizardExpenseRow(name = '', amount = '', category = 'Otros', dueDate = '15') {
@@ -6600,46 +6639,114 @@
           <span style="font-size: 10px; color: var(--text-muted); font-weight: 600;">Día:</span>
           <input type="number" class="form-control w-exp-due" min="1" max="31" placeholder="15" value="${dueDate}" style="width: 48px; font-size: 11px; padding: 6px 4px; text-align: center;" required title="Día de vencimiento del mes">
         </div>
-        <button type="button" class="w-exp-del" onclick="document.getElementById('${rowId}').remove()" style="background: none; border: none; color: #ef4444; font-size: 16px; cursor: pointer; padding: 2px 6px;" title="Eliminar fila">✕</button>
+        <button type="button" class="w-exp-del" onclick="document.getElementById('${rowId}').remove(); updateWizardExpenseCount();" style="background: none; border: none; color: #ef4444; font-size: 16px; cursor: pointer; padding: 2px 6px;" title="Eliminar fila">✕</button>
       `;
       container.appendChild(row);
+      updateWizardExpenseCount();
     }
 
-    function quickAddWizardExpense(name, amount, category, dueDate) {
-      const container = document.getElementById('wFixedExpensesContainer');
-      const currentRows = container ? container.querySelectorAll('.wizard-dynamic-row').length : 0;
-      if (!isUserPro() && currentRows >= 11) {
-        openFinZenProModal('Categorías y Gastos Ilimitados');
-        showToast('⭐ Límite de 11 gastos alcanzado en la versión gratuita', 'warning');
-        return;
+    // ================================================================
+    // PLANTILLA EXCEL Y CARGA MASIVA DE GASTOS FIJOS
+    // ================================================================
+    function downloadExpenseTemplateCSV() {
+      const csvHeader = 'Concepto,Categoria,Monto,DiaVencimiento\n';
+      const csvRows = [
+        'Alquiler / Casa,Vivienda,650.00,30',
+        'Servicio Luz y Agua,Servicios,120.00,15',
+        'Internet Fibra,Servicios,60.00,28',
+        'Plan Movil,Celular,39.90,15'
+      ].join('\n');
+      const csvContent = '\uFEFF' + csvHeader + csvRows; // UTF-8 BOM para que Excel en Windows/Mac reconozca tildes y caracteres latinos
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', 'aliviafin_plantilla_gastos.csv');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      showToast('📥 Plantilla Excel descargada. Puedes abrirla, llenarla y subirla.', 'success');
+    }
+
+    function triggerImportExpensesCSV() {
+      const fileInput = document.getElementById('wCsvFileInput');
+      if (fileInput) {
+        fileInput.value = '';
+        fileInput.click();
       }
-      addWizardExpenseRow(name, amount, category, dueDate);
-      showToast(`Añadido: ${name}`, 'info');
     }
 
-    function addWizardCardRow(name = '', cutDay = '15', payDay = '30') {
-      const container = document.getElementById('wCardsContainer');
-      if (!container) return;
+    function handleImportExpensesCSV(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
 
-      const rowId = 'wCard_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
-      const row = document.createElement('div');
-      row.className = 'wizard-dynamic-row';
-      row.id = rowId;
-      row.style.gridTemplateColumns = '2fr 1fr 1fr auto';
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const content = e.target.result;
+          const lines = content.split(/\r?\n/).filter(line => line.trim().length > 0);
+          if (lines.length <= 1) {
+            showToast('⚠️ El archivo está vacío o solo contiene encabezados', 'warning');
+            return;
+          }
 
-      row.innerHTML = `
-        <input type="text" class="form-control w-card-name" placeholder="Tarjeta / Entidad (ej. Interbank)" value="${escapeHtml(name)}" style="font-size: 11px; padding: 6px 8px;" required>
-        <div class="w-card-cut-wrap" style="display: flex; align-items: center; gap: 4px;">
-          <span style="font-size: 10px; color: var(--text-muted); font-weight: 600;">Cierre:</span>
-          <input type="number" class="form-control w-card-cut" min="1" max="31" placeholder="15" value="${cutDay}" style="font-size: 11px; padding: 6px 4px; text-align: center;" title="Día de corte de tarjeta">
-        </div>
-        <div class="w-card-pay-wrap" style="display: flex; align-items: center; gap: 4px;">
-          <span style="font-size: 10px; color: var(--text-muted); font-weight: 600;">Pago:</span>
-          <input type="number" class="form-control w-card-pay" min="1" max="31" placeholder="30" value="${payDay}" style="font-size: 11px; padding: 6px 4px; text-align: center;" title="Día límite de pago">
-        </div>
-        <button type="button" class="w-card-del" onclick="document.getElementById('${rowId}').remove()" style="background: none; border: none; color: #ef4444; font-size: 16px; cursor: pointer; padding: 2px 6px;" title="Eliminar tarjeta">✕</button>
-      `;
-      container.appendChild(row);
+          const container = document.getElementById('wFixedExpensesContainer');
+          if (!container) return;
+
+          // Limpiar filas por defecto
+          container.innerHTML = '';
+
+          let addedCount = 0;
+          const isPro = isUserPro();
+          const maxAllowed = isPro ? 100 : 11;
+
+          // Ignorar la fila de encabezados si contiene palabras como 'concepto' o 'nombre'
+          const startIndex = /concepto|nombre|item/i.test(lines[0]) ? 1 : 0;
+
+          for (let i = startIndex; i < lines.length; i++) {
+            if (addedCount >= maxAllowed) break;
+
+            // Soporta separación por coma (,) o punto y coma (;) típica de Excel en español
+            const separator = lines[i].includes(';') ? ';' : ',';
+            const parts = lines[i].split(separator).map(p => p.trim().replace(/^["']|["']$/g, ''));
+
+            const name = parts[0] || '';
+            const cat = parts[1] || 'Otros';
+            const amt = parseFloat(parts[2]?.replace(',', '.')) || 0;
+            const due = parts[3] || '15';
+
+            if (name) {
+              addWizardExpenseRow(name, amt, cat, due);
+              addedCount++;
+            }
+          }
+
+          updateWizardExpenseCount();
+
+          if (!isPro && lines.length - startIndex > 11) {
+            showToast(`✅ Se cargaron 11 gastos (límite de la versión gratuita). Pasa a Pro para ilimitados.`, 'info');
+          } else {
+            showToast(`✅ Se cargaron ${addedCount} gastos desde tu archivo Excel`, 'success');
+          }
+        } catch(err) {
+          console.error('Error al procesar archivo CSV:', err);
+          showToast('❌ Error al leer el archivo. Verifica el formato de la plantilla.', 'error');
+        }
+      };
+      reader.readAsText(file, 'UTF-8');
+    }
+
+    function confirmDismissWizard() {
+      const salaryInput = document.getElementById('wSalaryInput');
+      const hasSalary = salaryInput && salaryInput.value.trim().length > 0;
+      const fixedRows = document.querySelectorAll('#wFixedExpensesContainer .wizard-dynamic-row').length;
+      if (hasSalary || fixedRows > 0) {
+        if (!confirm('¿Deseas salir del asistente? Si sales ahora sin guardar, tu configuración no se aplicará.')) {
+          return;
+        }
+      }
+      dismissOnboardingWizard(true);
     }
 
     function completeOnboardingWizard() {
@@ -6673,7 +6780,7 @@
       if (!appState.recurringDueDates) appState.recurringDueDates = {};
       appState.recurringDueDates['sueldo'] = payDay;
 
-      // 2. Guardar Gastos Fijos (Lectura resiliente y soporte de hasta 11+ gastos)
+      // 2. Guardar Gastos Fijos (Lectura resiliente y FUSIÓN SEGURA sin chancar datos existentes)
       const curMonth = appState.currentMonth || getCurrentCalendarMonthName();
       if (!appState.transactions[curMonth]) appState.transactions[curMonth] = [];
 
@@ -6721,23 +6828,22 @@
       });
 
       if (newTxs.length > 0) {
-        appState.transactions[curMonth] = newTxs;
+        // SEGURIDAD: FUSIÓN DE DATOS EN VEZ DE SOBREESCRITURA DESTRUCTIVA
+        if (!appState.transactions[curMonth] || appState.transactions[curMonth].length === 0) {
+          appState.transactions[curMonth] = [...newTxs];
+        } else {
+          newTxs.forEach(nt => {
+            const alreadyExists = appState.transactions[curMonth].some(
+              et => et.name.toLowerCase() === nt.name.toLowerCase()
+            );
+            if (!alreadyExists) {
+              appState.transactions[curMonth].push(nt);
+            }
+          });
+        }
       }
 
-      // 3. Guardar Tarjetas
-      const cardRows = document.querySelectorAll('#wCardsContainer .wizard-dynamic-row');
-      cardRows.forEach(row => {
-        const cNameInput = row.querySelector('.w-card-name') || row.querySelector('input[type="text"]');
-        const cName = cNameInput?.value.trim();
-        const payDayInput = row.querySelector('.w-card-pay') || row.querySelectorAll('input[type="number"]')[1];
-        const payDay = payDayInput?.value.trim() || '30';
-        if (cName) {
-          const normKey = getNormalizedNameKey(cName);
-          appState.recurringDueDates[normKey] = payDay;
-        }
-      });
-
-      // 4. Guardar Meta Inicial
+      // 3. Guardar Meta Inicial
       const goalName = document.getElementById('wGoalName')?.value.trim();
       const goalTarget = parseFloat(document.getElementById('wGoalTarget')?.value);
       const goalMonthly = parseFloat(document.getElementById('wGoalMonthly')?.value);
@@ -8433,6 +8539,12 @@ window.goToWizardStep = goToWizardStep;
 window.openOnboardingWizard = openOnboardingWizard;
 window.completeOnboardingWizard = completeOnboardingWizard;
 window.dismissOnboardingWizard = dismissOnboardingWizard;
+window.confirmDismissWizard = confirmDismissWizard;
+window.downloadExpenseTemplateCSV = downloadExpenseTemplateCSV;
+window.triggerImportExpensesCSV = triggerImportExpensesCSV;
+window.handleImportExpensesCSV = handleImportExpensesCSV;
+window.updateWizardExpenseCount = updateWizardExpenseCount;
+window.addWizardExpenseRow = addWizardExpenseRow;
 window.openEditSalaryModal = openEditSalaryModal;
 window.handleSaveSalary = handleSaveSalary;
 window.openSecurityModal = openSecurityModal;

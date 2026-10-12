@@ -465,10 +465,10 @@
 
                 <!-- Integrated Executive Metrics: Ingresos, Gastos, Por Pagar -->
                 <div class="exec-card-metrics-cluster">
-                  <div class="exec-cluster-pill exec-pill-income" title="Ingresos del mes">
+                  <div class="exec-cluster-pill exec-pill-income" title="Ingresos del mes (Toca para editar)" onclick="event.stopPropagation(); openEditSalaryModal();" style="cursor: pointer;">
                     <span class="exec-pill-dot dot-income"></span>
                     <div class="exec-pill-content">
-                      <span class="exec-pill-label">Ingresos</span>
+                      <span class="exec-pill-label">Ingresos ✏️</span>
                       <span class="exec-pill-val" id="metricSalary">S/ 0</span>
                     </div>
                   </div>
@@ -1426,7 +1426,7 @@
         </div>
 
         <div style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-top: 6px; margin-bottom: 2px;">Herramientas & Configuración</div>
-        <button type="button" class="btn btn-secondary" onclick="openOnboardingWizard(true);" style="width: 100%; text-align: left; padding: 10px;">🔧 Reconfigurar Sueldo y Gastos Fijos</button>
+        <button type="button" class="btn btn-secondary" onclick="closeModal('settingsModal'); openEditSalaryModal();" style="width: 100%; text-align: left; padding: 10px; font-weight: 700;">💵 Modificar Sueldo / Ingreso Mensual</button>
         <button type="button" class="btn btn-secondary" onclick="openCategoryManagerModal();" style="width: 100%; text-align: left; padding: 10px;">⚙️ Gestor de Categorías</button>
         <button type="button" class="btn btn-secondary" onclick="closeModal('settingsModal'); openInstallmentsSimulatorModal();" style="width: 100%; text-align: left; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
           <span>💳 Simulador de Cuotas y Crédito</span>
@@ -2372,7 +2372,7 @@
   </div>
 
   <!-- MODAL: ASISTENTE DE BIENVENIDA & CONFIGURACIÓN INICIAL (WIZARD) -->
-  <div class="modal-backdrop" id="onboardingWizardModal" onclick="handleBackdropClick(event, 'onboardingWizardModal')">
+  <div class="modal-backdrop" id="onboardingWizardModal">
     <div class="modal wizard-modal-container">
       <!-- FIXED HEADER -->
       <div class="wizard-modal-header">
@@ -2380,11 +2380,11 @@
           <div class="modal-title" style="margin: 0; display: flex; align-items: center; gap: 8px;">
             <span>🧭</span> <span>Asistente de Configuración Inicial</span>
           </div>
-          <button type="button" onclick="dismissOnboardingWizard(true)" style="background:none; border:none; font-size:20px; cursor:pointer; color:var(--text-muted); line-height: 1;">✕</button>
+          <button type="button" onclick="confirmDismissWizard()" style="background:none; border:none; font-size:20px; cursor:pointer; color:var(--text-muted); line-height: 1;">✕</button>
         </div>
         <p style="font-size: 11px; color: var(--text-muted); margin: 0 0 10px 0;">Configura tus ingresos, gastos fijos y metas para que AliviaFin empiece a trabajar a tu favor.</p>
 
-        <!-- Step tracker bar -->
+        <!-- Step tracker bar (3 pasos limpios) -->
         <div class="wizard-step-tracker" style="margin-bottom: 0;">
           <div class="wizard-step-progress-line" id="wizardProgressLine"></div>
           <div class="wizard-step-item active" id="wStepDot1" onclick="goToWizardStep(1)">
@@ -2397,10 +2397,6 @@
           </div>
           <div class="wizard-step-item" id="wStepDot3" onclick="goToWizardStep(3)">
             <div class="wizard-step-circle">3</div>
-            <div class="wizard-step-label">Tarjetas</div>
-          </div>
-          <div class="wizard-step-item" id="wStepDot4" onclick="goToWizardStep(4)">
-            <div class="wizard-step-circle">4</div>
             <div class="wizard-step-label">Metas</div>
           </div>
         </div>
@@ -2445,56 +2441,42 @@
           </div>
         </div>
 
-        <!-- PASO 2: GASTOS FIJOS Y VENCIMIENTOS -->
+        <!-- PASO 2: GASTOS FIJOS DEL MES -->
         <div class="wizard-slide" id="wSlide2">
           <div style="background: rgba(255,255,255,0.45); border-radius: 12px; padding: 14px; border: 1px solid var(--glass-border); margin-bottom: 10px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <h4 style="font-size: 13px; font-weight: 800; color: var(--text-main); margin: 0;">📅 Gastos Fijos y Fechas de Vencimiento</h4>
-              <span style="font-size: 10px; color: var(--text-muted);">Alimentan el Calendario</span>
+              <h4 style="font-size: 13px; font-weight: 800; color: var(--text-main); margin: 0;">📅 Gastos Fijos y Vencimientos</h4>
             </div>
+
+            <!-- Indicador claro del límite de versión gratuita -->
+            <div id="wLimitBanner" style="display: flex; justify-content: space-between; align-items: center; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 8px 12px; margin-bottom: 10px; font-size: 11.5px;">
+              <span style="font-weight: 700; color: #166534;">Plan Gratuito:</span>
+              <span style="font-weight: 800; color: #15803d;"><span id="wExpenseCount">0</span> de 11 gastos fijos</span>
+            </div>
+
             <p style="font-size: 11px; color: var(--text-muted); margin: 0 0 10px 0;">Agrega tus servicios, alquiler o compromisos recurrentes del mes (hasta 11 en Free):</p>
             
             <div id="wFixedExpensesContainer">
               <!-- Dynamic rows rendered by JS -->
             </div>
-            <button type="button" class="btn btn-secondary" onclick="addWizardExpenseRow()" style="width: 100%; font-size: 11px; padding: 8px; margin-top: 4px;">➕ Agregar Otro Gasto Fijo</button>
+            
+            <button type="button" id="btnAddWizardExpense" class="btn btn-secondary" onclick="addWizardExpenseRow()" style="width: 100%; font-size: 11px; padding: 8px; margin-top: 4px;">➕ Agregar Otro Gasto Fijo</button>
 
-            <div style="margin-top: 12px;">
-              <span style="font-size: 10px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 6px;">Sugerencias rápidas de 1 clic:</span>
-              <div style="display: flex; flex-wrap: wrap; gap: 6px;">
-                <span class="wizard-chip-tag" onclick="quickAddWizardExpense('Alquiler / Casa', 650, 'Vivienda', '30')">🏠 Alquiler (Día 30)</span>
-                <span class="wizard-chip-tag" onclick="quickAddWizardExpense('Luz y Agua', 120, 'Servicios', '15')">⚡ Servicios (Día 15)</span>
-                <span class="wizard-chip-tag" onclick="quickAddWizardExpense('Internet Fibra', 60, 'Servicios', '28')">🌐 Internet (Día 28)</span>
-                <span class="wizard-chip-tag" onclick="quickAddWizardExpense('Plan Celular', 35, 'Celular', '15')">📱 Celular (Día 15)</span>
-                <span class="wizard-chip-tag" onclick="quickAddWizardExpense('Gimnasio', 100, 'Salud', '24')">🏋️ Gym (Día 24)</span>
-              </div>
+            <!-- Carga masiva y descarga de plantilla Excel -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;">
+              <button type="button" class="btn btn-secondary" onclick="downloadExpenseTemplateCSV()" style="font-size: 11px; padding: 7px; display: inline-flex; align-items: center; justify-content: center; gap: 5px;" title="Descargar archivo modelo para llenar tus gastos en Excel">
+                <span>📥</span> <span>Plantilla Excel</span>
+              </button>
+              <button type="button" class="btn btn-secondary" onclick="triggerImportExpensesCSV()" style="font-size: 11px; padding: 7px; display: inline-flex; align-items: center; justify-content: center; gap: 5px;" title="Subir archivo Excel o CSV con tus gastos para llenarlos al instante">
+                <span>📤</span> <span>Cargar Excel / CSV</span>
+              </button>
+              <input type="file" id="wCsvFileInput" accept=".csv,text/csv,.txt" style="display: none;" onchange="handleImportExpensesCSV(event)">
             </div>
-          </div>
-          <div class="wizard-tip-box">
-            <span>🔔</span>
-            <div>Al asignar el día de vencimiento, estos gastos se integran automáticamente en tu <b>Calendario de Vencimientos</b> mensual.</div>
           </div>
         </div>
 
-        <!-- PASO 3: TARJETAS Y CUOTAS -->
+        <!-- PASO 3: PRIMERA META DE AHORRO -->
         <div class="wizard-slide" id="wSlide3">
-          <div style="background: rgba(255,255,255,0.45); border-radius: 12px; padding: 14px; border: 1px solid var(--glass-border); margin-bottom: 10px;">
-            <h4 style="font-size: 13px; font-weight: 800; color: var(--text-main); margin: 0 0 6px 0;">💳 Tarjetas de Crédito y Préstamos</h4>
-            <p style="font-size: 11px; color: var(--text-muted); margin: 0 0 10px 0;">Configura tus tarjetas de crédito y fechas límite para no pagar penalidades ni intereses:</p>
-
-            <div id="wCardsContainer">
-              <!-- Dynamic card rows -->
-            </div>
-            <button type="button" class="btn btn-secondary" onclick="addWizardCardRow()" style="width: 100%; font-size: 11px; padding: 8px; margin-top: 4px;">➕ Registrar Tarjeta o Línea de Crédito</button>
-          </div>
-          <div class="wizard-tip-box">
-            <span>✨</span>
-            <div>Podrás usar nuestro <b>Simulador de Cuotas</b> para comprobar cómo una compra a plazos afectará tu superávit mensual antes de pasar la tarjeta.</div>
-          </div>
-        </div>
-
-        <!-- PASO 4: PRIMERA META DE AHORRO -->
-        <div class="wizard-slide" id="wSlide4">
           <div style="background: rgba(255,255,255,0.45); border-radius: 12px; padding: 14px; border: 1px solid var(--glass-border); margin-bottom: 10px;">
             <h4 style="font-size: 13px; font-weight: 800; color: var(--text-main); margin: 0 0 6px 0;">🎯 Define tu Primera Meta de Ahorro</h4>
             <p style="font-size: 11px; color: var(--text-muted); margin: 0 0 12px 0;">El ahorro con nombre y apellido se cumple más rápido. Fija tu primer gran objetivo:</p>
@@ -2533,7 +2515,7 @@
 
       <!-- FIXED FOOTER -->
       <div class="wizard-modal-footer">
-        <button type="button" class="btn btn-secondary" id="wBtnPrev" onclick="dismissOnboardingWizard(true)">Saltar Tutorial</button>
+        <button type="button" class="btn btn-secondary" id="wBtnPrev" onclick="confirmDismissWizard()">Saltar Tutorial</button>
         <button type="button" class="btn btn-primary" id="wBtnNext" onclick="goToWizardStep(2)">Continuar al Paso 2 ➔</button>
       </div>
     </div>
@@ -3469,6 +3451,6 @@
     </div>
   </div>
 
-  <script src="js/app.js?v=76.2"></script>
+  <script src="js/app.js?v=76.3"></script>
 </body>
 </html>
