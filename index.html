@@ -2,14 +2,14 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>AliviaFin — Paz mental para tu dinero</title>
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png?v=67.0">
   <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png?v=67.0">
   <link rel="shortcut icon" type="image/x-icon" href="favicon.ico?v=67.0">
   <link rel="icon" type="image/x-icon" href="favicon.ico?v=67.0">
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=67.0">
-  <link rel="manifest" href="manifest.json?v=67.0">
+  <link rel="manifest" href="manifest.json?v=76.6">
   <meta name="theme-color" content="#090d16" id="themeColorMeta">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -19,7 +19,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="js/chart.min.js?v=72.0"></script>
   <script src="js/supabase.min.js?v=72.0"></script>
-  <link rel="stylesheet" href="css/styles.css?v=76.0">
+  <link rel="stylesheet" href="css/styles.css?v=76.6">
 
   <style>
     /* Estilos Críticos Inmediatos: Paleta Unificada AliviaFin Light & Emerald */
@@ -98,7 +98,7 @@
           <a href="javascript:void(0)" onclick="openLegalModal('terms')" class="login-unified-legal-link">
             <span>⚖️ Términos, Privacidad & Reclamaciones</span>
           </a>
-          <p id="loginFooterVersionDesk" class="login-version-tag">AliviaFin v76.5 · Paz mental para tu dinero</p>
+          <p id="loginFooterVersionDesk" class="login-version-tag">AliviaFin v76.6 · Paz mental para tu dinero</p>
         </div>
       </div>
 
@@ -224,7 +224,7 @@
             <a href="javascript:void(0)" onclick="openLegalModal('terms')" class="login-unified-legal-link">
               <span>⚖️ Términos, Privacidad & Reclamaciones</span>
             </a>
-            <p id="loginFooterVersionMob" class="login-version-tag">AliviaFin v75.1 · Paz mental para tu dinero</p>
+            <p id="loginFooterVersionMob" class="login-version-tag">AliviaFin v76.6 · Paz mental para tu dinero</p>
           </div>
         </div>
 
@@ -393,7 +393,6 @@
             👑
             <span id="founderPendingAlertBadgeMob" style="display: none;"></span>
           </button>
-          <button id="btnSettings" class="settings-popover-btn hide-on-desktop" onclick="openSettingsModal()" title="Ajustes y Opciones">⚙️</button>
         </div>
       </div>
     </div>
@@ -437,7 +436,6 @@
         <div class="desktop-home-grid">
           <!-- Columna Principal / Izquierda (Desktop): Saldo Banco, Indicadores, Acciones & Radar -->
           <div class="desktop-home-col-left">
-            <!-- EXECUTIVE APPLE CARD: BALANCE GENERAL EN VIVO (SERENE & CLUTTER-FREE) -->
             <!-- EXECUTIVE APPLE CARD: BALANCE GENERAL EN VIVO (SERENE & CLUTTER-FREE) -->
             <div id="executiveBalanceCard" class="executive-balance-card" onclick="openExplainSurplusModal()" style="cursor: pointer;" title="Toca para ver el desglose exacto de tu saldo bancario">
               <div class="exec-card-top-row">
@@ -2215,7 +2213,7 @@
             </div>
 
             <div style="text-align: right; margin-top: 4px;">
-              <button type="button" onclick="closeModal('addExpenseModal'); openCuotasModal();" style="background: none; border: none; color: #059669; font-size: 11px; font-weight: 700; cursor: pointer; text-decoration: underline; padding: 2px 0;">
+              <button type="button" onclick="closeModal('addExpenseModal'); openInstallmentsSimulatorModal();" style="background: none; border: none; color: #059669; font-size: 11px; font-weight: 700; cursor: pointer; text-decoration: underline; padding: 2px 0;">
                 ⚡ ¿Deseas proyectar antes de pagar? Abrir Simulador de Cuotas ➔
               </button>
             </div>
@@ -3458,6 +3456,6 @@
     </div>
   </div>
 
-  <script src="js/app.js?v=76.5"></script>
+  <script src="js/app.js?v=76.6"></script>
 </body>
 </html>

@@ -33,3 +33,6 @@ scratch.js
 node_modules/
 .vercel
 .env*
+test-results/
+tests/audit_screenshots/
+tests/*.png

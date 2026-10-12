@@ -87,9 +87,9 @@
     let CATEGORIES = { ...GENERIC_CATEGORIES };
 
     // ================================================================
-    // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v71.8)
+    // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v76.6)
     // ================================================================
-    const APP_VERSION = 'v71.8';
+    const APP_VERSION = 'v76.6';
 
     // ================================================================
     // CONFIGURACIÓN DE SUPABASE Y CLIENTE DE AUTENTICACIÓN
@@ -1435,7 +1435,7 @@
       try {
         const client = getSupabaseClient();
         if (!client) {
-          alert('🚨 El motor de autenticación se está conectando. Por favor reintenta en un momento.');
+          uiAlert('🚨 El motor de autenticación se está conectando. Por favor reintenta en un momento.');
           return;
         }
         const { data, error } = await client.auth.signInWithOAuth({
@@ -1447,19 +1447,19 @@
         if (error) {
           const providerName = provider === 'azure' ? 'Microsoft' : 'Google';
           if (error.message.includes('not enabled') || error.message.includes('unsupported') || error.message.includes('invalid_client')) {
-            alert(`ℹ️ El acceso con ${providerName} aún no ha sido activado en tu panel de Supabase. Puedes ingresar mientras tanto con tu correo y contraseña habitual.`);
+            uiAlert(`ℹ️ El acceso con ${providerName} aún no ha sido activado en tu panel de Supabase. Puedes ingresar mientras tanto con tu correo y contraseña habitual.`);
           } else {
-            alert('🚨 ' + error.message);
+            uiAlert('🚨 ' + error.message);
           }
         }
       } catch (err) {
-        alert('🚨 ' + (err.message || err));
+        uiAlert('🚨 ' + (err.message || err));
       }
     }
 
     // LOGOUT
     async function handleLogout() {
-      if (!confirm('¿Deseas cerrar tu sesión?')) return;
+      if (!await uiConfirm('¿Deseas cerrar tu sesión?')) return;
       try { sessionStorage.clear(); } catch(e) {}
       try {
         const client = getSupabaseClient();
@@ -1625,11 +1625,15 @@
     }
 
     function switchSegmentView(type) {
-      document.getElementById('segBtnChart').className = 'segmented-btn ' + (type === 'chart' ? 'active' : '');
-      document.getElementById('segBtnCuotas').className = 'segmented-btn ' + (type === 'cuotas' ? 'active' : '');
+      const btnChart = document.getElementById('segBtnChart');
+      const btnCuotas = document.getElementById('segBtnCuotas');
+      if (btnChart) btnChart.className = 'segmented-btn ' + (type === 'chart' ? 'active' : '');
+      if (btnCuotas) btnCuotas.className = 'segmented-btn ' + (type === 'cuotas' ? 'active' : '');
 
-      document.getElementById('segmentChartBox').style.display = type === 'chart' ? 'block' : 'none';
-      document.getElementById('segmentCuotasBox').style.display = type === 'cuotas' ? 'block' : 'none';
+      const boxChart = document.getElementById('segmentChartBox');
+      const boxCuotas = document.getElementById('segmentCuotasBox');
+      if (boxChart) boxChart.style.display = type === 'chart' ? 'block' : 'none';
+      if (boxCuotas) boxCuotas.style.display = type === 'cuotas' ? 'block' : 'none';
     }
 
     function switchPlanMobileSection(section) {
@@ -1693,6 +1697,8 @@
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         let isRefreshing = false;
+        // Solo recargar ante una ACTUALIZACIÓN (ya había un SW controlando); en la 1ª visita no
+        const hadController = !!navigator.serviceWorker.controller;
         navigator.serviceWorker.register('./sw.js?v=74.0')
           .then(reg => {
             console.log('SW v74.0 registrado:', reg.scope);
@@ -1714,7 +1720,7 @@
         
         // Cuando el SW se actualiza, recargar automáticamente una sola vez para que Safari / PWA aplique la versión fresca
         navigator.serviceWorker.addEventListener('controllerchange', () => {
-          if (!isRefreshing) {
+          if (!isRefreshing && hadController) {
             isRefreshing = true;
             window.location.reload();
           }
@@ -1824,11 +1830,51 @@
     let realtimeChannel = null;
 
     // Aplicar datos remotos al estado local de forma segura
+    // --- Control de escrituras propias y reintentos (v76.6) ---
+    // myWrittenTimestamps: marcas _lastSaved que ESTE dispositivo envió; sirve para
+    // reconocer el "eco" realtime de nuestras propias escrituras y evitar bucles de guardado.
+    // lastAckedWriteTs: última marca confirmada por el servidor; si el estado local es más
+    // nuevo, hay cambios sin sincronizar (p. ej. hechos sin conexión) que deben subirse.
+    const myWrittenTimestamps = new Set();
+    let lastAckedWriteTs = 0;
+    let syncRetryCount = 0;
+    let syncRetryTimer = null;
+
+    function rememberOwnWrite(ts) {
+      myWrittenTimestamps.add(ts);
+      if (myWrittenTimestamps.size > 40) {
+        myWrittenTimestamps.delete(myWrittenTimestamps.values().next().value);
+      }
+    }
+
+    function scheduleSyncRetry() {
+      if (syncRetryTimer || syncRetryCount >= 3) return;
+      const delay = [3000, 8000, 20000][syncRetryCount++];
+      syncRetryTimer = setTimeout(() => {
+        syncRetryTimer = null;
+        if (navigator.onLine !== false) syncStateToServer();
+      }, delay);
+    }
+
+    function pushLocalIfUnsynced(localTs, remoteTs) {
+      if (localTs > remoteTs && localTs > lastAckedWriteTs) {
+        syncStateToServer();
+      } else {
+        updateSyncIndicator('synced', '🟢 En Vivo');
+      }
+    }
+
     function applyRemoteState(remoteData) {
       if (!remoteData || !remoteData.transactions) return;
 
       const remoteTs = remoteData._lastSaved || 0;
       const localTs  = appState._lastSaved  || 0;
+
+      // Eco de nuestra propia escritura: el estado local ya lo contiene
+      if (remoteTs && myWrittenTimestamps.has(remoteTs)) {
+        updateSyncIndicator('synced', '🟢 En Vivo');
+        return;
+      }
 
       // PROTECCIÓN: el servidor SIEMPRE tiene prioridad si tiene datos de incomes reales.
       // Esto evita que un dispositivo nuevo que inicializó incomes por defecto
@@ -1839,7 +1885,7 @@
 
       // Solo ignorar datos remotos si: el local es más reciente Y el local NO es datos por defecto
       if (remoteTs <= localTs && !localIsDefaultOnly && !remoteHasIncomes) {
-        updateSyncIndicator('synced', '🟢 En Vivo');
+        pushLocalIfUnsynced(localTs, remoteTs);
         return;
       }
       // Si el remoto tiene datos de incomes reales, siempre aplicar si es más reciente O si el local es default
@@ -1850,7 +1896,7 @@
           ? Object.values(appState.incomes).reduce((s, m) => s + (m ? m.length : 0), 0)
           : 0;
         if (remoteTs <= localTs && remoteIncomesCount <= localIncomesCount) {
-          updateSyncIndicator('synced', '🟢 En Vivo');
+          pushLocalIfUnsynced(localTs, remoteTs);
           return;
         }
       }
@@ -2069,6 +2115,8 @@
       appState.activeStatusFilter  = currentStatusFilter;
       appState.historyPeriodFilter = currentHistoryPeriodFilter;
       appState._lastSaved = Date.now();
+      const sentTs = appState._lastSaved;
+      rememberOwnWrite(sentTs);
       saveLocalState();
 
       updateSyncIndicator('syncing', '⏳ Guardando...');
@@ -2079,6 +2127,8 @@
           .upsert({ id: getUserStateId(), data: appState });
 
         if (!error) {
+          lastAckedWriteTs = Math.max(lastAckedWriteTs, sentTs);
+          syncRetryCount = 0;
           lastSuccessfulSyncTime = Date.now();
           lastKnownServerDataHash = JSON.stringify(appState.transactions) +
                                     JSON.stringify(appState.savingsGoals) +
@@ -2089,9 +2139,11 @@
           if (currentUser) recordUserHeartbeat(currentUser);
         } else {
           updateSyncIndicator('syncing', '⚠️ Reintentando...');
+          scheduleSyncRetry();
         }
       } catch(e) {
         updateSyncIndicator('error', '🔴 Offline (Modo Local)');
+        scheduleSyncRetry();
       } finally {
         isSyncing = false;
         if (syncPending) {
@@ -2285,6 +2337,100 @@
       setTimeout(() => { if (toast.parentNode) toast.remove(); }, 3000);
     }
 
+    // ================================================================
+    // DIÁLOGOS PROPIOS (reemplazan alert / confirm / prompt nativos)
+    // En iOS PWA los nativos muestran "aliviafin.vercel.app dice". Estos son
+    // asíncronos (Promise), accesibles (Esc/Enter/foco) y respetan el tema.
+    // El texto se inserta con textContent: no hay riesgo de XSS.
+    // ================================================================
+    function uiDialog({ message = '', okText = 'Aceptar', cancelText = 'Cancelar', showCancel = true, danger = false, input = null } = {}) {
+      return new Promise(resolve => {
+        const prevFocus = document.activeElement;
+        const overlay = document.createElement('div');
+        overlay.className = 'ui-dialog-overlay';
+        overlay.setAttribute('role', 'alertdialog');
+        overlay.setAttribute('aria-modal', 'true');
+
+        const box = document.createElement('div');
+        box.className = 'ui-dialog';
+        const msg = document.createElement('div');
+        msg.className = 'ui-dialog-message';
+        msg.textContent = String(message);
+        box.appendChild(msg);
+
+        let field = null;
+        if (input) {
+          field = document.createElement('input');
+          field.className = 'ui-dialog-input';
+          field.type = 'text';
+          field.inputMode = input.inputMode || 'text';
+          field.value = input.value == null ? '' : String(input.value);
+          box.appendChild(field);
+        }
+
+        const actions = document.createElement('div');
+        actions.className = 'ui-dialog-actions';
+        let cancelBtn = null;
+        if (showCancel) {
+          cancelBtn = document.createElement('button');
+          cancelBtn.type = 'button';
+          cancelBtn.className = 'ui-dialog-btn';
+          cancelBtn.textContent = cancelText;
+          actions.appendChild(cancelBtn);
+        }
+        const okBtn = document.createElement('button');
+        okBtn.type = 'button';
+        okBtn.className = 'ui-dialog-btn primary' + (danger ? ' danger' : '');
+        okBtn.textContent = okText;
+        actions.appendChild(okBtn);
+        box.appendChild(actions);
+        overlay.appendChild(box);
+
+        let done = false;
+        const onKey = (e) => {
+          if (e.key === 'Escape' || e.key === 'Esc') {
+            e.preventDefault(); e.stopImmediatePropagation(); finish(false);
+          } else if (e.key === 'Enter') {
+            e.preventDefault(); e.stopImmediatePropagation();
+            finish(document.activeElement !== cancelBtn);
+          }
+        };
+        const finish = (ok) => {
+          if (done) return;
+          done = true;
+          document.removeEventListener('keydown', onKey, true);
+          overlay.classList.add('closing');
+          setTimeout(() => overlay.remove(), 160);
+          if (prevFocus && typeof prevFocus.focus === 'function') {
+            try { prevFocus.focus({ preventScroll: true }); } catch (e) {}
+          }
+          resolve(input ? (ok ? field.value : null) : ok);
+        };
+
+        okBtn.addEventListener('click', () => finish(true));
+        if (cancelBtn) cancelBtn.addEventListener('click', () => finish(false));
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) finish(false); });
+        document.addEventListener('keydown', onKey, true);
+        document.body.appendChild(overlay);
+        const toFocus = field || okBtn;
+        toFocus.focus();
+        if (field) field.select();
+      });
+    }
+
+    function uiConfirm(message, opts = {}) {
+      const danger = opts.danger !== undefined ? opts.danger : /elimin|borrar|purg|irreversible/i.test(String(message));
+      return uiDialog({ message, okText: opts.okText || (danger ? 'Eliminar' : 'Confirmar'), danger });
+    }
+
+    function uiAlert(message, opts = {}) {
+      return uiDialog({ message, showCancel: false, okText: opts.okText || 'Entendido' }).then(() => undefined);
+    }
+
+    function uiPrompt(message, defaultValue = '', opts = {}) {
+      return uiDialog({ message, okText: opts.okText || 'Guardar', input: { value: defaultValue, inputMode: opts.inputMode || 'text' } });
+    }
+
     function exportDataJSON() {
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appState, null, 2));
       const downloadAnchor = document.createElement('a');
@@ -2297,7 +2443,18 @@
     }
 
     function triggerImportDataJSON() {
-      document.getElementById('importJsonFileInput').click();
+      let fileInput = document.getElementById('importJsonFileInput');
+      if (!fileInput) {
+        fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.id = 'importJsonFileInput';
+        fileInput.accept = '.json,application/json';
+        fileInput.style.display = 'none';
+        fileInput.addEventListener('change', importDataJSON);
+        document.body.appendChild(fileInput);
+      }
+      fileInput.value = '';
+      fileInput.click();
     }
 
     function importDataJSON(event) {
@@ -2311,7 +2468,7 @@
             appState = imported;
             saveState();
             renderAll();
-            alert('✅ ¡Estado importado con éxito!');
+            uiAlert('✅ ¡Estado importado con éxito!');
           }
         } catch(err) {}
       };
@@ -2372,8 +2529,8 @@
 
       window.addEventListener('online', () => {
         showToast('🟢 Conexión Recuperada. Sincronizando...', 'success');
-        updateSyncIndicator('synced', '🟢 En Vivo');
-        loadStateFromServer(3);
+        updateSyncIndicator('syncing', '🔄 Sincronizando...');
+        // handleAppWakeup() (listener 'online' superior) ya recarga el estado: evitamos doble sync
       });
       document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' || e.key === 'Esc') {
@@ -2794,6 +2951,11 @@
 
       if (pendingTxs.length === 0) {
         rebalanceDesktopDashboardLayout(false);
+        // Sin gastos en el mes no hay nada que celebrar: se evita una tarjeta vacía
+        if (txs.length === 0) {
+          container.innerHTML = '';
+          return;
+        }
         container.innerHTML = `
           <div class="upcoming-bills-card" style="margin-bottom: 14px; padding: 12px 16px;">
             <div class="upcoming-bills-zen">
@@ -3104,10 +3266,12 @@
     function renderRecentTransactions() {
       const container = document.getElementById('recentTxContainer');
       const badge = document.getElementById('recentTxCountBadge');
+      const viewAllBtn = badge ? badge.closest('button') : null;
       if (!container) return;
 
       const txs = getMonthTxList();
       if (badge) badge.textContent = txs.length.toString();
+      if (viewAllBtn) viewAllBtn.style.display = txs.length === 0 ? 'none' : 'inline-flex';
 
       if (txs.length === 0) {
         container.innerHTML = `
@@ -3775,33 +3939,51 @@
       const sum = incs.reduce((s, i) => s + (i.amount || 0), 0);
       if (sum === 0 && appState.salary && appState.salary > 0) {
         const mExtra = (appState.extraIncomes && appState.extraIncomes[targetMonth]) || [];
-        return appState.salary + mExtra.reduce((s, i) => s + (i.amount || 0), 0);
+        return roundCurrency(appState.salary + mExtra.reduce((s, i) => s + (i.amount || 0), 0));
       }
-      return sum;
+      return roundCurrency(sum);
     }
 
     function getAccumulatedBalance(targetMonth) {
       const allMonthsOrder = getSortedMonths();
-      const startIndex = allMonthsOrder.indexOf('Agosto 2026');
+      const isCesar = isAdminCesar();
+      let startIndex = allMonthsOrder.indexOf('Agosto 2026');
+      if (!isCesar || startIndex === -1) {
+        // Para suscriptores regulares: detectar su primer mes con datos registrados
+        let firstDataIdx = -1;
+        for (let idx = 0; idx < allMonthsOrder.length; idx++) {
+          const m = allMonthsOrder[idx];
+          const hasTx = appState.transactions && appState.transactions[m] && appState.transactions[m].length > 0;
+          const hasInc = appState.incomes && appState.incomes[m] && appState.incomes[m].length > 0;
+          if (hasTx || hasInc) {
+            firstDataIdx = idx;
+            break;
+          }
+        }
+        startIndex = firstDataIdx !== -1 ? firstDataIdx : allMonthsOrder.indexOf(targetMonth);
+        if (startIndex === -1) startIndex = 0;
+      }
       const targetIndex = allMonthsOrder.indexOf(targetMonth);
       
-      // Si el mes actual es anterior a Agosto 2026 o no existe en la lista, calculamos individual
+      // Si el mes actual es anterior al mes de inicio o no existe en la lista, calculamos individual
       if (startIndex === -1 || targetIndex < startIndex) {
+        if (typeof ensureMonthIncomes === 'function') ensureMonthIncomes(targetMonth);
         const txs = appState.transactions[targetMonth] || [];
-        const totalPaid = txs.filter(t => (t.status || 'Pagado') === 'Pagado').reduce((sum, item) => sum + item.amount, 0);
+        const totalPaid = roundCurrency(txs.filter(t => (t.status || 'Pagado') === 'Pagado').reduce((sum, item) => sum + (item.amount || 0), 0));
         const monthIncomes = appState.incomes ? (appState.incomes[targetMonth] || []) : [];
-        const totalReceived = monthIncomes.filter(i => (i.status || 'Pendiente') === 'Recibido').reduce((s, i) => s + i.amount, 0);
+        const totalReceived = roundCurrency(monthIncomes.filter(i => (i.status || 'Pendiente') === 'Recibido').reduce((s, i) => s + (i.amount || 0), 0));
         return roundCurrency(totalReceived - totalPaid);
       }
       
-      // Acumulado desde Agosto 2026 con aritmética protegida a centavos
+      // Acumulado con aritmética protegida a centavos
       let accumulatedBalance = 0;
       for (let i = startIndex; i <= targetIndex; i++) {
         const m = allMonthsOrder[i];
+        if (typeof ensureMonthIncomes === 'function') ensureMonthIncomes(m);
         const txs = appState.transactions[m] || [];
-        const totalPaid = txs.filter(t => (t.status || 'Pagado') === 'Pagado').reduce((sum, item) => sum + item.amount, 0);
+        const totalPaid = roundCurrency(txs.filter(t => (t.status || 'Pagado') === 'Pagado').reduce((sum, item) => sum + (item.amount || 0), 0));
         const monthIncomes = appState.incomes ? (appState.incomes[m] || []) : [];
-        const totalReceived = monthIncomes.filter(inc => (inc.status || 'Pendiente') === 'Recibido').reduce((s, inc) => s + inc.amount, 0);
+        const totalReceived = roundCurrency(monthIncomes.filter(inc => (inc.status || 'Pendiente') === 'Recibido').reduce((s, inc) => s + (inc.amount || 0), 0));
         accumulatedBalance = roundCurrency(accumulatedBalance + (totalReceived - totalPaid));
       }
       return roundCurrency(accumulatedBalance);
@@ -3814,6 +3996,8 @@
       const rawCurrent = parseFloat(element.getAttribute('data-numeric-val'));
       const startVal = isNaN(rawCurrent) ? 0 : rawCurrent;
       element.setAttribute('data-numeric-val', targetVal);
+      // Token por elemento: solo la animación más reciente puede escribir el valor final
+      const animToken = (element._animToken = (element._animToken || 0) + 1);
       
       const formattedFinal = targetVal.toLocaleString(loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       if (Math.abs(targetVal - startVal) < 0.01) {
@@ -3823,6 +4007,7 @@
 
       const startTime = performance.now();
       function step(now) {
+        if (element._animToken !== animToken) return; // reemplazada por una animación más nueva
         const progress = Math.min((now - startTime) / duration, 1);
         const ease = 1 - Math.pow(1 - progress, 3);
         const current = startVal + (targetVal - startVal) * ease;
@@ -3953,12 +4138,12 @@
 
     function renderMetrics() {
       const txs = getMonthTxList();
-      const totalSpent = txs.reduce((sum, item) => sum + item.amount, 0);
+      const totalSpent = roundCurrency(txs.reduce((sum, item) => sum + (item.amount || 0), 0));
       
-      const totalPaid = txs.filter(t => (t.status || 'Pagado') === 'Pagado').reduce((sum, item) => sum + item.amount, 0);
+      const totalPaid = roundCurrency(txs.filter(t => (t.status || 'Pagado') === 'Pagado').reduce((sum, item) => sum + (item.amount || 0), 0));
 
-      const totalIncome = getMonthTotalIncome();
-      const netSavings = totalIncome - totalSpent; 
+      const totalIncome = roundCurrency(getMonthTotalIncome());
+      const netSavings = roundCurrency(totalIncome - totalSpent); 
       
       const currentBalance = getAccumulatedBalance(appState.currentMonth);
 
@@ -3971,7 +4156,7 @@
       if (elSpent) elSpent.textContent = sym + ' ' + Math.round(totalSpent).toLocaleString(loc);
       
       // Métrica de Por Pagar
-      const totalPending = totalSpent - totalPaid;
+      const totalPending = roundCurrency(totalSpent - totalPaid);
       const elPending = document.getElementById('metricPending');
       if (elPending) elPending.textContent = sym + ' ' + Math.round(totalPending).toLocaleString(loc);
 
@@ -4105,13 +4290,13 @@
       container.innerHTML = html;
     }
 
-    function toggleIncomeStatus(incId) {
+    async function toggleIncomeStatus(incId) {
       if (!appState.incomes || !appState.incomes[appState.currentMonth]) return;
       const incs = appState.incomes[appState.currentMonth];
       const inc = incs.find(i => i.id === incId);
       if (inc) {
         const nextStatus = (inc.status === 'Recibido') ? 'Pendiente' : 'Recibido';
-        if (!confirm(`¿Seguro que deseas marcar este ingreso como ${nextStatus}?`)) return;
+        if (!await uiConfirm(`¿Seguro que deseas marcar este ingreso como ${nextStatus}?`)) return;
         
         const oldStatus = inc.status;
         inc.status = nextStatus;
@@ -4121,7 +4306,7 @@
       }
     }
 
-    function editIncomeDate(incId, event) {
+    async function editIncomeDate(incId, event) {
       event.stopPropagation();
       const currentMonth = appState.currentMonth;
       const incs = appState.incomes[currentMonth];
@@ -4129,11 +4314,11 @@
       const inc = incs.find(i => i.id === incId);
       if (!inc) return;
 
-      const newDateStr = prompt(`Cambiar el día de pago para "${inc.name}" (1-31):\nSe actualizará para todos los meses.`, inc.date);
+      const newDateStr = await uiPrompt(`Cambiar el día de pago para "${inc.name}" (1-31):\nSe actualizará para todos los meses.`, inc.date, { inputMode: 'numeric' });
       if (newDateStr === null) return;
       const newDate = parseInt(newDateStr, 10);
       if (isNaN(newDate) || newDate < 1 || newDate > 31) {
-        alert('Día inválido.');
+        uiAlert('Día inválido.');
         return;
       }
 
@@ -4622,8 +4807,7 @@
                 <div class="minimal-empty-state">
                   <div class="minimal-empty-icon-wrap">📋</div>
                   <div class="minimal-empty-title">Aún no hay gastos registrados este mes</div>
-                  <div class="minimal-empty-sub">Comienza a registrar tus pagos o consumos para tener control total de tu presupuesto.</div>
-                  <button type="button" class="btn btn-primary btn-sm" onclick="openQuickExpenseModal()" style="font-size: 11.5px; border-radius: 9px; padding: 7px 16px; font-weight: 700;">+ Registrar Primer Gasto</button>
+                  <div class="minimal-empty-sub">Usa «+ Gasto Detallado» para empezar a tener control total de tu presupuesto.</div>
                 </div>
               </td>
             </tr>
@@ -4691,12 +4875,12 @@
       }).join('');
     }
 
-    function toggleTxStatus(id) {
+    async function toggleTxStatus(id) {
       const txs = getMonthTxList();
       const tx = txs.find(t => t.id === id);
       if (tx) {
         const nextStatus = (tx.status === 'Pagado') ? 'Pendiente' : 'Pagado';
-        if (!confirm(`¿Seguro que deseas marcar este gasto como ${nextStatus}?`)) return;
+        if (!await uiConfirm(`¿Seguro que deseas marcar este gasto como ${nextStatus}?`)) return;
         
         tx.status = nextStatus;
         addAuditLog('🔄 Cambio Estado', `${tx.name} a ${tx.status} en ${appState.currentMonth}`);
@@ -4765,16 +4949,16 @@
     window.syncInstallmentFields = syncInstallmentFields;
     window.toggleInstallmentFields = toggleInstallmentFields;
 
-    function deleteTransaction(id) {
+    async function deleteTransaction(id) {
       const txs = getMonthTxList();
       const tx = txs.find(t => t.id === id);
       if (!tx) return;
 
-      if (!confirm(`¿Eliminar el gasto "${tx.name}" de este mes?`)) return;
+      if (!await uiConfirm(`¿Eliminar el gasto "${tx.name}" de este mes?`)) return;
       
       const normKey = getNormalizedNameKey(tx.name);
       
-      const propagate = confirm(`¿Deseas eliminar "${tx.name}" también para TODOS los meses posteriores a este?`);
+      const propagate = await uiConfirm(`¿Deseas eliminar "${tx.name}" también para TODOS los meses posteriores a este?`);
       
       if (propagate) {
         const allMonthsOrder = getSortedMonths();
@@ -5263,9 +5447,9 @@
       }).join('');
     }
 
-    function editCategoryBudget(cat) {
+    async function editCategoryBudget(cat) {
       const current = appState.categoryBudgets[cat] || 1000;
-      const val = prompt(`Ingresa nuevo límite para ${cat} (S/):`, current);
+      const val = await uiPrompt(`Ingresa nuevo límite para ${cat} (S/):`, current, { inputMode: 'decimal' });
       if (val !== null && !isNaN(val) && val > 0) {
         appState.categoryBudgets[cat] = parseFloat(val);
         addAuditLog('🎯 Presupuesto', `Nuevo límite ${cat}: S/ ${val}`);
@@ -5274,9 +5458,9 @@
       }
     }
 
-    function deleteCategory(cat) {
-      if (cat === 'Otros') return alert('No puedes eliminar la categoría por defecto.');
-      const confirmDelete = confirm(`¿Estás seguro de eliminar la categoría "${cat}"?\n\nSi tiene gastos asociados (históricos), estos seguirán existiendo pero se mostrarán como "Otros".\n\n(Recomendación: úsalo solo para limpiar categorías que ya no usas y están en S/ 0)`);
+    async function deleteCategory(cat) {
+      if (cat === 'Otros') return uiAlert('No puedes eliminar la categoría por defecto.');
+      const confirmDelete = await uiConfirm(`¿Estás seguro de eliminar la categoría "${cat}"?\n\nSi tiene gastos asociados (históricos), estos seguirán existiendo pero se mostrarán como "Otros".\n\n(Recomendación: úsalo solo para limpiar categorías que ya no usas y están en S/ 0)`);
       
       if (confirmDelete) {
         if (!appState.deletedCategories) appState.deletedCategories = [];
@@ -5530,9 +5714,9 @@
       showToast('🎯 Meta de ahorro creada con éxito', 'success');
     }
 
-    function deleteGoal(id) {
+    async function deleteGoal(id) {
       const g = appState.savingsGoals.find(item => item.id === id);
-      if (!confirm('¿Eliminar esta meta de ahorro?')) return;
+      if (!await uiConfirm('¿Eliminar esta meta de ahorro?')) return;
       if (g) addAuditLog('🗑️ Eliminar Meta', `Eliminada: ${g.name}`);
       appState.savingsGoals = appState.savingsGoals.filter(item => item.id !== id);
       saveState();
@@ -5676,14 +5860,15 @@
 
       const servicesAnnualTotal = servicesMonthlyTotal * 12;
 
+      const radarTotal = plannedServices.length + microExpenses.length;
       let executiveHtml = `
-        <!-- Filtros Rápidos & Buscador de Gastos -->
-        <div class="radar-controls-row">
-          <button type="button" class="radar-filter-pill ${radarActiveFilter === 'all' ? 'active' : ''}" onclick="setRadarFilter('all')">Todos (${plannedServices.length + microExpenses.length})</button>
+        <!-- Filtros Rápidos & Buscador de Gastos (solo si hay datos) -->
+        ${radarTotal > 0 ? `<div class="radar-controls-row">
+          <button type="button" class="radar-filter-pill ${radarActiveFilter === 'all' ? 'active' : ''}" onclick="setRadarFilter('all')">Todos (${radarTotal})</button>
           <button type="button" class="radar-filter-pill ${radarActiveFilter === 'services' ? 'active' : ''}" onclick="setRadarFilter('services')">📱 Servicios (${plannedServices.length})</button>
           <button type="button" class="radar-filter-pill ${radarActiveFilter === 'micro' ? 'active' : ''}" onclick="setRadarFilter('micro')">🐜 Menores &lt;35 (${microExpenses.length})</button>
           <input type="text" placeholder="🔍 Buscar servicio o gasto..." value="${escapeHtml(radarSearchTerm)}" oninput="onRadarSearchInput(this.value)" class="radar-search-input">
-        </div>
+        </div>` : ''}
 
         <!-- Lista de Conceptos -->
         <div class="radar-subs-list" style="max-height: 240px; overflow-y: auto;">
@@ -5703,7 +5888,7 @@
             </div>
           `).join('') : `
             <div style="padding: 20px; text-align: center; color: var(--text-muted); font-size: 12px;">
-              No se encontraron resultados para el filtro seleccionado.
+              ${radarTotal > 0 ? 'No se encontraron resultados para el filtro seleccionado.' : 'Aún no hay servicios ni gastos menores este mes.'}
             </div>
           `}
         </div>
@@ -5786,7 +5971,7 @@
 
     function showHormigaAdvice(totalAnnual) {
       const halfSaved = (totalAnnual / 2).toLocaleString('es-PE', { minimumFractionDigits: 0 });
-      alert(`💡 Oportunidad Financiera de Ahorro:\n\nSi optimizas y reduces a la mitad estos micro-gastos, acumularías S/ ${halfSaved} libres al año.\n\nEsto equivale a financiar tu fondo de emergencia o un viaje sin sacrificar tu calidad de vida.`);
+      uiAlert(`💡 Oportunidad Financiera de Ahorro:\n\nSi optimizas y reduces a la mitad estos micro-gastos, acumularías S/ ${halfSaved} libres al año.\n\nEsto equivale a financiar tu fondo de emergencia o un viaje sin sacrificar tu calidad de vida.`);
     }
 
     function showGroupOptimizationTip(key, annual) {
@@ -5797,7 +5982,7 @@
         taxis: `🚕 Consejo de Taxis:\nGastas S/ ${annual.toLocaleString()} al año. Planificar tus salidas con 15 minutos de anticipación amortigua S/ ${(annual * 0.35).toFixed(0)}.`,
         otros: `🐜 Micro-gastos diversos:\nSumaron S/ ${annual.toLocaleString()} al año. Asignar un presupuesto semanal en efectivo para compras sueltas frena las fugas invisibles.`
       };
-      alert(tips[key] || `Optimizando este rubro puedes recuperar parte de los S/ ${annual.toLocaleString()} al año.`);
+      uiAlert(tips[key] || `Optimizando este rubro puedes recuperar parte de los S/ ${annual.toLocaleString()} al año.`);
     }
 
 
@@ -5826,8 +6011,8 @@
       `).join('');
     }
 
-    function clearAuditLog() {
-      if (!confirm('¿Borrar historial de auditoría?')) return;
+    async function clearAuditLog() {
+      if (!await uiConfirm('¿Borrar historial de auditoría?')) return;
       appState.auditLog = [];
       saveState();
       renderAuditTable();
@@ -5993,7 +6178,7 @@
       const icon = document.getElementById('catIcon').value.trim() || '🏷️';
       const color = document.getElementById('catColor').value;
       
-      if (!name) return alert('Debes ingresar un nombre para la categoría.');
+      if (!name) return uiAlert('Debes ingresar un nombre para la categoría.');
       
       if (!appState.customCategories) {
         appState.customCategories = {};
@@ -6180,7 +6365,7 @@
       const color = document.getElementById('managerCatColor').value || '#38bdf8';
       const budget = parseFloat(document.getElementById('managerCatBudget').value) || 1000;
 
-      if (!name) return alert('Por favor ingresa un nombre para la categoría.');
+      if (!name) return uiAlert('Por favor ingresa un nombre para la categoría.');
 
       if (!appState.customCategories) appState.customCategories = {};
       if (!appState.categoryBudgets) appState.categoryBudgets = {};
@@ -6211,9 +6396,9 @@
       saveCategoryFromManager();
     }
 
-    function editCategoryBudgetFromManager(cat) {
+    async function editCategoryBudgetFromManager(cat) {
       const current = (appState.categoryBudgets && appState.categoryBudgets[cat]) || 1000;
-      const val = prompt(`Ingresa nuevo límite mensual para ${cat} (S/):`, current);
+      const val = await uiPrompt(`Ingresa nuevo límite mensual para ${cat} (S/):`, current, { inputMode: 'decimal' });
       if (val !== null && !isNaN(val) && val > 0) {
         if (!appState.categoryBudgets) appState.categoryBudgets = {};
         appState.categoryBudgets[cat] = parseFloat(val);
@@ -6225,9 +6410,9 @@
       }
     }
 
-    function deleteCategoryFromManager(cat) {
-      if (cat === 'Otros') return alert('No puedes eliminar la categoría por defecto.');
-      const confirmDelete = confirm(`¿Estás seguro de eliminar la categoría "${cat}"?\n\nSi tiene gastos asociados históricos, se mostrarán bajo "Otros".`);
+    async function deleteCategoryFromManager(cat) {
+      if (cat === 'Otros') return uiAlert('No puedes eliminar la categoría por defecto.');
+      const confirmDelete = await uiConfirm(`¿Estás seguro de eliminar la categoría "${cat}"?\n\nSi tiene gastos asociados históricos, se mostrarán bajo "Otros".`);
       if (confirmDelete) {
         if (!appState.deletedCategories) appState.deletedCategories = [];
         if (!appState.deletedCategories.includes(cat)) {
@@ -6413,8 +6598,8 @@
       const isZero = document.getElementById('simZeroInterest').checked;
       const teaInput = parseFloat(document.getElementById('simTea').value) || 0;
 
-      if (!concept) return alert('Por favor ingresa un concepto para la compra.');
-      if (amount <= 0) return alert('Por favor ingresa un monto válido.');
+      if (!concept) return uiAlert('Por favor ingresa un concepto para la compra.');
+      if (amount <= 0) return uiAlert('Por favor ingresa un monto válido.');
 
       let monthlyQuota = 0;
       if (isZero || teaInput === 0) {
@@ -6473,7 +6658,7 @@
     // ================================================================
     let wizardCurrentStep = 1;
 
-    function openOnboardingWizard(force = false) {
+    async function openOnboardingWizard(force = false) {
       const userKey = currentUser ? currentUser.id : 'guest';
       const isAlreadySetup = localStorage.getItem('finanzas_setup_completed_' + userKey) === 'true';
 
@@ -6486,7 +6671,7 @@
       const curMonth = appState.currentMonth || getCurrentCalendarMonthName();
       const hasExistingTxs = appState.transactions && appState.transactions[curMonth] && appState.transactions[curMonth].length > 0;
       if (force && hasExistingTxs) {
-        if (!confirm('⚠️ Tu cuenta ya tiene transacciones registradas. Tus datos existentes se conservarán y solo se agregarán los nuevos gastos fijos. ¿Deseas continuar?')) {
+        if (!await uiConfirm('⚠️ Tu cuenta ya tiene transacciones registradas. Tus datos existentes se conservarán y solo se agregarán los nuevos gastos fijos. ¿Deseas continuar?')) {
           return;
         }
       }
@@ -6905,12 +7090,12 @@
       handleImportExpensesExcel(event);
     }
 
-    function confirmDismissWizard() {
+    async function confirmDismissWizard() {
       const salaryInput = document.getElementById('wSalaryInput');
       const hasSalary = salaryInput && salaryInput.value.trim().length > 0;
       const fixedRows = document.querySelectorAll('#wFixedExpensesContainer .wizard-dynamic-row').length;
       if (hasSalary || fixedRows > 0) {
-        if (!confirm('¿Deseas salir del asistente? Si sales ahora sin guardar, tu configuración no se aplicará.')) {
+        if (!await uiConfirm('¿Deseas salir del asistente? Si sales ahora sin guardar, tu configuración no se aplicará.')) {
           return;
         }
       }
@@ -7505,7 +7690,7 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
         desc: 'Consulta tu lista completa de transacciones, tu Plan 50/30/20 y tus Compras en Cuotas (método Bola de Nieve) para liquidar compromisos.'
       },
       {
-        targetMobile: '#btnSettings',
+        targetMobile: '#navTabAjustes',
         targetDesk: '#deskNavTabSettings',
         tab: 'inicio',
         title: '⚙️ Ajustes y Tu Sueldo',
@@ -8621,7 +8806,7 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
       const curM = appState.currentMonth || getCurrentCalendarMonthName();
       const txs = (appState.transactions && appState.transactions[curM]) || [];
       if (txs.length === 0) {
-        alert('No hay gastos registrados en este mes para exportar.');
+        uiAlert('No hay gastos registrados en este mes para exportar.');
         return;
       }
 
@@ -9480,10 +9665,10 @@ function getDisplayNameForEmail(email, item = {}) {
   return formatCleanNameFromEmail(email);
 }
 
-function promptEditUserNickname(email) {
+async function promptEditUserNickname(email) {
   if (!isAdminCesar()) return;
   const current = getDisplayNameForEmail(email);
-  const newName = prompt(`Ingresa el nombre o apodo para ${email}:`, current);
+  const newName = await uiPrompt(`Ingresa el nombre o apodo para ${email}:`, current);
   if (newName !== null && newName.trim() !== '') {
     setStoredNickname(email, newName.trim());
     renderMasterSubscribers();
@@ -10248,7 +10433,7 @@ async function setMasterUserPlan(userId, email, newPlan) {
   }
 
   const planLabel = newPlan === 'pro_lifetime' ? 'PRO Vitalicio (S/ 19.90)' : (newPlan === 'pro_monthly' ? 'PRO Mensual (S/ 4.90)' : 'Gratuito (Free)');
-  if (!confirm(`¿Confirmas actualizar a ${email} al plan ${planLabel}?`)) return;
+  if (!await uiConfirm(`¿Confirmas actualizar a ${email} al plan ${planLabel}?`)) return;
 
   try {
     const updatePayload = { user_id: userId, status: newPlan };
@@ -10339,7 +10524,7 @@ async function renewMasterUser30Days(userId, email) {
   const newExpiresIso = new Date(newExpiresMs).toISOString();
   const dateFormatted = new Date(newExpiresMs).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' });
 
-  if (!confirm(`¿Confirmas renovar 30 días PRO para ${email}?\nNueva fecha de vencimiento: ${dateFormatted}`)) {
+  if (!await uiConfirm(`¿Confirmas renovar 30 días PRO para ${email}?\nNueva fecha de vencimiento: ${dateFormatted}`)) {
     return;
   }
 
@@ -10425,7 +10610,7 @@ async function confirmDeleteMasterUser(userId, email, displayName) {
               `Se eliminará su suscripción y desaparecerá de tu panel. Si activaste el SQL del Hub, también se borran su login y todos sus datos financieros.\n\n` +
               `¿Deseas continuar?`;
 
-  if (!confirm(msg)) return;
+  if (!await uiConfirm(msg)) return;
   await deleteMasterUser(userId, email, cleanName);
 }
 
@@ -10868,7 +11053,7 @@ async function handleConfirmDeleteAccountSubmit(event) {
       await supabaseClient.auth.signOut().catch(() => {});
     }
 
-    alert('✅ Tu cuenta y datos personales han sido purgados conforme a la Ley N° 29733. Gracias por habernos probado.');
+    await uiAlert('✅ Tu cuenta y datos personales han sido purgados conforme a la Ley N° 29733. Gracias por habernos probado.');
     window.location.reload();
   } catch (err) {
     console.error('Error al suprimir datos:', err);

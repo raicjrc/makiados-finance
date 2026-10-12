@@ -3941,6 +3941,7 @@
     @media (min-width: 640px) {
       .exec-card-main-content {
         flex-direction: row;
+        flex-wrap: wrap;
         justify-content: space-between;
         align-items: flex-end;
       }
@@ -4019,6 +4020,7 @@
       .exec-pill-label {
         font-size: 8.5px;
         letter-spacing: 0.02em;
+        white-space: nowrap;
       }
       .exec-pill-val {
         font-size: 12px;
@@ -7728,3 +7730,125 @@
         justify-content: center;
       }
     }
+
+/* ============================================================
+   AUDITORÍA v76.6 — Touch targets ≥44px (solo dispositivos táctiles)
+   Se amplía el área de toque con un pseudo-elemento invisible: el
+   diseño visual (minimalista) NO cambia, pero el tap es más preciso.
+   ============================================================ */
+@media (pointer: coarse) {
+  .btn:not([style*="position"]),
+  .chip,
+  .mobile-plan-btn,
+  .radar-filter-pill,
+  .strategy-pill,
+  .btn-pill,
+  #tab-inicio .card-header > button {
+    position: relative;
+  }
+  .btn:not([style*="position"])::after,
+  .chip::after,
+  .mobile-plan-btn::after,
+  .radar-filter-pill::after,
+  .strategy-pill::after,
+  .btn-pill::after,
+  #tab-inicio .card-header > button::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    min-width: 44px;
+    height: 44px;
+    transform: translateY(-50%);
+  }
+  .privacy-toggle-btn,
+  .theme-toggle-btn,
+  .settings-popover-btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+/* Accesibilidad: se permite zoom con pellizco, pero se evita el zoom por doble toque */
+html, body, button, a, .btn, .chip, .nav-item {
+  touch-action: manipulation;
+}
+
+/* ============================================================
+   DIÁLOGOS PROPIOS (uiConfirm / uiAlert / uiPrompt)
+   Glass Apple-style, safe-area aware, touch ≥44px, input 16px (sin zoom iOS)
+   ============================================================ */
+.ui-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom));
+  background: rgba(15, 23, 42, 0.42);
+  -webkit-backdrop-filter: blur(8px) saturate(160%);
+  backdrop-filter: blur(8px) saturate(160%);
+  animation: uiDialogFade 0.16s ease both;
+}
+.ui-dialog-overlay.closing { opacity: 0; transition: opacity 0.16s ease; }
+.ui-dialog {
+  width: 100%;
+  max-width: 340px;
+  padding: 22px 20px 16px;
+  border-radius: 20px;
+  background: var(--card-hover-bg, #fff);
+  color: var(--text-main, #0f172a);
+  border: 1px solid var(--card-glass-border, rgba(226, 232, 240, 0.85));
+  box-shadow: 0 24px 60px rgba(2, 6, 23, 0.35);
+  animation: uiDialogPop 0.2s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+body.theme-twilight .ui-dialog { background: #111827; }
+.ui-dialog-message {
+  font-size: 15px;
+  line-height: 1.45;
+  font-weight: 600;
+  white-space: pre-line;
+  word-break: break-word;
+  text-align: center;
+}
+.ui-dialog-input {
+  display: block;
+  width: 100%;
+  margin-top: 14px;
+  padding: 11px 12px;
+  font-size: 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border, rgba(226, 232, 240, 0.85));
+  background: var(--bg, #fbfbfd);
+  color: var(--text-main, #0f172a);
+  box-sizing: border-box;
+}
+.ui-dialog-input:focus { outline: 2px solid var(--primary, #059669); outline-offset: 1px; }
+.ui-dialog-actions { display: flex; gap: 10px; margin-top: 18px; }
+.ui-dialog-btn {
+  flex: 1;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border, rgba(226, 232, 240, 0.85));
+  background: transparent;
+  color: var(--text-secondary, #334155);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+.ui-dialog-btn.primary { background: var(--primary, #059669); border-color: transparent; color: #fff; }
+.ui-dialog-btn.primary.danger { background: var(--danger, #dc2626); }
+.ui-dialog-btn:active { transform: scale(0.97); }
+.ui-dialog-btn:focus-visible { outline: 2px solid var(--primary-accent, #10b981); outline-offset: 2px; }
+@keyframes uiDialogFade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes uiDialogPop { from { opacity: 0; transform: scale(0.94) translateY(6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .ui-dialog-overlay, .ui-dialog { animation: none; }
+}
+
+/* M7: el header de la auditoría ya es clicable; el chevron es solo indicador */
+#collapseBtnAudit { pointer-events: none; }

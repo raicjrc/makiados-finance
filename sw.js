@@ -1,6 +1,6 @@
-// Service Worker v76.5 - NETWORK FIRST para sincronización en tiempo real
+// Service Worker v76.6 - NETWORK FIRST para sincronización en tiempo real
 // Este SW NUNCA sirve datos de caché - siempre va a la red primero
-const CACHE_NAME = 'aliviafin-v163';
+const CACHE_NAME = 'aliviafin-v164';
 
 // Solo cachear assets estáticos (fonts, chart.js, supabase, html2pdf, xlsx)
 const STATIC_ASSETS = [
@@ -47,7 +47,10 @@ self.addEventListener('fetch', event => {
   if (shouldNeverCache) {
     event.respondWith(
       fetch(event.request, { cache: 'no-store' }).catch(() => {
+        // 503 (no 200): si devolviéramos 200, supabase-js trataría un guardado fallido como exitoso
         return new Response(JSON.stringify({ error: 'offline' }), {
+          status: 503,
+          statusText: 'Service Unavailable (offline)',
           headers: { 'Content-Type': 'application/json' }
         });
       })

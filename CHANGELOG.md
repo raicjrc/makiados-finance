@@ -3,6 +3,38 @@
 Todas las versiones notables de esta aplicación están documentadas aquí.
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
+## [v76.6] — 2026-10-12 — Auditoría Integral: Correcciones Críticas, Experiencia Minimalista y Sincronización Resiliente
+
+### 🛡️ Correcciones de Bugs Críticos
+- **Simulador de cuotas**: el enlace del modal "Registrar gasto" llamaba a `openCuotasModal()` (inexistente); ahora abre `openInstallmentsSimulatorModal()`.
+- **Saldo "Disponible en banco"**: `getAccumulatedBalance()` materializa los ingresos de cada mes antes de sumar (antes el primer render podía mostrar 0.00 hasta navegar a otra vista). Soporta meses iniciales dinámicos para suscriptores sin depender de meses fijos.
+- **`animateNumber`**: token por elemento para que animaciones solapadas en rAF no pisen el valor final del saldo.
+- **Service Worker (`aliviafin-v164`)**: sin red devuelve 503 (antes 200) para Supabase, evitando falsos "En Vivo" en guardados fallidos.
+- **Registro del SW**: ya no recarga la app automáticamente en la primera instalación (`controllerchange` de bienvenida suprimido; solo en actualizaciones reales).
+- **Aritmética monetaria**: cálculo estricto en centavos con `roundCurrency` protegiendo todas las sumas de ingresos, gastos y saldos acumulados.
+- **Código huérfano**: protegidos `switchSegmentView` contra referencias nulas y `triggerImportDataJSON` con creación dinámica de file input.
+
+### 🎨 Experiencia Minimalista Fintech (UX Clutter-Free)
+- **Diálogos Nativos Propios (`uiAlert`, `uiConfirm`, `uiPrompt`)**: sustitución de los 30+ `alert()`, `confirm()` y `prompt()` del navegador por modales glassmorphism Apple con atajos de teclado (Esc/Enter), autofocus, soporte táctil ≥44px y prevención de zoom iOS.
+- **Header Móvil Simplificado**: eliminación del botón duplicado de engranaje en la barra superior móvil (ahora centralizado en la barra inferior de navegación).
+- **Descluttering de Estados Vacíos**:
+  - En "Actividad Reciente", el botón "Ver todos (0) ↗" se oculta cuando no hay movimientos.
+  - En Inicio, la tarjeta "Todo al día" se suprime cuando no hay gastos en el mes para evitar ruido visual redundante.
+  - En "Movimientos", eliminado el botón duplicado de "+ Registrar Primer Gasto" al ya existir los CTAs superiores.
+  - En "Plan", el buscador y los chips de filtro del Radar ("Todos", "Servicios", "Menores") se ocultan limpiamente cuando no existen gastos ni servicios activos.
+- **Accesibilidad y Zoom**: `viewport` actualizado eliminando `user-scalable=no` e integrando `touch-action: manipulation` para habilitar zoom por accesibilidad sin retrasos táctiles ni zooms involuntarios en inputs.
+- **UI Responsiva**: píldora "Por Pagar" en tarjeta hero ajustada con `flex-wrap` para evitar recortes en pantallas de escritorio compactas; etiqueta "Ingresos ✏️" fija en una sola línea.
+- **Touch Targets**: áreas táctiles ampliadas a ≥44px para dispositivos táctiles (`pointer: coarse`).
+
+### ⚡ Sincronización y PWA Resiliente
+- **Reintentos Automáticos de Sincronización**: si una escritura falla por red, se encola un reintento automático con retroceso exponencial (3s, 8s, 20s).
+- **Push Local tras Reconexión**: al recuperar internet o recibir eventos remotos, si el dispositivo local posee cambios pendientes más recientes, los sube automáticamente al servidor.
+- **Deduplicación de Conexión**: eliminación de listeners `online` duplicados y prevención de bucles de eco de escrituras propias vía `myWrittenTimestamps`.
+- **W3C Web App Manifest**: manifiesto PWA actualizado con `id`, `scope`, `lang` e íconos con `purpose: any maskable`.
+- **Unificación de Versiones**: pie de página, login y cabeceras unificados y sincronizados en `v76.6`.
+
+---
+
 ## [v71.7] — 2026-10-07 — Corrección de Evaluación en Founder Hub (Eliminación de Falsos Infinityd), Restauración de Modo Privacidad Móvil y Ajustes
 
 ### 👑 Corrección de Evaluación en Founder Hub (`getSubscriptionDetails`)
