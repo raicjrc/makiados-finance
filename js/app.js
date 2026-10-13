@@ -3955,6 +3955,7 @@
       renderIncomes();
       renderRescueDashBanner();
       renderRescueCard();
+      renderExecutiveAdvisor();
     }
 
     function getMonthTxList() {
