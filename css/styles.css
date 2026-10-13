@@ -7928,3 +7928,88 @@ body.theme-twilight .ui-dialog { background: #111827; }
   .rescue-card { padding: 18px 16px; }
   .rescue-amount { font-size: 28px; }
 }
+
+/* ================================================================
+   SEGMENTED CONTROL: ASESOR & BOLA DE NIEVE (APPLE HIG STYLE)
+   ================================================================ */
+.advisor-segmented-nav {
+  display: flex;
+  gap: 6px;
+  background: rgba(148, 163, 184, 0.12);
+  padding: 4px;
+  border-radius: 14px;
+  margin-bottom: 14px;
+  max-width: 440px;
+}
+.advisor-subtab-pill {
+  flex: 1;
+  min-height: 40px;
+  padding: 8px 14px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary, #64748b);
+  font-weight: 800;
+  font-size: 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+.advisor-subtab-pill:hover {
+  color: var(--text-main);
+}
+.advisor-subtab-pill.active {
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+.theme-twilight .advisor-subtab-pill.active,
+[data-theme="dark"] .advisor-subtab-pill.active {
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+@media (max-width: 768px) {
+  .advisor-segmented-nav {
+    max-width: 100%;
+    margin-bottom: 12px;
+  }
+  .advisor-subtab-pill {
+    font-size: 11.5px;
+    padding: 8px 6px;
+    min-height: 42px;
+  }
+}
+
+/* ================================================================
+   CONTINGENCIA Y ALIVIO TÁCTICO ANTE DÉFICIT
+   ================================================================ */
+.rescue-contingency-card {
+  padding: 11px 13px;
+  background: rgba(148, 163, 184, 0.06);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-top: 6px;
+  transition: border-color 0.15s ease;
+}
+.rescue-contingency-card:hover {
+  border-color: rgba(99, 102, 241, 0.3);
+}
+.rescue-contingency-title {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text-main);
+  margin-bottom: 3px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.rescue-contingency-text {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  line-height: 1.45;
+  margin: 0;
+}

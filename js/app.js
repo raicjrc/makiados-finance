@@ -89,7 +89,7 @@
     // ================================================================
     // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v76.6)
     // ================================================================
-    const APP_VERSION = 'v77.0';
+    const APP_VERSION = 'v78.0';
 
     // ================================================================
     // CONFIGURACIÓN DE SUPABASE Y CLIENTE DE AUTENTICACIÓN
@@ -1731,6 +1731,27 @@
       }
     }
     window.switchPlanMobileSection = switchPlanMobileSection;
+
+    function switchAdvisorView(view) {
+      if (view === 'asesor' || view === 'consejos') {
+        switchTab('consejos');
+      } else if (view === 'deudas' || view === 'snowball') {
+        switchTab('deudas');
+      }
+    }
+    window.switchAdvisorView = switchAdvisorView;
+
+    function syncAdvisorSegmentedNav(currentTabId) {
+      const isAdvisor = currentTabId === 'consejos';
+      const isDeudas = currentTabId === 'deudas';
+      document.querySelectorAll('.advisor-subtab-pill-asesor').forEach(el => {
+        el.classList.toggle('active', isAdvisor);
+      });
+      document.querySelectorAll('.advisor-subtab-pill-deudas').forEach(el => {
+        el.classList.toggle('active', isDeudas);
+      });
+    }
+    window.syncAdvisorSegmentedNav = syncAdvisorSegmentedNav;
 
     window.addEventListener('resize', () => {
       if (window.innerWidth > 768) {
@@ -3533,7 +3554,7 @@
       } else if (tabId === 'movimientos') {
         const btn = document.getElementById('navTabMovimientos');
         if (btn) btn.classList.add('active');
-      } else if (tabId === 'plan' || tabId === 'metas' || tabId === 'consejos') {
+      } else if (tabId === 'plan' || tabId === 'metas' || tabId === 'consejos' || tabId === 'deudas') {
         const btn = document.getElementById('navTabPlan');
         if (btn) btn.classList.add('active');
       }
@@ -3545,11 +3566,17 @@
         'plan': 'deskNavTabPlan',
         'metas': 'deskNavTabMetas',
         'consejos': 'deskNavTabConsejos',
+        'deudas': 'deskNavTabDeudas',
         'founder': 'deskNavMasterBtn'
       };
       if (deskNavMap[tabId]) {
         const dBtn = document.getElementById(deskNavMap[tabId]);
         if (dBtn) dBtn.classList.add('active');
+      }
+
+      // Sincronizar pills del selector Asesor vs Deudas
+      if (typeof syncAdvisorSegmentedNav === 'function') {
+        syncAdvisorSegmentedNav(tabId);
       }
 
       if (tabId === 'founder') {
@@ -3584,10 +3611,15 @@
         renderMetrics();
       } else if (tabId === 'consejos') {
         setTimeout(() => {
+          renderRescueCard();
+          renderExecutiveAdvisor();
+          renderAuditTable();
+        }, 80);
+      } else if (tabId === 'deudas') {
+        setTimeout(() => {
           if (typeof renderDebtCommandCenter === 'function') {
             renderDebtCommandCenter();
           }
-          renderAuditTable();
         }, 80);
       }
     }
@@ -4431,6 +4463,7 @@
 
     function generateAutoDiagnosis(spent, savings, txs) {
       const el = document.getElementById('autoDiagnosisText');
+      if (!el) return;
       if (txs.length === 0) {
         el.textContent = 'No hay gastos registrados en este mes.';
         return;
@@ -8842,6 +8875,40 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
           </details>`;
       }
 
+      // 4) Alternativas tácticas si la poda no alcanza para salir del déficit
+      let contingencyHtml = '';
+      if (cov.state === 'deficit') {
+        const debts = currentSnowballDebts || [];
+        const totalDebtPayments = debts.reduce((s, d) => s + (parseFloat(d.minPayment) || 0), 0);
+        const totalIncome = getMonthTotalIncome();
+        const debtRatio = totalIncome > 0 ? Math.round((totalDebtPayments / totalIncome) * 100) : 0;
+        const estConsolidationPayment = Math.round(totalDebtPayments * 0.45);
+        const estCashflowRelief = Math.max(0, totalDebtPayments - estConsolidationPayment);
+
+        contingencyHtml = `
+          <details class="rescue-sec">
+            <summary>Alternativas tácticas si la poda no alcanza <small>4 opciones</small></summary>
+            <div class="rescue-sec-body">
+              <div class="rescue-contingency-card">
+                <div class="rescue-contingency-title">🛡️ 1. Pago Mínimo Táctico (SBS Cero Mora)</div>
+                <p class="rescue-contingency-text">Si este mes el total facturado asfixia tu liquidez, cubre únicamente el pago mínimo exigible en tarjetas/cuotas antes del vencimiento. Mantienes tu historial intacto ante Infocorp y proteges el dinero para techo y alimentación.</p>
+              </div>
+              <div class="rescue-contingency-card">
+                <div class="rescue-contingency-title">🔄 2. Consolidación / Compra de Deuda</div>
+                <p class="rescue-contingency-text">Tus cuotas absorben el ${debtRatio}% de tus ingresos (${rescueMoney(totalDebtPayments)}/mes). Consolidar en un solo crédito a tasa preferencial (14% - 16% TEA) bajaría tu cuota mensual a aprox. ${rescueMoney(estConsolidationPayment)}, liberando más de ${rescueMoney(estCashflowRelief)}/mes de flujo libre permanente.</p>
+              </div>
+              <div class="rescue-contingency-card">
+                <div class="rescue-contingency-title">⏳ 3. Reprogramación Preventiva / Cuota Comodín</div>
+                <p class="rescue-contingency-text">Contacta a tu banco antes de la fecha de corte. Las entidades permiten mover una cuota al final del cronograma o solicitar reprogramación preventiva sin manchar tu historial crediticio.</p>
+              </div>
+              <div class="rescue-contingency-card">
+                <div class="rescue-contingency-title">📋 4. Cascada de Prioridad Innegociable</div>
+                <p class="rescue-contingency-text">1) Vivienda y alimentación (innegociable) · 2) Servicios esenciales para trabajar (luz, internet) · 3) Obligaciones bancarias · 4) Préstamos con terceros o familiares (solicitar prórroga con fecha acordada).</p>
+              </div>
+            </div>
+          </details>`;
+      }
+
       el.innerHTML = `
         <div class="card rescue-card ${stateMeta.cls}">
           <div class="rescue-head">
@@ -8853,7 +8920,7 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
           </div>
           <p class="rescue-sub">${stateMeta.sub}</p>
           <div class="rescue-rows">${rows}</div>
-          ${postponeHtml}${orderHtml}${carryHtml}
+          ${postponeHtml}${orderHtml}${carryHtml}${contingencyHtml}
         </div>`;
       rescueUpdateLive();
     }
@@ -8981,20 +9048,10 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
       const prevPending = prevTxs.filter(t => t.status === 'Pendiente');
       const prevPendingTotal = prevPending.reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
 
-      // DIAGNÓSTICO INTELIGENTE REAL Y CONTEXTUAL
+      // Si existe autoDiagEl en DOM previo, vaciarlo para evitar textos duplicados
       if (autoDiagEl) {
-        const cov = computeCoverage();
-        if (cov && !cov.isPast && cov.deficit > 0) {
-          autoDiagEl.innerHTML = `🚨 <strong>Déficit proyectado de ${rescueMoney(cov.deficit)}:</strong> entre lo que tienes en banco, lo que aún vas a recibir y lo que falta por pagar${cov.carryTotal > 0 ? ' (incluye ' + rescueMoney(cov.carryTotal) + ' arrastrados de meses anteriores)' : ''}, cerrarías ${cov.month} en negativo. Revisa el plan de arriba: posponer gastos flexibles y pagar primero tarjetas y cuotas.`;
-        } else if (prevPending.length > 0) {
-          autoDiagEl.innerHTML = `⚠️ <strong>Flujo Comprometido por Pagos Atrasados:</strong> Tienes <strong>${prevPending.length} pagos pendientes</strong> de ${prevKey} por un total de <strong>${getCurrencySymbol()} ${prevPendingTotal.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>. Tu prioridad financiera inmediata debe ser regularizar estos compromisos arrastrados antes de programar abonos extra o proyectar ahorros libres, evitando intereses moratorios.`;
-        } else if (debtRatio > 30) {
-          autoDiagEl.innerHTML = `⚠️ <strong>Carga de Deuda Elevada (${debtRatio}% de tus ingresos):</strong> Estás destinando <strong>${getCurrencySymbol()} ${totalDebtPayments.toLocaleString()} mensuales</strong> a tarjetas, préstamos y compras en cuotas. Recomendamos usar el método Bola de Nieve para liquidar de inmediato la cuota más próxima a vencer y liberar flujo.`;
-        } else if (totalSpent > totalIncome) {
-          autoDiagEl.innerHTML = `🚨 <strong>Presupuesto Excedido:</strong> Tus gastos programados (<strong>${getCurrencySymbol()} ${totalSpent.toLocaleString()}</strong>) superan tus ingresos (<strong>${getCurrencySymbol()} ${totalIncome.toLocaleString()}</strong>). Congela consumos prescindibles para no acumular pasivos.`;
-        } else {
-          autoDiagEl.innerHTML = `💡 <strong>Situación Operativa Estable:</strong> Tus compromisos del mes están cubiertos por tus ingresos. Cuentas con un margen disponible en papel de <strong>${getCurrencySymbol()} ${surplus.toLocaleString()}</strong>. Mantén el foco en no generar nuevas compras a plazos.`;
-        }
+        autoDiagEl.innerHTML = '';
+        if (autoDiagEl.parentElement) autoDiagEl.parentElement.style.display = 'none';
       }
 
       // Identificar deudas tácticas
@@ -9006,13 +9063,6 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
       const fixedLivingTotal = fixedLivingTxs.reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
 
       const cards = [
-        {
-          icon: prevPending.length > 0 ? '🚨' : '🛡️',
-          title: prevPending.length > 0 ? `Pagos Pendientes de ${prevKey}` : 'Liquidez Operativa del Mes',
-          text: prevPending.length > 0
-            ? `Tienes <strong>${prevPending.length} cuentas por saldar (S/ ${prevPendingTotal.toFixed(2)})</strong> arrastradas de ${prevKey}. Revisa el mes anterior y marca los recibos ya cubiertos o prioriza saldar las obligaciones de tarjetas primero.`
-            : `Ingresos netos de ${appState.currentMonth || 'este mes'}: <strong>S/ ${totalIncome.toLocaleString()}</strong>. Gastos fijos obligatorios de vida: <strong>S/ ${fixedLivingTotal.toLocaleString()}</strong>. Tu margen neto es de <strong>S/ ${surplus.toLocaleString()}</strong>.`
-        },
         {
           icon: '🎯',
           title: quickestDebt ? `Próxima Victoria: Liquidar ${escapeHtml(quickestDebt.name)}` : 'Plan de Salida Bola de Nieve',
