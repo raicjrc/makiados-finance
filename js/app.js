@@ -89,7 +89,7 @@
     // ================================================================
     // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v76.6)
     // ================================================================
-    const APP_VERSION = 'v76.6';
+    const APP_VERSION = 'v76.7';
 
     // ================================================================
     // CONFIGURACIÓN DE SUPABASE Y CLIENTE DE AUTENTICACIÓN
@@ -330,6 +330,9 @@
       } else {
         document.getElementById('loginModalScreen').style.display = 'flex';
         document.getElementById('appMainWrapper').style.display = 'none';
+        if (window.location.search.includes('mode=register') || window.location.search.includes('register=1')) {
+          switchAuthTab('register');
+        }
       }
     }
 
@@ -685,6 +688,53 @@
         if (textEl) textEl.textContent = 'Copiar';
         if (iconEl) iconEl.textContent = '📋';
       }, 2200);
+    }
+
+    async function reportPaymentClaimInApp() {
+      const userEmail = (currentUser && currentUser.email) ? currentUser.email : '';
+      const planText = currentSelectedProPlan === 'pro_lifetime' ? 'PRO Vitalicio (S/ 19.90 pago único)' : 'PRO Mensual (S/ 4.90 / mes)';
+      
+      const promptTitle = (typeof uiPrompt === 'function') 
+        ? await uiPrompt(`Indica tu N° de Operación de Yape/Plin o tu nombre titular para validar el plan ${planText}:`, 'N° Operación o Nombre Titular')
+        : prompt(`Indica tu N° de Operación de Yape/Plin o tu nombre titular para validar el plan ${planText}:`);
+
+      if (!promptTitle || !promptTitle.trim()) return;
+
+      const btn = document.getElementById('btnReportPaymentInApp');
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Registrando comprobante... ⏳';
+      }
+
+      try {
+        const payload = {
+          user_id: currentUser ? currentUser.id : 'guest',
+          user_email: userEmail || 'sin_email',
+          type: 'payment_claim',
+          message: `AVISO DE PAGO: ${planText} | Referencia/Titular: ${promptTitle.trim()}`,
+          created_at: new Date().toISOString()
+        };
+
+        if (supabaseClient) {
+          await supabaseClient.from('app_feedback').insert([payload]);
+        }
+
+        const successMsg = '¡Comprobante registrado! César verificará la transferencia y activará tu cuenta en breve.';
+        if (typeof uiAlert === 'function') {
+          await uiAlert(successMsg, 'Aviso Recibido ⚡');
+        } else {
+          alert(successMsg);
+        }
+        closeGlassModal('finzenProModal');
+      } catch (err) {
+        console.error('Error reportando pago:', err);
+        showToast('Error al enviar el aviso. Por favor notifícalo por WhatsApp.', 'error');
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<span>🔔 Ya transferí por Yape / Plin (Avisar aquí)</span>';
+        }
+      }
     }
 
     function openFinZenProModal(featureName, initialPlan) {
@@ -9498,10 +9548,11 @@ async function loadMasterDashboardData(force = false) {
 
     masterChurnData = (fbData || []).filter(i => i.type === 'account_deletion_churn');
 
-    // Calcular alertas pendientes
+    // Calcular alertas pendientes (reclamos, reembolsos y pagos reportados)
+    const pendingPaymentClaims = (fbData || []).filter(i => i.type === 'payment_claim').length;
     const pendingClaims = masterReclamacionesData.filter(r => (r.estado || 'pendiente') === 'pendiente').length;
     const pendingRefunds = masterRefundsData.filter(r => ((r.metadata && r.metadata.estado) || 'pendiente') === 'pendiente').length;
-    const totalPendingAlerts = pendingClaims + pendingRefunds;
+    const totalPendingAlerts = pendingClaims + pendingRefunds + pendingPaymentClaims;
 
     // Actualizar Badges de Alerta Founder (sidebar y header)
     const badgeDesk = document.getElementById('founderPendingAlertBadgeDesk');
