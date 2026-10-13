@@ -89,7 +89,7 @@
     // ================================================================
     // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v76.6)
     // ================================================================
-    const APP_VERSION = 'v76.7';
+    const APP_VERSION = 'v76.8';
 
     // ================================================================
     // CONFIGURACIÓN DE SUPABASE Y CLIENTE DE AUTENTICACIÓN
@@ -5125,90 +5125,105 @@
       const allMonthsOrder = getSortedMonths();
       const selectedIndex = allMonthsOrder.indexOf(currentSelectedMonth);
 
-      // ALWAYS UPDATE RECURRING DUE DATE REGISTRY AUTOMATICALLY
-      if (!appState.recurringDueDates) appState.recurringDueDates = {};
-      appState.recurringDueDates[newNormKey] = dueDate;
-
-      // AUTOMATICALLY PROPAGATE DUE DATE & NAME & CATEGORY FROM CURRENT MONTH FORWARD TO ALL FUTURE MONTHS
-      const futureMonthsToUpdate = (selectedIndex !== -1) ? allMonthsOrder.slice(selectedIndex) : allMonthsOrder;
-
       if (editId) {
-        let oldName = name;
-        let oldDueDate = dueDate;
-        let targetItem = null;
-
+        // ==============================================================
+        // CASO: EDITAR GASTO EXISTENTE
+        // ==============================================================
         const curMonthTxs = appState.transactions[currentSelectedMonth] || [];
-        targetItem = curMonthTxs.find(t => t.id === editId);
+        const targetItem = curMonthTxs.find(t => t.id === editId);
 
-        if (targetItem) {
-          oldName = targetItem.name;
-          oldDueDate = targetItem.dueDate;
+        if (!targetItem) {
+          showToast('No se encontró el gasto a editar en este mes.', 'error');
+          return;
         }
 
+        const oldName = targetItem.name;
         const oldNormKey = getNormalizedNameKey(oldName);
-        appState.recurringDueDates[oldNormKey] = dueDate;
 
-        futureMonthsToUpdate.forEach((m, idx) => {
-          if (!appState.transactions[m]) appState.transactions[m] = [];
-          let found = false;
-          
-          appState.transactions[m].forEach(t => {
-            if (getNormalizedNameKey(t.name) === oldNormKey || getNormalizedNameKey(t.name) === newNormKey || t.id === editId) {
-              found = true;
-              t.name = name;
-              t.category = category;
-              t.dueDate = dueDate; // <-- OBLIGATORY PROPAGATION TO ALL FUTURE MONTHS
-              t.isInstallment = isInstallment;
-              t.installmentsTotal = installmentsTotal;
-              
+        // 1. SIEMPRE actualizar el ítem en el mes seleccionado actualmente
+        targetItem.name = name;
+        targetItem.amount = amount;
+        targetItem.category = category;
+        targetItem.status = status;
+        targetItem.dueDate = dueDate;
+        targetItem.isInstallment = isInstallment;
+        targetItem.installmentsTotal = installmentsTotal;
+        targetItem.installmentsCurrent = installmentsCurrent;
+        targetItem.remainingInstallments = remainingInstallments;
+        targetItem.tea = isInstallment ? teaRate : 0;
+
+        // 2. BLINDAJE ESTRICTO: Solo propagar a meses futuros si el usuario marcó EXPLÍCITAMENTE la casilla
+        if (shouldPropagateForward) {
+          if (!appState.recurringDueDates) appState.recurringDueDates = {};
+          appState.recurringDueDates[newNormKey] = dueDate;
+
+          const futureMonthsToUpdate = (selectedIndex !== -1) ? allMonthsOrder.slice(selectedIndex + 1) : [];
+
+          futureMonthsToUpdate.forEach((m, idx) => {
+            if (!appState.transactions[m]) appState.transactions[m] = [];
+            let found = false;
+
+            appState.transactions[m].forEach(t => {
+              if (getNormalizedNameKey(t.name) === oldNormKey || getNormalizedNameKey(t.name) === newNormKey) {
+                found = true;
+                t.name = name;
+                t.amount = amount;
+                t.category = category;
+                t.dueDate = dueDate;
+                t.isInstallment = isInstallment;
+                t.installmentsTotal = installmentsTotal;
+
+                if (isInstallment) {
+                  const step = idx + 1;
+                  t.installmentsCurrent = Math.min(installmentsTotal, installmentsCurrent + step);
+                  t.remainingInstallments = Math.max(0, remainingInstallments - step);
+                  t.tea = teaRate;
+                } else {
+                  t.installmentsCurrent = 1;
+                  t.remainingInstallments = 1;
+                  t.tea = 0;
+                }
+              }
+            });
+
+            if (!found) {
+              let adjCurrent = installmentsCurrent;
+              let adjRemaining = remainingInstallments;
               if (isInstallment) {
-                t.installmentsCurrent = Math.min(installmentsTotal, installmentsCurrent + idx);
-                t.remainingInstallments = Math.max(0, remainingInstallments - idx);
-                t.tea = teaRate;
-              } else {
-                t.installmentsCurrent = 1;
-                t.remainingInstallments = 1;
-                t.tea = 0;
+                const step = idx + 1;
+                adjCurrent = Math.min(installmentsTotal, installmentsCurrent + step);
+                adjRemaining = Math.max(0, remainingInstallments - step);
               }
-
-              if (m === currentSelectedMonth) {
-                t.amount = amount;
-                t.status = status;
-              } else if (shouldPropagateForward) {
-                t.amount = amount;
-              }
+              appState.transactions[m].push({
+                id: m + '_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+                name: name,
+                amount: amount,
+                category: category,
+                status: 'Pendiente',
+                dueDate: dueDate,
+                isInstallment: isInstallment,
+                installmentsTotal: installmentsTotal,
+                installmentsCurrent: adjCurrent,
+                remainingInstallments: adjRemaining,
+                tea: isInstallment ? teaRate : 0
+              });
             }
           });
-          
-          if (!found && shouldPropagateForward) {
-             let adjCurrent = installmentsCurrent;
-             let adjRemaining = remainingInstallments;
-             if (isInstallment) {
-               adjCurrent = Math.min(installmentsTotal, installmentsCurrent + idx);
-               adjRemaining = Math.max(0, remainingInstallments - idx);
-             }
-             appState.transactions[m].push({
-               id: m + '_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
-               name: name,
-               amount: amount,
-               category: category,
-               status: 'Pendiente',
-               dueDate: dueDate,
-               isInstallment: isInstallment,
-               installmentsTotal: installmentsTotal,
-               installmentsCurrent: adjCurrent,
-               remainingInstallments: adjRemaining,
-               tea: isInstallment ? teaRate : 0
-             });
-          }
-        });
 
-        addAuditLog('✏️ Gasto Editado', `Gasto '${oldName}' actualizado a '${name}' (S/ ${amount}, Día ${dueDate}).`);
+          addAuditLog('✏️ Gasto Editado', `Gasto '${oldName}' actualizado a '${name}' (S/ ${amount}, Día ${dueDate}) y replicado a meses futuros.`);
+        } else {
+          addAuditLog('✏️ Gasto Editado', `Gasto '${oldName}' actualizado a '${name}' (S/ ${amount}, Día ${dueDate}) solo en ${currentSelectedMonth}.`);
+        }
 
       } else {
+        // ==============================================================
+        // CASO: REGISTRAR NUEVO GASTO
+        // ==============================================================
         let targetMonths = [];
         if (shouldPropagateForward && selectedIndex !== -1) {
           targetMonths = allMonthsOrder.slice(selectedIndex);
+          if (!appState.recurringDueDates) appState.recurringDueDates = {};
+          appState.recurringDueDates[newNormKey] = dueDate;
         } else {
           targetMonths = [currentSelectedMonth];
         }
@@ -6279,6 +6294,7 @@
       if (document.getElementById('txInstallmentsCurrent')) document.getElementById('txInstallmentsCurrent').value = '1';
       if (document.getElementById('txInstallmentsRemaining')) document.getElementById('txInstallmentsRemaining').value = '12';
       if (document.getElementById('txInstallmentTea')) document.getElementById('txInstallmentTea').value = '0';
+      if (document.getElementById('txPropagateFuture')) document.getElementById('txPropagateFuture').checked = false;
 
       document.getElementById('expenseModalTitle').textContent = '+ Registrar Nuevo Gasto';
       document.getElementById('saveExpenseBtn').textContent = 'Guardar Gasto';
