@@ -494,6 +494,9 @@
               </div>
             </div>
 
+            <!-- Aviso mínimo: solo aparece si el cierre proyectado del mes es negativo -->
+            <div id="rescueDashBanner" class="rescue-banner" style="display: none;" onclick="switchTab('consejos')" role="button" tabindex="0"></div>
+
             <!-- 1. Curva de Flujo de Caja (Cashflow Mensual) -->
             <div class="card executive-chart-card desktop-only" style="margin-top: 14px;">
               <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
@@ -780,6 +783,9 @@
 
       <!-- TAB 4: CONSEJOS Y DEUDAS (CENTRO ESTRATÉGICO BOLA DE NIEVE & ASESOR INTELIGENTE) -->
       <div id="tab-consejos" class="tab-content">
+        <!-- COBERTURA DEL MES / PLAN DE RESCATE (se pinta desde js/app.js, vacío si es mes cerrado) -->
+        <div id="rescueCoverageCard"></div>
+
         <!-- HEADER ESTRATÉGICO EJECUTIVO (Fiel al Mockup 1) -->
         <div class="card executive-header-card" style="border-radius: 20px; padding: 20px 24px; margin-bottom: 16px;">
           <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">

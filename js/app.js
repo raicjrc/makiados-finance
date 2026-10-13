@@ -89,7 +89,7 @@
     // ================================================================
     // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v76.6)
     // ================================================================
-    const APP_VERSION = 'v76.8';
+    const APP_VERSION = 'v77.0';
 
     // ================================================================
     // CONFIGURACIÓN DE SUPABASE Y CLIENTE DE AUTENTICACIÓN
@@ -3921,6 +3921,8 @@
       renderPersonalizedTips();
       renderAuditTable();
       renderIncomes();
+      renderRescueDashBanner();
+      renderRescueCard();
     }
 
     function getMonthTxList() {
@@ -8664,9 +8666,302 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
     }
     window.handleSaveDebtFromModal = handleSaveDebtFromModal;
 
+    // ================================================================
+    // COPILOTO ANTIDEUDAS v77 — Cobertura del mes
+    // computeCoverage() es de SOLO LECTURA. Las acciones (posponer / traer /
+    // marcar pagado) piden confirmación, registran auditoría y usan
+    // aritmética a centavos (roundCurrency).
+    // ================================================================
+    const RESCUE_FLEX_CATEGORIES = ['Suscripciones', 'Gimnasio & Salud', 'Viajes', 'Ropa', 'Comida fuera', 'Otros'];
+    const RESCUE_CREDIT_RE = /pr[eé]stamo|tarjeta|rapicash|diners|interbank|bcp|bbva|cuota|visa|mastercard|cmr|ripley|falabella/i;
+    let rescueSelectedIds = new Set();
+
+    function rescueMoney(n) {
+      const v = roundCurrency(Math.abs(Number(n) || 0));
+      const s = `${getCurrencySymbol()} ${v.toLocaleString(getActiveCurrency().locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      return (Number(n) < 0 ? '−' : '') + s;
+    }
+
+    function rescueNextMonthKey(monthKey) {
+      const names = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+      const [mn, yr] = String(monthKey).split(' ');
+      const i = names.indexOf(mn);
+      const y = parseInt(yr, 10);
+      if (i === -1 || !y) return null;
+      return i === 11 ? `${names[0]} ${y + 1}` : `${names[i + 1]} ${y}`;
+    }
+
+    function computeCoverage(targetMonth) {
+      const month = targetMonth || appState.currentMonth;
+      const months = getSortedMonths();
+      const idx = months.indexOf(month);
+      if (idx === -1) return null;
+
+      // Mismo punto de partida que getAccumulatedBalance (coherencia con "Disponible en banco")
+      let startIdx = isAdminCesar() ? months.indexOf('Agosto 2026') : -1;
+      if (startIdx === -1) {
+        for (let i = 0; i < months.length; i++) {
+          const m = months[i];
+          const hasTx = appState.transactions && appState.transactions[m] && appState.transactions[m].length > 0;
+          const hasInc = appState.incomes && appState.incomes[m] && appState.incomes[m].length > 0;
+          if (hasTx || hasInc) { startIdx = i; break; }
+        }
+      }
+      if (startIdx === -1 || startIdx > idx) startIdx = idx;
+
+      const bank = getAccumulatedBalance(month);
+      ensureMonthIncomes(month);
+      const incs = (appState.incomes && appState.incomes[month]) || [];
+      const incomePending = roundCurrency(incs
+        .filter(i => (i.status || 'Pendiente') !== 'Recibido')
+        .reduce((s, i) => roundCurrency(s + (Number(i.amount) || 0)), 0));
+
+      const isPending = t => (t.status || 'Pagado') === 'Pendiente';
+      const thisPending = ((appState.transactions && appState.transactions[month]) || [])
+        .filter(isPending).map(t => ({ ...t, month }));
+      const carry = [];
+      for (let i = startIdx; i < idx; i++) {
+        const m = months[i];
+        ((appState.transactions && appState.transactions[m]) || [])
+          .filter(isPending).forEach(t => carry.push({ ...t, month: m }));
+      }
+      const sum = arr => arr.reduce((s, t) => roundCurrency(s + (Number(t.amount) || 0)), 0);
+      const thisPendingTotal = sum(thisPending);
+      const carryTotal = sum(carry);
+      const projected = roundCurrency(bank + incomePending - thisPendingTotal - carryTotal);
+      const income = getMonthTotalIncome(month);
+
+      const calIdx = months.indexOf(getCurrentCalendarMonthName());
+      const isPast = calIdx !== -1 && idx < calIdx;
+      let state = 'ok';
+      if (projected < 0) state = 'deficit';
+      else if (income > 0 && projected < income * 0.05) state = 'tight';
+
+      return {
+        month, bank, incomePending, thisPending, thisPendingTotal, carry, carryTotal,
+        projected, income, state, isPast,
+        deficit: projected < 0 ? roundCurrency(-projected) : 0,
+        nextMonth: rescueNextMonthKey(month)
+      };
+    }
+
+    function rescuePriority(t) {
+      if (t.isInstallment || t.category === 'Tarjetas' || RESCUE_CREDIT_RE.test(t.name || '')) return 1;
+      if (RESCUE_FLEX_CATEGORIES.includes(t.category)) return 3;
+      return 2;
+    }
+
+    function renderRescueCard() {
+      const el = document.getElementById('rescueCoverageCard');
+      if (!el) return;
+      const cov = computeCoverage();
+      if (!cov || cov.isPast) { el.innerHTML = ''; return; }
+
+      const stateMeta = {
+        deficit: { cls: 'is-deficit', pill: 'Déficit', sub: `Te faltan ${rescueMoney(cov.deficit)} para cubrir tus compromisos. Puedes posponer gastos flexibles, sumar un ingreso extra o renegociar cuotas.` },
+        tight:   { cls: 'is-tight',   pill: 'Ajustado', sub: 'Cubres tus compromisos, pero casi sin colchón.' },
+        ok:      { cls: 'is-ok',      pill: 'Cubierto', sub: 'Tus ingresos cubren todo lo pendiente.' }
+      }[cov.state];
+
+      const rows = [
+        ['Disponible en banco', rescueMoney(cov.bank)],
+        ['+ Por recibir este mes', rescueMoney(cov.incomePending)],
+        ['− Por pagar este mes', rescueMoney(cov.thisPendingTotal)],
+        ...(cov.carryTotal > 0 ? [['− Arrastre de meses anteriores', rescueMoney(cov.carryTotal)]] : [])
+      ].map(([l, v]) => `<div class="rescue-row"><span>${l}</span><b>${v}</b></div>`).join('');
+
+      // 1) Posponer (solo con déficit): gastos flexibles, no-cuotas, pendientes de este mes
+      let postponeHtml = '';
+      const flex = cov.thisPending.filter(t => !t.isInstallment && RESCUE_FLEX_CATEGORIES.includes(t.category));
+      rescueSelectedIds = new Set([...rescueSelectedIds].filter(id => flex.some(t => t.id === id)));
+      if (cov.state === 'deficit' && flex.length > 0 && cov.nextMonth) {
+        postponeHtml = `
+          <details class="rescue-sec" open>
+            <summary>Qué puedes posponer <small>${flex.length}</small></summary>
+            <div class="rescue-sec-body">
+              ${flex.map(t => `
+                <label class="rescue-item">
+                  <input type="checkbox" data-id="${escapeHtml(t.id)}" ${rescueSelectedIds.has(t.id) ? 'checked' : ''} onchange="rescueToggle(this)">
+                  <span class="rescue-item-name">${escapeHtml(t.name)}<small>${escapeHtml(t.category)}</small></span>
+                  <b>${rescueMoney(t.amount)}</b>
+                </label>`).join('')}
+              <div class="rescue-live" id="rescueLiveText"></div>
+              <button type="button" class="rescue-btn" id="rescuePostponeBtn" onclick="rescuePostponeSelected()">Mover a ${escapeHtml(cov.nextMonth)}</button>
+            </div>
+          </details>`;
+      }
+
+      // 2) Orden de pago (deficit o ajustado)
+      let orderHtml = '';
+      const all = [...cov.carry, ...cov.thisPending];
+      if (cov.state !== 'ok' && all.length > 0) {
+        const groups = {
+          1: { title: 'Primero · protege tu historial', hint: 'Tarjetas, préstamos y cuotas', items: [] },
+          2: { title: 'Después · esenciales', hint: 'Vivienda, servicios, familia', items: [] },
+          3: { title: 'Último · postergable', hint: 'Lo primero que conviene negociar', items: [] }
+        };
+        all.forEach(t => groups[rescuePriority(t)].items.push(t));
+        const due = t => parseInt(getEffectiveDueDate(t), 10) || 99;
+        orderHtml = `
+          <details class="rescue-sec">
+            <summary>Orden de pago sugerido</summary>
+            <div class="rescue-sec-body">
+              ${[1, 2, 3].filter(k => groups[k].items.length).map(k => {
+                const g = groups[k];
+                const items = g.items.sort((a, b) => due(a) - due(b));
+                const total = items.reduce((s, t) => roundCurrency(s + (Number(t.amount) || 0)), 0);
+                return `
+                  <div class="rescue-group g${k}">
+                    <div class="rescue-group-head"><span>${g.title}</span><b>${rescueMoney(total)}</b></div>
+                    <div class="rescue-group-hint">${g.hint}</div>
+                    ${items.slice(0, 5).map(t => `<div class="rescue-line"><span>${escapeHtml(t.name)}<small>día ${due(t) === 99 ? '—' : due(t)}${t.month !== cov.month ? ' · ' + escapeHtml(t.month.split(' ')[0]) : ''}</small></span><b>${rescueMoney(t.amount)}</b></div>`).join('')}
+                    ${items.length > 5 ? `<div class="rescue-more">+${items.length - 5} más</div>` : ''}
+                  </div>`;
+              }).join('')}
+            </div>
+          </details>`;
+      }
+
+      // 3) Arrastre de meses anteriores
+      let carryHtml = '';
+      if (cov.carry.length > 0) {
+        carryHtml = `
+          <details class="rescue-sec" ${cov.state === 'ok' ? '' : 'open'}>
+            <summary>Pendiente de meses anteriores <small>${rescueMoney(cov.carryTotal)}</small></summary>
+            <div class="rescue-sec-body">
+              ${cov.carry.map(t => `
+                <div class="rescue-carry">
+                  <span class="rescue-item-name">${escapeHtml(t.name)}<small>${escapeHtml(t.month)}</small></span>
+                  <b>${rescueMoney(t.amount)}</b>
+                  <div class="rescue-carry-actions">
+                    <button type="button" data-id="${escapeHtml(t.id)}" data-month="${escapeHtml(t.month)}" onclick="rescueCarryAction(this,'paid')">Ya lo pagué</button>
+                    ${t.isInstallment ? '' : `<button type="button" data-id="${escapeHtml(t.id)}" data-month="${escapeHtml(t.month)}" onclick="rescueCarryAction(this,'bring')">Traer a este mes</button>`}
+                  </div>
+                </div>`).join('')}
+            </div>
+          </details>`;
+      }
+
+      el.innerHTML = `
+        <div class="card rescue-card ${stateMeta.cls}">
+          <div class="rescue-head">
+            <div>
+              <div class="rescue-eyebrow">Cierre proyectado · ${escapeHtml(cov.month)}</div>
+              <div class="rescue-amount">${rescueMoney(cov.projected)}</div>
+            </div>
+            <span class="rescue-pill">${stateMeta.pill}</span>
+          </div>
+          <p class="rescue-sub">${stateMeta.sub}</p>
+          <div class="rescue-rows">${rows}</div>
+          ${postponeHtml}${orderHtml}${carryHtml}
+        </div>`;
+      rescueUpdateLive();
+    }
+    window.renderRescueCard = renderRescueCard;
+
+    function renderRescueDashBanner() {
+      const el = document.getElementById('rescueDashBanner');
+      if (!el) return;
+      const cov = computeCoverage();
+      if (!cov || cov.isPast || cov.deficit <= 0) {
+        el.style.display = 'none';
+        el.innerHTML = '';
+        return;
+      }
+      el.style.display = 'flex';
+      el.innerHTML = `<span>Cierre proyectado <b>${rescueMoney(cov.projected)}</b></span><span class="rescue-banner-cta">Ver plan ›</span>`;
+    }
+    window.renderRescueDashBanner = renderRescueDashBanner;
+
+    function rescueToggle(cb) {
+      const id = cb.dataset.id;
+      if (cb.checked) rescueSelectedIds.add(id); else rescueSelectedIds.delete(id);
+      rescueUpdateLive();
+    }
+    window.rescueToggle = rescueToggle;
+
+    function rescueUpdateLive() {
+      const live = document.getElementById('rescueLiveText');
+      const btn = document.getElementById('rescuePostponeBtn');
+      if (!live || !btn) return;
+      const cov = computeCoverage();
+      if (!cov) return;
+      const freed = cov.thisPending
+        .filter(t => rescueSelectedIds.has(t.id))
+        .reduce((s, t) => roundCurrency(s + (Number(t.amount) || 0)), 0);
+      const remaining = roundCurrency(Math.max(0, cov.deficit - freed));
+      live.textContent = freed > 0
+        ? (remaining > 0 ? `Liberas ${rescueMoney(freed)} · aún faltan ${rescueMoney(remaining)}` : `Liberas ${rescueMoney(freed)} · tu mes queda cubierto`)
+        : 'Marca lo que puedas pasar al próximo mes';
+      btn.disabled = freed <= 0;
+    }
+
+    async function rescuePostponeSelected() {
+      const cov = computeCoverage();
+      if (!cov || !cov.nextMonth) return;
+      const items = cov.thisPending.filter(t => rescueSelectedIds.has(t.id) && !t.isInstallment);
+      if (items.length === 0) return;
+      const total = items.reduce((s, t) => roundCurrency(s + (Number(t.amount) || 0)), 0);
+      const ok = await uiConfirm(`¿Mover ${items.length} gasto(s) por ${rescueMoney(total)} de ${cov.month} a ${cov.nextMonth}? Saldrán de este mes y quedarán pendientes en el siguiente.`);
+      if (!ok) return;
+
+      const ids = new Set(items.map(t => t.id));
+      const source = appState.transactions[cov.month] || [];
+      const moved = source.filter(t => ids.has(t.id)).map(t => ({
+        ...t,
+        id: cov.nextMonth + '_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+        name: /\(pospuesto\)$/.test(t.name) ? t.name : `${t.name} (pospuesto)`,
+        status: 'Pendiente'
+      }));
+      if (moved.length !== items.length) { showToast('No se pudo completar: los datos cambiaron. Intenta de nuevo.', 'error'); return; }
+
+      appState.transactions[cov.nextMonth] = (appState.transactions[cov.nextMonth] || []).concat(moved);
+      appState.transactions[cov.month] = source.filter(t => !ids.has(t.id));
+      addAuditLog('⏭️ Gastos pospuestos', `${moved.map(t => t.name).join(', ')} (${rescueMoney(total)}) movidos de ${cov.month} a ${cov.nextMonth}.`);
+      rescueSelectedIds.clear();
+      saveState();
+      renderAll();
+      showToast(`✅ ${moved.length} gasto(s) movidos a ${cov.nextMonth}`, 'success');
+    }
+    window.rescuePostponeSelected = rescuePostponeSelected;
+
+    async function rescueCarryAction(btn, action) {
+      const id = btn.dataset.id;
+      const from = btn.dataset.month;
+      const cur = appState.currentMonth;
+      const list = (appState.transactions && appState.transactions[from]) || [];
+      const tx = list.find(t => t.id === id);
+      if (!tx || (tx.status || 'Pagado') !== 'Pendiente') { renderAll(); return; }
+      const amt = rescueMoney(tx.amount);
+
+      if (action === 'paid') {
+        const ok = await uiConfirm(`¿Ya pagaste "${tx.name}" (${amt}) de ${from}? Se marcará como pagado y restará ${amt} de tu saldo disponible.`);
+        if (!ok) return;
+        tx.status = 'Pagado';
+        addAuditLog('✅ Arrastre regularizado', `'${tx.name}' (${amt}) de ${from} marcado como pagado.`);
+      } else {
+        if (tx.isInstallment) { showToast('Las cuotas no se mueven: márcala como pagada.', 'info'); return; }
+        const ok = await uiConfirm(`¿Traer "${tx.name}" (${amt}) de ${from} a ${cur}? Quedará pendiente en este mes.`);
+        if (!ok) return;
+        const copy = {
+          ...tx,
+          id: cur + '_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+          name: /\(arrastre\)$/.test(tx.name) ? tx.name : `${tx.name} (arrastre)`,
+          status: 'Pendiente'
+        };
+        appState.transactions[cur] = (appState.transactions[cur] || []).concat([copy]);
+        appState.transactions[from] = list.filter(t => t.id !== id);
+        addAuditLog('↪️ Arrastre traído', `'${tx.name}' (${amt}) movido de ${from} a ${cur}.`);
+      }
+      saveState();
+      renderAll();
+    }
+    window.rescueCarryAction = rescueCarryAction;
+
     function renderExecutiveAdvisor() {
       const container = document.getElementById('executiveTipsGrid');
       const autoDiagEl = document.getElementById('autoDiagnosisText');
+      renderRescueCard();
       if (!container) return;
 
       const totalIncome = getMonthTotalIncome();
@@ -8688,7 +8983,10 @@ Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
 
       // DIAGNÓSTICO INTELIGENTE REAL Y CONTEXTUAL
       if (autoDiagEl) {
-        if (prevPending.length > 0) {
+        const cov = computeCoverage();
+        if (cov && !cov.isPast && cov.deficit > 0) {
+          autoDiagEl.innerHTML = `🚨 <strong>Déficit proyectado de ${rescueMoney(cov.deficit)}:</strong> entre lo que tienes en banco, lo que aún vas a recibir y lo que falta por pagar${cov.carryTotal > 0 ? ' (incluye ' + rescueMoney(cov.carryTotal) + ' arrastrados de meses anteriores)' : ''}, cerrarías ${cov.month} en negativo. Revisa el plan de arriba: posponer gastos flexibles y pagar primero tarjetas y cuotas.`;
+        } else if (prevPending.length > 0) {
           autoDiagEl.innerHTML = `⚠️ <strong>Flujo Comprometido por Pagos Atrasados:</strong> Tienes <strong>${prevPending.length} pagos pendientes</strong> de ${prevKey} por un total de <strong>${getCurrencySymbol()} ${prevPendingTotal.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>. Tu prioridad financiera inmediata debe ser regularizar estos compromisos arrastrados antes de programar abonos extra o proyectar ahorros libres, evitando intereses moratorios.`;
         } else if (debtRatio > 30) {
           autoDiagEl.innerHTML = `⚠️ <strong>Carga de Deuda Elevada (${debtRatio}% de tus ingresos):</strong> Estás destinando <strong>${getCurrencySymbol()} ${totalDebtPayments.toLocaleString()} mensuales</strong> a tarjetas, préstamos y compras en cuotas. Recomendamos usar el método Bola de Nieve para liquidar de inmediato la cuota más próxima a vencer y liberar flujo.`;
