@@ -1,11 +1,11 @@
 const fs = require('fs');
 const path = require('path');
 const { chromium } = require('playwright');
+const { getMasterVectorSvg } = require('./master_vector_definition');
 
 const root = path.resolve(__dirname, '..');
 const logotiposDir = path.join(root, 'Logotipos');
 
-// Subcarpetas organizadas para toda la línea de marca
 const dirs = {
   social: path.join(logotiposDir, '01_Perfiles_Sociales_1024x1024'),
   horizontal: path.join(logotiposDir, '02_Logotipos_Horizontales_UltraHD_4K'),
@@ -19,64 +19,13 @@ Object.values(dirs).forEach(d => {
   if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true });
 });
 
-// Leemos el SVG suavizado
-const rawSvg = fs.readFileSync(path.join(__dirname, 'smooth_monogram.svg'), 'utf8');
-const match = rawSvg.match(/d="([^"]+)"/);
-if (!match) throw new Error('No se encontró el path en smooth_monogram.svg');
+// 1. Guardamos los archivos SVG puros de calidad matemática infinita
+fs.writeFileSync(
+  path.join(dirs.svg, 'AliviaFin_Monograma_Maestro.svg'),
+  `<?xml version="1.0" encoding="UTF-8"?>\n${getMasterVectorSvg({ idPrefix: 'pure', shadow: true })}`
+);
 
-const fullD = match[1];
-const [stemPath, wavePath, smilePath] = fullD.split(/(?=M\s)/g).map(s => s.trim()).filter(Boolean);
-
-// Función constructora del SVG del monograma con gradientes y sombras
-function getMonogramSvgMarkup({ idPrefix = 'af', dropShadow = true } = {}) {
-  return `
-    <svg viewBox="0 0 512 512" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" style="display:block; overflow:visible;">
-      <defs>
-        <linearGradient id="${idPrefix}_stemGrad" x1="40%" y1="0%" x2="60%" y2="100%">
-          <stop offset="0%" stop-color="#34d399" />
-          <stop offset="35%" stop-color="#10b981" />
-          <stop offset="70%" stop-color="#059669" />
-          <stop offset="100%" stop-color="#047857" />
-        </linearGradient>
-
-        <linearGradient id="${idPrefix}_waveGrad" x1="0%" y1="100%" x2="100%" y2="0%">
-          <stop offset="0%" stop-color="#047857" />
-          <stop offset="25%" stop-color="#059669" />
-          <stop offset="65%" stop-color="#10b981" />
-          <stop offset="100%" stop-color="#34d399" />
-        </linearGradient>
-
-        <linearGradient id="${idPrefix}_smileGrad" x1="0%" y1="50%" x2="100%" y2="50%">
-          <stop offset="0%" stop-color="#047857" />
-          <stop offset="50%" stop-color="#059669" />
-          <stop offset="100%" stop-color="#10b981" />
-        </linearGradient>
-
-        ${dropShadow ? `
-        <filter id="${idPrefix}_ribbonDepth" x="-30%" y="-30%" width="160%" height="160%">
-          <feDropShadow dx="0" dy="5" stdDeviation="7" flood-color="#042f2e" flood-opacity="0.30" />
-        </filter>
-        ` : ''}
-      </defs>
-
-      <!-- Capa 1: Tallo y ápice de la A -->
-      <path d="${stemPath}" fill="url(#${idPrefix}_stemGrad)" />
-
-      <!-- Capa 2: Curva de sonrisa inferior -->
-      <path d="${smilePath}" fill="url(#${idPrefix}_smileGrad)" />
-
-      <!-- Capa 3: Cinta fluida frontal con relieve táctil -->
-      <path d="${wavePath}" fill="url(#${idPrefix}_waveGrad)" ${dropShadow ? `filter="url(#${idPrefix}_ribbonDepth)"` : ''} />
-    </svg>
-  `;
-}
-
-// 1. Guardamos los archivos SVG puros
-const svgPureMonogram = `<?xml version="1.0" encoding="UTF-8"?>
-${getMonogramSvgMarkup({ idPrefix: 'pure', dropShadow: true })}`;
-fs.writeFileSync(path.join(dirs.svg, 'AliviaFin_Monograma_Maestro.svg'), svgPureMonogram);
-
-// SVG App Icon con Squircle Apple
+// SVG App Icon Apple Squircle
 const svgAppIcon = `<?xml version="1.0" encoding="UTF-8"?>
 <svg viewBox="0 0 512 512" width="512" height="512" xmlns="http://www.w3.org/2000/svg">
   <defs>
@@ -91,7 +40,7 @@ const svgAppIcon = `<?xml version="1.0" encoding="UTF-8"?>
   </defs>
   <rect x="24" y="24" width="464" height="464" rx="104" fill="url(#sqBg)" stroke="rgba(0,0,0,0.06)" stroke-width="2" filter="url(#sqShadow)" />
   <g transform="translate(48, 48) scale(0.8125)">
-    ${getMonogramSvgMarkup({ idPrefix: 'app', dropShadow: true })}
+    ${getMasterVectorSvg({ idPrefix: 'app', shadow: true })}
   </g>
 </svg>`;
 fs.writeFileSync(path.join(dirs.svg, 'AliviaFin_Icono_App_Apple.svg'), svgAppIcon);
@@ -122,7 +71,7 @@ function getHorizontalSvg(isDark = false) {
     </style>
   </defs>
   <g transform="translate(90, 85) scale(0.64)">
-    ${getMonogramSvgMarkup({ idPrefix: isDark ? 'hd' : 'hl', dropShadow: true })}
+    ${getMasterVectorSvg({ idPrefix: isDark ? 'hd' : 'hl', shadow: true })}
   </g>
   <text x="470" y="295" class="brand-title">aliviafin<tspan fill="#10b981">.</tspan></text>
   <text x="476" y="360" class="brand-tag">Paz mental para tu dinero</text>
@@ -131,14 +80,18 @@ function getHorizontalSvg(isDark = false) {
 fs.writeFileSync(path.join(dirs.svg, 'AliviaFin_Logo_Horizontal_Fondo_Claro.svg'), getHorizontalSvg(false));
 fs.writeFileSync(path.join(dirs.svg, 'AliviaFin_Logo_Horizontal_Fondo_Oscuro.svg'), getHorizontalSvg(true));
 
-console.log('Archivos SVG Maestros creados en:', dirs.svg);
+// Copiar a assets/brand para la web
+fs.copyFileSync(path.join(dirs.svg, 'AliviaFin_Monograma_Maestro.svg'), path.join(dirs.brandAssets, 'AliviaFin_Monograma_Maestro.svg'));
+fs.copyFileSync(path.join(dirs.svg, 'AliviaFin_Icono_App_Apple.svg'), path.join(dirs.brandAssets, 'AliviaFin_Icono_App_Apple.svg'));
+fs.copyFileSync(path.join(dirs.svg, 'AliviaFin_Logo_Horizontal_Fondo_Claro.svg'), path.join(dirs.brandAssets, 'AliviaFin_Logo_Horizontal_Fondo_Claro.svg'));
+fs.copyFileSync(path.join(dirs.svg, 'AliviaFin_Logo_Horizontal_Fondo_Oscuro.svg'), path.join(dirs.brandAssets, 'AliviaFin_Logo_Horizontal_Fondo_Oscuro.svg'));
 
-// 2. Renderizado de PNGs de Ultra Alta Definición con Playwright
+// 2. Renderizado de PNGs en Ultra HD (4096px / 2048px)
 (async () => {
   const browser = await chromium.launch({ channel: 'chrome', headless: true });
 
   const tasks = [
-    // --- 01. Perfiles Sociales (1024x1024) ---
+    // --- 01. Perfiles Sociales (1024x1024 con scale 2 = 2048x2048 real para Retina 4K) ---
     {
       outPath: path.join(dirs.social, 'Avatar_Gmail_Instagram_TikTok_Fondo_Blanco_1024x1024.png'),
       width: 1024,
@@ -148,9 +101,9 @@ console.log('Archivos SVG Maestros creados en:', dirs.svg);
         <!DOCTYPE html><html><head><style>
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body { width: 1024px; height: 1024px; background: #ffffff; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-          .wrap { width: 680px; height: 680px; display: flex; align-items: center; justify-content: center; }
+          .wrap { width: 720px; height: 720px; display: flex; align-items: center; justify-content: center; }
         </style></head><body>
-          <div class="wrap">${getMonogramSvgMarkup({ idPrefix: 's1' })}</div>
+          <div class="wrap">${getMasterVectorSvg({ idPrefix: 's1' })}</div>
         </body></html>
       `
     },
@@ -163,9 +116,31 @@ console.log('Archivos SVG Maestros creados en:', dirs.svg);
         <!DOCTYPE html><html><head><style>
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body { width: 1024px; height: 1024px; background: radial-gradient(circle at center, #111827 0%, #070a13 100%); display: flex; align-items: center; justify-content: center; overflow: hidden; }
-          .wrap { width: 680px; height: 680px; display: flex; align-items: center; justify-content: center; }
+          .wrap { width: 720px; height: 720px; display: flex; align-items: center; justify-content: center; }
         </style></head><body>
-          <div class="wrap">${getMonogramSvgMarkup({ idPrefix: 's2' })}</div>
+          <div class="wrap">${getMasterVectorSvg({ idPrefix: 's2' })}</div>
+        </body></html>
+      `
+    },
+    {
+      outPath: path.join(dirs.social, 'Avatar_Con_Texto_Redes_Blanco_1024x1024.png'),
+      width: 1024,
+      height: 1024,
+      deviceScaleFactor: 2,
+      html: `
+        <!DOCTYPE html><html><head>
+          <link rel="preconnect" href="https://fonts.googleapis.com">
+          <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800;900&display=swap" rel="stylesheet">
+          <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { width: 1024px; height: 1024px; background: #ffffff; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; }
+            .wrap { width: 520px; height: 520px; margin-bottom: 8px; }
+            .name { font-size: 104px; font-weight: 800; letter-spacing: -0.04em; color: #0f172a; line-height: 1; }
+            .dot { color: #10b981; }
+          </style>
+        </head><body>
+          <div class="wrap">${getMasterVectorSvg({ idPrefix: 'sText' })}</div>
+          <div class="name">aliviafin<span class="dot">.</span></div>
         </body></html>
       `
     },
@@ -179,14 +154,14 @@ console.log('Archivos SVG Maestros creados en:', dirs.svg);
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body { width: 1024px; height: 1024px; background: #f1f5f9; display: flex; align-items: center; justify-content: center; overflow: hidden; }
           .squircle {
-            width: 760px; height: 760px; border-radius: 180px; background: #ffffff;
+            width: 780px; height: 780px; border-radius: 185px; background: #ffffff;
             display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 32px 64px -12px rgba(15, 23, 42, 0.15), 0 4px 12px rgba(15, 23, 42, 0.05);
+            box-shadow: 0 32px 64px -12px rgba(15, 23, 42, 0.16), 0 4px 12px rgba(15, 23, 42, 0.05);
             border: 1px solid rgba(0,0,0,0.06);
           }
-          .icon { width: 560px; height: 560px; }
+          .icon { width: 580px; height: 580px; }
         </style></head><body>
-          <div class="squircle"><div class="icon">${getMonogramSvgMarkup({ idPrefix: 's3' })}</div></div>
+          <div class="squircle"><div class="icon">${getMasterVectorSvg({ idPrefix: 's3' })}</div></div>
         </body></html>
       `
     },
@@ -200,19 +175,19 @@ console.log('Archivos SVG Maestros creados en:', dirs.svg);
       html: `
         <!DOCTYPE html><html><head>
           <link rel="preconnect" href="https://fonts.googleapis.com">
-          <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+          <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800;900&display=swap" rel="stylesheet">
           <style>
             * { margin: 0; padding: 0; box-sizing: border-box; }
             body { width: 4096px; height: 1280px; background: #ffffff; display: flex; align-items: center; justify-content: center; font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; }
             .row { display: flex; align-items: center; gap: 96px; }
-            .mono { width: 520px; height: 520px; }
+            .mono { width: 540px; height: 540px; }
             .title { font-size: 340px; font-weight: 800; letter-spacing: -0.04em; color: #0f172a; line-height: 1; }
             .dot { color: #10b981; }
             .tag { font-size: 68px; font-weight: 600; color: #64748b; margin-top: 24px; letter-spacing: -0.01em; }
           </style>
         </head><body>
           <div class="row">
-            <div class="mono">${getMonogramSvgMarkup({ idPrefix: 'h1' })}</div>
+            <div class="mono">${getMasterVectorSvg({ idPrefix: 'h1' })}</div>
             <div>
               <div class="title">aliviafin<span class="dot">.</span></div>
               <div class="tag">Paz mental para tu dinero</div>
@@ -229,19 +204,19 @@ console.log('Archivos SVG Maestros creados en:', dirs.svg);
       html: `
         <!DOCTYPE html><html><head>
           <link rel="preconnect" href="https://fonts.googleapis.com">
-          <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+          <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800;900&display=swap" rel="stylesheet">
           <style>
             * { margin: 0; padding: 0; box-sizing: border-box; }
             body { width: 4096px; height: 1280px; background: #090d16; display: flex; align-items: center; justify-content: center; font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; }
             .row { display: flex; align-items: center; gap: 96px; }
-            .mono { width: 520px; height: 520px; }
+            .mono { width: 540px; height: 540px; }
             .title { font-size: 340px; font-weight: 800; letter-spacing: -0.04em; color: #f8fafc; line-height: 1; }
             .dot { color: #10b981; }
             .tag { font-size: 68px; font-weight: 600; color: #94a3b8; margin-top: 24px; letter-spacing: -0.01em; }
           </style>
         </head><body>
           <div class="row">
-            <div class="mono">${getMonogramSvgMarkup({ idPrefix: 'h2' })}</div>
+            <div class="mono">${getMasterVectorSvg({ idPrefix: 'h2' })}</div>
             <div>
               <div class="title">aliviafin<span class="dot">.</span></div>
               <div class="tag">Paz mental para tu dinero</div>
@@ -259,19 +234,19 @@ console.log('Archivos SVG Maestros creados en:', dirs.svg);
       html: `
         <!DOCTYPE html><html><head>
           <link rel="preconnect" href="https://fonts.googleapis.com">
-          <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+          <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800;900&display=swap" rel="stylesheet">
           <style>
             * { margin: 0; padding: 0; box-sizing: border-box; }
             body { width: 4096px; height: 1280px; background: transparent; display: flex; align-items: center; justify-content: center; font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; }
             .row { display: flex; align-items: center; gap: 96px; }
-            .mono { width: 520px; height: 520px; }
+            .mono { width: 540px; height: 540px; }
             .title { font-size: 340px; font-weight: 800; letter-spacing: -0.04em; color: #0f172a; line-height: 1; }
             .dot { color: #10b981; }
             .tag { font-size: 68px; font-weight: 600; color: #64748b; margin-top: 24px; letter-spacing: -0.01em; }
           </style>
         </head><body>
           <div class="row">
-            <div class="mono">${getMonogramSvgMarkup({ idPrefix: 'h3' })}</div>
+            <div class="mono">${getMasterVectorSvg({ idPrefix: 'h3' })}</div>
             <div>
               <div class="title">aliviafin<span class="dot">.</span></div>
               <div class="tag">Paz mental para tu dinero</div>
@@ -290,17 +265,17 @@ console.log('Archivos SVG Maestros creados en:', dirs.svg);
       html: `
         <!DOCTYPE html><html><head>
           <link rel="preconnect" href="https://fonts.googleapis.com">
-          <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+          <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800;900&display=swap" rel="stylesheet">
           <style>
             * { margin: 0; padding: 0; box-sizing: border-box; }
             body { width: 2048px; height: 2048px; background: #ffffff; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; text-align: center; }
-            .mono { width: 680px; height: 680px; margin-bottom: 40px; }
-            .title { font-size: 200px; font-weight: 800; letter-spacing: -0.04em; color: #0f172a; line-height: 1; }
+            .mono { width: 720px; height: 720px; margin-bottom: 48px; }
+            .title { font-size: 210px; font-weight: 800; letter-spacing: -0.04em; color: #0f172a; line-height: 1; }
             .dot { color: #10b981; }
-            .tag { font-size: 48px; font-weight: 600; color: #64748b; margin-top: 24px; letter-spacing: -0.01em; }
+            .tag { font-size: 52px; font-weight: 600; color: #64748b; margin-top: 24px; letter-spacing: -0.01em; }
           </style>
         </head><body>
-          <div class="mono">${getMonogramSvgMarkup({ idPrefix: 'v1' })}</div>
+          <div class="mono">${getMasterVectorSvg({ idPrefix: 'v1' })}</div>
           <div class="title">aliviafin<span class="dot">.</span></div>
           <div class="tag">Paz mental para tu dinero</div>
         </body></html>
@@ -314,17 +289,17 @@ console.log('Archivos SVG Maestros creados en:', dirs.svg);
       html: `
         <!DOCTYPE html><html><head>
           <link rel="preconnect" href="https://fonts.googleapis.com">
-          <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+          <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800;900&display=swap" rel="stylesheet">
           <style>
             * { margin: 0; padding: 0; box-sizing: border-box; }
             body { width: 2048px; height: 2048px; background: #090d16; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; text-align: center; }
-            .mono { width: 680px; height: 680px; margin-bottom: 40px; }
-            .title { font-size: 200px; font-weight: 800; letter-spacing: -0.04em; color: #f8fafc; line-height: 1; }
+            .mono { width: 720px; height: 720px; margin-bottom: 48px; }
+            .title { font-size: 210px; font-weight: 800; letter-spacing: -0.04em; color: #f8fafc; line-height: 1; }
             .dot { color: #10b981; }
-            .tag { font-size: 48px; font-weight: 600; color: #94a3b8; margin-top: 24px; letter-spacing: -0.01em; }
+            .tag { font-size: 52px; font-weight: 600; color: #94a3b8; margin-top: 24px; letter-spacing: -0.01em; }
           </style>
         </head><body>
-          <div class="mono">${getMonogramSvgMarkup({ idPrefix: 'v2' })}</div>
+          <div class="mono">${getMasterVectorSvg({ idPrefix: 'v2' })}</div>
           <div class="title">aliviafin<span class="dot">.</span></div>
           <div class="tag">Paz mental para tu dinero</div>
         </body></html>
@@ -339,17 +314,17 @@ console.log('Archivos SVG Maestros creados en:', dirs.svg);
       html: `
         <!DOCTYPE html><html><head>
           <link rel="preconnect" href="https://fonts.googleapis.com">
-          <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+          <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800;900&display=swap" rel="stylesheet">
           <style>
             * { margin: 0; padding: 0; box-sizing: border-box; }
             body { width: 2048px; height: 2048px; background: transparent; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; text-align: center; }
-            .mono { width: 680px; height: 680px; margin-bottom: 40px; }
-            .title { font-size: 200px; font-weight: 800; letter-spacing: -0.04em; color: #0f172a; line-height: 1; }
+            .mono { width: 720px; height: 720px; margin-bottom: 48px; }
+            .title { font-size: 210px; font-weight: 800; letter-spacing: -0.04em; color: #0f172a; line-height: 1; }
             .dot { color: #10b981; }
-            .tag { font-size: 48px; font-weight: 600; color: #64748b; margin-top: 24px; letter-spacing: -0.01em; }
+            .tag { font-size: 52px; font-weight: 600; color: #64748b; margin-top: 24px; letter-spacing: -0.01em; }
           </style>
         </head><body>
-          <div class="mono">${getMonogramSvgMarkup({ idPrefix: 'v3' })}</div>
+          <div class="mono">${getMasterVectorSvg({ idPrefix: 'v3' })}</div>
           <div class="title">aliviafin<span class="dot">.</span></div>
           <div class="tag">Paz mental para tu dinero</div>
         </body></html>
@@ -367,9 +342,9 @@ console.log('Archivos SVG Maestros creados en:', dirs.svg);
         <!DOCTYPE html><html><head><style>
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body { width: 2048px; height: 2048px; background: transparent; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-          .wrap { width: 1560px; height: 1560px; }
+          .wrap { width: 1600px; height: 1600px; }
         </style></head><body>
-          <div class="wrap">${getMonogramSvgMarkup({ idPrefix: 'm1' })}</div>
+          <div class="wrap">${getMasterVectorSvg({ idPrefix: 'm1' })}</div>
         </body></html>
       `
     },
@@ -382,9 +357,9 @@ console.log('Archivos SVG Maestros creados en:', dirs.svg);
         <!DOCTYPE html><html><head><style>
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body { width: 2048px; height: 2048px; background: #ffffff; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-          .wrap { width: 1400px; height: 1400px; }
+          .wrap { width: 1450px; height: 1450px; }
         </style></head><body>
-          <div class="wrap">${getMonogramSvgMarkup({ idPrefix: 'm2' })}</div>
+          <div class="wrap">${getMasterVectorSvg({ idPrefix: 'm2' })}</div>
         </body></html>
       `
     },
@@ -397,9 +372,9 @@ console.log('Archivos SVG Maestros creados en:', dirs.svg);
         <!DOCTYPE html><html><head><style>
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body { width: 2048px; height: 2048px; background: radial-gradient(circle at center, #111827 0%, #070a13 100%); display: flex; align-items: center; justify-content: center; overflow: hidden; }
-          .wrap { width: 1400px; height: 1400px; }
+          .wrap { width: 1450px; height: 1450px; }
         </style></head><body>
-          <div class="wrap">${getMonogramSvgMarkup({ idPrefix: 'm3' })}</div>
+          <div class="wrap">${getMasterVectorSvg({ idPrefix: 'm3' })}</div>
         </body></html>
       `
     },
@@ -413,14 +388,14 @@ console.log('Archivos SVG Maestros creados en:', dirs.svg);
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body { width: 2048px; height: 2048px; background: #f8fafc; display: flex; align-items: center; justify-content: center; overflow: hidden; }
           .squircle {
-            width: 1600px; height: 1600px; border-radius: 380px; background: #ffffff;
+            width: 1640px; height: 1640px; border-radius: 390px; background: #ffffff;
             display: flex; align-items: center; justify-content: center;
             box-shadow: 0 48px 96px -16px rgba(15, 23, 42, 0.16), 0 8px 24px rgba(15, 23, 42, 0.06);
             border: 2px solid rgba(0,0,0,0.05);
           }
-          .icon { width: 1180px; height: 1180px; }
+          .icon { width: 1220px; height: 1220px; }
         </style></head><body>
-          <div class="squircle"><div class="icon">${getMonogramSvgMarkup({ idPrefix: 'm4' })}</div></div>
+          <div class="squircle"><div class="icon">${getMasterVectorSvg({ idPrefix: 'm4' })}</div></div>
         </body></html>
       `
     }
@@ -432,18 +407,18 @@ console.log('Archivos SVG Maestros creados en:', dirs.svg);
       deviceScaleFactor: t.deviceScaleFactor || 1
     });
     await page.setContent(t.html, { waitUntil: 'networkidle' });
-    await page.waitForTimeout(800);
+    await page.waitForTimeout(600);
     await page.screenshot({
       path: t.outPath,
       omitBackground: !!t.omitBackground
     });
-    console.log(`Renderizado HD: ${path.basename(t.outPath)} (${t.width}x${t.height})`);
+    console.log(`Renderizado Ultra 4K: ${path.basename(t.outPath)} (${t.width}x${t.height})`);
     await page.close();
   }
 
   await browser.close();
 
-  // 3. Creamos copias directas de acceso rápido en la raíz de 'Logotipos/'
+  // 3. Accesos directos en la raíz de 'Logotipos/'
   fs.copyFileSync(
     path.join(dirs.social, 'Avatar_Gmail_Instagram_TikTok_Fondo_Blanco_1024x1024.png'),
     path.join(logotiposDir, '01_Avatar_Gmail_Instagram_TikTok_Blanco_1024x1024.png')
@@ -453,8 +428,8 @@ console.log('Archivos SVG Maestros creados en:', dirs.svg);
     path.join(logotiposDir, '02_Avatar_Redes_Fondo_Oscuro_1024x1024.png')
   );
   fs.copyFileSync(
-    path.join(dirs.monogram, 'Isotipo_Monograma_Transparente_2048x2048.png'),
-    path.join(logotiposDir, '03_Isotipo_Monograma_Transparente_2048x2048.png')
+    path.join(dirs.social, 'Avatar_Con_Texto_Redes_Blanco_1024x1024.png'),
+    path.join(logotiposDir, '03_Avatar_Con_Texto_aliviafin_1024x1024.png')
   );
   fs.copyFileSync(
     path.join(dirs.horizontal, 'Logo_Horizontal_Fondo_Blanco_4096x1280.png'),
@@ -469,7 +444,7 @@ console.log('Archivos SVG Maestros creados en:', dirs.svg);
     path.join(logotiposDir, '06_Icono_App_Apple_Squircle_2048x2048.png')
   );
 
-  // Copiamos también a assets/brand para la web
+  // Copiamos a assets/brand para la web
   fs.copyFileSync(
     path.join(dirs.social, 'Avatar_Gmail_Instagram_TikTok_Fondo_Blanco_1024x1024.png'),
     path.join(dirs.brandAssets, 'aliviafin-avatar-social-light-1024.png')
@@ -491,5 +466,5 @@ console.log('Archivos SVG Maestros creados en:', dirs.svg);
     path.join(dirs.brandAssets, 'aliviafin-monograma-transparente-1024.png')
   );
 
-  console.log('¡TODA LA LÍNEA DE MARCA ALIVIAFIN EN ULTRA HD Y SVG COMPLETADA EXITOSAMENTE!');
+  console.log('¡SISTEMA DE MARCA ALIVIAFIN EN ULTRA HD 4K GENERADO!');
 })();
