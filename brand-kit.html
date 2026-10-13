@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kit Oficial de Marca & Logos · AliviaFin</title>
+  <title>Línea Oficial de Marca & Logos · AliviaFin</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800;900&display=swap" rel="stylesheet">
@@ -26,7 +26,7 @@
       line-height: 1.5;
     }
     .wrap {
-      max-width: 1040px;
+      max-width: 1100px;
       margin: 0 auto;
     }
     .header {
@@ -57,7 +57,7 @@
     p.sub {
       font-size: 16px;
       color: var(--muted);
-      max-width: 600px;
+      max-width: 640px;
       margin: 0 auto;
     }
     .grid {
@@ -75,6 +75,9 @@
       flex-direction: column;
       gap: 16px;
       backdrop-filter: blur(20px);
+    }
+    .card.full-card {
+      grid-column: 1 / -1;
     }
     .preview-box {
       width: 100%;
@@ -99,77 +102,73 @@
       max-height: 85%;
       object-fit: contain;
     }
-    /* Simulación de avatar circular */
     .social-circle-guide {
       position: absolute;
-      width: 200px;
-      height: 200px;
+      width: 220px;
+      height: 220px;
       border-radius: 50%;
       border: 2px dashed rgba(16, 185, 129, 0.45);
       pointer-events: none;
+      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.25);
     }
     .card-title {
       font-size: 18px;
       font-weight: 800;
-      letter-spacing: -0.01em;
+      letter-spacing: -0.02em;
     }
     .card-desc {
-      font-size: 13px;
+      font-size: 14px;
       color: var(--muted);
+      line-height: 1.5;
       flex: 1;
     }
     .actions {
       display: flex;
       gap: 10px;
-      margin-top: 8px;
+      flex-wrap: wrap;
     }
     .btn {
       flex: 1;
+      min-width: 140px;
       padding: 12px 18px;
-      border-radius: 14px;
-      font-size: 13px;
-      font-weight: 800;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 700;
       text-decoration: none;
+      text-align: center;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
-      transition: all 0.2s ease;
       cursor: pointer;
-      border: none;
+      transition: all 0.2s;
     }
     .btn-primary {
-      background: linear-gradient(135deg, #10b981, #059669);
+      background: #10b981;
       color: #ffffff;
       box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
     }
     .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45);
+      background: #059669;
+      transform: translateY(-1px);
     }
     .btn-secondary {
       background: rgba(255, 255, 255, 0.08);
-      color: #f8fafc;
+      color: var(--text);
       border: 1px solid var(--border);
     }
     .btn-secondary:hover {
-      background: rgba(255, 255, 255, 0.12);
-    }
-    .full-card {
-      grid-column: 1 / -1;
-    }
-    .full-card .preview-box {
-      height: 220px;
+      background: rgba(255, 255, 255, 0.15);
     }
     .specs-box {
-      background: rgba(15, 23, 42, 0.6);
+      margin-top: 24px;
+      background: rgba(255, 255, 255, 0.02);
       border: 1px solid var(--border);
       border-radius: 20px;
       padding: 24px;
-      margin-top: 24px;
     }
     .specs-title {
-      font-size: 15px;
+      font-size: 16px;
       font-weight: 800;
       margin-bottom: 12px;
       color: #34d399;
@@ -177,36 +176,34 @@
     .specs-list {
       list-style: none;
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
       gap: 12px;
-      font-size: 13px;
+      font-size: 14px;
       color: var(--muted);
     }
-    .specs-list li b {
-      color: #f8fafc;
-    }
+    .specs-list b { color: var(--text); }
   </style>
 </head>
 <body>
 
   <div class="wrap">
     <div class="header">
-      <div class="badge">🎨 Brand Kit Oficial</div>
-      <h1>Logos Oficiales AliviaFin en Alta Resolución</h1>
-      <p class="sub">Descarga con un clic los logos optimizados para tus perfiles de Gmail, Instagram, TikTok y papelería digital.</p>
+      <div class="badge">✨ Kit Oficial de Marca · Calidad Vectorial Ultra HD</div>
+      <h1>Línea Gráfica Completa AliviaFin</h1>
+      <p class="sub">Logos oficiales en Ultra Alta Resolución y formato vectorial SVG infinito. 100% nítidos para perfiles de Gmail, Instagram, TikTok y documentos.</p>
     </div>
 
     <div class="grid">
       <!-- 1. Avatar Social Light -->
       <div class="card">
         <div class="preview-box bg-white">
-          <div class="social-circle-guide" title="Zona segura del corte circular en redes"></div>
+          <div class="social-circle-guide" title="Zona de corte circular en Instagram/TikTok"></div>
           <img src="assets/brand/aliviafin-avatar-social-light-1024.png" alt="Avatar Fondo Claro">
         </div>
-        <div class="card-title">1. Avatar Redes · Fondo Claro (Recomendado)</div>
-        <div class="card-desc">Ideal para <b>Instagram, TikTok y Gmail</b>. Fondo blanco cristal con margen de seguridad del 22% para que el corte circular no toque el monograma.</div>
+        <div class="card-title">1. Avatar Redes · Fondo Claro (Oficial)</div>
+        <div class="card-desc">Ideal para <b>Gmail, Instagram y TikTok</b>. Margen de seguridad calibrado para que el recorte circular no corte las esquinas.</div>
         <div class="actions">
-          <a href="assets/brand/aliviafin-avatar-social-light-1024.png" download="aliviafin-avatar-light-1024.png" class="btn btn-primary">
+          <a href="assets/brand/aliviafin-avatar-social-light-1024.png" download="aliviafin-avatar-blanco-1024x1024.png" class="btn btn-primary">
             📥 Descargar (1024×1024)
           </a>
         </div>
@@ -215,68 +212,94 @@
       <!-- 2. Avatar Social Dark -->
       <div class="card">
         <div class="preview-box bg-dark">
-          <div class="social-circle-guide" title="Zona segura del corte circular en redes"></div>
+          <div class="social-circle-guide" title="Zona de corte circular en Instagram/TikTok"></div>
           <img src="assets/brand/aliviafin-avatar-social-dark-1024.png" alt="Avatar Fondo Oscuro">
         </div>
         <div class="card-title">2. Avatar Redes · Fondo Noche (Twilight)</div>
-        <div class="card-desc">Fondo azul noche profundo con resplandor esmeralda. Máximo contraste e impacto visual para el feed de <b>TikTok e Instagram Dark</b>.</div>
+        <div class="card-desc">Fondo azul noche profundo con resplandor esmeralda. Máximo contraste e impacto para <b>TikTok e Instagram Dark</b>.</div>
         <div class="actions">
-          <a href="assets/brand/aliviafin-avatar-social-dark-1024.png" download="aliviafin-avatar-dark-1024.png" class="btn btn-primary">
+          <a href="assets/brand/aliviafin-avatar-social-dark-1024.png" download="aliviafin-avatar-oscuro-1024x1024.png" class="btn btn-primary">
             📥 Descargar (1024×1024)
           </a>
         </div>
       </div>
 
-      <!-- 3. Monograma Transparente -->
+      <!-- 3. App Icon Apple Squircle -->
+      <div class="card">
+        <div class="preview-box bg-white">
+          <img src="Logotipos/06_Icono_App_Apple_Squircle_2048x2048.png" alt="Icono App Apple">
+        </div>
+        <div class="card-title">3. Icono App Apple Oficial (Squircle)</div>
+        <div class="card-desc">El diseño insignia de la aplicación con esquinas redondeadas Apple HIG y relieve táctil. Para <b>Favicon, Mac y PWA</b>.</div>
+        <div class="actions">
+          <a href="Logotipos/06_Icono_App_Apple_Squircle_2048x2048.png" download="aliviafin-app-icon-apple-2048x2048.png" class="btn btn-primary">
+            📥 Descargar (2048×2048)
+          </a>
+          <a href="assets/brand/AliviaFin_Icono_App_Apple.svg" download="AliviaFin_Icono_App_Apple.svg" class="btn btn-secondary">
+            ⚡ SVG
+          </a>
+        </div>
+      </div>
+
+      <!-- 4. Monograma Transparente -->
       <div class="card">
         <div class="preview-box bg-checkers">
           <img src="assets/brand/aliviafin-monograma-transparente-1024.png" alt="Monograma Transparente">
         </div>
-        <div class="card-title">3. Isotipo Monograma Transparente</div>
-        <div class="card-desc">Monograma "A" sin fondo (PNG transparente). Para montar sobre cualquier color, historias de Instagram, banners o miniaturas de video.</div>
+        <div class="card-title">4. Isotipo Monograma Transparente</div>
+        <div class="card-desc">Monograma "A" sin fondo (PNG transparente). Para montar sobre videos de TikTok, Reels, stories o stickers.</div>
         <div class="actions">
-          <a href="assets/brand/aliviafin-monograma-transparente-1024.png" download="aliviafin-monograma-transparente-1024.png" class="btn btn-primary">
-            📥 Descargar PNG (Transparente)
+          <a href="assets/brand/aliviafin-monograma-transparente-1024.png" download="aliviafin-monograma-transparente-2048x2048.png" class="btn btn-primary">
+            📥 Descargar PNG HD
+          </a>
+          <a href="assets/brand/AliviaFin_Monograma_Maestro.svg" download="AliviaFin_Monograma_Maestro.svg" class="btn btn-secondary">
+            ⚡ SVG
           </a>
         </div>
       </div>
 
-      <!-- 4. Logo Horizontal Light -->
+      <!-- 5. Logo Horizontal Light Ultra 4K -->
       <div class="card full-card">
         <div class="preview-box bg-white">
           <img src="assets/brand/aliviafin-logo-horizontal-light-2048.png" alt="Logo Horizontal Light">
         </div>
-        <div class="card-title">4. Logotipo Horizontal Completo (Fondo Claro)</div>
-        <div class="card-desc">Isotipo fluido + tipografía "aliviafin" + slogan "Paz mental para tu dinero". Perfecto para <b>firmas de correo en Gmail, web, facturación y presentaciones</b>.</div>
+        <div class="card-title">5. Logotipo Horizontal Completo (Fondo Blanco · Ultra HD 4K)</div>
+        <div class="card-desc">Isotipo fluido + tipografía "aliviafin." + eslogan "Paz mental para tu dinero". Perfecto para <b>firmas de correo en Gmail, web, facturación y presentaciones ejecutivas</b>.</div>
         <div class="actions">
-          <a href="assets/brand/aliviafin-logo-horizontal-light-2048.png" download="aliviafin-logo-horizontal-light-2048.png" class="btn btn-primary">
-            📥 Descargar Ultra HD (2048×640)
+          <a href="assets/brand/aliviafin-logo-horizontal-light-2048.png" download="aliviafin-logo-horizontal-blanco-4096x1280.png" class="btn btn-primary">
+            📥 Descargar Ultra HD 4K (4096×1280)
+          </a>
+          <a href="assets/brand/AliviaFin_Logo_Horizontal_Fondo_Claro.svg" download="AliviaFin_Logo_Horizontal_Fondo_Claro.svg" class="btn btn-secondary">
+            ⚡ Descargar Vector SVG
           </a>
         </div>
       </div>
 
-      <!-- 5. Logo Horizontal Dark -->
+      <!-- 6. Logo Horizontal Dark Ultra 4K -->
       <div class="card full-card">
         <div class="preview-box bg-dark">
           <img src="assets/brand/aliviafin-logo-horizontal-dark-2048.png" alt="Logo Horizontal Dark">
         </div>
-        <div class="card-title">5. Logotipo Horizontal Completo (Fondo Oscuro)</div>
-        <div class="card-desc">Versión horizontal de alta gama para cabeceras oscuras, banners de canal de YouTube o diapositivas ejecutivas.</div>
+        <div class="card-title">6. Logotipo Horizontal Completo (Fondo Oscuro · Ultra HD 4K)</div>
+        <div class="card-desc">Versión horizontal de máxima elegancia para cabeceras web nocturnas, banners de canal de YouTube o diapositivas.</div>
         <div class="actions">
-          <a href="assets/brand/aliviafin-logo-horizontal-dark-2048.png" download="aliviafin-logo-horizontal-dark-2048.png" class="btn btn-primary">
-            📥 Descargar Ultra HD (2048×640)
+          <a href="assets/brand/aliviafin-logo-horizontal-dark-2048.png" download="aliviafin-logo-horizontal-oscuro-4096x1280.png" class="btn btn-primary">
+            📥 Descargar Ultra HD 4K (4096×1280)
+          </a>
+          <a href="assets/brand/AliviaFin_Logo_Horizontal_Fondo_Oscuro.svg" download="AliviaFin_Logo_Horizontal_Fondo_Oscuro.svg" class="btn btn-secondary">
+            ⚡ Descargar Vector SVG
           </a>
         </div>
       </div>
     </div>
 
     <div class="specs-box">
-      <div class="specs-title">📌 Especificaciones Oficiales de la Marca</div>
+      <div class="specs-title">📌 Especificaciones Oficiales del Sistema de Marca</div>
       <ul class="specs-list">
-        <li><b>Isotipo:</b> Monograma fluido "A" con gradiente esmeralda / cian (#10b981 → #06b6d4)</li>
-        <li><b>Tipografía:</b> Plus Jakarta Sans / Inter (geométrica, minúsculas: <i>aliviafin</i>)</li>
-        <li><b>Formato:</b> PNG 32-bit (sRGB), optimizado para pantallas Retina y 4K</li>
-        <li><b>Corte Circular:</b> Margen de respiro calibrado para corte automático de Instagram/TikTok</li>
+        <li><b>Isotipo:</b> Monograma fluido "A" con gradiente esmeralda fintech (#34d399 → #10b981 → #047857)</li>
+        <li><b>Tipografía:</b> Plus Jakarta Sans / Inter en minúsculas (<i>aliviafin.</i>)</li>
+        <li><b>Formato de Vectores:</b> Archivos SVG nativos matemáticos (escalabilidad infinita sin píxeles)</li>
+        <li><b>Resolución PNG:</b> Renderizados a 4096×1280 px y 2048×2048 px para máxima nitidez en pantallas Retina</li>
       </ul>
     </div>
   </div>

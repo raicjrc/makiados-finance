@@ -22,6 +22,7 @@
   },
   "homepage": "https://github.com/raicjrc/makiados-finance#readme",
   "devDependencies": {
-    "playwright": "^1.64.0"
+    "playwright": "^1.64.0",
+    "potrace": "^2.1.8"
   }
 }
