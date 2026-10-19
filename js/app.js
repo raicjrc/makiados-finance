@@ -199,17 +199,48 @@
         activeCategoryChip: 'TODAS',
         activeStatusFilter: 'TODOS',
         historyPeriodFilter: 'ALL',
+        onboardingCompleted: false,
         _lastSaved: 0
       };
     }
 
+    // Helper de seguridad: detecta de forma infalible si el usuario ya posee datos financieros reales en su cuenta
+    function userHasExistingFinancialData(state) {
+      if (!state) return false;
+      if (state.onboardingCompleted === true || state.onboardingSkipped === true) return true;
+      if (state.salary && Number(state.salary) > 0) return true;
+      if (state._lastSaved && Number(state._lastSaved) > 0) return true;
+      if (state.savingsGoals && Array.isArray(state.savingsGoals) && state.savingsGoals.length > 0) return true;
+      if (state.transactions && typeof state.transactions === 'object') {
+        const months = Object.keys(state.transactions);
+        for (let i = 0; i < months.length; i++) {
+          const list = state.transactions[months[i]];
+          if (Array.isArray(list) && list.length > 0) return true;
+        }
+      }
+      if (state.incomes && typeof state.incomes === 'object') {
+        const months = Object.keys(state.incomes);
+        for (let i = 0; i < months.length; i++) {
+          const list = state.incomes[months[i]];
+          if (Array.isArray(list) && list.length > 0) return true;
+        }
+      }
+      if (state.extraIncomes && Array.isArray(state.extraIncomes) && state.extraIncomes.length > 0) return true;
+      if (state.recurringDueDates && typeof state.recurringDueDates === 'object' && Object.keys(state.recurringDueDates).length > 0) return true;
+      return false;
+    }
+
     // Detector de datos heredados por error de la plantilla personal
+    // Requiere la presencia simultánea e inequívoca de TODOS los marcadores originales para evitar falsos positivos
     function isLegacyClonedState(state) {
       if (!state) return false;
-      if (state.salary === 8800 && state.recurringDueDates && state.recurringDueDates['alquiler']) return true;
-      if (state.transactions && state.transactions['Octubre'] && Array.isArray(state.transactions['Octubre']) && state.transactions['Octubre'].some(t => t.name === 'Casa' && t.amount === 750)) return true;
-      if (state.transactions && state.transactions['Septiembre 2026'] && Array.isArray(state.transactions['Septiembre 2026']) && state.transactions['Septiembre 2026'].some(t => t.name === 'Sheldon')) return true;
-      return false;
+      if (state.onboardingCompleted === true) return false;
+      if (state._lastSaved && state._lastSaved > 1700000000000) return false;
+      const hasCesarSalary = Number(state.salary) === 8800;
+      const hasAlquilerDue = state.recurringDueDates && state.recurringDueDates['alquiler'];
+      const hasCesarOct = state.transactions && state.transactions['Octubre'] && Array.isArray(state.transactions['Octubre']) && state.transactions['Octubre'].some(t => t.name === 'Casa' && t.amount === 750);
+      const hasSheldon = state.transactions && state.transactions['Septiembre 2026'] && Array.isArray(state.transactions['Septiembre 2026']) && state.transactions['Septiembre 2026'].some(t => t.name === 'Sheldon');
+      return Boolean(hasCesarSalary && hasAlquilerDue && hasCesarOct && hasSheldon);
     }
 
     let appState = getCleanUserState();
@@ -381,6 +412,7 @@
       }
 
       // Inicializar app con datos del usuario
+      window._serverStateLoaded = false;
       loadLocalState();
       populateMonthDropdown();
       renderCategoryChips();
@@ -392,12 +424,15 @@
       await subPromise;
       syncAdminUI();
       checkMonthEndNotification();
+      checkOnboardingAndVersionAnnouncements();
     }
 
-    // Helper para pruebas y preview local
-    window.testBypassLogin = async function(email = 'cesar.risso.f@gmail.com') {
-      await onLoginSuccess({ id: 'local_test_user', email: email });
-    };
+    // Helper para pruebas en desarrollo local exclusivamente (desactivado en producción)
+    if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+      window.testBypassLogin = async function(email = 'cesar.risso.f@gmail.com') {
+        await onLoginSuccess({ id: 'local_test_user', email: email });
+      };
+    }
 
     // ================================================================
     // SISTEMA DE MONETIZACIÓN FREEMIUM (FREE VS PRO CON CICLO DE 30 DÍAS & CORTESÍA 48H)
@@ -947,7 +982,6 @@
         syncAdminUI();
         recordUserHeartbeat(user, true);
         updateAllProBadgesAndBanners();
-        setTimeout(() => checkOnboardingAndVersionAnnouncements(), 400);
         return;
       }
 
@@ -1074,10 +1108,6 @@
       recordUserHeartbeat(user, false);
       syncAdminUI();
       updateAllProBadgesAndBanners();
-
-      // IMPORTANTE: Nunca se bloquea al usuario con paywall.
-      // El usuario siempre accede a la app con su plan Free vitalicio.
-      setTimeout(() => checkOnboardingAndVersionAnnouncements(), 400);
     }
 
     // LOGIN con Supabase Auth
@@ -1517,11 +1547,13 @@
       } catch(e) {}
       currentUser = null;
       window.currentUser = null;
+      window._serverStateLoaded = false;
       window._currentUserSubscriptionStatus = 'free';
       window._currentUserSubscriptionExpiresAt = null;
       updateAllProBadgesAndBanners();
       appState = getCleanUserState();
       syncAdminUI();
+      closeModal('onboardingWizardModal');
       document.getElementById('loginModalScreen').style.display = 'flex';
       document.getElementById('appMainWrapper').style.display = 'none';
       // Limpiar datos locales de este usuario
@@ -2001,6 +2033,13 @@
       appState.activeStatusFilter   = currentStatusFilter;
       appState.historyPeriodFilter  = currentHistoryPeriodFilter;
 
+      if (userHasExistingFinancialData(appState)) {
+        appState.onboardingCompleted = true;
+        const uKey = currentUser ? currentUser.id : 'guest';
+        localStorage.setItem('finanzas_setup_completed_' + uKey, 'true');
+        localStorage.setItem('finanzas_setup_completed', 'true');
+      }
+
       saveLocalState();
       lastSuccessfulSyncTime = Date.now();
       updateSyncIndicator('synced', '🟢 En Vivo');
@@ -2085,6 +2124,11 @@
 
     // Carga inicial desde Supabase
     async function loadStateFromServer(retries = 3) {
+      if (!currentUser) {
+        window._serverStateLoaded = true;
+        updateSyncIndicator('synced', '📱 Modo Local');
+        return;
+      }
       try {
         const { data, error } = await supabaseClient
           .from('finanzas_state')
@@ -2106,6 +2150,12 @@
           }
           applyRemoteState(data.data);
           window._serverStateLoaded = true;
+          if (userHasExistingFinancialData(appState)) {
+            appState.onboardingCompleted = true;
+            const uKey = currentUser ? currentUser.id : 'guest';
+            localStorage.setItem('finanzas_setup_completed_' + uKey, 'true');
+            localStorage.setItem('finanzas_setup_completed', 'true');
+          }
           lastSuccessfulSyncTime = Date.now();
           updateSyncIndicator('synced', '🟢 En Vivo');
         } else if (error && error.code === 'PGRST116') {
@@ -2189,6 +2239,12 @@
       const sentTs = appState._lastSaved;
       rememberOwnWrite(sentTs);
       saveLocalState();
+
+      if (!currentUser) {
+        isSyncing = false;
+        updateSyncIndicator('synced', '📱 Modo Local');
+        return;
+      }
 
       updateSyncIndicator('syncing', '⏳ Guardando...');
 
@@ -6761,19 +6817,40 @@
     let wizardCurrentStep = 1;
 
     async function openOnboardingWizard(force = false) {
-      const userKey = currentUser ? currentUser.id : 'guest';
-      const isAlreadySetup = localStorage.getItem('finanzas_setup_completed_' + userKey) === 'true';
+      if (!force) {
+        // SEGURIDAD CRÍTICA: Nunca abrir si el servidor aún no ha confirmado la carga del usuario
+        if (window._serverStateLoaded !== true) {
+          console.warn('🛡️ Onboarding bloqueado: esperando confirmación de datos del servidor');
+          return;
+        }
 
-      // Si ya está configurado y el usuario no forzó deliberadamente, no abrir
-      if (!force && isAlreadySetup) {
-        return;
+        // Administrador César jamás ve el onboarding
+        if (isAdminCesar()) return;
+
+        const userKey = currentUser ? currentUser.id : 'guest';
+        const isAlreadySetup = (appState && (appState.onboardingCompleted === true || appState.onboardingSkipped === true))
+                            || localStorage.getItem('finanzas_setup_completed_' + userKey) === 'true'
+                            || localStorage.getItem('finanzas_setup_completed_' + userKey) === 'skipped'
+                            || localStorage.getItem('finanzas_setup_completed') === 'true';
+
+        const hasExistingData = userHasExistingFinancialData(appState);
+
+        // Si ya está configurado o si el usuario ya tiene cualquier dato financiero, NO ABRIR
+        if (isAlreadySetup || hasExistingData) {
+          if (appState && !appState.onboardingCompleted) {
+            appState.onboardingCompleted = true;
+            saveLocalState();
+          }
+          localStorage.setItem('finanzas_setup_completed_' + userKey, 'true');
+          localStorage.setItem('finanzas_setup_completed', 'true');
+          return;
+        }
       }
 
-      // Si forzó pero ya tiene transacciones, confirmar para seguridad
-      const curMonth = appState.currentMonth || getCurrentCalendarMonthName();
-      const hasExistingTxs = appState.transactions && appState.transactions[curMonth] && appState.transactions[curMonth].length > 0;
-      if (force && hasExistingTxs) {
-        if (!await uiConfirm('⚠️ Tu cuenta ya tiene transacciones registradas. Tus datos existentes se conservarán y solo se agregarán los nuevos gastos fijos. ¿Deseas continuar?')) {
+      // Si forzó pero ya tiene registros, confirmar para seguridad
+      const hasExistingData = userHasExistingFinancialData(appState);
+      if (force && hasExistingData) {
+        if (!await uiConfirm('⚠️ Tu cuenta ya tiene registros financieros. Tus datos existentes se conservarán y solo se agregarán los nuevos gastos fijos. ¿Deseas continuar?')) {
           return;
         }
       }
@@ -7320,9 +7397,11 @@
         }
       }
 
-      // Marcar onboarding como completado
+      // Marcar onboarding como completado en memoria, servidor y localStorage
+      appState.onboardingCompleted = true;
       const userKey = currentUser ? currentUser.id : 'guest';
       localStorage.setItem('finanzas_setup_completed_' + userKey, 'true');
+      localStorage.setItem('finanzas_setup_completed', 'true');
 
       // Guardar y refrescar
       addAuditLog('🧭 Onboarding', 'Configuración inicial completada mediante asistente');
@@ -7343,6 +7422,12 @@
     function dismissOnboardingWizard(markSkipped = true) {
       closeModal('onboardingWizardModal');
       if (markSkipped) {
+        if (appState) {
+          appState.onboardingCompleted = true;
+          appState.onboardingSkipped = true;
+          saveLocalState();
+          syncStateToServer();
+        }
         const userKey = currentUser ? currentUser.id : 'guest';
         localStorage.setItem('finanzas_setup_completed_' + userKey, 'skipped');
         localStorage.setItem('finanzas_setup_completed', 'skipped');
@@ -7420,9 +7505,15 @@
     // Comprobación automática de bienvenida, versión y anuncios
     function checkOnboardingAndVersionAnnouncements() {
       syncVersionUI();
+      // SEGURIDAD: Nunca verificar onboarding mientras el servidor no haya terminado de cargar
+      if (window._serverStateLoaded !== true) return;
+
       const userKey = currentUser ? currentUser.id : 'guest';
       const isCesar = isAdminCesar();
-      const setupDone = localStorage.getItem('finanzas_setup_completed_' + userKey) || localStorage.getItem('finanzas_setup_completed');
+      const setupDone = (appState && (appState.onboardingCompleted === true || appState.onboardingSkipped === true))
+                     || localStorage.getItem('finanzas_setup_completed_' + userKey) === 'true'
+                     || localStorage.getItem('finanzas_setup_completed_' + userKey) === 'skipped'
+                     || localStorage.getItem('finanzas_setup_completed') === 'true';
       const seenVer = localStorage.getItem('finanzas_last_seen_version_' + userKey) || localStorage.getItem('finanzas_last_seen_version');
 
       // Si es el administrador César, nunca interrumpir con popups automáticos de wizard ni novedades
@@ -7432,16 +7523,22 @@
         localStorage.setItem('finanzas_last_seen_version_' + userKey, APP_VERSION);
         localStorage.setItem('finanzas_last_seen_version', APP_VERSION);
         return;
-      } else {
-        const hasData = (appState.salary && appState.salary > 0) || (appState.transactions && Object.keys(appState.transactions).some(m => appState.transactions[m].length > 0));
-        
-        if (!setupDone && !hasData && window._serverStateLoaded === true) {
-          setTimeout(() => openOnboardingWizard(false), 500);
-          return;
-        } else if (hasData) {
-          localStorage.setItem('finanzas_setup_completed_' + userKey, 'true');
-          localStorage.setItem('finanzas_setup_completed', 'true');
+      }
+
+      const hasData = userHasExistingFinancialData(appState);
+
+      if (setupDone || hasData) {
+        // Usuario existente con datos o que ya completó onboarding: blindar flags
+        if (appState && !appState.onboardingCompleted) {
+          appState.onboardingCompleted = true;
+          saveLocalState();
         }
+        localStorage.setItem('finanzas_setup_completed_' + userKey, 'true');
+        localStorage.setItem('finanzas_setup_completed', 'true');
+      } else {
+        // Usuario 100% nuevo, sin datos y con carga de servidor confirmada
+        setTimeout(() => openOnboardingWizard(false), 500);
+        return;
       }
 
       // Si el navegador ya tiene registrada alguna versión vista, NO molestar con popups automáticos en login/logout
