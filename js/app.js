@@ -827,7 +827,7 @@
               email: user.email,
               status: 'pro_lifetime'
             }, { onConflict: 'user_id' })
-            .catch(() => {});
+            .then(() => {}, () => {});
         }
 
         // Throttle por usuario individual: solo para pings pasivos de fondo
@@ -1546,6 +1546,15 @@
     // LOGOUT
     async function handleLogout() {
       if (!await uiConfirm('¿Deseas cerrar tu sesión?')) return;
+      // Seguridad: asegurar que cualquier cambio reciente (conciliación, gastos, etc.) se guarde en la nube antes de salir
+      if (currentUser && typeof flushSyncToServer === 'function') {
+        try {
+          updateSyncIndicator('syncing', '⏳ Guardando cambios antes de salir...');
+          await flushSyncToServer();
+        } catch (e) {
+          console.warn('Error al vaciar sync en logout:', e);
+        }
+      }
       try { sessionStorage.clear(); } catch(e) {}
       try {
         const client = getSupabaseClient();
@@ -2168,6 +2177,10 @@
           }
           lastSuccessfulSyncTime = Date.now();
           updateSyncIndicator('synced', '🟢 En Vivo');
+          if (syncPending) {
+            syncPending = false;
+            syncStateToServer();
+          }
         } else if (error && error.code === 'PGRST116') {
           // 0 filas: puede ser usuario realmente nuevo O sesión/RLS aún no lista.
           // NUNCA crear un estado vacío sin verificar antes (podría pisar datos reales).
@@ -2274,68 +2287,86 @@
 
     // Guardar en Supabase (upsert) con protección anti-pérdida de concurrencia
     let syncPending = false;
+    let currentSyncPromise = null;
+
     async function syncStateToServer() {
       if (isSyncing) {
         syncPending = true;
-        return;
+        return currentSyncPromise;
       }
       isSyncing = true;
       syncPending = false;
 
-      appState.activeCategoryChip  = currentCategoryFilter;
-      appState.activeStatusFilter  = currentStatusFilter;
-      appState.historyPeriodFilter = currentHistoryPeriodFilter;
-      appState._lastSaved = Date.now();
-      const sentTs = appState._lastSaved;
-      rememberOwnWrite(sentTs);
-      saveLocalState();
+      currentSyncPromise = (async () => {
+        appState.activeCategoryChip  = currentCategoryFilter;
+        appState.activeStatusFilter  = currentStatusFilter;
+        appState.historyPeriodFilter = currentHistoryPeriodFilter;
+        appState._lastSaved = Date.now();
+        const sentTs = appState._lastSaved;
+        rememberOwnWrite(sentTs);
+        saveLocalState();
 
-      if (!currentUser) {
-        isSyncing = false;
-        updateSyncIndicator('synced', '📱 Modo Local');
-        return;
-      }
+        if (!currentUser) {
+          isSyncing = false;
+          updateSyncIndicator('synced', '📱 Modo Local');
+          return;
+        }
 
-      // SEGURIDAD CRÍTICA: jamás escribir al servidor antes de haber confirmado la carga de los datos
-      // reales (un dispositivo nuevo arranca con estado vacío y lo subiría encima del existente).
-      if (window._serverStateLoaded !== true) {
-        isSyncing = false;
-        console.warn('🛡️ Sync bloqueado: esperando carga confirmada del servidor');
-        updateSyncIndicator('syncing', '⏳ Esperando datos de la nube...');
-        return;
-      }
+        // SEGURIDAD CRÍTICA: jamás escribir al servidor antes de haber confirmado la carga de los datos
+        // reales (un dispositivo nuevo arranca con estado vacío y lo subiría encima del existente).
+        if (window._serverStateLoaded !== true) {
+          isSyncing = false;
+          syncPending = true;
+          console.warn('🛡️ Sync bloqueado: esperando carga confirmada del servidor');
+          updateSyncIndicator('syncing', '⏳ Esperando datos de la nube...');
+          return;
+        }
 
-      updateSyncIndicator('syncing', '⏳ Guardando...');
+        updateSyncIndicator('syncing', '⏳ Guardando...');
 
-      try {
-        const { error } = await supabaseClient
-          .from('finanzas_state')
-          .upsert({ id: getUserStateId(), data: appState });
+        try {
+          const { error } = await supabaseClient
+            .from('finanzas_state')
+            .upsert({ id: getUserStateId(), data: appState });
 
-        if (!error) {
-          lastAckedWriteTs = Math.max(lastAckedWriteTs, sentTs);
-          syncRetryCount = 0;
-          lastSuccessfulSyncTime = Date.now();
-          lastKnownServerDataHash = JSON.stringify(appState.transactions) +
-                                    JSON.stringify(appState.savingsGoals) +
-                                    JSON.stringify(appState.extraIncomes) +
-                                    appState.salary +
-                                    JSON.stringify(appState.recurringDueDates);
-          updateSyncIndicator('synced', '🟢 En Vivo');
-          if (currentUser) recordUserHeartbeat(currentUser);
-        } else {
-          updateSyncIndicator('syncing', '⚠️ Reintentando...');
+          if (!error) {
+            lastAckedWriteTs = Math.max(lastAckedWriteTs, sentTs);
+            syncRetryCount = 0;
+            lastSuccessfulSyncTime = Date.now();
+            lastKnownServerDataHash = JSON.stringify(appState.transactions) +
+                                      JSON.stringify(appState.savingsGoals) +
+                                      JSON.stringify(appState.extraIncomes) +
+                                      JSON.stringify(appState.incomes) +
+                                      appState.salary +
+                                      JSON.stringify(appState.recurringDueDates);
+            updateSyncIndicator('synced', '🟢 En Vivo');
+            if (currentUser) recordUserHeartbeat(currentUser);
+          } else {
+            updateSyncIndicator('syncing', '⚠️ Reintentando...');
+            scheduleSyncRetry();
+          }
+        } catch(e) {
+          updateSyncIndicator('error', '🔴 Offline (Modo Local)');
           scheduleSyncRetry();
+        } finally {
+          isSyncing = false;
+          if (syncPending) {
+            syncPending = false;
+            await syncStateToServer();
+          }
         }
-      } catch(e) {
-        updateSyncIndicator('error', '🔴 Offline (Modo Local)');
-        scheduleSyncRetry();
-      } finally {
-        isSyncing = false;
-        if (syncPending) {
-          syncPending = false;
-          syncStateToServer();
-        }
+      })();
+
+      return currentSyncPromise;
+    }
+
+    // Esperar de forma determinista que cualquier guardado pendiente o en vuelo termine
+    async function flushSyncToServer() {
+      if (isSyncing && currentSyncPromise) {
+        await currentSyncPromise;
+      }
+      if (syncPending || (appState._lastSaved && appState._lastSaved > lastAckedWriteTs)) {
+        await syncStateToServer();
       }
     }
 
@@ -2434,6 +2465,14 @@
     window.addEventListener('online', () => {
       console.log('📶 Conexión recuperada (online). Sincronizando datos...');
       handleAppWakeup();
+    });
+
+    // Advertir si el usuario intenta cerrar la ventana mientras hay una sincronización en vuelo
+    window.addEventListener('beforeunload', (e) => {
+      if (isSyncing || syncPending) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
     });
 
     function saveLocalState() {
@@ -3398,7 +3437,7 @@
       }
     }
 
-    function applyReconciliationAdjustment() {
+    async function applyReconciliationAdjustment() {
       if (Math.abs(_lastReconciliationDiff) < 0.01) return;
 
       const month = appState.currentMonth;
@@ -3435,10 +3474,17 @@
         addAuditLog('⚖️ Conciliación', `Ajuste de gasto -${sym} ${absAmount.toLocaleString(loc)} para cuadrar con banco en ${month}`);
       }
 
-      saveState();
-      closeModal('reconcileBalanceModal');
-      showToast('✅ Saldo conciliado y cuadrado con éxito', 'success');
+      saveLocalState();
       renderAll();
+      closeModal('reconcileBalanceModal');
+
+      // Sincronizar determinísticamente con Supabase
+      try {
+        await flushSyncToServer();
+        showToast('✅ Saldo conciliado y guardado en la nube', 'success');
+      } catch (e) {
+        showToast('✅ Saldo guardado localmente', 'info');
+      }
     }
 
     function openMissingExpenseFromReconcile() {
@@ -11559,7 +11605,7 @@ async function markRefundProcessed(idOrCod) {
     if (supabaseClient && typeof idOrCod === 'string' && idOrCod.length > 20) {
       await supabaseClient.from('app_feedback').update({
         metadata: { ...(item ? item.metadata : {}), estado: 'procesado' }
-      }).eq('id', idOrCod).catch(() => {});
+      }).eq('id', idOrCod).then(() => {}, () => {});
     }
   } catch (e) {}
   showToast('Reembolso marcado como procesado ✅', 'success');
@@ -11615,7 +11661,7 @@ async function handleConfirmDeleteAccountSubmit(event) {
           fecha: new Date().toISOString()
         },
         created_at: new Date().toISOString()
-      }]).catch(() => {});
+      }]).then(() => {}, () => {});
     }
 
     // 2. Borrar datos financieros en finanzas_state
@@ -11624,7 +11670,7 @@ async function handleConfirmDeleteAccountSubmit(event) {
         .from('finanzas_state')
         .delete()
         .eq('id', 'state_' + currentUser.id)
-        .catch(() => {});
+        .then(() => {}, () => {});
     }
 
     // 3. Borrar suscripción en user_subscriptions
@@ -11633,7 +11679,7 @@ async function handleConfirmDeleteAccountSubmit(event) {
         .from('user_subscriptions')
         .delete()
         .eq('user_id', currentUser.id)
-        .catch(() => {});
+        .then(() => {}, () => {});
     }
 
     // 4. Limpiar almacenamiento local
