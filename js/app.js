@@ -209,7 +209,7 @@
       if (!state) return false;
       if (state.onboardingCompleted === true || state.onboardingSkipped === true) return true;
       if (state.salary && Number(state.salary) > 0) return true;
-      if (state._lastSaved && Number(state._lastSaved) > 0) return true;
+      // NOTA: _lastSaved NO es evidencia de datos reales (se estampa incluso al guardar el estado vacío)
       if (state.savingsGoals && Array.isArray(state.savingsGoals) && state.savingsGoals.length > 0) return true;
       if (state.transactions && typeof state.transactions === 'object') {
         const months = Object.keys(state.transactions);
@@ -225,7 +225,10 @@
           if (Array.isArray(list) && list.length > 0) return true;
         }
       }
-      if (state.extraIncomes && Array.isArray(state.extraIncomes) && state.extraIncomes.length > 0) return true;
+      if (state.extraIncomes && typeof state.extraIncomes === 'object') {
+        if (Array.isArray(state.extraIncomes)) { if (state.extraIncomes.length > 0) return true; }
+        else if (Object.values(state.extraIncomes).some(l => Array.isArray(l) && l.length > 0)) return true;
+      }
       if (state.recurringDueDates && typeof state.recurringDueDates === 'object' && Object.keys(state.recurringDueDates).length > 0) return true;
       return false;
     }
@@ -334,7 +337,10 @@
           if (event === 'PASSWORD_RECOVERY') {
             openResetPasswordModal();
           } else if (event === 'SIGNED_IN' && session && session.user && !currentUser) {
-            await onLoginSuccess(session.user);
+            // Diferir fuera del callback: llamar a Supabase dentro del lock de auth puede
+            // ejecutar la consulta sin token (0 filas por RLS) y simular un usuario nuevo.
+            const u = session.user;
+            setTimeout(() => { if (!currentUser) onLoginSuccess(u); }, 0);
           }
         });
       }
@@ -852,7 +858,7 @@
             .from('user_subscriptions')
             .update({ last_active_at: nowIso })
             .eq('user_id', user.id)
-            .catch(() => {});
+            .then(() => {}, () => {});
         }
 
         // 3) Telemetría nativa directa en finanzas_state (el propio usuario tiene permiso RLS total sobre su fila de estado)
@@ -2038,6 +2044,9 @@
         const uKey = currentUser ? currentUser.id : 'guest';
         localStorage.setItem('finanzas_setup_completed_' + uKey, 'true');
         localStorage.setItem('finanzas_setup_completed', 'true');
+        // Si el asistente estaba abierto y llegan datos reales, cerrarlo para no pisarlos
+        const wz = document.getElementById('onboardingWizardModal');
+        if (wz && wz.classList.contains('active')) closeModal('onboardingWizardModal');
       }
 
       saveLocalState();
@@ -2140,11 +2149,12 @@
           const isCesar = isAdminCesar();
           if (!isCesar && isLegacyClonedState(data.data)) {
             console.warn('Usuario no-admin con datos clonados por defecto. Reseteando a espacio limpio...');
+            await createCloudBackupAuto(data.data, 'legacy_' + new Date().toISOString().split('T')[0]);
             appState = getCleanUserState();
             saveLocalState();
+            window._serverStateLoaded = true;
             syncStateToServer();
             renderAll();
-            window._serverStateLoaded = true;
             setTimeout(() => openOnboardingWizard(false), 500);
             return;
           }
@@ -2159,7 +2169,47 @@
           lastSuccessfulSyncTime = Date.now();
           updateSyncIndicator('synced', '🟢 En Vivo');
         } else if (error && error.code === 'PGRST116') {
-          // No hay datos para este usuario aun (usuario nuevo)
+          // 0 filas: puede ser usuario realmente nuevo O sesión/RLS aún no lista.
+          // NUNCA crear un estado vacío sin verificar antes (podría pisar datos reales).
+          const { data: { session: liveSession } } = await supabaseClient.auth.getSession();
+          if (!liveSession) throw new Error('Sesión aún no lista; reintentando');
+
+          // 1) Caché local con datos reales: conservarla y subirla
+          if (userHasExistingFinancialData(appState)) {
+            console.warn('Servidor sin fila pero hay datos locales: se conservan y se re-suben.');
+            appState.onboardingCompleted = true;
+            saveLocalState();
+            window._serverStateLoaded = true;
+            lastSuccessfulSyncTime = Date.now();
+            updateSyncIndicator('synced', '🟢 En Vivo');
+            renderAll();
+            syncStateToServer();
+            return;
+          }
+
+          // 2) Respaldo en la nube existente: restaurar el más reciente
+          try {
+            const id8 = currentUser.id.slice(0, 8);
+            const { data: bks } = await supabaseClient
+              .from('finanzas_state')
+              .select('id,data')
+              .like('id', `backup_${id8}_20%`)
+              .order('id', { ascending: false })
+              .limit(1);
+            if (bks && bks[0] && bks[0].data && userHasExistingFinancialData(bks[0].data)) {
+              console.warn('Fila ausente pero existe respaldo; restaurando:', bks[0].id);
+              applyRemoteState(bks[0].data);
+              appState.onboardingCompleted = true;
+              saveLocalState();
+              window._serverStateLoaded = true;
+              renderAll();
+              syncStateToServer();
+              showToast('♻️ Datos restaurados desde tu último respaldo en la nube', 'success');
+              return;
+            }
+          } catch (bkErr) { console.warn('No se pudo consultar respaldos:', bkErr); }
+
+          // 3) Usuario genuinamente nuevo
           console.log('Usuario nuevo: inicializando con espacio 100% limpio...');
           appState = getCleanUserState();
           saveLocalState();
@@ -2243,6 +2293,15 @@
       if (!currentUser) {
         isSyncing = false;
         updateSyncIndicator('synced', '📱 Modo Local');
+        return;
+      }
+
+      // SEGURIDAD CRÍTICA: jamás escribir al servidor antes de haber confirmado la carga de los datos
+      // reales (un dispositivo nuevo arranca con estado vacío y lo subiría encima del existente).
+      if (window._serverStateLoaded !== true) {
+        isSyncing = false;
+        console.warn('🛡️ Sync bloqueado: esperando carga confirmada del servidor');
+        updateSyncIndicator('syncing', '⏳ Esperando datos de la nube...');
         return;
       }
 
@@ -6844,6 +6903,25 @@
           localStorage.setItem('finanzas_setup_completed_' + userKey, 'true');
           localStorage.setItem('finanzas_setup_completed', 'true');
           return;
+        }
+
+        // ÚLTIMA DEFENSA: reconfirmar contra el servidor que esta cuenta realmente no tiene datos.
+        // Ante cualquier duda (error de red, sesión no lista, datos presentes) NO se abre el asistente.
+        if (currentUser && typeof supabaseClient !== 'undefined' && supabaseClient) {
+          try {
+            const { data: rows, error: vErr } = await supabaseClient
+              .from('finanzas_state')
+              .select('data')
+              .eq('id', getUserStateId())
+              .limit(1);
+            if (vErr) return;
+            if (rows && rows[0] && rows[0].data && userHasExistingFinancialData(rows[0].data)) {
+              console.warn('🛡️ Onboarding cancelado: el servidor SÍ tiene datos de esta cuenta. Sincronizando...');
+              lastKnownServerDataHash = '';
+              applyRemoteState(rows[0].data);
+              return;
+            }
+          } catch (vEx) { return; }
         }
       }
 
@@ -11460,7 +11538,7 @@ async function markClaimAttended(codigo) {
   if (item) item.estado = 'atendido';
   try {
     if (supabaseClient) {
-      await supabaseClient.from('app_reclamaciones').update({ estado: 'atendido' }).eq('codigo', codigo).catch(() => {});
+      await supabaseClient.from('app_reclamaciones').update({ estado: 'atendido' }).eq('codigo', codigo).then(() => {}, () => {});
     }
     const localList = JSON.parse(localStorage.getItem('finanzas_reclamaciones_backup') || '[]');
     const localItem = localList.find(r => r.codigo === codigo);
