@@ -2449,6 +2449,11 @@
     document.addEventListener('visibilitychange', () => {
       if (!document.hidden) {
         handleAppWakeup();
+      } else {
+        // En móviles (iOS Safari / Android PWA) y escritorio: flush inmediato si hay cambios pendientes al minimizar o bloquear
+        if (currentUser && typeof flushSyncToServer === 'function' && (isSyncing || syncPending || (appState && appState._lastSaved && appState._lastSaved > lastAckedWriteTs))) {
+          flushSyncToServer().catch(err => console.warn('Flush en background:', err));
+        }
       }
     });
     window.addEventListener('focus', () => {
@@ -2456,6 +2461,12 @@
     });
     window.addEventListener('pageshow', () => {
       handleAppWakeup();
+    });
+    window.addEventListener('pagehide', () => {
+      // En móviles (iOS / Android), pagehide es el evento más confiable al salir o cerrar PWA/pestaña
+      if (currentUser && typeof flushSyncToServer === 'function' && (isSyncing || syncPending || (appState && appState._lastSaved && appState._lastSaved > lastAckedWriteTs))) {
+        flushSyncToServer().catch(err => console.warn('Flush en pagehide:', err));
+      }
     });
     // Compatibilidad Android Chrome / Samsung Internet (Page Lifecycle API)
     document.addEventListener('resume', () => {
