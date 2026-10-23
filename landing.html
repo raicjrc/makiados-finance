@@ -761,6 +761,127 @@
       color: var(--text-main);
     }
 
+    /* PREVIEW VISUAL MINIMALISTA EN COMPARACIÓN */
+    .comp-preview-box {
+      margin-top: 20px;
+      border-radius: 14px;
+      padding: 16px;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .comp-preview-box.bad {
+      background: #ffffff;
+      border: 1px dashed #f87171;
+      color: #475569;
+    }
+
+    .comp-preview-box.bad .preview-tag {
+      display: inline-block;
+      font-size: 10.5px;
+      font-weight: 800;
+      text-transform: uppercase;
+      background: #fee2e2;
+      color: #dc2626;
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-bottom: 8px;
+    }
+
+    .comp-preview-box.bad .preview-text {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      color: #64748b;
+      margin-bottom: 6px;
+    }
+
+    .comp-preview-box.bad .preview-alert {
+      color: #e11d48;
+      font-weight: 700;
+      font-size: 12px;
+    }
+
+    .comp-preview-box.good {
+      background: #ffffff;
+      border: 1px solid var(--primary-border);
+      box-shadow: 0 4px 12px rgba(5, 150, 105, 0.08);
+      color: var(--text-main);
+    }
+
+    .comp-preview-box.good .preview-tag {
+      display: inline-block;
+      font-size: 10.5px;
+      font-weight: 800;
+      text-transform: uppercase;
+      background: var(--primary-light);
+      color: var(--primary);
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-bottom: 8px;
+    }
+
+    .comp-preview-box.good .preview-alivia-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 700;
+      font-size: 13px;
+      margin-bottom: 8px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .comp-preview-box.good .preview-alivia-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12.5px;
+      color: var(--text-secondary);
+    }
+
+    /* BANNER DE PAGO LOCAL EN SOLES */
+    .pricing-trust-banner {
+      max-width: 820px;
+      margin: 32px auto 0;
+      background: #ffffff;
+      border: 1px solid var(--primary-border);
+      border-radius: 18px;
+      padding: 18px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 4px 14px rgba(5, 150, 105, 0.06);
+    }
+
+    .pricing-trust-banner .flag-icon {
+      font-size: 28px;
+      flex-shrink: 0;
+    }
+
+    .pricing-trust-banner strong {
+      display: block;
+      font-size: 14.5px;
+      color: var(--text-main);
+      margin-bottom: 2px;
+      font-weight: 800;
+    }
+
+    .pricing-trust-banner p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin: 0;
+      line-height: 1.45;
+    }
+
+    @media (max-width: 640px) {
+      .pricing-trust-banner {
+        flex-direction: column;
+        text-align: center;
+        gap: 10px;
+        padding: 20px 16px;
+      }
+    }
+
     /* SECCIÓN DE FUNCIONES MINIMALISTAS */
     .features-section {
       padding: 60px 0 80px;
@@ -1295,15 +1416,15 @@
         <div class="trust-bar">
           <div class="trust-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            <span>100% Privado (Sin conectar bancos)</span>
+            <span>100% Privado (Sin Gmail ni bancos)</span>
+          </div>
+          <div class="trust-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            <span>Registro ágil en 3 segundos</span>
           </div>
           <div class="trust-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
             <span>iPhone, Android, Mac y Windows</span>
-          </div>
-          <div class="trust-item">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-            <span>Carga instantánea sin descargas</span>
           </div>
         </div>
 
@@ -1663,6 +1784,11 @@
                 <div><strong>Pérdida de tiempo y pereza:</strong> Requiere sentarse frente a la computadora y cuadrar fórmulas rotas.</div>
               </li>
             </ul>
+            <div class="comp-preview-box bad">
+              <span class="preview-tag">Notificación del banco</span>
+              <div class="preview-text">[Alerta] Compra por S/ 450.00 en SODIMAC a 3 cuotas con Tarjeta Visa *4821.</div>
+              <div class="preview-alert">⚠️ El banco no te dice cuánto dinero libre te queda este mes.</div>
+            </div>
           </div>
 
           <div class="comp-card good">
@@ -1671,7 +1797,7 @@
             <ul class="comp-list">
               <li>
                 <span>✅</span>
-                <div><strong>Gasto rápido en 5 segundos:</strong> Botones rápidos para registrar compras por Yape, Plin o tarjeta al instante.</div>
+                <div><strong>Gasto rápido en 3 segundos:</strong> Botones ágiles para registrar compras por Yape, Plin o tarjeta al instante.</div>
               </li>
               <li>
                 <span>✅</span>
@@ -1682,6 +1808,17 @@
                 <div><strong>Disponible en todos tus equipos:</strong> Se sincroniza en tiempo real en tu teléfono y computadora sin instalaciones pesadas.</div>
               </li>
             </ul>
+            <div class="comp-preview-box good">
+              <span class="preview-tag">AliviaFin Inteligente</span>
+              <div class="preview-alivia-row">
+                <span>Sodimac (Cuota 1 de 3)</span>
+                <strong style="color: var(--primary);">S/ 150.00 / mes</strong>
+              </div>
+              <div class="preview-alivia-footer">
+                <span>Tu dinero libre hoy para gastar:</span>
+                <strong style="color: var(--primary); font-family: var(--font-mono); font-size: 13.5px;">S/ 65.00 / día</strong>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -1718,7 +1855,7 @@
           <div class="feature-card">
             <div class="feature-icon-box">🔒</div>
             <h3 class="feature-title">100% Privado y Seguro</h3>
-            <p class="feature-desc">Nunca te pediremos tus contraseñas bancarias ni vincular cuentas. Tus finanzas están cifradas y bajo tu control total.</p>
+            <p class="feature-desc">Cero acceso a tu Gmail y sin claves de banco. Tus finanzas están cifradas y bajo tu control total, sin intermediarios.</p>
           </div>
 
           <div class="feature-card">
@@ -1879,6 +2016,15 @@
               </div>
               <div style="font-size: 11px; color: #64748b; margin-top: 2px;">(Transferencia directa · No disponible con tarjeta)</div>
             </div>
+          </div>
+        </div>
+
+        <!-- BANNER DE CONFIANZA LOCAL: CERO COBROS OCULTOS NI TARJETA EN DÓLARES -->
+        <div class="pricing-trust-banner">
+          <div class="flag-icon">🇵🇪</div>
+          <div>
+            <strong>100% Pensado para el Perú · Cero cobros sorpresa</strong>
+            <p>Pagas en Soles con Yape o Plin al instante. Sin tarjetas de crédito en dólares, sin comisiones bancarias ocultas y sin suscripciones forzosas.</p>
           </div>
         </div>
       </div>
