@@ -178,28 +178,67 @@
       transform: translateY(-1px);
     }
 
+    /* ================================================================
+       APPLE-GRADE MOTION & MICRO-ANIMATIONS
+       ================================================================ */
+    @keyframes shimmerSwipe {
+      0% { transform: translateX(-120%) rotate(25deg); opacity: 0; }
+      15% { opacity: 0.45; }
+      35% { transform: translateX(220%) rotate(25deg); opacity: 0; }
+      100% { transform: translateX(220%) rotate(25deg); opacity: 0; }
+    }
+
+    @keyframes subtleLevitate {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+
+    @keyframes pillPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.25); }
+      50% { box-shadow: 0 0 0 7px rgba(5, 150, 105, 0); }
+    }
+
+    @keyframes pulseLive {
+      0%, 100% { transform: scale(1); opacity: 0.9; }
+      50% { transform: scale(1.35); opacity: 1; }
+    }
+
     .btn-primary {
       color: #ffffff;
       background: linear-gradient(135deg, var(--primary) 0%, var(--primary-accent) 100%);
       box-shadow: 0 4px 14px rgba(5, 150, 105, 0.28);
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .btn-primary::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(60deg, transparent 40%, rgba(255, 255, 255, 0.45) 50%, transparent 60%);
+      transform: translateX(-120%) rotate(25deg);
+      animation: shimmerSwipe 4.5s ease-in-out infinite;
+      pointer-events: none;
     }
 
     .btn-primary:hover {
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(5, 150, 105, 0.38);
+      box-shadow: 0 6px 22px rgba(5, 150, 105, 0.4);
       background: linear-gradient(135deg, var(--primary-hover) 0%, var(--primary) 100%);
+    }
+
+    .btn-primary:active {
+      transform: scale(0.97);
     }
 
     .btn-lg {
       padding: 14px 28px;
       font-size: 15px;
       border-radius: 14px;
-    }
-
-    /* HERO SECTION */
-    .hero-section {
-      padding: 64px 0 50px;
-      text-align: center;
     }
 
     .pill-badge {
@@ -214,6 +253,86 @@
       font-size: 13px;
       font-weight: 700;
       margin-bottom: 20px;
+      animation: pillPulse 3.5s ease-in-out infinite;
+    }
+
+    .demo-mobile-wrapper {
+      animation: subtleLevitate 7s ease-in-out infinite;
+    }
+
+    .demo-quick-btn {
+      transition: all 0.18s ease;
+    }
+
+    .demo-quick-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    }
+
+    .demo-quick-btn:active {
+      transform: scale(0.94);
+    }
+
+    /* Toast de Contacto */
+    .contact-toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 10000;
+      background: rgba(15, 23, 42, 0.96);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      color: #ffffff;
+      padding: 14px 18px;
+      border-radius: 16px;
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.12);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      max-width: 420px;
+      transform: translateY(140%);
+      opacity: 0;
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: none;
+    }
+    .contact-toast.active {
+      transform: translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .contact-toast-icon {
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+    .contact-toast-body {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      font-size: 13px;
+    }
+    .contact-toast-body strong {
+      color: #ffffff;
+      font-size: 13.5px;
+    }
+    .contact-toast-body span {
+      color: #94a3b8;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+    }
+    .contact-toast-btn {
+      background: #059669;
+      color: #ffffff;
+      padding: 7px 13px;
+      border-radius: 9px;
+      font-size: 12px;
+      font-weight: 700;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .contact-toast-btn:hover {
+      background: #047857;
+      transform: translateY(-1px);
     }
 
     .hero-title {
@@ -1376,7 +1495,7 @@
         <a href="#beneficios" class="nav-link">Beneficios</a>
         <a href="#funciones" class="nav-link">Funciones</a>
         <a href="#precios" class="nav-link">Precios</a>
-        <a href="mailto:aliviafin@gmail.com" class="nav-link">Contacto</a>
+        <a href="mailto:aliviafin@gmail.com" class="nav-link" onclick="handleContactClick(event)">Contacto</a>
       </nav>
 
       <div class="nav-actions">
@@ -2095,9 +2214,9 @@
 
         <div class="footer-links">
           <a href="index.html">Acceso a la App</a>
-          <a href="mailto:aliviafin@gmail.com">Contacto (aliviafin@gmail.com)</a>
-          <a href="javascript:void(0)" onclick="openLegalModal('reclamaciones')">Libro de Reclamaciones</a>
-          <a href="javascript:void(0)" onclick="openLegalModal('terms')">Términos y Privacidad</a>
+          <a href="mailto:aliviafin@gmail.com" onclick="handleContactClick(event)">Contacto (aliviafin@gmail.com)</a>
+          <a href="reclamaciones.html">Libro de Reclamaciones</a>
+          <a href="terminos.html">Términos y Privacidad</a>
         </div>
       </div>
 
@@ -2273,6 +2392,33 @@
       document.getElementById('calcAnnualLeakDisplay').innerHTML = `Equivale a <strong>S/ ${annualLeak.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong> perdidos al año`;
       document.getElementById('calcRoiText').innerHTML = `✨ <strong>AliviaFin cuesta solo S/ 4.90/mes</strong><br>Evitando apenas un gasto impulsivo o delivery de S/ 20 al mes, la aplicación se paga sola.`;
     }
+
+    // GESTIÓN DE CONTACTO CON TOAST Y PORTAPAPELES
+    let toastTimeout = null;
+    function handleContactClick(e) {
+      if (e && e.preventDefault) e.preventDefault();
+      const email = 'aliviafin@gmail.com';
+      
+      // 1. Copiar al portapapeles
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(email).catch(() => {});
+      }
+      
+      // 2. Mostrar toast flotante
+      const toast = document.getElementById('contactToast');
+      if (toast) {
+        toast.classList.add('active');
+        clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => {
+          toast.classList.remove('active');
+        }, 6000);
+      }
+      
+      // 3. Fallback mailto si el navegador tiene cliente configurado
+      setTimeout(() => {
+        window.location.href = `mailto:${email}?subject=Consulta%20AliviaFin`;
+      }, 600);
+    }
   </script>
 
   <!-- MODAL DE PAGO (YAPE / PLIN / APP) -->
@@ -2285,7 +2431,7 @@
       <h3 id="planModalTitle" style="font-size: 20px; font-weight: 800; color: #0f172a; margin: 10px 0 4px;">Activar Plan</h3>
       
       <div style="display: flex; align-items: baseline; justify-content: center; gap: 4px; margin-bottom: 18px;">
-        <span id="planModalPrice" style="font-size: 34px; font-weight: 800; color: #059669; font-family: 'JetBrains Mono', monospace;">S/ 19.90</span>
+        <span id="planModalPrice" style="font-size: 34px; font-weight: 800; color: #059669; font-family: 'JetBrains Mono', monospace;">S/ 29.90</span>
         <span id="planModalPeriod" style="font-size: 13px; color: #64748b; font-weight: 600;">/ al año</span>
       </div>
 
@@ -2364,6 +2510,18 @@
           Entendido, Cerrar
         </button>
       </div>
+    </div>
+  </div>
+
+  <!-- TOAST DE CONTACTO FLOTANTE ELEGANTE -->
+  <div id="contactToast" class="contact-toast" role="alert">
+    <div class="contact-toast-icon">✉️</div>
+    <div class="contact-toast-body">
+      <strong>Correo copiado al portapapeles</strong>
+      <span>aliviafin@gmail.com</span>
+    </div>
+    <div class="contact-toast-actions">
+      <a href="https://mail.google.com/mail/?view=cm&fs=1&to=aliviafin@gmail.com" target="_blank" rel="noopener" class="contact-toast-btn">Abrir Gmail ↗</a>
     </div>
   </div>
 </body>

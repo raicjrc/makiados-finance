@@ -3,6 +3,10 @@
   "rewrites": [
     { "source": "/landing", "destination": "/landing.html" },
     { "source": "/inicio", "destination": "/landing.html" },
+    { "source": "/terminos", "destination": "/terminos.html" },
+    { "source": "/reclamaciones", "destination": "/reclamaciones.html" },
+    { "source": "/terminos.html", "destination": "/terminos.html" },
+    { "source": "/reclamaciones.html", "destination": "/reclamaciones.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [

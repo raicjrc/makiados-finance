@@ -698,7 +698,7 @@
       if (!waLink) return;
       const userEmail = (currentUser && currentUser.email) ? currentUser.email : '';
       const planText = currentSelectedProPlan === 'pro_lifetime' 
-        ? 'PRO Vitalicio (S/ 19.90 pago único)' 
+        ? 'Plan Anual PRO (S/ 29.90 / año)' 
         : 'PRO Mensual (S/ 4.90 / mes)';
       const msg = `Hola César, acabo de transferir a tu Yape para activar mi suscripción AliviaFin ${planText}.${userEmail ? ' Mi correo registrado es: ' + userEmail : ''}`;
       waLink.href = 'https://wa.me/51914688135?text=' + encodeURIComponent(msg);
@@ -733,7 +733,7 @@
 
     async function reportPaymentClaimInApp() {
       const userEmail = (currentUser && currentUser.email) ? currentUser.email : '';
-      const planText = currentSelectedProPlan === 'pro_lifetime' ? 'PRO Vitalicio (S/ 19.90 pago único)' : 'PRO Mensual (S/ 4.90 / mes)';
+      const planText = currentSelectedProPlan === 'pro_lifetime' ? 'Plan Anual PRO (S/ 29.90 / año)' : 'PRO Mensual (S/ 4.90 / mes)';
       
       const promptTitle = (typeof uiPrompt === 'function') 
         ? await uiPrompt(`Indica tu N° de Operación de Yape/Plin o tu nombre titular para validar el plan ${planText}:`, 'N° Operación o Nombre Titular')
@@ -6710,7 +6710,36 @@
     let simChartObj = null;
     let currentSimCuotas = 12;
 
+    function checkFreeSimulationGate() {
+      if (isUserPro()) return true;
+      const curMonth = (appState && appState.currentMonth) || new Date().toISOString().slice(0, 7);
+      const userKey = (currentUser && currentUser.id) ? currentUser.id : 'anon';
+      const storageKey = `aliviafin_sim_count_${userKey}_${curMonth}`;
+      const count = parseInt(localStorage.getItem(storageKey) || '0', 10);
+      if (count >= 1) {
+        openFinZenProModal('Simulador de Cuotas Ilimitado');
+        showToast('🔒 Has usado tu simulación gratuita del mes. Pasa al Plan Anual PRO (S/ 29.90) para cálculos ilimitados.', 'info');
+        return false;
+      }
+      return true;
+    }
+
+    function recordFreeSimulationUsed() {
+      if (isUserPro()) return;
+      const curMonth = (appState && appState.currentMonth) || new Date().toISOString().slice(0, 7);
+      const userKey = (currentUser && currentUser.id) ? currentUser.id : 'anon';
+      const storageKey = `aliviafin_sim_count_${userKey}_${curMonth}`;
+      const count = parseInt(localStorage.getItem(storageKey) || '0', 10);
+      localStorage.setItem(storageKey, String(count + 1));
+      showToast('⚡ Simulación gratuita (1 de 1 usada este mes). Para simular compras ilimitadas, pásate al Plan Anual PRO.', 'info');
+    }
+
     function openInstallmentsSimulatorModal() {
+      if (!checkFreeSimulationGate()) {
+        return;
+      }
+      recordFreeSimulationUsed();
+
       // Poblar selector de categorías
       const catSelect = document.getElementById('simCategory');
       if (catSelect) {
@@ -9779,7 +9808,7 @@ window.updateCurrencyDOMElements = updateCurrencyDOMElements;
 // ================================================================
 const FOUNDER_EMAIL = 'cesar.risso.f@gmail.com';
 const MASTER_ONLINE_WINDOW_MS = 12 * 60 * 1000;   // "En línea ahora" = ping en los últimos 12 min
-const MASTER_PRICE_LIFETIME_CENTS = 1990;          // S/ 19.90
+const MASTER_PRICE_LIFETIME_CENTS = 2990;          // S/ 29.90 (Plan Anual PRO)
 const MASTER_PRICE_MONTHLY_CENTS = 490;            // S/ 4.90
 const SUPABASE_SQL_EDITOR_URL = 'https://supabase.com/dashboard/project/swwvbfemxookbqoqotre/sql/new';
 
@@ -10693,7 +10722,7 @@ function founderMailto(email, name, kind) {
     ? 'Tu plan PRO de AliviaFin'
     : '¿Cómo te va con AliviaFin?';
   const body = kind === 'upgrade'
-    ? `Hola ${name}, soy César de AliviaFin. Vi que estás usando la app con frecuencia y quería contarte del plan PRO Vitalicio (S/ 19.90, pago único). ¿Te interesa?`
+    ? `Hola ${name}, soy César de AliviaFin. Vi que estás usando la app con frecuencia y quería contarte del Plan Anual PRO (S/ 29.90 al año). ¿Te interesa?`
     : `Hola ${name}, soy César de AliviaFin. Noté que hace unos días no entras y quiero ayudarte a sacarle provecho. ¿Hay algo que no te haya gustado o te haya costado usar? Tu opinión me ayuda muchísimo.`;
   return `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
@@ -10736,7 +10765,7 @@ function renderFounderInsights() {
     icon: '🔥',
     title: `Listos para PRO (${hot.length})`,
     text: hot.length
-      ? 'Usuarios gratuitos que usaron la app en los últimos 3 días. Son tu mejor oportunidad: ofréceles el Vitalicio (S/ 19.90) por correo o WhatsApp.'
+      ? 'Usuarios gratuitos que usaron la app en los últimos 3 días. Son tu mejor oportunidad: ofréceles el Plan Anual PRO (S/ 29.90) por correo o WhatsApp.'
       : 'Aún no hay usuarios gratuitos muy activos. Invita a probar el Simulador de Cuotas y la Bola de Nieve para aumentar el enganche.',
     chips: hot.length ? chips(hot, 'upgrade') : ''
   });
@@ -10994,8 +11023,8 @@ function renderMasterSubscribers() {
       planBadge = '<span class="master-user-badge-pro-life" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(217, 119, 6, 0.35)); border-color: #f59e0b; font-weight: 800;">👑 PRO Vitalicio</span>';
       revenueEst = 'Fundador CEO';
     } else if (isLife) {
-      planBadge = '<span class="master-user-badge-pro-life">👑 PRO Vitalicio</span>';
-      revenueEst = 'S/ 19.90';
+      planBadge = '<span class="master-user-badge-pro-life">👑 PRO Anual</span>';
+      revenueEst = 'S/ 29.90';
     } else if (isMonth) {
       if (expInfo.isExpired) {
         planBadge = '<span class="master-user-badge-pro-month" style="background: rgba(239, 68, 68, 0.12); color: #dc2626; border: 1.5px solid rgba(239, 68, 68, 0.35); font-weight: 800;">📅 PRO Mensual (Vencido)</span>';
@@ -11080,7 +11109,7 @@ async function setMasterUserPlan(userId, email, newPlan) {
     return;
   }
 
-  const planLabel = newPlan === 'pro_lifetime' ? 'PRO Vitalicio (S/ 19.90)' : (newPlan === 'pro_monthly' ? 'PRO Mensual (S/ 4.90)' : 'Gratuito (Free)');
+  const planLabel = newPlan === 'pro_lifetime' ? 'Plan Anual PRO (S/ 29.90)' : (newPlan === 'pro_monthly' ? 'PRO Mensual (S/ 4.90)' : 'Gratuito (Free)');
   if (!await uiConfirm(`¿Confirmas actualizar a ${email} al plan ${planLabel}?`)) return;
 
   try {
@@ -11127,7 +11156,7 @@ async function setMasterUserPlan(userId, email, newPlan) {
         await supabaseClient.from('subscription_payments').insert([{
           user_id: userId,
           user_email: email,
-          amount: newPlan === 'pro_lifetime' ? 19.90 : 4.90,
+          amount: newPlan === 'pro_lifetime' ? 29.90 : 4.90,
           plan_type: newPlan,
           payment_method: 'yape_plin'
         }]);
@@ -11522,7 +11551,7 @@ function renderMasterReclamos() {
               <div style="font-size: 10.5px; color: var(--text-muted);">Tel: ${escapeHtml(tel)}</div>
             </td>
             <td>
-              <span style="font-size: 11px; font-weight: 700; color: #475569;">${plan === 'pro_lifetime' ? '👑 Vitalicio (S/ 19.90)' : '📅 Mensual (S/ 4.90)'}</span>
+              <span style="font-size: 11px; font-weight: 700; color: #475569;">${plan === 'pro_lifetime' ? '👑 PRO Anual (S/ 29.90)' : '📅 Mensual (S/ 4.90)'}</span>
             </td>
             <td style="max-width: 260px;">
               <div style="font-size: 11.5px; color: var(--text-main); line-height: 1.4;">${escapeHtml(motivo)}</div>
@@ -11878,7 +11907,7 @@ function openExecutiveWhatsAppAction(type, email, name, detail) {
   if (type === 'collection') {
     msg = `¡Hola ${cleanFirst}! 👋 Te saluda César de AliviaFin.\n\nTe escribo con un recordatorio cordial de que tu suscripción PRO mensual venció ${detail ? 'el ' + detail : 'hace unos días'}.\n\nPara renovarla por 30 días más y seguir disfrutando del Simulador de Cuotas, Bola de Nieve y finanzas al día en ${curMonth}, puedes transferir S/ 4.90 por Yape o Plin al:\n📱 993 993 993 (César Risso)\n\nUna vez transferido me confirmas por aquí y te reactivo al instante. ¡Muchas gracias! 🚀`;
   } else if (type === 'promo') {
-    msg = `¡Hola ${cleanFirst}! 👋 Te saluda César de AliviaFin.\n\nNoté que estás usando activamente la versión gratuita de la app y quería ofrecerte una promo especial exclusiva:\n\n🔥 PRO Vitalicio por S/ 19.90 (un solo pago de por vida, sin mensualidades).\n\nIncluye Bola de Nieve automática, proyección de compras en cuotas y respaldos automáticos.\n\nPuedes activarlo vía Yape o Plin. ¿Te gustaría aprovecharla? ¡Quedo atento!`;
+    msg = `¡Hola ${cleanFirst}! 👋 Te saluda César de AliviaFin.\n\nNoté que estás usando activamente la versión gratuita de la app y quería ofrecerte una promo especial exclusiva:\n\n🔥 Plan Anual PRO por S/ 29.90 al año (acceso completo a todas las herramientas premium).\n\nIncluye Bola de Nieve automática, proyección de compras en cuotas y respaldos automáticos.\n\nPuedes activarlo vía Yape o Plin. ¿Te gustaría aprovecharla? ¡Quedo atento!`;
   } else {
     msg = `¡Hola ${cleanFirst}! 👋 Te escribe César de AliviaFin.\n\nNotamos que no ingresas a la app hace unos días y queremos que tus finanzas de ${curMonth} queden 100% al día y sin estrés.\n\n¿Tuviste alguna duda con tus gastos o te gustaría probar alguna función en especial? ¡Aquí estoy para apoyarte directamente! 🚀\n\n👉 Accede directo a: https://aliviafin.vercel.app`;
   }
@@ -11944,7 +11973,7 @@ function openMasterUserActionsModal(uid, email, name, plan) {
   let btns = '';
   btns += `<button type="button" class="btn btn-secondary" onclick="renewMasterUser30Days('${uid}', '${email}'); closeModal('masterUserActionsModal');" style="width: 100%; justify-content: flex-start; padding: 12px 16px; font-weight: 800; font-size: 13px; border-radius: 12px; text-align: left; background: #ffffff !important; border: 1.5px solid #cbd5e1 !important; color: #0f172a !important; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">⚡ Renovar o Extender +30 Días (S/ 4.90)</button>`;
   if (!isLife) {
-    btns += `<button type="button" class="btn btn-secondary" onclick="setMasterUserPlan('${uid}', '${email}', 'pro_lifetime'); closeModal('masterUserActionsModal');" style="width: 100%; justify-content: flex-start; padding: 12px 16px; font-weight: 800; font-size: 13px; border-radius: 12px; text-align: left; background: #fffbeb !important; border: 1.5px solid #fde68a !important; color: #b45309 !important; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">👑 Activar PRO Vitalicio (S/ 19.90)</button>`;
+    btns += `<button type="button" class="btn btn-secondary" onclick="setMasterUserPlan('${uid}', '${email}', 'pro_lifetime'); closeModal('masterUserActionsModal');" style="width: 100%; justify-content: flex-start; padding: 12px 16px; font-weight: 800; font-size: 13px; border-radius: 12px; text-align: left; background: #fffbeb !important; border: 1.5px solid #fde68a !important; color: #b45309 !important; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">👑 Activar Plan Anual PRO (S/ 29.90)</button>`;
   }
   if (!isMonth) {
     btns += `<button type="button" class="btn btn-secondary" onclick="setMasterUserPlan('${uid}', '${email}', 'pro_monthly'); closeModal('masterUserActionsModal');" style="width: 100%; justify-content: flex-start; padding: 12px 16px; font-weight: 800; font-size: 13px; border-radius: 12px; text-align: left; background: #ffffff !important; border: 1.5px solid #cbd5e1 !important; color: #0f172a !important; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">📅 Activar PRO Mensual (S/ 4.90)</button>`;

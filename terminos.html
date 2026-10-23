@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Términos de Servicio y Privacidad — AliviaFin</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #059669;
+      --primary-hover: #047857;
+      --primary-light: #ecfdf5;
+      --primary-border: #a7f3d0;
+      --text-main: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #64748b;
+      --bg-page: #f8fafc;
+      --bg-card: #ffffff;
+      --border-color: #e2e8f0;
+      --shadow-card: 0 10px 30px -10px rgba(15, 23, 42, 0.08), 0 0 1px 1px rgba(0, 0, 0, 0.02);
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Plus Jakarta Sans", "SF Pro Display", sans-serif;
+      background: var(--bg-page);
+      color: var(--text-main);
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+    }
+    .header {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border-bottom: 1px solid var(--border-color);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .container {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 72px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--text-main);
+    }
+    .brand-logo {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+    }
+    .brand-title {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+    .brand-title span {
+      color: var(--primary);
+    }
+    .btn-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: 10px;
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .btn-back:hover {
+      background: var(--bg-page);
+      color: var(--text-main);
+      border-color: #cbd5e1;
+    }
+    .main-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      padding: 44px 38px;
+      margin: 36px auto 60px;
+      box-shadow: var(--shadow-card);
+    }
+    @media (max-width: 640px) {
+      .main-card {
+        padding: 28px 20px;
+        margin: 20px auto 40px;
+        border-radius: 18px;
+      }
+    }
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--primary-light);
+      color: var(--primary);
+      border: 1px solid var(--primary-border);
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin-bottom: 14px;
+    }
+    h1 {
+      font-size: 30px;
+      font-weight: 800;
+      color: var(--text-main);
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+    }
+    .meta {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 32px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .legal-section {
+      margin-bottom: 28px;
+    }
+    .legal-section h2 {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .legal-section p {
+      font-size: 14.5px;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+    }
+    .legal-section ul {
+      padding-left: 24px;
+      margin-bottom: 14px;
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+    .legal-section li {
+      margin-bottom: 6px;
+    }
+    .callout-box {
+      background: #f8fafc;
+      border: 1px solid var(--border-color);
+      border-left: 4px solid var(--primary);
+      border-radius: 12px;
+      padding: 16px 18px;
+      margin: 18px 0;
+      font-size: 13.5px;
+      color: var(--text-secondary);
+    }
+    .callout-box strong {
+      color: var(--text-main);
+    }
+    .footer {
+      text-align: center;
+      padding: 24px;
+      font-size: 13px;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border-color);
+    }
+    .footer a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <div class="container nav">
+      <a href="landing.html" class="brand">
+        <img src="logo.png" alt="AliviaFin" class="brand-logo" onerror="this.src='apple-touch-icon.png'">
+        <div class="brand-title">alivia<span>fin</span></div>
+      </a>
+      <a href="landing.html" class="btn-back">← Volver a AliviaFin</a>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="main-card">
+      <div class="badge-pill">⚖️ Legal & Cumplimiento</div>
+      <h1>Términos de Servicio y Privacidad de Datos</h1>
+      <div class="meta">Última actualización: 23 de octubre de 2026 · Cumplimiento de la Ley N° 29733 (República del Perú)</div>
+
+      <div class="legal-section">
+        <h2>1. Naturaleza de la Plataforma</h2>
+        <p>AliviaFin es una aplicación web y solución PWA diseñada para brindar claridad mental y control presupuestario personal y familiar. AliviaFin <strong>no es una entidad financiera, banco, casa de préstamos, intermediaria de pagos ni administradora de fondos</strong> supervisada por la SBS (Superintendencia de Banca, Seguros y AFP).</p>
+        <p>No captamos fondos de terceros, no custodiamos dinero ni ejecutamos débitos bancarios automáticos sin tu consentimiento expreso.</p>
+      </div>
+
+      <div class="legal-section">
+        <h2>2. Privacidad y Protección de Datos Personales (Ley N° 29733)</h2>
+        <p>En estricto cumplimiento con la Ley de Protección de Datos Personales de la República del Perú (Ley N° 29733) y su Reglamento (D.S. 003-2013-JUS):</p>
+        <ul>
+          <li><strong>Principio de Aislamiento por Usuario (Zero-Knowledge):</strong> Tus registros presupuestarios, montos de gastos, saldos y nombres de cuentas están aislados criptográficamente y asociados exclusivamente a tu identificador de cuenta único en Supabase con Row Level Security (RLS).</li>
+          <li><strong>No solicitamos contraseñas bancarias:</strong> AliviaFin jamás te solicitará tu token digital, clave de internet, PIN de cajero ni el código CVV de tus tarjetas. El registro de transacciones es voluntario y controlado por el usuario.</li>
+          <li><strong>No venta de datos:</strong> AliviaFin no vende, alquila, comercializa ni comparte tus datos financieros con entidades bancarias, burós de crédito (Infocorp, Sentinel) ni anunciantes de terceros.</li>
+        </ul>
+      </div>
+
+      <div class="legal-section">
+        <h2>3. Ejercicio de Derechos ARCO</h2>
+        <p>Conforme a la normativa peruana, tienes derecho a ejercer en cualquier momento tus derechos de <strong>Acceso, Rectificación, Cancelación y Oposición (ARCO)</strong>:</p>
+        <div class="callout-box">
+          Para solicitar la eliminación definitiva de tu cuenta y todos tus registros asociados, o para descargar una copia completa de tu información contable en formato JSON o CSV, puedes gestionarlo directamente desde el menú de Ajustes dentro de la app o enviando un correo a <strong>aliviafin@gmail.com</strong>.
+        </div>
+      </div>
+
+      <div class="legal-section">
+        <h2>4. Precios, Suscripciones y Medios de Pago Locales</h2>
+        <p>AliviaFin promueve la transparencia financiera absoluta:</p>
+        <ul>
+          <li><strong>Plan Gratuito:</strong> Permite gestionar tus finanzas básicas sin costo y probar las herramientas principales (incluyendo 1 simulación mensual en el Simulador de Cuotas).</li>
+          <li><strong>Plan Mensual PRO:</strong> S/ 4.90 / mes. Renovación cada 30 días sin ataduras ni contratos forzosos.</li>
+          <li><strong>Plan Anual PRO:</strong> S/ 29.90 / al año. Acceso completo e ilimitado a todas las herramientas avanzadas (Proyección Bola de Nieve, Simulador de Cuotas ilimitado, respaldos en la nube).</li>
+        </ul>
+        <p><strong>Cero cargos fantasma:</strong> La activación de planes se procesa mediante transferencias digitales seguras (Yape o Plin). No obligamos a domiciliar tu tarjeta de crédito para evitar cobros automáticos sorpresivos.</p>
+      </div>
+
+      <div class="legal-section">
+        <h2>5. Garantía de Satisfacción 100% de 7 Días</h2>
+        <p>Queremos que utilices AliviaFin con total tranquilidad. Si dentro de los primeros <strong>7 días naturales</strong> posteriores a la activación de tu Plan PRO consideras que la aplicación no cumple tus expectativas, te reembolsamos el 100% de tu dinero vía Yape o Plin en un plazo máximo de 24 a 48 horas hábiles, sin preguntas incómodas.</p>
+      </div>
+
+      <div class="legal-section">
+        <h2>6. Transparencia y Respeto al Consumidor (INDECOPI)</h2>
+        <p>En concordancia con el Código de Protección y Defensa del Consumidor (Ley N° 29571) de la República del Perú y las directrices de INDECOPI:</p>
+        <ul>
+          <li>No publicamos testimonios ficticios ni reseñas patrocinadas.</li>
+          <li>Ponemos a tu disposición nuestro <a href="reclamaciones.html" style="color: var(--primary); font-weight: 700;">Libro de Reclamaciones Virtual</a> para cualquier queja o reclamo formal.</li>
+        </ul>
+      </div>
+
+      <div class="legal-section">
+        <h2>7. Contacto Oficial</h2>
+        <p>Para consultas legales, facturación o soporte técnico:</p>
+        <p><strong>Correo electrónico:</strong> <a href="mailto:aliviafin@gmail.com" style="color: var(--primary); font-weight: 700;">aliviafin@gmail.com</a><br>
+        <strong>Ubicación:</strong> Lima, Perú.</p>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      &copy; 2026 AliviaFin. Todos los derechos reservados. · <a href="reclamaciones.html">Libro de Reclamaciones</a> · <a href="landing.html">Volver al Inicio</a>
+    </div>
+  </footer>
+
+</body>
+</html>
