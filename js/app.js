@@ -167,6 +167,46 @@
       showToast(`Moneda cambiada a ${SUPPORTED_CURRENCIES[code].flag} ${SUPPORTED_CURRENCIES[code].name} (${SUPPORTED_CURRENCIES[code].symbol})`, 'success');
     }
 
+    function toggleTravelMode() {
+      const current = getCurrencyCode();
+      const next = current === 'PEN' ? 'USD' : 'PEN';
+      if (!SUPPORTED_CURRENCIES[next]) return;
+      localStorage.setItem('aliviafin_currency', next);
+      if (typeof appState !== 'undefined' && appState) {
+        appState.currency = next;
+        if (typeof saveData === 'function') saveData();
+      }
+      updateCurrencyDOMElements();
+      syncTravelModeUI();
+      if (typeof renderAll === 'function') renderAll();
+      if (typeof updateSimulation === 'function') updateSimulation();
+      if (next === 'USD') {
+        showToast('✈️ Modo Viaje activado: Vista en Dólares ($ USD)', 'info');
+      } else {
+        showToast('🇵🇪 Modo Local activado: Vista en Soles (S/ PEN)', 'info');
+      }
+    }
+
+    function syncTravelModeUI() {
+      const code = getCurrencyCode();
+      const flagEl = document.getElementById('travelModeFlag');
+      const codeEl = document.getElementById('travelModeCode');
+      const btn = document.getElementById('travelModeToggleBtn');
+      if (flagEl) flagEl.textContent = code === 'USD' ? '✈️' : '🇵🇪';
+      if (codeEl) codeEl.textContent = code;
+      if (btn) {
+        if (code === 'USD') {
+          btn.style.background = '#eff6ff';
+          btn.style.borderColor = '#93c5fd';
+          btn.style.color = '#1d4ed8';
+        } else {
+          btn.style.background = 'rgba(255, 255, 255, 0.85)';
+          btn.style.borderColor = 'var(--border)';
+          btn.style.color = 'var(--text-main)';
+        }
+      }
+    }
+
     // Plantilla inicial 100% limpia para cualquier usuario nuevo
     function getCleanUserState() {
       const now = new Date();
@@ -2523,6 +2563,7 @@
       if (!appState.extraIncomes) appState.extraIncomes = {};
       if (!appState.savingsGoals) appState.savingsGoals = [];
       if (!appState.checklists) appState.checklists = {};
+      if (!appState.loans) appState.loans = [];
       if (!appState.categoryBudgets) {
         appState.categoryBudgets = {};
         const userCats = getUserDefaultCategories();
@@ -4128,6 +4169,8 @@
       renderRescueDashBanner();
       renderRescueCard();
       renderExecutiveAdvisor();
+      syncTravelModeUI();
+      renderLoansCard();
     }
 
     function getMonthTxList() {
@@ -7719,6 +7762,266 @@
     }
 
     // ================================================================
+    // MÓDULO CUENTAS CLARAS: PRÉSTAMOS & COBROS (RECORDATORIOS INTELIGENTES)
+    // ================================================================
+    function getLoansList() {
+      if (!appState.loans || !Array.isArray(appState.loans)) {
+        appState.loans = [];
+      }
+      return appState.loans;
+    }
+
+    function renderLoansCard() {
+      const summaryEl = document.getElementById('loansQuickSummary');
+      const feedEl = document.getElementById('loansMiniFeed');
+      if (!summaryEl || !feedEl) return;
+
+      const loans = getLoansList();
+      const pendingReceivables = loans.filter(l => l.type === 'receivable' && l.status === 'pending');
+      const pendingPayables = loans.filter(l => l.type === 'payable' && l.status === 'pending');
+
+      const totalReceivable = pendingReceivables.reduce((acc, l) => acc + (Number(l.amount) || 0), 0);
+      const totalPayable = pendingPayables.reduce((acc, l) => acc + (Number(l.amount) || 0), 0);
+      const sym = getCurrencySymbol();
+
+      summaryEl.innerHTML = `
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+          <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 12px; padding: 8px 12px;">
+            <div style="font-size: 10px; font-weight: 800; color: #059669; text-transform: uppercase;">Me Deben (${pendingReceivables.length})</div>
+            <div style="font-size: 16px; font-weight: 900; color: #065f46; font-family: 'JetBrains Mono', monospace; margin-top: 2px;">${sym} ${totalReceivable.toFixed(2)}</div>
+          </div>
+          <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 12px; padding: 8px 12px;">
+            <div style="font-size: 10px; font-weight: 800; color: #dc2626; text-transform: uppercase;">Yo Debo (${pendingPayables.length})</div>
+            <div style="font-size: 16px; font-weight: 900; color: #991b1b; font-family: 'JetBrains Mono', monospace; margin-top: 2px;">${sym} ${totalPayable.toFixed(2)}</div>
+          </div>
+        </div>
+      `;
+
+      const pendingAll = loans.filter(l => l.status === 'pending');
+      if (pendingAll.length === 0) {
+        feedEl.innerHTML = `
+          <div style="padding: 12px 10px; text-align: center; color: var(--text-muted); font-size: 11.5px; background: #f8fafc; border-radius: 12px; border: 1px dashed var(--border);">
+            ✨ Cuentas claras: No tienes cobros ni deudas pendientes.
+          </div>
+        `;
+        return;
+      }
+
+      feedEl.innerHTML = pendingAll.slice(0, 3).map(l => {
+        const isRec = l.type === 'receivable';
+        return `
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; background: #ffffff; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 5px;">
+            <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
+              <span style="font-size: 16px;">${isRec ? '🟢' : '🔴'}</span>
+              <div style="min-width: 0;">
+                <div style="font-size: 12px; font-weight: 800; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(l.person)}</div>
+                <div style="font-size: 10.5px; color: var(--text-muted);">${escapeHtml(l.concept || (isRec ? 'Por cobrar' : 'Por pagar'))}</div>
+              </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
+              <div style="font-size: 13px; font-weight: 900; color: ${isRec ? '#059669' : '#dc2626'}; font-family: 'JetBrains Mono', monospace;">
+                ${isRec ? '+' : '-'}${sym} ${Number(l.amount).toFixed(2)}
+              </div>
+              ${isRec ? `
+                <button type="button" onclick="sendLoanWhatsAppReminder('${l.id}')" title="Cobrar por WhatsApp con mensaje cordial" style="background: #25d366; color: white; border: none; padding: 4px 7px; border-radius: 7px; font-size: 10.5px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 2px;">
+                  💬 Cobrar
+                </button>
+              ` : ''}
+              <button type="button" onclick="markLoanSettled('${l.id}')" title="Marcar como saldado" style="background: #f1f5f9; border: 1px solid #cbd5e1; padding: 4px 7px; border-radius: 7px; font-size: 10.5px; font-weight: 700; cursor: pointer; color: #059669;">
+                ✓
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('') + (pendingAll.length > 3 ? `
+        <div style="text-align: center; margin-top: 6px;">
+          <a href="javascript:void(0)" onclick="openLoansModal()" style="font-size: 11px; font-weight: 700; color: var(--primary); text-decoration: none;">Ver todos (${pendingAll.length}) →</a>
+        </div>
+      ` : '');
+    }
+
+    function renderLoansModalList() {
+      const container = document.getElementById('loansModalList');
+      if (!container) return;
+
+      const loans = getLoansList();
+      const sym = getCurrencySymbol();
+
+      if (loans.length === 0) {
+        container.innerHTML = `
+          <div style="padding: 30px 10px; text-align: center; color: var(--text-muted); font-size: 13px;">
+            Aún no has registrado préstamos ni cobros pendientes.<br>Toca "+ Nuevo" para agregar el primero.
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = loans.map(l => {
+        const isRec = l.type === 'receivable';
+        const isPending = l.status === 'pending';
+        return `
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; background: ${isPending ? '#ffffff' : '#f8fafc'}; border: 1px solid var(--border); border-radius: 14px; margin-bottom: 8px; opacity: ${isPending ? '1' : '0.6'};">
+            <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
+              <span style="font-size: 20px;">${isRec ? '📥' : '📤'}</span>
+              <div style="min-width: 0;">
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <strong style="font-size: 13px; color: var(--text-main);">${escapeHtml(l.person)}</strong>
+                  <span style="font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 6px; background: ${isRec ? '#ecfdf5' : '#fef2f2'}; color: ${isRec ? '#059669' : '#dc2626'};">
+                    ${isRec ? 'Me deben' : 'Yo debo'}
+                  </span>
+                  ${!isPending ? '<span style="font-size: 9.5px; font-weight: 800; background: #e2e8f0; color: #64748b; padding: 2px 6px; border-radius: 6px;">SALDADO</span>' : ''}
+                </div>
+                <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">
+                  ${escapeHtml(l.concept || 'Sin concepto')}${l.dueDate ? ' · Vence: ' + l.dueDate : ''}
+                </div>
+              </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
+              <div style="font-size: 14px; font-weight: 900; color: ${isRec ? '#059669' : '#dc2626'}; font-family: 'JetBrains Mono', monospace;">
+                ${isRec ? '+' : '-'}${sym} ${Number(l.amount).toFixed(2)}
+              </div>
+              ${isRec && isPending ? `
+                <button type="button" onclick="sendLoanWhatsAppReminder('${l.id}')" title="Cobrar por WhatsApp" style="background: #25d366; color: white; border: none; padding: 5px 9px; border-radius: 8px; font-size: 11px; font-weight: 800; cursor: pointer;">
+                  💬 WhatsApp
+                </button>
+              ` : ''}
+              ${isPending ? `
+                <button type="button" onclick="markLoanSettled('${l.id}')" title="Marcar como saldado" style="background: #f1f5f9; border: 1px solid #cbd5e1; padding: 5px 9px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; color: #059669;">
+                  ✓ Saldar
+                </button>
+              ` : ''}
+              <button type="button" onclick="deleteLoan('${l.id}')" title="Eliminar" style="background: transparent; border: none; color: #94a3b8; font-size: 13px; cursor: pointer; padding: 4px;">
+                🗑️
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function openLoansModal() {
+      renderLoansModalList();
+      openModalById('loansModal');
+    }
+
+    function openNewLoanModal() {
+      document.getElementById('loanPersonInput').value = '';
+      document.getElementById('loanAmountInput').value = '';
+      document.getElementById('loanConceptInput').value = '';
+      document.getElementById('loanPhoneInput').value = '';
+      document.getElementById('loanDueDateInput').value = '';
+      setLoanType('receivable');
+      openModalById('newLoanModal');
+    }
+
+    let _currentLoanType = 'receivable';
+    function setLoanType(type) {
+      _currentLoanType = type;
+      const btnRec = document.getElementById('btnLoanTypeReceivable');
+      const btnPay = document.getElementById('btnLoanTypePayable');
+      if (btnRec && btnPay) {
+        if (type === 'receivable') {
+          btnRec.classList.add('active');
+          btnPay.classList.remove('active');
+        } else {
+          btnPay.classList.add('active');
+          btnRec.classList.remove('active');
+        }
+      }
+    }
+
+    async function handleSaveLoanSubmit(e) {
+      if (e && e.preventDefault) e.preventDefault();
+      const person = (document.getElementById('loanPersonInput')?.value || '').trim();
+      const amount = parseFloat(document.getElementById('loanAmountInput')?.value || '0');
+      const concept = (document.getElementById('loanConceptInput')?.value || '').trim();
+      const phone = (document.getElementById('loanPhoneInput')?.value || '').trim();
+      const dueDate = document.getElementById('loanDueDateInput')?.value || '';
+
+      if (!person || amount <= 0) {
+        showToast('Ingresa un nombre y un monto válido', 'error');
+        return;
+      }
+
+      const loans = getLoansList();
+      loans.unshift({
+        id: 'loan_' + Date.now(),
+        type: _currentLoanType,
+        person,
+        amount,
+        concept: concept || (_currentLoanType === 'receivable' ? 'Préstamo a cobrar' : 'Deuda a pagar'),
+        phone,
+        dueDate,
+        status: 'pending',
+        createdAt: new Date().toISOString(),
+        settledAt: null
+      });
+
+      saveLocalState();
+      renderLoansCard();
+      closeModal('newLoanModal');
+      showToast(_currentLoanType === 'receivable' ? `✅ Registrado: ${person} te debe S/ ${amount.toFixed(2)}` : `✅ Registrado: Debes S/ ${amount.toFixed(2)} a ${person}`, 'success');
+
+      try {
+        await flushSyncToServer();
+      } catch(e) {}
+    }
+
+    async function markLoanSettled(loanId) {
+      const loans = getLoansList();
+      const item = loans.find(l => l.id === loanId);
+      if (!item) return;
+
+      const isRec = item.type === 'receivable';
+      if (!await uiConfirm(`¿Marcar como ${isRec ? 'cobrado' : 'pagado'} (${getCurrencySymbol()} ${item.amount.toFixed(2)} de ${item.person})?`)) return;
+
+      item.status = 'settled';
+      item.settledAt = new Date().toISOString();
+
+      saveLocalState();
+      renderLoansCard();
+      renderLoansModalList();
+      showToast(`✅ ${isRec ? 'Cobro' : 'Pago'} completado con éxito`, 'success');
+
+      try {
+        await flushSyncToServer();
+      } catch(e) {}
+    }
+
+    async function deleteLoan(loanId) {
+      if (!await uiConfirm('¿Deseas eliminar este registro de Cuentas Claras?')) return;
+      const loans = getLoansList();
+      const idx = loans.findIndex(l => l.id === loanId);
+      if (idx !== -1) {
+        loans.splice(idx, 1);
+        saveLocalState();
+        renderLoansCard();
+        renderLoansModalList();
+        showToast('Registro eliminado', 'info');
+        try {
+          await flushSyncToServer();
+        } catch(e) {}
+      }
+    }
+
+    function sendLoanWhatsAppReminder(loanId) {
+      const loans = getLoansList();
+      const item = loans.find(l => l.id === loanId);
+      if (!item) return;
+
+      const sym = getCurrencySymbol();
+      const cleanFirst = item.person.split(' ')[0] || item.person;
+      const msg = `¡Hola ${cleanFirst}! 👋 Te paso un recordatorio amigable de los ${sym} ${item.amount.toFixed(2)} por "${item.concept}".\n\nMe puedes transferir por Yape o Plin al 914 688 135 (César Risso). ¡Muchas gracias! ✨`;
+
+      const cleanPhone = (item.phone || '').replace(/\D/g, '');
+      const waUrl = cleanPhone.length >= 9
+        ? `https://wa.me/51${cleanPhone.slice(-9)}?text=${encodeURIComponent(msg)}`
+        : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+
+      window.open(waUrl, '_blank');
+    }
+
+    // ================================================================
     // MODALES DE SEGURIDAD & FEEDBACK (SOPORTE)
     // ================================================================
     function openSecurityModal() {
@@ -9580,6 +9883,15 @@ window.addWizardExpenseRow = addWizardExpenseRow;
 window.openEditSalaryModal = openEditSalaryModal;
 window.handleSaveSalary = handleSaveSalary;
 window.openSecurityModal = openSecurityModal;
+window.toggleTravelMode = toggleTravelMode;
+window.syncTravelModeUI = syncTravelModeUI;
+window.openLoansModal = openLoansModal;
+window.openNewLoanModal = openNewLoanModal;
+window.setLoanType = setLoanType;
+window.handleSaveLoanSubmit = handleSaveLoanSubmit;
+window.markLoanSettled = markLoanSettled;
+window.deleteLoan = deleteLoan;
+window.sendLoanWhatsAppReminder = sendLoanWhatsAppReminder;
 window.openLegalModal = openLegalModal;
 window.switchLegalTab = switchLegalTab;
 window.openReclamacionesModal = openReclamacionesModal;
