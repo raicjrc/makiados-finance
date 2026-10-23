@@ -162,6 +162,7 @@
         if (typeof saveData === 'function') saveData();
       }
       updateCurrencyDOMElements();
+      syncTravelModeUI();
       if (typeof renderAll === 'function') renderAll();
       if (typeof updateSimulation === 'function') updateSimulation();
       showToast(`Moneda cambiada a ${SUPPORTED_CURRENCIES[code].flag} ${SUPPORTED_CURRENCIES[code].name} (${SUPPORTED_CURRENCIES[code].symbol})`, 'success');
