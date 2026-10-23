@@ -3781,6 +3781,7 @@
         'metas': 'deskNavTabMetas',
         'consejos': 'deskNavTabConsejos',
         'deudas': 'deskNavTabDeudas',
+        'prestamos': 'deskNavTabLoans',
         'founder': 'deskNavMasterBtn'
       };
       if (deskNavMap[tabId]) {
@@ -3833,6 +3834,12 @@
         setTimeout(() => {
           if (typeof renderDebtCommandCenter === 'function') {
             renderDebtCommandCenter();
+          }
+        }, 80);
+      } else if (tabId === 'prestamos') {
+        setTimeout(() => {
+          if (typeof renderLoansDashboard === 'function') {
+            renderLoansDashboard();
           }
         }, 80);
       }
@@ -4171,7 +4178,8 @@
       renderRescueCard();
       renderExecutiveAdvisor();
       syncTravelModeUI();
-      renderLoansCard();
+      renderLoansHomeWidget();
+      renderLoansDashboard();
     }
 
     function getMonthTxList() {
@@ -7763,8 +7771,10 @@
     }
 
     // ================================================================
-    // MÓDULO CUENTAS CLARAS: PRÉSTAMOS & COBROS (RECORDATORIOS INTELIGENTES)
+    // MÓDULO CUENTAS CLARAS: PRÉSTAMOS & COBROS (DASHBOARD FULL-SCREEN)
     // ================================================================
+    let _currentLoansFilter = 'all';
+
     function getLoansList() {
       if (!appState.loans || !Array.isArray(appState.loans)) {
         appState.loans = [];
@@ -7772,126 +7782,201 @@
       return appState.loans;
     }
 
-    function renderLoansCard() {
-      const summaryEl = document.getElementById('loansQuickSummary');
-      const feedEl = document.getElementById('loansMiniFeed');
-      if (!summaryEl || !feedEl) return;
+    function setLoansFilter(filter) {
+      _currentLoansFilter = filter;
+      const filterBtns = {
+        'all': 'loanFilterAll',
+        'receivable': 'loanFilterReceivable',
+        'payable': 'loanFilterPayable',
+        'settled': 'loanFilterSettled'
+      };
+      Object.keys(filterBtns).forEach(k => {
+        const btn = document.getElementById(filterBtns[k]);
+        if (btn) {
+          if (k === filter) btn.classList.add('active');
+          else btn.classList.remove('active');
+        }
+      });
+      renderLoansDashboard();
+    }
+
+    function renderLoansHomeWidget() {
+      const widget = document.getElementById('loansHomeWidget');
+      const pill = document.getElementById('loansHomeNetPill');
+      const sub = document.getElementById('loansHomeSubtitle');
+      if (!widget) return;
 
       const loans = getLoansList();
       const pendingReceivables = loans.filter(l => l.type === 'receivable' && l.status === 'pending');
       const pendingPayables = loans.filter(l => l.type === 'payable' && l.status === 'pending');
 
-      const totalReceivable = pendingReceivables.reduce((acc, l) => acc + (Number(l.amount) || 0), 0);
-      const totalPayable = pendingPayables.reduce((acc, l) => acc + (Number(l.amount) || 0), 0);
+      const totalRec = pendingReceivables.reduce((acc, l) => acc + (Number(l.amount) || 0), 0);
+      const totalPay = pendingPayables.reduce((acc, l) => acc + (Number(l.amount) || 0), 0);
+      const net = totalRec - totalPay;
       const sym = getCurrencySymbol();
 
-      summaryEl.innerHTML = `
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
-          <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 12px; padding: 8px 12px;">
-            <div style="font-size: 10px; font-weight: 800; color: #059669; text-transform: uppercase;">Me Deben (${pendingReceivables.length})</div>
-            <div style="font-size: 16px; font-weight: 900; color: #065f46; font-family: 'JetBrains Mono', monospace; margin-top: 2px;">${sym} ${totalReceivable.toFixed(2)}</div>
-          </div>
-          <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 12px; padding: 8px 12px;">
-            <div style="font-size: 10px; font-weight: 800; color: #dc2626; text-transform: uppercase;">Yo Debo (${pendingPayables.length})</div>
-            <div style="font-size: 16px; font-weight: 900; color: #991b1b; font-family: 'JetBrains Mono', monospace; margin-top: 2px;">${sym} ${totalPayable.toFixed(2)}</div>
-          </div>
-        </div>
-      `;
-
-      const pendingAll = loans.filter(l => l.status === 'pending');
-      if (pendingAll.length === 0) {
-        feedEl.innerHTML = `
-          <div style="padding: 12px 10px; text-align: center; color: var(--text-muted); font-size: 11.5px; background: #f8fafc; border-radius: 12px; border: 1px dashed var(--border);">
-            ✨ Cuentas claras: No tienes cobros ni deudas pendientes.
-          </div>
-        `;
-        return;
+      if (pill) {
+        if (net > 0) {
+          pill.textContent = `+ ${sym} ${net.toFixed(2)} a favor`;
+          pill.style.background = '#ecfdf5';
+          pill.style.color = '#059669';
+        } else if (net < 0) {
+          pill.textContent = `- ${sym} ${Math.abs(net).toFixed(2)} por pagar`;
+          pill.style.background = '#fef2f2';
+          pill.style.color = '#dc2626';
+        } else {
+          pill.textContent = `${sym} 0.00`;
+          pill.style.background = '#f1f5f9';
+          pill.style.color = '#64748b';
+        }
       }
 
-      feedEl.innerHTML = pendingAll.slice(0, 3).map(l => {
-        const isRec = l.type === 'receivable';
-        return `
-          <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; background: #ffffff; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 5px;">
-            <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
-              <span style="font-size: 16px;">${isRec ? '🟢' : '🔴'}</span>
-              <div style="min-width: 0;">
-                <div style="font-size: 12px; font-weight: 800; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(l.person)}</div>
-                <div style="font-size: 10.5px; color: var(--text-muted);">${escapeHtml(l.concept || (isRec ? 'Por cobrar' : 'Por pagar'))}</div>
-              </div>
-            </div>
-            <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
-              <div style="font-size: 13px; font-weight: 900; color: ${isRec ? '#059669' : '#dc2626'}; font-family: 'JetBrains Mono', monospace;">
-                ${isRec ? '+' : '-'}${sym} ${Number(l.amount).toFixed(2)}
-              </div>
-              ${isRec ? `
-                <button type="button" onclick="sendLoanWhatsAppReminder('${l.id}')" title="Cobrar por WhatsApp con mensaje cordial" style="background: #25d366; color: white; border: none; padding: 4px 7px; border-radius: 7px; font-size: 10.5px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 2px;">
-                  💬 Cobrar
-                </button>
-              ` : ''}
-              <button type="button" onclick="markLoanSettled('${l.id}')" title="Marcar como saldado" style="background: #f1f5f9; border: 1px solid #cbd5e1; padding: 4px 7px; border-radius: 7px; font-size: 10.5px; font-weight: 700; cursor: pointer; color: #059669;">
-                ✓
-              </button>
-            </div>
-          </div>
-        `;
-      }).join('') + (pendingAll.length > 3 ? `
-        <div style="text-align: center; margin-top: 6px;">
-          <a href="javascript:void(0)" onclick="openLoansModal()" style="font-size: 11px; font-weight: 700; color: var(--primary); text-decoration: none;">Ver todos (${pendingAll.length}) →</a>
-        </div>
-      ` : '');
+      if (sub) {
+        const totalPending = pendingReceivables.length + pendingPayables.length;
+        if (totalPending === 0) {
+          sub.textContent = 'Sin cobros ni compromisos pendientes';
+        } else {
+          sub.textContent = `${pendingReceivables.length} por cobrar · ${pendingPayables.length} por pagar`;
+        }
+      }
     }
 
-    function renderLoansModalList() {
-      const container = document.getElementById('loansModalList');
-      if (!container) return;
+    function renderLoansDashboard() {
+      const kpiRec = document.getElementById('loansKpiReceivable');
+      const kpiRecSub = document.getElementById('loansKpiReceivableSub');
+      const kpiPay = document.getElementById('loansKpiPayable');
+      const kpiPaySub = document.getElementById('loansKpiPayableSub');
+      const kpiNet = document.getElementById('loansKpiNet');
+      const kpiNetSub = document.getElementById('loansKpiNetSub');
+      const grid = document.getElementById('loansDashboardGrid');
+
+      const countAll = document.getElementById('loanCountAll');
+      const countRec = document.getElementById('loanCountReceivable');
+      const countPay = document.getElementById('loanCountPayable');
+      const countSet = document.getElementById('loanCountSettled');
 
       const loans = getLoansList();
       const sym = getCurrencySymbol();
 
-      if (loans.length === 0) {
-        container.innerHTML = `
-          <div style="padding: 30px 10px; text-align: center; color: var(--text-muted); font-size: 13px;">
-            Aún no has registrado préstamos ni cobros pendientes.<br>Toca "+ Nuevo" para agregar el primero.
+      const pendingReceivables = loans.filter(l => l.type === 'receivable' && l.status === 'pending');
+      const pendingPayables = loans.filter(l => l.type === 'payable' && l.status === 'pending');
+      const settledList = loans.filter(l => l.status === 'settled');
+
+      const totalRec = pendingReceivables.reduce((acc, l) => acc + (Number(l.amount) || 0), 0);
+      const totalPay = pendingPayables.reduce((acc, l) => acc + (Number(l.amount) || 0), 0);
+      const net = totalRec - totalPay;
+
+      if (kpiRec) kpiRec.textContent = `+ ${sym} ${totalRec.toFixed(2)}`;
+      if (kpiRecSub) kpiRecSub.textContent = `${pendingReceivables.length} persona${pendingReceivables.length === 1 ? '' : 's'} por cobrar`;
+      if (kpiPay) kpiPay.textContent = `- ${sym} ${totalPay.toFixed(2)}`;
+      if (kpiPaySub) kpiPaySub.textContent = `${pendingPayables.length} compromiso${pendingPayables.length === 1 ? '' : 's'} pendiente${pendingPayables.length === 1 ? '' : 's'}`;
+
+      if (kpiNet) {
+        kpiNet.textContent = `${net >= 0 ? '+' : '-'}${sym} ${Math.abs(net).toFixed(2)}`;
+        kpiNet.style.color = net >= 0 ? '#059669' : '#dc2626';
+      }
+      if (kpiNetSub) {
+        kpiNetSub.textContent = net >= 0 ? 'Diferencia a tu favor en la calle' : 'Diferencia neta a liquidar';
+      }
+
+      if (countAll) countAll.textContent = loans.length;
+      if (countRec) countRec.textContent = pendingReceivables.length;
+      if (countPay) countPay.textContent = pendingPayables.length;
+      if (countSet) countSet.textContent = settledList.length;
+
+      renderLoansHomeWidget();
+
+      if (!grid) return;
+
+      // Filtrado según _currentLoansFilter
+      let filtered = [];
+      if (_currentLoansFilter === 'all') {
+        filtered = [...loans].sort((a, b) => {
+          if (a.status === 'pending' && b.status === 'settled') return -1;
+          if (a.status === 'settled' && b.status === 'pending') return 1;
+          return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+        });
+      } else if (_currentLoansFilter === 'receivable') {
+        filtered = pendingReceivables;
+      } else if (_currentLoansFilter === 'payable') {
+        filtered = pendingPayables;
+      } else if (_currentLoansFilter === 'settled') {
+        filtered = settledList;
+      }
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `
+          <div style="grid-column: 1 / -1; padding: 48px 20px; text-align: center; background: #ffffff; border-radius: 20px; border: 1.5px dashed var(--border);">
+            <div style="font-size: 38px; margin-bottom: 8px;">🤝</div>
+            <div style="font-size: 15px; font-weight: 800; color: var(--text-main);">No hay préstamos ni cobros en esta sección</div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px; max-width: 340px; margin-left: auto; margin-right: auto;">
+              Registra lo que te deben tus amigos o tus compromisos personales para tener tus cuentas siempre claras.
+            </div>
+            <button type="button" class="btn btn-primary btn-sm" onclick="openNewLoanModal()" style="margin-top: 14px; padding: 8px 18px; border-radius: 10px; font-weight: 800;">
+              + Anotar Primer Registro
+            </button>
           </div>
         `;
         return;
       }
 
-      container.innerHTML = loans.map(l => {
+      grid.innerHTML = filtered.map(l => {
         const isRec = l.type === 'receivable';
         const isPending = l.status === 'pending';
         return `
-          <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; background: ${isPending ? '#ffffff' : '#f8fafc'}; border: 1px solid var(--border); border-radius: 14px; margin-bottom: 8px; opacity: ${isPending ? '1' : '0.6'};">
-            <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
-              <span style="font-size: 20px;">${isRec ? '📥' : '📤'}</span>
-              <div style="min-width: 0;">
-                <div style="display: flex; align-items: center; gap: 6px;">
-                  <strong style="font-size: 13px; color: var(--text-main);">${escapeHtml(l.person)}</strong>
-                  <span style="font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 6px; background: ${isRec ? '#ecfdf5' : '#fef2f2'}; color: ${isRec ? '#059669' : '#dc2626'};">
-                    ${isRec ? 'Me deben' : 'Yo debo'}
-                  </span>
-                  ${!isPending ? '<span style="font-size: 9.5px; font-weight: 800; background: #e2e8f0; color: #64748b; padding: 2px 6px; border-radius: 6px;">SALDADO</span>' : ''}
+          <div class="loan-card-item" style="opacity: ${isPending ? '1' : '0.65'};">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 10px;">
+                <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
+                  <span style="font-size: 22px;">${isRec ? '📥' : '📤'}</span>
+                  <div style="min-width: 0;">
+                    <div style="font-size: 14.5px; font-weight: 800; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                      ${escapeHtml(l.person)}
+                    </div>
+                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 1px;">
+                      ${escapeHtml(l.concept || (isRec ? 'Préstamo' : 'Deuda'))}
+                    </div>
+                  </div>
                 </div>
-                <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">
-                  ${escapeHtml(l.concept || 'Sin concepto')}${l.dueDate ? ' · Vence: ' + l.dueDate : ''}
+                <span style="font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 8px; white-space: nowrap; background: ${!isPending ? '#f1f5f9' : (isRec ? '#ecfdf5' : '#fef2f2')}; color: ${!isPending ? '#64748b' : (isRec ? '#059669' : '#dc2626')};">
+                  ${!isPending ? '✓ SALDADO' : (isRec ? 'Me deben' : 'Yo debo')}
+                </span>
+              </div>
+
+              <!-- Monto -->
+              <div style="display: flex; align-items: baseline; justify-content: space-between; margin: 12px 0 8px;">
+                <div style="font-size: 10.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Monto:</div>
+                <div style="font-size: 22px; font-weight: 900; color: ${isRec ? '#059669' : '#dc2626'}; font-family: 'JetBrains Mono', monospace;">
+                  ${isRec ? '+' : '-'}${sym} ${Number(l.amount).toFixed(2)}
                 </div>
+              </div>
+
+              <!-- Fechas -->
+              <div style="font-size: 11px; color: var(--text-muted); display: flex; justify-content: space-between; padding-top: 6px; border-top: 1px solid #f1f5f9; margin-bottom: 12px;">
+                <span>${l.dueDate ? 'Vence: <b>' + escapeHtml(l.dueDate) + '</b>' : 'Fecha flexible'}</span>
+                <span>${l.phone ? '📱 ' + escapeHtml(l.phone) : ''}</span>
               </div>
             </div>
-            <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
-              <div style="font-size: 14px; font-weight: 900; color: ${isRec ? '#059669' : '#dc2626'}; font-family: 'JetBrains Mono', monospace;">
-                ${isRec ? '+' : '-'}${sym} ${Number(l.amount).toFixed(2)}
+
+            <!-- Botones de Acción -->
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; padding-top: 8px; border-top: 1px solid #f1f5f9;">
+              <div style="display: flex; gap: 6px;">
+                ${isRec && isPending ? `
+                  <button type="button" onclick="sendLoanWhatsAppReminder('${l.id}')" title="Enviar recordatorio cordial por WhatsApp" style="background: #25d366; color: white; border: none; padding: 6px 11px; border-radius: 8px; font-size: 11.5px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                    <span>💬</span> <span>WhatsApp</span>
+                  </button>
+                ` : ''}
+                ${isPending ? `
+                  <button type="button" onclick="markLoanSettled('${l.id}')" title="Marcar como cobrado / pagado" style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 6px 11px; border-radius: 8px; font-size: 11.5px; font-weight: 700; cursor: pointer; color: #059669;">
+                    ✓ Saldar
+                  </button>
+                ` : `
+                  <button type="button" onclick="reopenLoan('${l.id}')" title="Volver a marcar como pendiente" style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 5px 9px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; color: #64748b;">
+                    ↩ Reabrir
+                  </button>
+                `}
               </div>
-              ${isRec && isPending ? `
-                <button type="button" onclick="sendLoanWhatsAppReminder('${l.id}')" title="Cobrar por WhatsApp" style="background: #25d366; color: white; border: none; padding: 5px 9px; border-radius: 8px; font-size: 11px; font-weight: 800; cursor: pointer;">
-                  💬 WhatsApp
-                </button>
-              ` : ''}
-              ${isPending ? `
-                <button type="button" onclick="markLoanSettled('${l.id}')" title="Marcar como saldado" style="background: #f1f5f9; border: 1px solid #cbd5e1; padding: 5px 9px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; color: #059669;">
-                  ✓ Saldar
-                </button>
-              ` : ''}
-              <button type="button" onclick="deleteLoan('${l.id}')" title="Eliminar" style="background: transparent; border: none; color: #94a3b8; font-size: 13px; cursor: pointer; padding: 4px;">
+              <button type="button" onclick="deleteLoan('${l.id}')" title="Eliminar registro" style="background: transparent; border: none; color: #94a3b8; font-size: 14px; cursor: pointer; padding: 4px 6px;">
                 🗑️
               </button>
             </div>
@@ -7900,19 +7985,20 @@
       }).join('');
     }
 
-    function openLoansModal() {
-      renderLoansModalList();
-      openModalById('loansModal');
-    }
-
     function openNewLoanModal() {
-      document.getElementById('loanPersonInput').value = '';
-      document.getElementById('loanAmountInput').value = '';
-      document.getElementById('loanConceptInput').value = '';
-      document.getElementById('loanPhoneInput').value = '';
-      document.getElementById('loanDueDateInput').value = '';
+      const pEl = document.getElementById('loanPersonInput');
+      const aEl = document.getElementById('loanAmountInput');
+      const cEl = document.getElementById('loanConceptInput');
+      const phEl = document.getElementById('loanPhoneInput');
+      const dEl = document.getElementById('loanDueDateInput');
+      if (pEl) pEl.value = '';
+      if (aEl) aEl.value = '';
+      if (cEl) cEl.value = '';
+      if (phEl) phEl.value = '';
+      if (dEl) dEl.value = '';
       setLoanType('receivable');
       openModalById('newLoanModal');
+      setTimeout(() => { if (pEl) pEl.focus(); }, 100);
     }
 
     let _currentLoanType = 'receivable';
@@ -7939,8 +8025,8 @@
       const phone = (document.getElementById('loanPhoneInput')?.value || '').trim();
       const dueDate = document.getElementById('loanDueDateInput')?.value || '';
 
-      if (!person || amount <= 0) {
-        showToast('Ingresa un nombre y un monto válido', 'error');
+      if (!person || isNaN(amount) || amount <= 0) {
+        showToast('Ingresa un nombre y un monto válido mayor a 0', 'error');
         return;
       }
 
@@ -7949,7 +8035,7 @@
         id: 'loan_' + Date.now(),
         type: _currentLoanType,
         person,
-        amount,
+        amount: Math.round((amount + Number.EPSILON) * 100) / 100,
         concept: concept || (_currentLoanType === 'receivable' ? 'Préstamo a cobrar' : 'Deuda a pagar'),
         phone,
         dueDate,
@@ -7959,9 +8045,14 @@
       });
 
       saveLocalState();
-      renderLoansCard();
       closeModal('newLoanModal');
-      showToast(_currentLoanType === 'receivable' ? `✅ Registrado: ${person} te debe S/ ${amount.toFixed(2)}` : `✅ Registrado: Debes S/ ${amount.toFixed(2)} a ${person}`, 'success');
+
+      // Navegar inmediatamente a la vista de pantalla completa para que el usuario vea su registro
+      switchTab('prestamos');
+      renderLoansDashboard();
+
+      const sym = getCurrencySymbol();
+      showToast(_currentLoanType === 'receivable' ? `✅ Registrado en Cuentas Claras: ${person} te debe ${sym} ${amount.toFixed(2)}` : `✅ Registrado en Cuentas Claras: Debes ${sym} ${amount.toFixed(2)} a ${person}`, 'success');
 
       try {
         await flushSyncToServer();
@@ -7980,9 +8071,25 @@
       item.settledAt = new Date().toISOString();
 
       saveLocalState();
-      renderLoansCard();
-      renderLoansModalList();
-      showToast(`✅ ${isRec ? 'Cobro' : 'Pago'} completado con éxito`, 'success');
+      renderLoansDashboard();
+      showToast(`✅ ${isRec ? 'Cobro' : 'Pago'} marcado como completado`, 'success');
+
+      try {
+        await flushSyncToServer();
+      } catch(e) {}
+    }
+
+    async function reopenLoan(loanId) {
+      const loans = getLoansList();
+      const item = loans.find(l => l.id === loanId);
+      if (!item) return;
+
+      item.status = 'pending';
+      item.settledAt = null;
+
+      saveLocalState();
+      renderLoansDashboard();
+      showToast('Registro reabierto como pendiente', 'info');
 
       try {
         await flushSyncToServer();
@@ -7996,8 +8103,7 @@
       if (idx !== -1) {
         loans.splice(idx, 1);
         saveLocalState();
-        renderLoansCard();
-        renderLoansModalList();
+        renderLoansDashboard();
         showToast('Registro eliminado', 'info');
         try {
           await flushSyncToServer();
@@ -9886,11 +9992,14 @@ window.handleSaveSalary = handleSaveSalary;
 window.openSecurityModal = openSecurityModal;
 window.toggleTravelMode = toggleTravelMode;
 window.syncTravelModeUI = syncTravelModeUI;
-window.openLoansModal = openLoansModal;
+window.renderLoansDashboard = renderLoansDashboard;
+window.renderLoansHomeWidget = renderLoansHomeWidget;
+window.setLoansFilter = setLoansFilter;
 window.openNewLoanModal = openNewLoanModal;
 window.setLoanType = setLoanType;
 window.handleSaveLoanSubmit = handleSaveLoanSubmit;
 window.markLoanSettled = markLoanSettled;
+window.reopenLoan = reopenLoan;
 window.deleteLoan = deleteLoan;
 window.sendLoanWhatsAppReminder = sendLoanWhatsAppReminder;
 window.openLegalModal = openLegalModal;

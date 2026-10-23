@@ -8068,3 +8068,123 @@ body.theme-twilight .ui-dialog { background: #111827; }
   color: var(--text-main);
   box-shadow: 0 2px 6px rgba(0,0,0,0.08);
 }
+
+/* ====== CUENTAS CLARAS FULL-SCREEN DASHBOARD ====== */
+.loans-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+@media (max-width: 768px) {
+  .loans-kpi-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+}
+.loans-kpi-card {
+  background: var(--card-bg, #ffffff);
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 16px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+}
+.loans-kpi-label {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text-muted, #64748b);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.loans-kpi-amount {
+  font-size: 24px;
+  font-weight: 900;
+  font-family: 'JetBrains Mono', -apple-system, monospace;
+  margin-top: 6px;
+}
+.loans-kpi-sub {
+  font-size: 11px;
+  color: var(--text-muted, #94a3b8);
+  font-weight: 600;
+  margin-top: 3px;
+}
+.loans-filter-nav {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  margin-bottom: 16px;
+  scrollbar-width: none;
+}
+.loans-filter-nav::-webkit-scrollbar {
+  display: none;
+}
+.loans-filter-btn {
+  background: var(--card-bg, #ffffff);
+  border: 1px solid var(--border, #e2e8f0);
+  padding: 7px 14px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary, #64748b);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+.loans-filter-btn.active {
+  background: var(--text-main, #0f172a);
+  color: #ffffff;
+  border-color: var(--text-main, #0f172a);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.14);
+}
+.loans-dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+  gap: 12px;
+}
+@media (max-width: 600px) {
+  .loans-dashboard-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+}
+.loan-card-item {
+  background: #ffffff;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.loan-card-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+}
+.loans-mobile-back-btn {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: var(--primary, #059669);
+  font-size: 13px;
+  font-weight: 700;
+  padding: 4px 0;
+  margin-bottom: 10px;
+  cursor: pointer;
+}
+@media (max-width: 768px) {
+  .loans-mobile-back-btn {
+    display: inline-flex;
+  }
+}
+

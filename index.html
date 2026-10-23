@@ -290,9 +290,9 @@
           <span class="desk-nav-icon">💳</span>
           <span>Simulador de Cuotas</span>
         </button>
-        <button class="desktop-nav-item" id="deskNavTabLoans" onclick="openLoansModal()">
+        <button class="desktop-nav-item" id="deskNavTabLoans" onclick="switchTab('prestamos')">
           <span class="desk-nav-icon">🤝</span>
-          <span>Préstamos & Cobros</span>
+          <span>Cuentas Claras</span>
         </button>
       </nav>
 
@@ -463,6 +463,24 @@
             <!-- Aviso mínimo: solo aparece si el cierre proyectado del mes es negativo -->
             <div id="rescueDashBanner" class="rescue-banner" style="display: none;" onclick="switchTab('consejos')" role="button" tabindex="0"></div>
 
+            <!-- ACCESO DIRECTO EJECUTIVO: CUENTAS CLARAS -->
+            <div id="loansHomeWidget" class="card" onclick="switchTab('prestamos')" style="padding: 12px 16px; margin-top: 10px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; border-radius: 14px; background: #ffffff; border: 1px solid var(--border); transition: all 0.2s;" title="Ir al Dashboard de Cuentas Claras">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 20px;">🤝</span>
+                <div>
+                  <div style="font-size: 13px; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 6px;">
+                    <span>Cuentas Claras</span>
+                    <span id="loansHomeNetPill" style="font-size: 10.5px; font-weight: 800; padding: 1px 7px; border-radius: 6px; background: #ecfdf5; color: #059669;">+ S/ 0.00</span>
+                  </div>
+                  <div id="loansHomeSubtitle" style="font-size: 11px; color: var(--text-muted); font-weight: 600; margin-top: 1px;">Préstamos, cobros y deudas personales</div>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 800; color: var(--primary);">
+                <span>Abrir</span>
+                <span>→</span>
+              </div>
+            </div>
+
             <!-- 1. Curva de Flujo de Caja (Cashflow Mensual) -->
             <div class="card executive-chart-card desktop-only" style="margin-top: 14px;">
               <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
@@ -511,30 +529,6 @@
             <!-- RADAR DE PRÓXIMOS VENCIMIENTOS (APPLE FINTECH WIDGET) -->
             <div id="upcomingBillsContainer">
               <!-- Renders dynamically via renderUpcomingDueDates() -->
-            </div>
-
-            <!-- CUENTAS CLARAS: PRÉSTAMOS & COBROS (RECORDATORIOS INTELIGENTES) -->
-            <div id="loansSummaryCard" class="card executive-chart-card" style="margin-top: 14px;">
-              <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <div>
-                  <div class="card-title" style="font-size: 13.5px; font-weight: 800; display: flex; align-items: center; gap: 6px;">
-                    <span>🤝</span>
-                    <span>Cuentas Claras: Préstamos & Cobros</span>
-                  </div>
-                  <div style="font-size: 11px; color: var(--text-muted); font-weight: 600; margin-top: 2px;">
-                    Control de lo que te deben y lo que debes
-                  </div>
-                </div>
-                <button type="button" class="btn btn-primary btn-sm" onclick="openNewLoanModal()" style="font-size: 11.5px; padding: 4px 10px; border-radius: 8px; font-weight: 700;">
-                  + Anotar
-                </button>
-              </div>
-
-              <!-- Resumen Rápido -->
-              <div class="loans-quick-summary" id="loansQuickSummary"></div>
-
-              <!-- Lista de préstamos activos -->
-              <div id="loansMiniFeed" class="loans-mini-feed" style="margin-top: 6px;"></div>
             </div>
 
             <!-- SLOT DINÁMICO DERECHO: Posición natural cuando NO hay vencimientos -->
@@ -1010,6 +1004,105 @@
           </button>
         </div>
       </div>
+
+      <!-- TAB 7: CUENTAS CLARAS: PRÉSTAMOS & COBROS (DASHBOARD COMPLETO FULL-SCREEN) -->
+      <div id="tab-prestamos" class="tab-content">
+        
+        <!-- Botón de retorno móvil -->
+        <button type="button" class="loans-mobile-back-btn" onclick="switchTab('inicio')">
+          <span>←</span>
+          <span>Volver a Inicio</span>
+        </button>
+
+        <!-- Header Estratégico Ejecutivo -->
+        <div class="card executive-header-card" style="border-radius: 20px; padding: 20px 22px; margin-bottom: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span style="font-size: 28px;">🤝</span>
+              <div>
+                <h2 style="font-size: 19px; font-weight: 800; margin: 0; color: var(--text-main); letter-spacing: -0.02em;">
+                  Cuentas Claras: Préstamos & Cobros
+                </h2>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 3px;">
+                  Control inteligente de dinero prestado, cobros a amigos/familiares y compromisos personales
+                </div>
+              </div>
+            </div>
+            <button type="button" class="btn btn-primary" onclick="openNewLoanModal()" style="padding: 10px 18px; font-size: 13px; font-weight: 800; border-radius: 12px; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);">
+              <span>+</span>
+              <span>Anotar en Cuentas Claras</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- FILA DE KPIS EJECUTIVOS (3 Tarjetas) -->
+        <div class="loans-kpi-grid">
+          <!-- Card 1: Por Cobrar (Me deben) -->
+          <div class="loans-kpi-card">
+            <div class="loans-kpi-label">
+              <span>📥</span>
+              <span>Me Deben (Por Cobrar)</span>
+            </div>
+            <div id="loansKpiReceivable" class="loans-kpi-amount" style="color: #059669;">
+              + S/ 0.00
+            </div>
+            <div id="loansKpiReceivableSub" class="loans-kpi-sub">
+              0 cobros pendientes
+            </div>
+          </div>
+
+          <!-- Card 2: Por Pagar (Yo debo) -->
+          <div class="loans-kpi-card">
+            <div class="loans-kpi-label">
+              <span>📤</span>
+              <span>Yo Debo (Por Pagar)</span>
+            </div>
+            <div id="loansKpiPayable" class="loans-kpi-amount" style="color: #dc2626;">
+              - S/ 0.00
+            </div>
+            <div id="loansKpiPayableSub" class="loans-kpi-sub">
+              0 compromisos pendientes
+            </div>
+          </div>
+
+          <!-- Card 3: Balance Neto Personal -->
+          <div class="loans-kpi-card">
+            <div class="loans-kpi-label">
+              <span>⚖️</span>
+              <span>Balance Neto Personal</span>
+            </div>
+            <div id="loansKpiNet" class="loans-kpi-amount" style="color: var(--text-main);">
+              S/ 0.00
+            </div>
+            <div id="loansKpiNetSub" class="loans-kpi-sub">
+              Diferencia neta a tu favor
+            </div>
+          </div>
+        </div>
+
+        <!-- BARRA DE FILTROS SEGMENTADA -->
+        <div class="loans-filter-nav">
+          <button type="button" class="loans-filter-btn active" id="loanFilterAll" onclick="setLoansFilter('all')">
+            Todos (<span id="loanCountAll">0</span>)
+          </button>
+          <button type="button" class="loans-filter-btn" id="loanFilterReceivable" onclick="setLoansFilter('receivable')">
+            🟢 Me deben (<span id="loanCountReceivable">0</span>)
+          </button>
+          <button type="button" class="loans-filter-btn" id="loanFilterPayable" onclick="setLoansFilter('payable')">
+            🔴 Yo debo (<span id="loanCountPayable">0</span>)
+          </button>
+          <button type="button" class="loans-filter-btn" id="loanFilterSettled" onclick="setLoansFilter('settled')">
+            ✓ Historial Saldados (<span id="loanCountSettled">0</span>)
+          </button>
+        </div>
+
+        <!-- GRID PRINCIPAL DE TARJETAS DE PRÉSTAMOS -->
+        <div id="loansDashboardGrid" class="loans-dashboard-grid">
+          <!-- Renders dynamically via renderLoansDashboard() -->
+        </div>
+
+      </div>
+
       <div id="tab-auditoria" class="tab-content" style="display: none;"></div>
 
       <!-- TAB 6: HUB DE FUNDADOR CEO (MÓDULO COMPLETO FULL-SCREEN v69.0) -->
@@ -1450,6 +1543,10 @@
         </div>
 
         <div style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-top: 6px; margin-bottom: 2px;">Herramientas & Configuración</div>
+        <button type="button" class="btn btn-secondary" onclick="closeModal('settingsModal'); switchTab('prestamos');" style="width: 100%; text-align: left; padding: 10px; font-weight: 700; display: flex; justify-content: space-between; align-items: center;">
+          <span>🤝 Cuentas Claras: Préstamos & Cobros</span>
+          <span style="font-size: 11px; font-weight: 700; color: #059669; background: rgba(5,150,105,0.1); padding: 2px 7px; border-radius: 6px;">Dashboard</span>
+        </button>
         <button type="button" class="btn btn-secondary" onclick="closeModal('settingsModal'); openEditSalaryModal();" style="width: 100%; text-align: left; padding: 10px; font-weight: 700;">💵 Modificar Sueldo / Ingreso Mensual</button>
         <button type="button" class="btn btn-secondary" onclick="openCategoryManagerModal();" style="width: 100%; text-align: left; padding: 10px;">⚙️ Gestor de Categorías</button>
         <button type="button" class="btn btn-secondary" onclick="closeModal('settingsModal'); openInstallmentsSimulatorModal();" style="width: 100%; text-align: left; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
@@ -3523,29 +3620,6 @@
     </div>
   </div>
 
-  <!-- MODAL: DIRECTORIO COMPLETO CUENTAS CLARAS -->
-  <div class="glass-backdrop" id="loansModal" style="z-index: 100008; display: none;" onclick="if(event.target === this) closeModal('loansModal')">
-    <div class="glass-modal" style="max-width: 520px; width: 92%; max-height: 85vh; border-radius: 24px; padding: 26px 22px; background: #ffffff; box-shadow: 0 24px 60px rgba(0,0,0,0.22); border: 1px solid rgba(0,0,0,0.08); margin: auto; display: flex; flex-direction: column;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <span style="font-size: 22px;">🤝</span>
-          <h3 style="font-size: 17px; font-weight: 800; color: #0f172a; margin: 0;">Directorio de Préstamos y Cobros</h3>
-        </div>
-        <button type="button" onclick="closeModal('loansModal')" style="background: rgba(0,0,0,0.06); border: none; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 13px; cursor: pointer; color: #64748b;">✕</button>
-      </div>
-
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-        <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;">Historial y estado actual</span>
-        <button type="button" class="btn btn-primary btn-sm" onclick="closeModal('loansModal'); openNewLoanModal();" style="font-size: 11.5px; padding: 5px 12px; border-radius: 8px;">
-          + Nuevo
-        </button>
-      </div>
-
-      <div id="loansModalList" style="overflow-y: auto; flex: 1; min-height: 140px; padding-right: 4px;">
-        <!-- Renders dynamically via renderLoansModalList() -->
-      </div>
-    </div>
-  </div>
 
   <!-- COMPATIBILIDAD MODAL MASTER: Ahora reemplazado por el Módulo Full-Screen tab-founder -->
   <div id="masterDashboardModal" style="display: none;"></div>
