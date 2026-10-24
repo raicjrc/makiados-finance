@@ -2231,7 +2231,7 @@
         <div class="footer-links">
           <a href="index.html">Acceso a la App</a>
           <a href="mailto:aliviafin@gmail.com" onclick="handleContactClick(event)">Contacto (aliviafin@gmail.com)</a>
-          <a href="reclamaciones.html">Libro de Reclamaciones</a>
+          <a href="javascript:void(0)" onclick="openLegalModal('reclamaciones')">Canal de Atención & Soporte</a>
           <a href="terminos.html">Términos y Privacidad</a>
         </div>
       </div>
@@ -2371,7 +2371,7 @@
       const title = document.getElementById('legalModalTitle');
 
       if (type === 'reclamaciones') {
-        title.textContent = '📖 Libro de Reclamaciones';
+        title.textContent = '📨 Canal de Atención & Soporte';
         termsContent.style.display = 'none';
         claimsContent.style.display = 'block';
       } else {
@@ -2508,17 +2508,18 @@
         <p>La asistencia al usuario se canaliza a través del buzón de soporte integrado en la propia aplicación web.</p>
       </div>
 
-      <!-- Contenido Libro de Reclamaciones -->
+      <!-- Contenido Canal de Atención & Soporte -->
       <div id="legalClaimsContent" style="display: none; font-size: 13.5px; color: #475569; line-height: 1.6;">
-        <p style="margin-bottom: 14px;">Conforme a lo establecido en el Código de Protección y Defensa del Consumidor (Ley N° 29571) de la República del Perú, ponemos a disposición de nuestros usuarios este canal de atención:</p>
+        <p style="margin-bottom: 14px;">En AliviaFin nos comprometemos con un trato directo, ágil y 100% transparente. Si tienes alguna duda sobre tu cuenta, necesitas asistencia técnica o deseas solicitar la devolución de tu dinero, ponemos a tu disposición este canal oficial:</p>
         
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px; margin-bottom: 16px;">
-          <div><strong>Servicio:</strong> AliviaFin (Plataforma Web PWA)</div>
-          <div><strong>Canal de Atención:</strong> Buzón de Soporte dentro de la App</div>
-          <div><strong>Tiempo de respuesta:</strong> Máximo 48 horas hábiles</div>
+          <div style="margin-bottom: 6px;"><strong>Servicio:</strong> AliviaFin (Plataforma Web PWA de Finanzas)</div>
+          <div style="margin-bottom: 6px;"><strong>Correo de Atención:</strong> <a href="mailto:aliviafin@gmail.com" style="color: #2563eb; font-weight: 700;">aliviafin@gmail.com</a></div>
+          <div style="margin-bottom: 6px;"><strong>Tiempo de Respuesta:</strong> Máximo 24 a 48 horas hábiles</div>
+          <div><strong>Garantía de Satisfacción:</strong> 100% de devolución dentro de los primeros 7 días vía Yape o Plin.</div>
         </div>
 
-        <p>Para ingresar un reclamo formal o queja sobre tu cuenta, puedes enviarlo directamente desde la sección de ajustes de la aplicación para atenderte de manera prioritaria.</p>
+        <p>Para ingresar un requerimiento o consulta sobre tu cuenta, puedes escribirnos directamente al correo oficial o desde el formulario de atención disponible dentro de la propia aplicación.</p>
       </div>
 
       <div style="margin-top: 24px; text-align: center;">

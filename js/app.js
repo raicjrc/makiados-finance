@@ -8314,25 +8314,25 @@
 
       if (submitBtn) {
         submitBtn.disabled = false;
-        submitBtn.textContent = '📝 Enviar Reclamación';
+        submitBtn.textContent = '📨 Enviar Solicitud';
       }
 
-      showToast('✅ Reclamación registrada: ' + codigo, 'success');
+      showToast('✅ Solicitud registrada: ' + codigo, 'success');
     }
 
     function copyReclamacionVoucher() {
       if (!lastReclamacionVoucherData) return;
       const d = lastReclamacionVoucherData;
-      const text = `📖 HOJA DE RECLAMACIÓN VIRTUAL — ALIVIAFIN (D.S. 011-2011-PCM)
+      const text = `📨 TICKET DE ATENCIÓN & SOPORTE — ALIVIAFIN
 Código de seguimiento: ${d.codigo}
 Fecha de registro: ${d.formattedDate}
-Consumidor: ${d.consumidor_nombre} (${d.consumidor_tipo_doc}: ${d.consumidor_num_doc})
+Usuario: ${d.consumidor_nombre} (${d.consumidor_tipo_doc}: ${d.consumidor_num_doc})
 Email: ${d.consumidor_email} | Tel: ${d.consumidor_telefono}
 Servicio: ${d.tipo_servicio} (Monto: S/ ${d.monto_reclamado})
 Tipo: ${d.tipo.toUpperCase()}
 Detalle: ${d.detalle}
 Pedido concreto: ${d.pedido}
-Plazo de respuesta legal: Máximo quince (15) días hábiles improrrogables.`;
+Plazo de respuesta: Máximo 24 a 48 horas hábiles directas a tu correo.`;
 
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(text).then(() => {
