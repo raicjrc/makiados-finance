@@ -1774,52 +1774,6 @@
       if (boxCuotas) boxCuotas.style.display = type === 'cuotas' ? 'block' : 'none';
     }
 
-    function switchPlanMobileSection(section) {
-      const isAnalysis = section === 'analysis';
-      const isBudgets = section === 'budgets';
-      const isCuotas = section === 'cuotas';
-
-      const btnA = document.getElementById('planTabAnalysis');
-      const btnB = document.getElementById('planTabBudgets');
-      const btnC = document.getElementById('planTabCuotas');
-      if (btnA) btnA.classList.toggle('active', isAnalysis);
-      if (btnB) btnB.classList.toggle('active', isBudgets);
-      if (btnC) btnC.classList.toggle('active', isCuotas);
-
-      const planCardLeft = document.querySelector('.plan-card-left');
-      const planCardRight = document.querySelector('.plan-card-right');
-      const grid2 = document.querySelector('.desktop-plan-grid-2');
-      const segChartBox = document.getElementById('segmentChartBox');
-      const segCuotasBox = document.getElementById('segmentCuotasBox');
-
-      if (window.innerWidth <= 768) {
-        if (isAnalysis) {
-          if (planCardLeft) planCardLeft.style.display = 'block';
-          if (planCardRight) planCardRight.style.display = 'block';
-          if (segChartBox) segChartBox.style.display = 'block';
-          if (segCuotasBox) segCuotasBox.style.display = 'none';
-          if (grid2) grid2.style.display = 'none';
-          setTimeout(() => { if (typeof renderDonutChart === 'function') renderDonutChart(); if (typeof renderHistoryChart === 'function') renderHistoryChart(); }, 50);
-        } else if (isBudgets) {
-          if (planCardLeft) planCardLeft.style.display = 'none';
-          if (planCardRight) planCardRight.style.display = 'none';
-          if (grid2) grid2.style.display = 'block';
-        } else if (isCuotas) {
-          if (planCardLeft) planCardLeft.style.display = 'block';
-          if (planCardRight) planCardRight.style.display = 'none';
-          if (segChartBox) segChartBox.style.display = 'none';
-          if (segCuotasBox) segCuotasBox.style.display = 'block';
-          if (grid2) grid2.style.display = 'none';
-          setTimeout(() => { if (typeof renderCuotasTracker === 'function') renderCuotasTracker(); }, 50);
-        }
-      } else {
-        if (planCardLeft) planCardLeft.style.display = '';
-        if (planCardRight) planCardRight.style.display = '';
-        if (grid2) grid2.style.display = '';
-      }
-    }
-    window.switchPlanMobileSection = switchPlanMobileSection;
-
     function switchAdvisorView(view) {
       if (view === 'asesor' || view === 'consejos') {
         switchTab('consejos');
@@ -1840,17 +1794,6 @@
       });
     }
     window.syncAdvisorSegmentedNav = syncAdvisorSegmentedNav;
-
-    window.addEventListener('resize', () => {
-      if (window.innerWidth > 768) {
-        const planCardLeft = document.querySelector('.plan-card-left');
-        const planCardRight = document.querySelector('.plan-card-right');
-        const grid2 = document.querySelector('.desktop-plan-grid-2');
-        if (planCardLeft) planCardLeft.style.display = '';
-        if (planCardRight) planCardRight.style.display = '';
-        if (grid2) grid2.style.display = '';
-      }
-    });
 
     // Registrar Service Worker v71.8 (Network-First, sin caché de datos)
     if ('serviceWorker' in navigator) {
@@ -3817,9 +3760,6 @@
           renderCategoryBudgets();
           renderCuotasTracker();
           renderHistoryChart();
-          if (window.innerWidth <= 768) {
-            switchPlanMobileSection('analysis');
-          }
         }, 80);
       } else if (tabId === 'metas') {
         renderGoals();

@@ -6657,51 +6657,10 @@
       display: none;
     }
 
-    .mobile-plan-nav {
-      display: none;
-    }
-
     /* ================================================================
        REGLAS MÓVILES EXCLUSIVAS (IPHONE / PWA / SAFARI)
        ================================================================ */
     @media (max-width: 768px) {
-      .mobile-plan-nav {
-        display: grid !important;
-        grid-template-columns: 1fr 1fr 1fr !important;
-        gap: 6px !important;
-        background: rgba(148, 163, 184, 0.12) !important;
-        padding: 4px !important;
-        border-radius: 14px !important;
-        margin-bottom: 14px !important;
-        box-sizing: border-box !important;
-      }
-      .mobile-plan-btn {
-        width: 100% !important;
-        padding: 9px 4px !important;
-        border: none !important;
-        background: transparent !important;
-        color: var(--text-secondary, #64748b) !important;
-        font-weight: 800 !important;
-        font-size: 11.5px !important;
-        border-radius: 10px !important;
-        cursor: pointer !important;
-        transition: all 0.15s ease !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        white-space: nowrap !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
-      }
-      .mobile-plan-btn.active {
-        background: #ffffff !important;
-        color: var(--text-main, #0f172a) !important;
-        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08) !important;
-      }
-      body.theme-twilight .mobile-plan-btn.active {
-        background: #334155 !important;
-        color: #ffffff !important;
-      }
       .desktop-only-header-btn {
         display: none !important;
       }
