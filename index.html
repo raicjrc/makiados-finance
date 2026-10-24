@@ -1571,13 +1571,13 @@
 
         <div style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-top: 6px; margin-bottom: 2px;">Soporte & Legal</div>
         <button type="button" class="btn btn-secondary" id="settingsWhatsNewBtn" onclick="openWhatsNewModal();" style="width: 100%; text-align: left; padding: 10px;">🚀 Novedades</button>
-        <button type="button" class="btn btn-secondary" onclick="openLegalModal('terms');" style="width: 100%; text-align: left; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; border-radius: 12px; margin-bottom: 6px;" title="Términos, Privacidad, Garantía de 7 días y Libro de Reclamaciones">
+        <button type="button" class="btn btn-secondary" onclick="openLegalModal('terms');" style="width: 100%; text-align: left; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; border-radius: 12px; margin-bottom: 6px;" title="Términos, Privacidad y Garantía de 7 días">
           <div>
             <div style="font-size: 12.5px; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 6px;">
-              <span>⚖️ Centro Legal & Reclamaciones</span>
-              <span style="font-size: 9.5px; font-weight: 800; background: rgba(16,185,129,0.1); color: #059669; padding: 1px 6px; border-radius: 6px;">Indecopi · 7 Días</span>
+              <span>⚖️ Términos, Privacidad & Garantía</span>
+              <span style="font-size: 9.5px; font-weight: 800; background: rgba(16,185,129,0.1); color: #059669; padding: 1px 6px; border-radius: 6px;">Garantía 7 Días</span>
             </div>
-            <div style="font-size: 10.5px; color: var(--text-muted); margin-top: 2px;">Términos · Privacidad · Garantía & Reembolsos · Libro Virtual</div>
+            <div style="font-size: 10.5px; color: var(--text-muted); margin-top: 2px;">Términos de Uso · Privacidad Zero-Knowledge · Garantía 100% · Soporte</div>
           </div>
           <span style="font-size: 16px; color: var(--text-muted);">›</span>
         </button>
@@ -2666,7 +2666,35 @@
       </div>
 
       <div style="margin-top: 14px; max-height: 55vh; overflow-y: auto; padding-right: 4px;">
-        <!-- Card 1: Radar de Próximos Vencimientos -->
+        <!-- Card 1: Cuentas Claras: Préstamos & Cobros -->
+        <div class="whats-new-feature-card">
+          <div class="whats-new-icon-box" style="color: #059669;">🤝</div>
+          <div style="flex: 1;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+              <h5 style="margin: 0; font-size: 13px; font-weight: 800; color: var(--text-main);">Cuentas Claras: Préstamos & Cobros</h5>
+              <span class="whats-new-card-badge" style="background: rgba(16, 185, 129, 0.12); color: #059669;">Nuevo ✨</span>
+            </div>
+            <p style="margin: 0; font-size: 11px; color: var(--text-muted); line-height: 1.4;">
+              Lleva el control de lo que te deben o lo que debes en un dashboard de pantalla completa, con balance neto y recordatorios amigables por WhatsApp en 1 solo toque.
+            </p>
+          </div>
+        </div>
+
+        <!-- Card 2: Modo Viaje Multi-Moneda -->
+        <div class="whats-new-feature-card">
+          <div class="whats-new-icon-box" style="color: #2563eb;">✈️</div>
+          <div style="flex: 1;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+              <h5 style="margin: 0; font-size: 13px; font-weight: 800; color: var(--text-main);">Modo Viaje (Soles ⇄ Dólares)</h5>
+              <span class="whats-new-card-badge" style="background: rgba(37, 99, 235, 0.12); color: #2563eb;">1 Toque 🇵🇪 🇺🇸</span>
+            </div>
+            <p style="margin: 0; font-size: 11px; color: var(--text-muted); line-height: 1.4;">
+              Conmuta toda la visualización de la plataforma entre Soles (PEN) y Dólares (USD) para tus viajes o cuentas bimonetarias sin alterar tus cálculos de fondo.
+            </p>
+          </div>
+        </div>
+
+        <!-- Card 3: Radar de Próximos Vencimientos -->
         <div class="whats-new-feature-card">
           <div class="whats-new-icon-box" style="color: #f59e0b;">📅</div>
           <div style="flex: 1;">
@@ -2675,57 +2703,29 @@
               <span class="whats-new-card-badge" style="background: rgba(245, 158, 11, 0.12); color: #d97706;">Alerta 5 Días ⚡</span>
             </div>
             <p style="margin: 0; font-size: 11px; color: var(--text-muted); line-height: 1.4;">
-              Identifica en segundos tus recibos, préstamos o cuotas que vencen en los siguientes 5 días con un botón para marcarlos como pagados en 1 toque.
+              Monitorea en tiempo real tus recibos, préstamos o cuotas que vencen en los siguientes 5 días con un botón para marcarlos como pagados en 1 toque.
             </p>
           </div>
         </div>
 
-        <!-- Card 2: Conciliación Bancaria en 1 Tap -->
-        <div class="whats-new-feature-card">
-          <div class="whats-new-icon-box" style="color: #4f46e5;">⚖️</div>
-          <div style="flex: 1;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
-              <h5 style="margin: 0; font-size: 13px; font-weight: 800; color: var(--text-main);">Conciliación Bancaria en 1 Tap</h5>
-              <span class="whats-new-card-badge" style="background: rgba(79, 70, 229, 0.12); color: #4f46e5;">Cuadre Exacto 🏦</span>
-            </div>
-            <p style="margin: 0; font-size: 11px; color: var(--text-muted); line-height: 1.4;">
-              Compara en segundos el saldo de tu app bancaria (BCP, Interbank, BBVA, etc.) con AliviaFin para verificar que todo cuadre y detectar olvidos al instante.
-            </p>
-          </div>
-        </div>
-
-        <!-- Card 3: Soporte Multi-Moneda Internacional -->
-        <div class="whats-new-feature-card">
-          <div class="whats-new-icon-box" style="color: #10b981;">💱</div>
-          <div style="flex: 1;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
-              <h5 style="margin: 0; font-size: 13px; font-weight: 800; color: var(--text-main);">Soporte Multi-Moneda</h5>
-              <span class="whats-new-card-badge" style="background: rgba(16, 185, 129, 0.12); color: #10b981;">PEN · USD · EUR</span>
-            </div>
-            <p style="margin: 0; font-size: 11px; color: var(--text-muted); line-height: 1.4;">
-              Registra y gestiona tus presupuestos en Soles (S/), Dólares ($) o Euros (€) con visualización clara y adaptada a tu economía personal.
-            </p>
-          </div>
-        </div>
-
-        <!-- Card 4: Modo Privacidad Inmediato -->
+        <!-- Card 4: Modo Privacidad en 1 Tap -->
         <div class="whats-new-feature-card">
           <div class="whats-new-icon-box" style="color: #0d9488;">👁️</div>
           <div style="flex: 1;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
               <h5 style="margin: 0; font-size: 13px; font-weight: 800; color: var(--text-main);">Modo Privacidad en 1 Tap</h5>
-              <span class="whats-new-card-badge" style="background: rgba(13, 148, 136, 0.12); color: #0d9488;">Seguridad Táctil</span>
+              <span class="whats-new-card-badge" style="background: rgba(13, 148, 136, 0.12); color: #0d9488;">Seguridad Apple 🔒</span>
             </div>
             <p style="margin: 0; font-size: 11px; color: var(--text-muted); line-height: 1.4;">
-              Oculta tus saldos con puntos discretos (••••) desde la barra superior para consultar tu dinero tranquilamente en la calle o la oficina.
+              Oculta tus saldos bancarios con puntos discretos (••••) desde la barra superior para revisar tus finanzas tranquilamente en el transporte público o la oficina.
             </p>
           </div>
         </div>
       </div>
 
       <div class="modal-actions" style="margin-top: 16px; display: flex; gap: 8px;">
-        <button type="button" class="btn btn-secondary" onclick="dismissWhatsNewModal(); startInteractiveTour();" style="font-size: 12px;">🧭 Ver Tutorial</button>
-        <button type="button" class="btn btn-primary" onclick="dismissWhatsNewModal()" style="flex: 1; font-weight: 800;">¡Entendido, a explorar! ✨</button>
+        <button type="button" class="btn btn-secondary" onclick="dismissWhatsNewModal(false); startInteractiveTour();" style="font-size: 12px;">🧭 Ver Tutorial</button>
+        <button type="button" class="btn btn-primary" onclick="dismissWhatsNewModal(true)" style="flex: 1; font-weight: 800;">✓ ¡Entendido, a explorar! ✨</button>
       </div>
     </div>
   </div>
@@ -3203,7 +3203,7 @@
           <p style="margin: 0 0 10px 0; color: var(--text-muted);">El plan mensual se ofrece a <strong>S/ 4.90 / mes</strong> con cancelación libre sin penalidad en cualquier momento. El plan anual preferencial tiene una tarifa de <strong>S/ 29.90 / año</strong> con acceso completo a todas las funciones premium. Las activaciones se procesan de forma verificada vía transferencias y billeteras digitales (Yape / Plin).</p>
 
           <h4 style="margin: 0 0 6px 0; font-size: 13.5px; font-weight: 800; color: var(--text-main);">3. Veracidad de Testimonios y Transparencia Publicitaria</h4>
-          <p style="margin: 0 0 10px 0; color: var(--text-muted);">En estricto cumplimiento con las normas de protección al consumidor (Indecopi y directrices internacionales de la FTC), AliviaFin <strong>no emplea testimonios falsos, opiniones patrocinadas ni reseñas manipuladas</strong>. Todo testimonio expuesto proviene de la experiencia voluntaria de usuarios reales.</p>
+          <p style="margin: 0 0 10px 0; color: var(--text-muted);">En estricto compromiso con la transparencia y honestidad comercial, AliviaFin <strong>no emplea testimonios falsos, opiniones patrocinadas ni reseñas manipuladas</strong>. Todo testimonio expuesto proviene de la experiencia voluntaria de usuarios reales.</p>
 
           <h4 style="margin: 0 0 6px 0; font-size: 13.5px; font-weight: 800; color: var(--text-main);">4. Propiedad Absoluta de tus Datos y Portabilidad</h4>
           <p style="margin: 0 0 10px 0; color: var(--text-muted);">Tus datos financieros te pertenecen exclusivamente a ti. Puedes exportar tus reportes a PDF o Excel / CSV en cualquier momento, así como solicitar la eliminación definitiva de tu cuenta y registros asociados conforme a ley.</p>
@@ -3212,7 +3212,7 @@
           <p style="margin: 0 0 10px 0; color: var(--text-muted);">Las proyecciones de ahorro, simulaciones de cuotas y fechas de vencimiento son de carácter estimativo para facilitar tu planificación personal. El usuario es el único responsable de la exactitud de los montos ingresados.</p>
 
           <h4 style="margin: 0 0 6px 0; font-size: 13.5px; font-weight: 800; color: var(--text-main);">6. Jurisdicción y Ley Aplicable</h4>
-          <p style="margin: 0 0 4px 0; color: var(--text-muted);">Los presentes Términos se rigen por las leyes de la República del Perú. Para cualquier controversia derivada del uso de la plataforma o de la contratación de planes de pago, las partes se someten a la competencia territorial de los jueces y tribunales del Distrito Judicial de Lima, sin perjuicio de los derechos de protección al consumidor amparados por el Código de Protección y Defensa del Consumidor (Ley N° 29571) ante Indecopi.</p>
+          <p style="margin: 0 0 4px 0; color: var(--text-muted);">Los presentes Términos se rigen por las leyes de la República del Perú. Para cualquier controversia derivada del uso de la plataforma o de la contratación de planes de pago, las partes se someten a la competencia de los jueces y tribunales de la ciudad de Lima de conformidad con el marco legal peruano.</p>
         </div>
 
         <div id="legalSectionPrivacy" style="display: none;">
@@ -3235,7 +3235,7 @@
           </p>
 
           <h4 style="margin: 0 0 6px 0; font-size: 13.5px; font-weight: 800; color: var(--text-main);">4. Derecho al Olvido y Supresión Definitiva (Ley N° 29733 & GDPR)</h4>
-          <p style="margin: 0 0 10px 0; color: var(--text-muted);">Conforme a la Ley N° 29733 de Protección de Datos Personales del Perú y estándares GDPR, garantizamos tus Derechos ARCO (Acceso, Rectificación, Cancelación y Oposición). Puedes solicitar la eliminación definitiva e inmediata de tu cuenta y todos tus datos financieros desde el botón de Ajustes > <em>"Eliminar Mi Cuenta y Datos"</em> o enviando un correo a <strong>privacidad@aliviafin.com</strong>. La purga de datos se procesa de forma irrevocable en menos de 48 horas.</p>
+          <p style="margin: 0 0 10px 0; color: var(--text-muted);">Conforme a la Ley N° 29733 de Protección de Datos Personales del Perú y estándares internacionales, garantizamos tus Derechos ARCO (Acceso, Rectificación, Cancelación y Oposición). Puedes solicitar la eliminación definitiva e inmediata de tu cuenta y todos tus datos financieros desde el botón de Ajustes > <em>"Eliminar Mi Cuenta y Datos"</em> o enviando un correo a <strong>aliviafin@gmail.com</strong>. La purga de datos se procesa de forma irrevocable en menos de 48 horas.</p>
 
           <h4 style="margin: 0 0 6px 0; font-size: 13.5px; font-weight: 800; color: var(--text-main);">5. Cero Venta de Información Personal</h4>
           <p style="margin: 0 0 4px 0; color: var(--text-muted);">AliviaFin no comercializa, monetiza ni comparte tu historial financiero con centrales de riesgo, aseguradoras, anunciantes ni entidades crediticias. Tus datos te pertenecen al 100%.</p>
@@ -3253,7 +3253,7 @@
           <h4 style="margin: 0 0 6px 0; font-size: 13.5px; font-weight: 800; color: var(--text-main);">2. Cómo Solicitar tu Devolución</h4>
           <p style="margin: 0 0 10px 0; color: var(--text-muted);">
             Para solicitar tu reembolso, únicamente debes contactarnos por cualquiera de nuestros canales:<br>
-            • <strong>Correo de Soporte:</strong> soporte@aliviafin.com<br>
+            • <strong>Correo de Soporte:</strong> aliviafin@gmail.com<br>
             • <strong>Canal de Atención:</strong> WhatsApp de soporte oficial en la plataforma<br>
             Indicando tu correo de cuenta registrado en AliviaFin y la captura o constancia de tu operación por Yape, Plin o transferencia bancaria.
           </p>
@@ -3272,35 +3272,35 @@
         </div>
 
         <div id="legalSectionProvider" style="display: none;">
-          <h4 style="margin: 0 0 6px 0; font-size: 13.5px; font-weight: 800; color: var(--text-main);">Identificación del Servicio</h4>
-          <p style="margin: 0 0 10px 0; color: var(--text-muted);">En cumplimiento con los deberes de transparencia e información al usuario:</p>
+          <h4 style="margin: 0 0 6px 0; font-size: 13.5px; font-weight: 800; color: var(--text-main);">Identificación del Software</h4>
+          <p style="margin: 0 0 10px 0; color: var(--text-muted);">En cumplimiento con los estándares de transparencia y claridad de cara a nuestros usuarios:</p>
           <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; font-size: 12px; line-height: 1.6; color: #334155; margin-bottom: 12px;">
-            <div><strong>• Denominación de la Plataforma:</strong> AliviaFin</div>
+            <div><strong>• Denominación:</strong> AliviaFin</div>
             <div><strong>• Naturaleza del Software:</strong> Plataforma web y PWA para organización y optimización presupuestaria personal.</div>
-            <div><strong>• Domicilio Operativo:</strong> Lima, República del Perú</div>
-            <div><strong>• Correo de Soporte & Legal:</strong> soporte@aliviafin.com</div>
+            <div><strong>• Operado por:</strong> Equipo Fundador AliviaFin (Lima, República del Perú)</div>
+            <div><strong>• Correo Oficial de Contacto & Soporte:</strong> aliviafin@gmail.com</div>
             <div><strong>• Privacidad de Datos:</strong> Zero-Knowledge Cloud con cifrado por usuario.</div>
           </div>
-          <p style="margin: 0 0 4px 0; color: var(--text-muted); font-size: 11.5px;">Para requerimientos, consultas sobre el tratamiento de datos o ejercicio de derechos ARCO, puedes comunicarte directamente al correo antes indicado.</p>
+          <p style="margin: 0 0 4px 0; color: var(--text-muted); font-size: 11.5px;">Para requerimientos, dudas o soporte técnico, puedes comunicarte directamente al correo <strong>aliviafin@gmail.com</strong>.</p>
         </div>
       </div>
 
       <div style="padding: 12px 20px; background: rgba(15, 23, 42, 0.02); border-top: 1px solid var(--border-light, #e2e8f0); display: flex; justify-content: space-between; align-items: center;">
-        <button type="button" onclick="closeModal('legalModal'); openReclamacionesModal();" style="background: none; border: none; font-size: 11.5px; color: #2563eb; font-weight: 700; cursor: pointer; text-decoration: underline; padding: 0;">📖 Libro de Reclamaciones Virtual</button>
+        <button type="button" onclick="closeModal('legalModal'); openReclamacionesModal();" style="background: none; border: none; font-size: 11.5px; color: #2563eb; font-weight: 700; cursor: pointer; text-decoration: underline; padding: 0;">📨 Canal de Atención y Consultas</button>
         <button type="button" class="btn btn-primary" onclick="closeModal('legalModal')" style="padding: 8px 18px; font-size: 12px; font-weight: 800; border-radius: 10px;">Entendido</button>
       </div>
     </div>
   </div>
 
-  <!-- MODAL: LIBRO DE RECLAMACIONES VIRTUAL (LEY N° 29571 / D.S. 011-2011-PCM · INDECOPI) -->
+  <!-- MODAL: CANAL DE ATENCIÓN & CONSULTAS -->
   <div class="glass-backdrop" id="reclamacionesModal" style="display: none; z-index: 100011;" onclick="if(event.target === this) closeModal('reclamacionesModal')">
     <div class="legal-modal-container" style="max-width: 580px; max-height: 90vh;">
       <div class="legal-modal-header">
         <div style="display: flex; align-items: center; gap: 8px;">
-          <span style="font-size: 18px;">📖</span>
+          <span style="font-size: 18px;">📨</span>
           <div>
-            <div style="font-size: 15px; font-weight: 800; color: var(--text-main);">Libro de Reclamaciones Virtual</div>
-            <div style="font-size: 10.5px; color: #64748b;">Conforme a la Ley N° 29571 y D.S. 011-2011-PCM · Indecopi</div>
+            <div style="font-size: 15px; font-weight: 800; color: var(--text-main);">Canal de Atención & Consultas</div>
+            <div style="font-size: 10.5px; color: #64748b;">Atención directa y resolución de dudas para usuarios de AliviaFin</div>
           </div>
         </div>
         <button type="button" onclick="closeModal('reclamacionesModal')" style="background: rgba(0,0,0,0.06); border: none; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 13px; cursor: pointer; color: #64748b;">✕</button>
@@ -3309,8 +3309,8 @@
       <div class="legal-content-body" style="padding: 16px 20px;">
         <!-- Ficha Proveedor -->
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 12px; margin-bottom: 14px; font-size: 11px; line-height: 1.5; color: #475569;">
-          <div><strong>Proveedor:</strong> AliviaFin — Plataforma de Gestión Financiera Personal</div>
-          <div><strong>Sede:</strong> Lima, Perú · <strong>Canal de Atención:</strong> soporte@aliviafin.com</div>
+          <div><strong>Software:</strong> AliviaFin — Plataforma de Gestión Financiera Personal</div>
+          <div><strong>Sede:</strong> Lima, Perú · <strong>Canal de Atención:</strong> aliviafin@gmail.com</div>
         </div>
 
         <!-- FORMULARIO DE RECLAMACIÓN -->

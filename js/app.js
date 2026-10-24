@@ -7706,16 +7706,18 @@
       closeModal('settingsModal');
       syncVersionUI();
       openModalById('whatsNewModal');
-      const userKey = currentUser ? currentUser.id : 'guest';
-      localStorage.setItem('finanzas_last_seen_version_' + userKey, APP_VERSION);
-      localStorage.setItem('finanzas_last_seen_version', APP_VERSION);
     }
 
-    function dismissWhatsNewModal() {
+    function dismissWhatsNewModal(confirmed = false) {
       closeModal('whatsNewModal');
-      const userKey = currentUser ? currentUser.id : 'guest';
-      localStorage.setItem('finanzas_last_seen_version_' + userKey, APP_VERSION);
-      localStorage.setItem('finanzas_last_seen_version', APP_VERSION);
+      if (confirmed) {
+        const userKey = currentUser ? currentUser.id : 'guest';
+        localStorage.setItem('aliviafin_whats_new_confirmed_' + APP_VERSION, 'true');
+        localStorage.setItem('aliviafin_whats_new_confirmed_' + userKey + '_' + APP_VERSION, 'true');
+        localStorage.setItem('finanzas_last_seen_version_' + userKey, APP_VERSION);
+        localStorage.setItem('finanzas_last_seen_version', APP_VERSION);
+        showToast('✨ ¡Novedades confirmadas! Que disfrutes AliviaFin ' + APP_VERSION, 'success');
+      }
     }
 
     // Comprobación automática de bienvenida, versión y anuncios
@@ -7730,20 +7732,10 @@
                      || localStorage.getItem('finanzas_setup_completed_' + userKey) === 'true'
                      || localStorage.getItem('finanzas_setup_completed_' + userKey) === 'skipped'
                      || localStorage.getItem('finanzas_setup_completed') === 'true';
-      const seenVer = localStorage.getItem('finanzas_last_seen_version_' + userKey) || localStorage.getItem('finanzas_last_seen_version');
-
-      // Si es el administrador César, nunca interrumpir con popups automáticos de wizard ni novedades
-      if (isCesar) {
-        localStorage.setItem('finanzas_setup_completed_' + userKey, 'true');
-        localStorage.setItem('finanzas_setup_completed', 'true');
-        localStorage.setItem('finanzas_last_seen_version_' + userKey, APP_VERSION);
-        localStorage.setItem('finanzas_last_seen_version', APP_VERSION);
-        return;
-      }
 
       const hasData = userHasExistingFinancialData(appState);
 
-      if (setupDone || hasData) {
+      if (setupDone || hasData || isCesar) {
         // Usuario existente con datos o que ya completó onboarding: blindar flags
         if (appState && !appState.onboardingCompleted) {
           appState.onboardingCompleted = true;
@@ -7757,17 +7749,17 @@
         return;
       }
 
-      // Si el navegador ya tiene registrada alguna versión vista, NO molestar con popups automáticos en login/logout
-      // El usuario puede consultar novedades cuando lo desee desde Ajustes > 🚀 Novedades
-      if (seenVer) {
-        localStorage.setItem('finanzas_last_seen_version_' + userKey, APP_VERSION);
-        localStorage.setItem('finanzas_last_seen_version', APP_VERSION);
-        return;
-      }
+      // Verificación de novedades para la versión actual:
+      // Debe aparecer al loguearse o al actualizar la página mientras está logueado,
+      // y seguirá apareciendo hasta que el usuario confirme lectura ("¡Entendido, a explorar!").
+      const isConfirmed = localStorage.getItem('aliviafin_whats_new_confirmed_' + userKey + '_' + APP_VERSION) === 'true'
+                       || localStorage.getItem('aliviafin_whats_new_confirmed_' + APP_VERSION) === 'true';
 
-      // Primera vez absoluta en este navegador
-      localStorage.setItem('finanzas_last_seen_version_' + userKey, APP_VERSION);
-      localStorage.setItem('finanzas_last_seen_version', APP_VERSION);
+      if (!isConfirmed) {
+        setTimeout(() => {
+          openWhatsNewModal();
+        }, 1100);
+      }
     }
 
     // ================================================================
