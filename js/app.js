@@ -3638,11 +3638,43 @@
       }
     }
 
+    function findRecentDuplicateExpense(name, amount, month) {
+      if (!appState.transactions || !appState.transactions[month]) return null;
+      const list = appState.transactions[month];
+      const now = Date.now();
+      const cleanName = (name || '').trim().toLowerCase();
+      
+      return list.find(t => {
+        const isSameAmount = Math.abs((Number(t.amount) || 0) - amount) < 0.01;
+        const tName = (t.name || '').trim().toLowerCase();
+        const isSameName = (tName === cleanName) || (cleanName.length > 2 && (tName.includes(cleanName) || cleanName.includes(tName)));
+        
+        let isRecent = false;
+        if (t.id && typeof t.id === 'string') {
+          const matches = t.id.match(/_(\d{10,13})_/);
+          if (matches && matches[1]) {
+            const ts = parseInt(matches[1], 10);
+            if (ts && (now - ts) < 5 * 60 * 1000) { // Menos de 5 minutos
+              isRecent = true;
+            }
+          }
+        }
+        return isSameAmount && isSameName && isRecent;
+      });
+    }
+
     async function saveQuickExpense() {
       const amount = parseFloat(_quickAmountBuffer);
       if (isNaN(amount) || amount <= 0) {
         showToast('⚠️ Ingresa un monto mayor a 0', 'warning');
         return;
+      }
+
+      // Detector de Gastos Duplicados (MonAi pattern)
+      const dup = findRecentDuplicateExpense(_quickSelectedCategory, amount, appState.currentMonth);
+      if (dup) {
+        const proceed = confirm(`⚠️ Posible gasto duplicado:\nYa registraste "${_quickSelectedCategory}" por S/ ${amount.toFixed(2)} hace unos instantes.\n\n¿Deseas registrarlo de todos modos?`);
+        if (!proceed) return;
       }
 
       ensureMonthTransactions(appState.currentMonth);
@@ -4473,6 +4505,35 @@
           elSavings.className = 'stat-value text-warning';
         } else {
           elSavings.className = 'stat-value text-danger';
+        }
+      }
+
+      // Widget Límite Sugerido de Hoy (Safe-to-Spend Apple MonAi / Lukas)
+      const elDailyBadge = document.getElementById('execDailyLimitBadge');
+      const elDailyText = document.getElementById('execDailyLimitText');
+      if (elDailyBadge && elDailyText) {
+        if (isCurrentRealMonth) {
+          const now = new Date();
+          const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+          const currentDay = now.getDate();
+          const daysRemaining = Math.max(1, (daysInMonth - currentDay) + 1);
+          
+          // Liquidez libre descontando facturas pendientes
+          const availableFree = roundCurrency(currentBalance - totalPending);
+          const suggestedDaily = availableFree > 0 ? roundCurrency(availableFree / daysRemaining) : 0;
+          
+          elDailyBadge.style.display = 'inline-flex';
+          if (suggestedDaily > 0) {
+            elDailyBadge.className = 'exec-daily-limit-badge is-positive';
+            elDailyText.textContent = `Límite sugerido de hoy: ${sym} ${suggestedDaily.toLocaleString(loc, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+          } else {
+            elDailyBadge.className = 'exec-daily-limit-badge is-warning';
+            elDailyText.textContent = `Límite sugerido de hoy: ${sym} 0.00`;
+          }
+        } else {
+          elDailyBadge.style.display = 'inline-flex';
+          elDailyBadge.className = 'exec-daily-limit-badge is-historical';
+          elDailyText.textContent = `Mes cerrado · ${appState.currentMonth}`;
         }
       }
 
@@ -5324,6 +5385,14 @@
 
       const allMonthsOrder = getSortedMonths();
       const selectedIndex = allMonthsOrder.indexOf(currentSelectedMonth);
+
+      if (!editId) {
+        const dup = findRecentDuplicateExpense(name, amount, currentSelectedMonth);
+        if (dup) {
+          const proceed = confirm(`⚠️ Posible gasto duplicado:\nYa registraste "${name}" por S/ ${amount.toFixed(2)} hace unos minutos.\n\n¿Deseas registrarlo de todos modos?`);
+          if (!proceed) return;
+        }
+      }
 
       if (editId) {
         // ==============================================================

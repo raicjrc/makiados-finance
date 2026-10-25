@@ -3830,38 +3830,136 @@
        ZEN EXECUTIVE REDESIGN (FASE 1)
        ================================================================ */
 
-    /* ====== 0. EXECUTIVE BALANCE CARD & APPLE FINTECH SPRINGS (v67.4) ====== */
+    /* ====== 0. EXECUTIVE BALANCE CARD & APPLE LIQUID GLASS (v68.0) ====== */
     .executive-balance-card {
-      background: rgba(255, 255, 255, 0.94);
-      border-radius: 24px;
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.86) 100%);
+      border-radius: 26px;
       padding: 22px 24px;
       margin-bottom: 18px;
-      border: 1.5px solid rgba(226, 232, 240, 0.95);
-      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05), 0 2px 6px rgba(0, 0, 0, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.85);
+      box-shadow: 
+        inset 0 1.5px 1.5px 0 rgba(255, 255, 255, 0.95),
+        inset 0 -1px 1px 0 rgba(0, 0, 0, 0.02),
+        0 14px 34px -4px rgba(15, 23, 42, 0.06),
+        0 2px 6px rgba(0, 0, 0, 0.02);
       position: relative;
       overflow: hidden;
       transition: transform 0.22s var(--apple-spring), box-shadow 0.22s var(--apple-spring), border-color 0.22s ease;
-      backdrop-filter: blur(28px) saturate(180%);
-      -webkit-backdrop-filter: blur(28px) saturate(180%);
+      backdrop-filter: blur(32px) saturate(190%);
+      -webkit-backdrop-filter: blur(32px) saturate(190%);
     }
     .executive-balance-card:hover {
       transform: translateY(-2px);
-      box-shadow: 0 16px 36px rgba(15, 23, 42, 0.08), 0 0 25px rgba(16, 185, 129, 0.1);
-      border-color: rgba(16, 185, 129, 0.4);
+      box-shadow: 
+        inset 0 1.5px 1.5px 0 rgba(255, 255, 255, 0.98),
+        0 18px 40px rgba(15, 23, 42, 0.08), 
+        0 0 25px rgba(16, 185, 129, 0.12);
+      border-color: rgba(16, 185, 129, 0.35);
     }
     .executive-balance-card:active {
-      transform: scale(0.98);
+      transform: scale(0.985);
     }
 
-    /* Dark Mode: Obsidian Glass */
+    /* Dark Mode: Apple Obsidian Liquid Glass */
     body.theme-twilight .executive-balance-card {
-      background: rgba(18, 26, 43, 0.82);
-      border-color: rgba(255, 255, 255, 0.09);
-      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45), 0 0 35px rgba(16, 185, 129, 0.08);
+      background: linear-gradient(145deg, rgba(24, 32, 51, 0.85) 0%, rgba(15, 22, 38, 0.75) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 
+        inset 0 1.5px 1.5px 0 rgba(255, 255, 255, 0.2),
+        inset 0 -1px 1px 0 rgba(0, 0, 0, 0.4),
+        0 18px 44px rgba(0, 0, 0, 0.48), 
+        0 0 35px rgba(16, 185, 129, 0.08);
+      backdrop-filter: blur(32px) saturate(190%);
+      -webkit-backdrop-filter: blur(32px) saturate(190%);
     }
     body.theme-twilight .executive-balance-card:hover {
-      box-shadow: 0 20px 48px rgba(0, 0, 0, 0.55), 0 0 45px rgba(16, 185, 129, 0.14);
+      box-shadow: 
+        inset 0 1.5px 1.5px 0 rgba(255, 255, 255, 0.25),
+        0 22px 52px rgba(0, 0, 0, 0.58), 
+        0 0 45px rgba(16, 185, 129, 0.14);
       border-color: rgba(16, 185, 129, 0.35);
+    }
+
+    /* Widget Apple: Límite Sugerido de Hoy (Safe-to-Spend) */
+    .exec-daily-limit-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 13px;
+      font-weight: 700;
+      margin-top: 10px;
+      margin-bottom: 2px;
+      letter-spacing: -0.01em;
+      backdrop-filter: blur(16px) saturate(160%);
+      -webkit-backdrop-filter: blur(16px) saturate(160%);
+      transition: all 0.25s var(--apple-spring, ease);
+      user-select: none;
+    }
+    .exec-daily-limit-badge.is-positive {
+      background: linear-gradient(135deg, rgba(236, 253, 245, 0.92) 0%, rgba(209, 250, 229, 0.78) 100%);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      color: #065f46;
+      box-shadow: 
+        inset 0 1px 1px rgba(255, 255, 255, 0.95),
+        0 2px 8px rgba(16, 185, 129, 0.08);
+    }
+    .exec-daily-limit-badge.is-warning {
+      background: linear-gradient(135deg, rgba(254, 242, 242, 0.92) 0%, rgba(254, 226, 226, 0.78) 100%);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      color: #991b1b;
+      box-shadow: 
+        inset 0 1px 1px rgba(255, 255, 255, 0.95),
+        0 2px 8px rgba(239, 68, 68, 0.08);
+    }
+    .exec-daily-limit-badge.is-historical {
+      background: linear-gradient(135deg, rgba(241, 245, 249, 0.92) 0%, rgba(226, 232, 240, 0.78) 100%);
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      color: #475569;
+      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.85);
+    }
+    .exec-daily-limit-icon {
+      font-size: 13px;
+      line-height: 1;
+    }
+
+    /* Dark Mode: Límite Sugerido de Hoy */
+    body.theme-twilight .exec-daily-limit-badge.is-positive {
+      background: linear-gradient(135deg, rgba(6, 78, 59, 0.45) 0%, rgba(6, 95, 70, 0.3) 100%);
+      border: 1px solid rgba(52, 211, 153, 0.3);
+      color: #6ee7b7;
+      box-shadow: 
+        inset 0 1px 1px rgba(255, 255, 255, 0.15),
+        0 4px 12px rgba(0, 0, 0, 0.25);
+    }
+    body.theme-twilight .exec-daily-limit-badge.is-warning {
+      background: linear-gradient(135deg, rgba(127, 29, 29, 0.45) 0%, rgba(153, 27, 27, 0.3) 100%);
+      border: 1px solid rgba(248, 113, 113, 0.3);
+      color: #fca5a5;
+      box-shadow: 
+        inset 0 1px 1px rgba(255, 255, 255, 0.15),
+        0 4px 12px rgba(0, 0, 0, 0.25);
+    }
+    body.theme-twilight .exec-daily-limit-badge.is-historical {
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.5) 0%, rgba(15, 23, 42, 0.4) 100%);
+      border: 1px solid rgba(100, 116, 139, 0.3);
+      color: #94a3b8;
+      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.08);
+    }
+
+    /* Soporte para Modo Privacidad en Límite Sugerido */
+    body.privacy-active #execDailyLimitText {
+      visibility: hidden;
+      position: relative;
+    }
+    body.privacy-active #execDailyLimitText::after {
+      content: "Límite sugerido de hoy: S/ •••••";
+      visibility: visible;
+      position: absolute;
+      left: 0;
+      top: 0;
+      white-space: nowrap;
     }
 
     .exec-card-top-row {
