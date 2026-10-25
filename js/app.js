@@ -4432,14 +4432,14 @@
       const loc = getActiveCurrency().locale;
 
       const elSalary = document.getElementById('metricSalary');
-      if (elSalary) elSalary.textContent = sym + ' ' + Math.round(totalIncome).toLocaleString(loc);
+      if (elSalary) elSalary.textContent = sym + ' ' + totalIncome.toLocaleString(loc, {minimumFractionDigits: 2, maximumFractionDigits: 2});
       const elSpent = document.getElementById('metricSpent');
-      if (elSpent) elSpent.textContent = sym + ' ' + Math.round(totalSpent).toLocaleString(loc);
+      if (elSpent) elSpent.textContent = sym + ' ' + totalSpent.toLocaleString(loc, {minimumFractionDigits: 2, maximumFractionDigits: 2});
       
       // Métrica de Por Pagar
       const totalPending = roundCurrency(totalSpent - totalPaid);
       const elPending = document.getElementById('metricPending');
-      if (elPending) elPending.textContent = sym + ' ' + Math.round(totalPending).toLocaleString(loc);
+      if (elPending) elPending.textContent = sym + ' ' + totalPending.toLocaleString(loc, {minimumFractionDigits: 2, maximumFractionDigits: 2});
 
       // Executive Balance Card
       const elSavingsLarge = document.getElementById('metricSavingsLarge');
