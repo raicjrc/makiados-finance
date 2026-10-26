@@ -19,7 +19,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="js/chart.min.js?v=72.0"></script>
   <script src="js/supabase.min.js?v=72.0"></script>
-  <link rel="stylesheet" href="css/styles.css?v=78.1">
+  <link rel="stylesheet" href="css/styles.css?v=78.2">
 
   <style>
     /* Estilos Críticos Inmediatos: Paleta Unificada AliviaFin Light & Emerald */
@@ -864,44 +864,52 @@
           <button type="button" class="advisor-subtab-pill advisor-subtab-pill-deudas active" onclick="switchAdvisorView('deudas')">❄️ Bola de Nieve & Cuotas</button>
         </div>
 
-        <!-- HEADER ESTRATÉGICO EJECUTIVO (Fiel al Mockup 1) -->
+        <!-- HEADER ESTRATÉGICO EJECUTIVO (Fase 6: Liquid Glass & Lenguaje Amigable) -->
         <div class="card executive-header-card" style="border-radius: 20px; padding: 20px 24px; margin-bottom: 16px;">
           <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
             <div style="display: flex; align-items: center; gap: 12px;">
-              <span style="font-size: 28px;">📈</span>
+              <span style="font-size: 28px;">🏔️</span>
               <div>
                 <h2 style="font-size: 19px; font-weight: 800; margin: 0; color: var(--text-main); letter-spacing: -0.02em;">
-                  Plan Estratégico Bola de Nieve & Avalancha
+                  Plan Cero Deudas
                 </h2>
                 <div style="font-size: 12px; color: var(--text-muted); margin-top: 3px;">
-                  Liquidación acelerada de pasivos y optimización matemática de tu flujo libre
+                  Paga tus compras en cuotas y préstamos en orden estratégico para liberarte antes sin asfixiarte
                 </div>
               </div>
             </div>
             
             <!-- Selector de Estrategia (Apple Switcher) -->
             <div class="strategy-toggle-box">
-              <span style="font-size: 11px; font-weight: 700; color: var(--text-muted); padding: 0 4px 0 8px;">Estrategia:</span>
+              <span style="font-size: 11px; font-weight: 700; color: var(--text-muted); padding: 0 4px 0 8px;">Método:</span>
               <button type="button" class="strategy-pill active" id="stratPillSnowball" onclick="setDebtStrategy('snowball')">❄️ Bola de Nieve</button>
-              <button type="button" class="strategy-pill" id="stratPillAvalanche" onclick="setDebtStrategy('avalanche')">⚡ Avalancha</button>
+              <button type="button" class="strategy-pill" id="stratPillAvalanche" onclick="setDebtStrategy('avalanche')">⚡ Menos Intereses</button>
+            </div>
+          </div>
+
+          <!-- Micro-Guía Explicativa de la Estrategia Activa -->
+          <div id="debtStrategyExplainer" class="debt-strategy-explainer">
+            <span style="font-size: 16px; flex-shrink: 0;">❄️</span>
+            <div>
+              <strong>Método Bola de Nieve (Recomendado):</strong> Pagas primero la deuda más pequeña. Cada victoria rápida te motiva y usas esa cuota que se liberó para pagar la siguiente mucho más rápido.
             </div>
           </div>
         </div>
 
         <!-- FILA 1: KPIS EJECUTIVOS (Fecha Cero Deudas, Acelerador, Intereses Ahorrados) -->
         <div class="debt-kpi-grid">
-          <!-- Card 1: Fecha Cero Deudas -->
+          <!-- Card 1: Hero de Libertad Financiera -->
           <div class="card debt-kpi-main-card">
             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
               <div>
-                <div style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Fecha Cero Deudas:</div>
-                <div id="debtFreedomTargetDate" style="font-size: 26px; font-weight: 900; color: var(--text-main); margin-top: 2px; letter-spacing: -0.02em;">Cargando...</div>
-                <div id="debtSpeedSubtitle" style="font-size: 11px; color: var(--text-muted); margin-top: 3px;">Al ritmo actual de pagos mínimos</div>
+                <div style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">🎯 Fecha Estimada de Libertad:</div>
+                <div id="debtFreedomTargetDate" style="font-size: 27px; font-weight: 900; color: var(--text-main); margin-top: 3px; letter-spacing: -0.02em;">Cargando...</div>
+                <div id="debtSpeedSubtitle" style="font-size: 11.5px; color: var(--text-muted); margin-top: 3px;">Al ritmo actual de tus cuotas</div>
               </div>
-              <span id="debtSpeedBadge" class="badge-pro-gold" style="font-size: 10.5px; padding: 4px 10px;">Ritmo Regular</span>
+              <span id="debtSpeedBadge" class="badge-pro-gold" style="font-size: 11px; padding: 5px 12px; border-radius: 999px;">Ritmo Regular</span>
             </div>
 
-            <!-- Barra de Progreso Lujo (Cian a Esmeralda con Glow) -->
+            <!-- Barra de Progreso Lujo con Glow Esmeralda -->
             <div class="debt-progress-track">
               <div id="debtProgressBarFill" class="debt-progress-fill" style="width: 50%;">
                 <span id="debtProgressText" class="debt-progress-label">0% PAGADO</span>
@@ -909,25 +917,50 @@
               <span id="debtProgressRemaining" class="debt-progress-remaining">100%</span>
             </div>
 
-            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--text-muted); margin-top: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--text-muted); margin-top: 6px;">
               <span id="debtStartDateLabel">Inicio: Este Mes</span>
               <span id="debtZeroDateLabel">0 Deudas: Proyectado</span>
+            </div>
+
+            <!-- 3 Mini KPIs Integrados -->
+            <div class="debt-hero-mini-kpis">
+              <div class="debt-hero-mini-pill">
+                <span class="debt-hero-mini-label">Total que debes</span>
+                <span id="debtHeroTotalBalance" class="debt-hero-mini-val">S/ 0.00</span>
+              </div>
+              <div class="debt-hero-mini-pill">
+                <span class="debt-hero-mini-label">Pagos este mes</span>
+                <span id="debtHeroMonthlyPayment" class="debt-hero-mini-val">S/ 0.00 / mes</span>
+              </div>
+              <div class="debt-hero-mini-pill">
+                <span class="debt-hero-mini-label">Tiempo estimado</span>
+                <span id="debtHeroTotalMonths" class="debt-hero-mini-val">0 meses</span>
+              </div>
             </div>
           </div>
 
           <!-- Card 2: Abono Extra Mensual (Acelerador) -->
           <div class="card debt-kpi-card" style="display: flex; flex-direction: column; justify-content: space-between;">
             <div>
-              <div style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em;">Abono Extra Mensual</div>
+              <div style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em;">🚀 Acelerador Mensual</div>
               <div id="debtExtraDisplayBig" style="font-size: 24px; font-weight: 900; color: #10b981; margin-top: 2px;">+ S/ 0 / mes</div>
               <div id="debtTotalMonthlyAttack" style="font-size: 11px; color: var(--text-muted); margin-top: 3px;">Total mensual con mínimos: S/ 0.00</div>
+
+              <!-- Píldoras de Monto Rápido -->
+              <div class="debt-preset-group">
+                <button type="button" class="debt-preset-btn active" data-amount="0" onclick="setSnowballExtraPreset(0)">S/ 0</button>
+                <button type="button" class="debt-preset-btn" data-amount="50" onclick="setSnowballExtraPreset(50)">+S/ 50</button>
+                <button type="button" class="debt-preset-btn" data-amount="100" onclick="setSnowballExtraPreset(100)">+S/ 100</button>
+                <button type="button" class="debt-preset-btn" data-amount="200" onclick="setSnowballExtraPreset(200)">+S/ 200</button>
+                <button type="button" class="debt-preset-btn" data-amount="500" onclick="setSnowballExtraPreset(500)">+S/ 500</button>
+              </div>
             </div>
             
             <!-- Slider interactivo Apple -->
-            <div style="margin-top: 10px;">
+            <div style="margin-top: 6px;">
               <input type="range" id="snowballExtraSlider" min="0" max="2000" step="25" value="0" oninput="onSnowballSliderChange(this.value)" class="apple-range-slider" style="width: 100%;">
               <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--text-muted); margin-top: 4px;">
-                <span style="cursor: pointer; font-weight: 700; color: var(--primary);" onclick="if(document.getElementById('snowballExtraSlider')){document.getElementById('snowballExtraSlider').value=0; onSnowballSliderChange(0);}">0 (Solo mínimos)</span>
+                <span style="cursor: pointer; font-weight: 700; color: var(--primary);" onclick="setSnowballExtraPreset(0)">Solo cuotas regulares</span>
                 <span id="snowballSliderAmountLabel" style="font-weight: 800; color: #10b981;">S/ 0 extra</span>
                 <span>+ S/ 2,000</span>
               </div>
@@ -937,11 +970,11 @@
           <!-- Card 3: Total Intereses Ahorrados -->
           <div class="card debt-kpi-card" style="display: flex; flex-direction: column; justify-content: space-between;">
             <div>
-              <div style="font-size: 11.5px; font-weight: 700; color: var(--text-muted);">Total Intereses Ahorrados</div>
+              <div style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em;">💰 Ahorro Estimado en Intereses</div>
               <div id="debtTotalInterestSaved" style="font-size: 24px; font-weight: 900; color: #10b981; margin-top: 2px;">S/ 0 ahorrados</div>
             </div>
-            <div style="font-size: 11px; color: var(--text-muted); margin-top: 8px; line-height: 1.4;">
-              Dinero que no pagarás a entidades financieras gracias a la estrategia elegida.
+            <div id="debtImpactAdviceText" style="font-size: 11.5px; color: var(--text-muted); margin-top: 8px; line-height: 1.45;">
+              Dinero que dejas de pagar al banco gracias a liquidar tus compras y préstamos en orden estratégico.
             </div>
           </div>
         </div>
@@ -950,20 +983,20 @@
         <div class="card executive-card" style="margin-top: 16px;">
           <div class="flex-between" style="margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
             <div>
-              <div class="card-title" id="debtTableTitle" style="font-size: 15.5px; font-weight: 800;">
-                Compras en Cuotas y Compromisos (Método Bola de Nieve)
+              <div class="card-title" id="debtTableTitle" style="font-size: 16px; font-weight: 800;">
+                Tus Compras en Cuotas y Compromisos
               </div>
-              <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">
-                Concentra tu capacidad de pago en la cuota #1 (<span style="color: #ea580c; font-weight: 700;">EN ATAQUE ⚡</span>) mientras mantienes al día las demás (<span style="color: #b45309; font-weight: 700;">Pendiente</span>)
+              <div style="font-size: 12px; color: var(--text-muted); margin-top: 3px;">
+                Paso 1: Enfócate en liquidar la #1 (<span style="color: #ea580c; font-weight: 800;">EN ATAQUE ⚡</span>) mientras cubres las demás. ¡Al terminarla, pasarás a la siguiente con más fuerza!
               </div>
             </div>
             
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-              <button type="button" class="btn btn-outline btn-sm" onclick="syncDebtsFromCuotas()" style="font-size: 11px; padding: 5px 12px; border-radius: 10px; font-weight: 700; border-color: var(--border);">
-                🔄 Sincronizar Cuotas del Mes
+              <button type="button" class="btn btn-outline btn-sm" onclick="syncDebtsFromCuotas()" style="font-size: 11.5px; padding: 6px 14px; border-radius: 10px; font-weight: 700; border-color: var(--border);">
+                🔄 Traer Cuotas de mis Gastos
               </button>
-              <button type="button" class="btn btn-primary btn-sm" onclick="openNewDebtPromptModal()" style="font-size: 11px; padding: 5px 14px; border-radius: 10px; font-weight: 700;">
-                + Añadir Cuota / Compromiso
+              <button type="button" class="btn btn-primary btn-sm" onclick="openNewDebtPromptModal()" style="font-size: 11.5px; padding: 6px 16px; border-radius: 10px; font-weight: 700;">
+                + Añadir Cuota o Préstamo
               </button>
             </div>
           </div>
@@ -2500,59 +2533,61 @@
     <div class="modal" style="max-width: 440px;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
         <div class="modal-title" style="margin: 0; display: flex; align-items: center; gap: 8px;">
-          <span id="editDebtModalIcon">✏️</span>
-          <span id="editDebtModalTitle">Editar Compra en Cuotas / Compromiso</span>
+          <span id="editDebtModalIcon">💳</span>
+          <span id="editDebtModalTitle">Añadir Compra en Cuotas o Préstamo</span>
         </div>
         <button type="button" onclick="closeModal('editDebtModal')" aria-label="Cerrar" style="background: #f1f5f9; border: 1px solid #cbd5e1; width: 30px; height: 30px; border-radius: 50%; font-size: 15px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #475569;">✕</button>
       </div>
       <form onsubmit="handleSaveDebtFromModal(event)">
         <input type="hidden" id="editDebtOrigIdx" value="">
 
-        <div class="form-group">
-          <label>Nombre del Compromiso / Tarjeta</label>
-          <input type="text" id="editDebtName" class="form-control" required placeholder="Ej: Tarjeta Interbank Mami">
+        <div class="form-group" style="margin-bottom: 12px;">
+          <label style="font-size: 12px; font-weight: 700;">¿Qué compraste o qué deuda es?</label>
+          <input type="text" id="editDebtName" class="form-control" required placeholder="Ej: Laptop en Falabella, Préstamo BCP" style="font-size: 14px;">
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
           <div>
-            <label style="font-size: 11px; font-weight: 700;">Cuotas Totales</label>
-            <input type="number" id="editDebtInstallmentsTotal" class="form-control" min="1" value="12" oninput="syncEditDebtFields('total')">
+            <label style="font-size: 11.5px; font-weight: 700;">Cuotas Totales</label>
+            <input type="number" id="editDebtInstallmentsTotal" class="form-control" min="1" value="12" oninput="syncEditDebtFields('total')" style="font-size: 14px;">
+            <span style="font-size: 10px; color: var(--text-muted);">En las que se pactó</span>
           </div>
           <div>
-            <label style="font-size: 11px; font-weight: 700;">Cuota Actual este mes</label>
-            <input type="number" id="editDebtInstallmentsCurrent" class="form-control" min="1" value="1" oninput="syncEditDebtFields('current')">
-          </div>
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
-          <div>
-            <label style="font-size: 11px; font-weight: 700;">Cuotas Pendientes por Pagar</label>
-            <input type="number" id="editDebtInstallmentsRemaining" class="form-control" min="1" value="10" oninput="syncEditDebtFields('remaining')">
-          </div>
-          <div>
-            <label style="font-size: 11px; font-weight: 700;">Cuota Mensual (<span class="app-currency-symbol">S/</span>)</label>
-            <input type="number" id="editDebtMinPayment" class="form-control" min="1" step="0.01" value="60" required oninput="syncEditDebtFields('minPayment')">
+            <label style="font-size: 11.5px; font-weight: 700;">Cuotas Faltantes</label>
+            <input type="number" id="editDebtInstallmentsRemaining" class="form-control" min="1" value="10" oninput="syncEditDebtFields('remaining')" style="font-size: 14px;">
+            <span style="font-size: 10px; color: var(--text-muted);">Las que quedan por pagar</span>
           </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;">
+        <!-- Campo interno mantenido sincronizado para compatibilidad -->
+        <input type="hidden" id="editDebtInstallmentsCurrent" value="1">
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
           <div>
-            <label style="font-size: 11px; font-weight: 700;">Saldo Pendiente Total (<span class="app-currency-symbol">S/</span>)</label>
-            <input type="number" id="editDebtBalance" class="form-control" min="0" step="0.01" value="600" required>
+            <label style="font-size: 11.5px; font-weight: 700;">Cuota Mensual (<span class="app-currency-symbol">S/</span>)</label>
+            <input type="number" id="editDebtMinPayment" class="form-control" min="1" step="0.01" value="60" required oninput="syncEditDebtFields('minPayment')" style="font-size: 14px;">
+            <span style="font-size: 10px; color: var(--text-muted);">Monto que pagas cada mes</span>
           </div>
           <div>
-            <label style="font-size: 11px; font-weight: 700;">Tasa TEA Anual (%)</label>
-            <input type="number" id="editDebtTea" class="form-control" min="0" step="0.1" value="0" placeholder="0% sin intereses">
+            <label style="font-size: 11.5px; font-weight: 700;">Saldo Total Faltante (<span class="app-currency-symbol">S/</span>)</label>
+            <input type="number" id="editDebtBalance" class="form-control" min="0" step="0.01" value="600" required style="font-size: 14px;">
+            <span style="font-size: 10px; color: var(--text-muted);">Monto total que te resta</span>
           </div>
         </div>
 
-        <div id="editDebtSummaryHint" style="font-size: 11px; color: #4338ca; background: #e0e7ff; padding: 8px 12px; border-radius: 8px; font-weight: 600; line-height: 1.4; margin-bottom: 14px;">
+        <div class="form-group" style="margin-bottom: 12px;">
+          <label style="font-size: 11.5px; font-weight: 700;">¿Te cobran intereses? (Tasa TEA % Anual)</label>
+          <input type="number" id="editDebtTea" class="form-control" min="0" step="0.1" value="0" placeholder="0% (compras sin intereses)" style="font-size: 14px;">
+          <span style="font-size: 10.5px; color: var(--text-muted); margin-top: 2px; display: block;">Déjalo en 0 si es una compra en cuotas sin intereses con tarjeta de crédito.</span>
+        </div>
+
+        <div id="editDebtSummaryHint" style="font-size: 11.5px; color: #4338ca; background: #e0e7ff; padding: 10px 14px; border-radius: 12px; font-weight: 600; line-height: 1.4; margin-bottom: 16px;">
           💡 Pagando Cuota 3 de 12 • Faltan 10 cuotas (Saldo pendiente: S/ 600.00)
         </div>
 
         <div class="modal-actions">
           <button type="button" class="btn btn-secondary" onclick="closeModal('editDebtModal')">Cancelar</button>
-          <button type="submit" id="editDebtSubmitBtn" class="btn btn-primary">Guardar Cambios</button>
+          <button type="submit" id="editDebtSubmitBtn" class="btn btn-primary">+ Guardar en el Plan</button>
         </div>
       </form>
     </div>
@@ -3764,6 +3799,6 @@
     </div>
   </div>
 
-  <script src="js/app.js?v=78.1"></script>
+  <script src="js/app.js?v=78.2"></script>
 </body>
 </html>

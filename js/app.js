@@ -90,7 +90,7 @@
     // ================================================================
     // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v76.6)
     // ================================================================
-    const APP_VERSION = 'v78.0';
+    const APP_VERSION = 'v78.2';
 
     // ================================================================
     // CONFIGURACIÓN DE SUPABASE Y CLIENTE DE AUTENTICACIÓN
@@ -5283,7 +5283,7 @@
       if (customInstallments.length > 0) {
         customInstallments.forEach(ci => {
           html += `
-            <div class="cuota-row" style="background: #fdf4ff; border-color: #f5d0fe; transition: transform 0.2s; cursor: pointer;" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='none'">
+            <div class="cuota-row" style="background: #fdf4ff; border-color: #f5d0fe; transition: transform 0.2s; cursor: pointer;" onclick="switchAdvisorView('deudas')" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='none'">
               <div>
                 <div class="cuota-title" style="color: #86198f;">💳 ${ci.name}</div>
                 <div class="cuota-sub">${getCurrencySymbol()} ${ci.amount.toFixed(2)} / mes</div>
@@ -5292,12 +5292,20 @@
             </div>
           `;
         });
+        html += `
+          <div style="margin-top: 10px; text-align: center;">
+            <button type="button" class="btn-pill" onclick="switchAdvisorView('deudas')" style="font-size: 11.5px; padding: 7px 14px; background: rgba(99, 102, 241, 0.08); color: #4f46e5; border: 1px solid rgba(99, 102, 241, 0.25); font-weight: 700; cursor: pointer; width: 100%;">❄️ Abrir Plan Cero Deudas (Bola de Nieve) →</button>
+          </div>
+        `;
       } else {
         html = `
           <div style="padding: 20px; text-align: center; color: var(--text-muted); font-size: 12px; background: #fafafa; border-radius: 12px; border: 1px dashed #e5e7eb;">
             <div style="font-size: 24px; margin-bottom: 8px;">💳</div>
             <strong>No hay cuotas registradas</strong><br>
             <span style="font-size: 11px; margin-top: 4px; display: inline-block;">Edita un gasto y activa la opción "Es una compra a cuotas" para monitorearlo aquí.</span>
+            <div style="margin-top: 10px;">
+              <button type="button" class="btn btn-outline btn-sm" onclick="switchAdvisorView('deudas')" style="font-size: 11px; border-radius: 8px; padding: 5px 12px; font-weight: 700;">❄️ Abrir Plan Cero Deudas →</button>
+            </div>
           </div>
         `;
       }
@@ -9478,13 +9486,52 @@ Plazo de respuesta: Máximo 24 a 48 horas hábiles directas a tu correo.`;
 
       const titleEl = document.getElementById('debtTableTitle');
       if (titleEl) {
-        titleEl.textContent = `Compras en Cuotas y Compromisos (Orden: ${currentDebtStrategy === 'snowball' ? 'Bola de Nieve' : 'Avalancha'})`;
+        titleEl.textContent = `Tus Compras en Cuotas y Compromisos (Orden: ${currentDebtStrategy === 'snowball' ? 'Bola de Nieve' : 'Menos Intereses'})`;
       }
 
+      updateDebtStrategyExplainerUI(currentDebtStrategy);
+      syncSnowballPresetButtons(currentDebtExtraPayment);
       calculateAndRenderDebtPlan(currentDebtExtraPayment);
       renderExecutiveAdvisor();
     }
     window.renderDebtCommandCenter = renderDebtCommandCenter;
+
+    function updateDebtStrategyExplainerUI(strat) {
+      const explainer = document.getElementById('debtStrategyExplainer');
+      if (!explainer) return;
+      if (strat === 'snowball') {
+        explainer.innerHTML = `
+          <span style="font-size: 16px; flex-shrink: 0;">❄️</span>
+          <div>
+            <strong>Método Bola de Nieve (Recomendado):</strong> Pagas primero la deuda más pequeña. Cada victoria rápida te motiva y usas esa cuota que se liberó para pagar la siguiente mucho más rápido.
+          </div>
+        `;
+      } else {
+        explainer.innerHTML = `
+          <span style="font-size: 16px; flex-shrink: 0;">⚡</span>
+          <div>
+            <strong>Método Menos Intereses (Avalancha):</strong> Pagas primero la deuda con mayor tasa de interés (TEA). Minimizas los intereses totales que pagas a las entidades bancarias.
+          </div>
+        `;
+      }
+    }
+    window.updateDebtStrategyExplainerUI = updateDebtStrategyExplainerUI;
+
+    function syncSnowballPresetButtons(amount) {
+      const val = parseFloat(amount) || 0;
+      document.querySelectorAll('.debt-preset-btn').forEach(btn => {
+        const btnAmt = parseFloat(btn.dataset.amount);
+        btn.classList.toggle('active', btnAmt === val);
+      });
+    }
+
+    function setSnowballExtraPreset(amount) {
+      const slider = document.getElementById('snowballExtraSlider');
+      if (slider) slider.value = amount;
+      onSnowballSliderChange(amount);
+      syncSnowballPresetButtons(amount);
+    }
+    window.setSnowballExtraPreset = setSnowballExtraPreset;
 
     function setDebtStrategy(strat) {
       currentDebtStrategy = strat;
@@ -9495,9 +9542,10 @@ Plazo de respuesta: Máximo 24 a 48 horas hábiles directas a tu correo.`;
 
       const titleEl = document.getElementById('debtTableTitle');
       if (titleEl) {
-        titleEl.textContent = `Compras en Cuotas y Compromisos (Orden: ${strat === 'snowball' ? 'Bola de Nieve' : 'Avalancha'})`;
+        titleEl.textContent = `Tus Compras en Cuotas y Compromisos (Orden: ${strat === 'snowball' ? 'Bola de Nieve' : 'Menos Intereses'})`;
       }
 
+      updateDebtStrategyExplainerUI(strat);
       saveDebtSnowballPlanQuiet();
       calculateAndRenderDebtPlan(currentDebtExtraPayment);
       renderExecutiveAdvisor();
@@ -9522,6 +9570,7 @@ Plazo de respuesta: Máximo 24 a 48 horas hábiles directas a tu correo.`;
           : `S/ 0 extra`;
       }
 
+      syncSnowballPresetButtons(extra);
       saveDebtSnowballPlanQuiet();
       calculateAndRenderDebtPlan(extra);
       renderExecutiveAdvisor();
@@ -9587,23 +9636,37 @@ Plazo de respuesta: Máximo 24 a 48 horas hábiles directas a tu correo.`;
       }
 
       if (!currentSnowballDebts || currentSnowballDebts.length === 0) {
-        if (targetDateEl) targetDateEl.textContent = '¡Sin cuotas activas!';
-        if (speedBadgeEl) speedBadgeEl.textContent = 'Libre de Cuotas';
-        if (speedSubtitleEl) speedSubtitleEl.textContent = 'No tienes compromisos en cuotas pendientes';
+        if (targetDateEl) targetDateEl.textContent = '¡Sin deudas activas! 🎉';
+        if (speedBadgeEl) {
+          speedBadgeEl.textContent = '100% Libre';
+          speedBadgeEl.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+          speedBadgeEl.style.color = '#ffffff';
+        }
+        if (speedSubtitleEl) speedSubtitleEl.textContent = 'No tienes compras en cuotas ni préstamos pendientes';
         if (progressBarFillEl) progressBarFillEl.style.width = '100%';
         if (progressTextEl) progressTextEl.textContent = '100% LIBRE';
-        if (progressRemEl) progressRemEl.textContent = '0%';
+        if (progressRemEl) progressRemEl.textContent = 'S/ 0.00';
         if (totalMonthlyAttackEl) totalMonthlyAttackEl.textContent = 'Total mensual: S/ 0.00';
         if (totalInterestSavedEl) totalInterestSavedEl.textContent = `${getCurrencySymbol()} 0 ahorrados`;
+
+        const heroBalanceEl = document.getElementById('debtHeroTotalBalance');
+        if (heroBalanceEl) heroBalanceEl.textContent = `${getCurrencySymbol()} 0.00`;
+        const heroMonthlyEl = document.getElementById('debtHeroMonthlyPayment');
+        if (heroMonthlyEl) heroMonthlyEl.textContent = `${getCurrencySymbol()} 0.00 / mes`;
+        const heroMonthsEl = document.getElementById('debtHeroTotalMonths');
+        if (heroMonthsEl) heroMonthsEl.textContent = '0 meses';
+        const impactAdviceEl = document.getElementById('debtImpactAdviceText');
+        if (impactAdviceEl) impactAdviceEl.textContent = 'No tienes compromisos en cuotas activos en este momento.';
+
         if (tableContainerEl) {
           tableContainerEl.innerHTML = `
-            <div class="minimal-empty-state">
-              <div class="minimal-empty-icon-wrap">💳</div>
-              <div class="minimal-empty-title">Sin compras en cuotas registradas</div>
-              <div class="minimal-empty-sub">Sincroniza tus cuotas activas del mes o añade compromisos a plazos para proyectar tu fecha de libertad financiera.</div>
-              <div style="display: flex; gap: 8px; justify-content: center; margin-top: 6px; flex-wrap: wrap;">
-                <button type="button" class="btn btn-outline btn-sm" onclick="syncDebtsFromCuotas()" style="font-size: 11px; border-radius: 9px; padding: 6px 14px; font-weight: 700; border-color: var(--border);">🔄 Sincronizar Cuotas del Mes</button>
-                <button type="button" class="btn btn-primary btn-sm" onclick="openNewDebtPromptModal()" style="font-size: 11px; border-radius: 9px; padding: 6px 14px; font-weight: 700;">+ Añadir Cuota / Compromiso</button>
+            <div class="minimal-empty-state" style="padding: 32px 18px;">
+              <div class="minimal-empty-icon-wrap" style="width: 52px; height: 52px; font-size: 24px; margin-bottom: 10px;">🏔️</div>
+              <div class="minimal-empty-title" style="font-size: 16px;">¡Estás libre de deudas registradas! 🎉</div>
+              <div class="minimal-empty-sub" style="max-width: 440px; margin: 0 auto; line-height: 1.5;">Si tienes compras con tarjeta de crédito en cuotas (Falabella, Ripley, etc.) o préstamos personales, añádelos para proyectar tu fecha de libertad financiera.</div>
+              <div style="display: flex; gap: 10px; justify-content: center; margin-top: 14px; flex-wrap: wrap;">
+                <button type="button" class="btn btn-primary btn-sm" onclick="openNewDebtPromptModal()" style="font-size: 11.5px; border-radius: 10px; padding: 7px 18px; font-weight: 700;">+ Añadir Cuota o Préstamo</button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="syncDebtsFromCuotas()" style="font-size: 11.5px; border-radius: 10px; padding: 7px 18px; font-weight: 700; border-color: var(--border);">🔄 Traer Cuotas de mis Gastos</button>
               </div>
             </div>
           `;
@@ -9789,6 +9852,29 @@ Plazo de respuesta: Máximo 24 a 48 horas hábiles directas a tu correo.`;
           : `${getCurrencySymbol()} 0 ahorrados`;
       }
 
+      const heroBalanceEl = document.getElementById('debtHeroTotalBalance');
+      if (heroBalanceEl) {
+        heroBalanceEl.textContent = `${getCurrencySymbol()} ${totalCurrent.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      }
+      const heroMonthlyEl = document.getElementById('debtHeroMonthlyPayment');
+      if (heroMonthlyEl) {
+        heroMonthlyEl.textContent = `${getCurrencySymbol()} ${(sumMin + extra).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} / mes`;
+      }
+      const heroMonthsEl = document.getElementById('debtHeroTotalMonths');
+      if (heroMonthsEl) {
+        heroMonthsEl.textContent = `${effectiveMonths} mes${effectiveMonths === 1 ? '' : 'es'}`;
+      }
+      const impactAdviceEl = document.getElementById('debtImpactAdviceText');
+      if (impactAdviceEl) {
+        if (extra > 0 && totalInterestSaved > 0) {
+          impactAdviceEl.innerHTML = `🔥 <strong>¡Gran impacto!</strong> Te liberas <strong>${effectiveBaselineMonths - effectiveMonths} mes${(effectiveBaselineMonths - effectiveMonths) > 1 ? 'es' : ''} antes</strong> y ahorras <strong>${getCurrencySymbol()} ${Math.round(totalInterestSaved).toLocaleString('es-PE')}</strong> en intereses bancarios.`;
+        } else if (extra > 0 && effectiveBaselineMonths > effectiveMonths) {
+          impactAdviceEl.innerHTML = `🚀 Te liberas <strong>${effectiveBaselineMonths - effectiveMonths} mes${(effectiveBaselineMonths - effectiveMonths) > 1 ? 'es' : ''} antes</strong> gracias a tu abono extra mensual.`;
+        } else {
+          impactAdviceEl.textContent = `Dinero que dejas de pagar al banco gracias a liquidar tus compras y préstamos en orden estratégico.`;
+        }
+      }
+
       if (tableContainerEl) {
         let displayedDebts = [...workingDebts];
         if (debtSearchTerm) {
@@ -9799,109 +9885,171 @@ Plazo de respuesta: Máximo 24 a 48 horas hábiles directas a tu correo.`;
         if (countLabel) {
           countLabel.textContent = debtSearchTerm
             ? `Mostrando ${displayedDebts.length} de ${workingDebts.length} compromisos`
-            : `${workingDebts.length} compromisos en cuotas`;
+            : `${workingDebts.length} ${workingDebts.length === 1 ? 'compromiso activo' : 'compromisos activos'}`;
         }
 
+        if (displayedDebts.length === 0) {
+          tableContainerEl.innerHTML = `
+            <div class="minimal-empty-state" style="padding: 24px 16px;">
+              <div class="minimal-empty-icon-wrap" style="width: 40px; height: 40px; font-size: 18px; margin-bottom: 8px;">🔍</div>
+              <div class="minimal-empty-title">Sin resultados para "${escapeHtml(debtSearchTerm)}"</div>
+              <div class="minimal-empty-sub">No se encontraron compras en cuotas que coincidan con la búsqueda.</div>
+              <button type="button" class="btn btn-outline btn-sm" onclick="clearDebtSearch()" style="font-size: 11px; border-radius: 9px; padding: 5px 14px; font-weight: 700; border-color: var(--border); margin-top: 8px;">Limpiar Búsqueda</button>
+            </div>
+          `;
+          return;
+        }
+
+        // 1. CARDS TÁCTILES PARA MÓVIL (PWA / iPhone)
+        let cardsHtml = `<div class="debt-mobile-cards">`;
+        displayedDebts.forEach((d, idx) => {
+          const isTarget = (idx === 0 && !debtSearchTerm);
+          const remInstallments = (typeof d.remainingInstallments === 'number' && d.remainingInstallments > 0)
+            ? d.remainingInstallments
+            : Math.max(1, Math.ceil(d.balance / d.minPayment));
+          let debtMonths = remInstallments;
+          if (extra > 0 && isTarget) {
+            debtMonths = Math.max(1, Math.min(remInstallments, Math.ceil(d.balance / (d.minPayment + extra))));
+          }
+          const totInst = d.installmentsTotal || (remInstallments > 6 ? 12 : 6);
+          const currInst = Math.min(totInst, Math.max(1, totInst - remInstallments + 1));
+          const cardPct = totInst > 0 ? Math.min(100, Math.round(((currInst - 1) / totInst) * 100)) : 0;
+          const debtFinalDate = new Date(now.getFullYear(), now.getMonth() + debtMonths, 1);
+          const debtFinalStr = `${monthsNames[debtFinalDate.getMonth()].slice(0, 3)} ${debtFinalDate.getFullYear()}`;
+
+          const statusBadge = isTarget
+            ? `<span class="badge-status-attack" title="Objetivo prioritario: Recibe todo tu superávit para liquidarse al 100% lo antes posible">⚡ EN ATAQUE AHORA</span>`
+            : `<span class="badge-status-pending" title="Pago regular: Cubres su cuota mínima mensual programada mientras la #1 está en ataque">⏳ En espera</span>`;
+
+          cardsHtml += `
+            <div class="debt-mobile-card ${isTarget ? 'is-attack' : ''}">
+              <div class="debt-card-top">
+                <div class="debt-card-identity">
+                  <div class="debt-card-squircle">💳</div>
+                  <div>
+                    <div class="debt-card-name">${idx + 1}. ${escapeHtml(d.name)}</div>
+                    <div class="debt-card-installments">Cuota ${currInst} de ${totInst} • <strong style="color: var(--primary);">${remInstallments} ${remInstallments === 1 ? 'pendiente' : 'pendientes'}</strong></div>
+                  </div>
+                </div>
+                ${statusBadge}
+              </div>
+
+              <div class="debt-card-progress-track">
+                <div class="debt-card-progress-fill" style="width: ${cardPct}%;"></div>
+              </div>
+
+              <div class="debt-card-stats-grid">
+                <div class="debt-card-stat-item">
+                  <span class="debt-card-stat-label">Saldo Pendiente</span>
+                  <span class="debt-card-stat-val" style="color: var(--text-main);">${getCurrencySymbol()} ${d.balance.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                </div>
+                <div class="debt-card-stat-item">
+                  <span class="debt-card-stat-label">Cuota al Mes</span>
+                  <span class="debt-card-stat-val" style="color: var(--primary);">${getCurrencySymbol()} ${d.minPayment.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                </div>
+                <div class="debt-card-stat-item">
+                  <span class="debt-card-stat-label">¿Intereses?</span>
+                  <span class="debt-card-stat-val" style="color: ${d.tea > 0 ? '#6366f1' : '#10b981'}; font-size: 12px;">${d.tea > 0 ? d.tea.toFixed(1) + '% TEA' : '0% Sin interés'}</span>
+                </div>
+                <div class="debt-card-stat-item">
+                  <span class="debt-card-stat-label">Terminas de Pagar</span>
+                  <span class="debt-card-stat-val" style="font-size: 12px; color: var(--text-main);">🗓️ ${debtFinalStr} (${debtMonths}m)</span>
+                </div>
+              </div>
+
+              <div class="debt-card-actions">
+                <button type="button" class="debt-card-btn" onclick="editSnowballDebtRow(${d.originalIdx})" title="Editar datos o cuotas">
+                  ✏️ Editar
+                </button>
+                <button type="button" class="debt-card-btn danger" onclick="removeSnowballDebtRow(${d.originalIdx})" title="Quitar de este plan">
+                  ✕ Quitar
+                </button>
+              </div>
+            </div>
+          `;
+        });
+        cardsHtml += `</div>`;
+
+        // 2. TABLA EJECUTIVA PARA DESKTOP (Mac / Pantallas grandes)
         let tableHtml = `
-          <table class="debt-table">
-            <thead>
-              <tr>
-                <th style="width: 32px;">#</th>
-                <th>COMPRA EN CUOTAS / COMPROMISO</th>
-                <th>SALDO PENDIENTE</th>
-                <th>TASA (TEA)</th>
-                <th>CUOTA MENSUAL</th>
-                <th>ESTADO</th>
-                <th>PAGO FINAL</th>
-                <th>TIEMPO RESTANTE</th>
-                <th style="width: 60px; text-align: center;">ACCIONES</th>
-              </tr>
-            </thead>
-            <tbody>
+          <div class="debt-desktop-table-wrap">
+            <table class="debt-table">
+              <thead>
+                <tr>
+                  <th style="width: 32px;">#</th>
+                  <th>COMPRA EN CUOTAS / COMPROMISO</th>
+                  <th>SALDO PENDIENTE</th>
+                  <th>TASA (TEA)</th>
+                  <th>CUOTA MENSUAL</th>
+                  <th>ESTADO</th>
+                  <th>PAGO FINAL</th>
+                  <th>TIEMPO RESTANTE</th>
+                  <th style="width: 70px; text-align: center;">ACCIONES</th>
+                </tr>
+              </thead>
+              <tbody>
         `;
 
-        if (displayedDebts.length === 0) {
+        displayedDebts.forEach((d, idx) => {
+          const isTarget = (idx === 0 && !debtSearchTerm);
+          const remInstallments = (typeof d.remainingInstallments === 'number' && d.remainingInstallments > 0)
+            ? d.remainingInstallments
+            : Math.max(1, Math.ceil(d.balance / d.minPayment));
+          let debtMonths = remInstallments;
+          if (extra > 0 && isTarget) {
+            debtMonths = Math.max(1, Math.min(remInstallments, Math.ceil(d.balance / (d.minPayment + extra))));
+          }
+          const totInst = d.installmentsTotal || (remInstallments > 6 ? 12 : 6);
+          const currInst = Math.min(totInst, Math.max(1, totInst - remInstallments + 1));
+          d.installmentsTotal = totInst;
+          d.installmentsCurrent = currInst;
+          d.remainingInstallments = remInstallments;
+
+          const debtFinalDate = new Date(now.getFullYear(), now.getMonth() + debtMonths, 1);
+          const debtFinalStr = `${monthsNames[debtFinalDate.getMonth()].slice(0, 3)} ${debtFinalDate.getFullYear()}`;
+
+          const statusBadge = isTarget
+            ? `<span class="badge-status-attack" title="Objetivo prioritario: Recibe todo tu superávit para liquidarse al 100% lo antes posible">EN ATAQUE ⚡</span>`
+            : `<span class="badge-status-pending" title="Pago regular: Cubres su cuota mínima mensual programada mientras la #1 está en ataque">Pendiente</span>`;
+
+          const timeBadge = debtMonths === 1
+            ? `<span class="badge-time-remaining" style="color: #059669; font-weight: 800; border-color: rgba(16,185,129,0.3); background: rgba(16,185,129,0.1);">1 mes restante (¡Última cuota!)</span>`
+            : `<span class="badge-time-remaining">${debtMonths} meses restantes</span>`;
+
           tableHtml += `
-            <tr>
-              <td colspan="9">
-                <div class="minimal-empty-state" style="padding: 24px 16px;">
-                  <div class="minimal-empty-icon-wrap" style="width: 40px; height: 40px; font-size: 18px; margin-bottom: 8px;">🔍</div>
-                  <div class="minimal-empty-title">Sin resultados para "${escapeHtml(debtSearchTerm)}"</div>
-                  <div class="minimal-empty-sub">No se encontraron compras en cuotas que coincidan con la búsqueda.</div>
-                  <button type="button" class="btn btn-outline btn-sm" onclick="clearDebtSearch()" style="font-size: 11px; border-radius: 9px; padding: 5px 14px; font-weight: 700; border-color: var(--border);">Limpiar Búsqueda</button>
+            <tr class="debt-table-row">
+              <td style="font-weight: 800; color: var(--text-muted);">${idx + 1}.</td>
+              <td>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 16px;">💳</span>
+                  <div>
+                    <strong style="color: var(--text-main);">${escapeHtml(d.name)}</strong>
+                    <div style="font-size: 10px; color: var(--text-muted); margin-top: 2px;">Cuota ${currInst} de ${totInst} <span style="color: #6366f1; font-weight: 700;">(${remInstallments} ${remInstallments === 1 ? 'pendiente' : 'pendientes'})</span></div>
+                  </div>
                 </div>
+              </td>
+              <td style="font-weight: 800; color: var(--text-main);">
+                ${getCurrencySymbol()} ${d.balance.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </td>
+              <td style="font-weight: 700; color: ${d.tea > 0 ? '#6366f1' : '#10b981'};">
+                ${d.tea > 0 ? d.tea.toFixed(1) + '%' : '0.0% (Sin interés)'}
+              </td>
+              <td style="font-weight: 700; color: var(--text-secondary);">
+                ${getCurrencySymbol()} ${d.minPayment.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </td>
+              <td>${statusBadge}</td>
+              <td style="font-weight: 700; color: var(--text-main);">${debtFinalStr}</td>
+              <td>${timeBadge}</td>
+              <td style="text-align: center;">
+                <button type="button" onclick="editSnowballDebtRow(${d.originalIdx})" class="debt-row-action-btn" title="Editar saldo o cuota">✏️</button>
+                <button type="button" onclick="removeSnowballDebtRow(${d.originalIdx})" class="debt-row-action-btn" style="color: #ef4444;" title="Eliminar compromiso">✕</button>
               </td>
             </tr>
           `;
-        } else {
-          displayedDebts.forEach((d, idx) => {
-            const isTarget = (idx === 0 && !debtSearchTerm);
+        });
 
-            // CÁLCULO EXACTO DEL TIEMPO RESTANTE POR DEUDA:
-            // 1. Duración natural según sus cuotas pendientes registradas o saldo / cuota mensual
-            const remInstallments = (typeof d.remainingInstallments === 'number' && d.remainingInstallments > 0)
-              ? d.remainingInstallments
-              : Math.max(1, Math.ceil(d.balance / d.minPayment));
-
-            // 2. Si hay abono extra del acelerador Y es la deuda objetivo en ataque:
-            let debtMonths = remInstallments;
-            if (extra > 0 && isTarget) {
-              debtMonths = Math.max(1, Math.min(remInstallments, Math.ceil(d.balance / (d.minPayment + extra))));
-            }
-
-            // 3. Normalización estricta de cuotas para evitar "Cuota 10 de 6":
-            const totInst = d.installmentsTotal || (remInstallments > 6 ? 12 : 6);
-            const currInst = Math.min(totInst, Math.max(1, totInst - remInstallments + 1));
-            d.installmentsTotal = totInst;
-            d.installmentsCurrent = currInst;
-            d.remainingInstallments = remInstallments;
-
-            const debtFinalDate = new Date(now.getFullYear(), now.getMonth() + debtMonths, 1);
-            const debtFinalStr = `${monthsNames[debtFinalDate.getMonth()].slice(0, 3)} ${debtFinalDate.getFullYear()}`;
-
-            const statusBadge = isTarget
-              ? `<span class="badge-status-attack" title="Objetivo prioritario: Recibe todo tu superávit para liquidarse al 100% lo antes posible">EN ATAQUE ⚡</span>`
-              : `<span class="badge-status-pending" title="Pago regular: Cubres su cuota mínima mensual programada mientras la #1 está en ataque">Pendiente</span>`;
-
-            const timeBadge = debtMonths === 1
-              ? `<span class="badge-time-remaining" style="color: #059669; font-weight: 800; border-color: rgba(16,185,129,0.3); background: rgba(16,185,129,0.1);">1 mes restante (¡Última cuota!)</span>`
-              : `<span class="badge-time-remaining">${debtMonths} meses restantes</span>`;
-
-            tableHtml += `
-              <tr class="debt-table-row">
-                <td style="font-weight: 800; color: var(--text-muted);">${idx + 1}.</td>
-                <td>
-                  <div style="display: flex; align-items: center; gap: 8px;">
-                    <span style="font-size: 16px;">💳</span>
-                    <div>
-                      <strong style="color: var(--text-main);">${escapeHtml(d.name)}</strong>
-                      <div style="font-size: 10px; color: var(--text-muted); margin-top: 2px;">Cuota ${currInst} de ${totInst} <span style="color: #6366f1; font-weight: 700;">(${remInstallments} ${remInstallments === 1 ? 'pendiente' : 'pendientes'})</span></div>
-                    </div>
-                  </div>
-                </td>
-                <td style="font-weight: 800; color: var(--text-main);">
-                  ${getCurrencySymbol()} ${d.balance.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </td>
-                <td style="font-weight: 700; color: ${d.tea > 0 ? '#6366f1' : '#10b981'};">
-                  ${d.tea > 0 ? d.tea.toFixed(1) + '%' : '0.0% (Sin interés)'}
-                </td>
-                <td style="font-weight: 700; color: var(--text-secondary);">
-                  ${getCurrencySymbol()} ${d.minPayment.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </td>
-                <td>${statusBadge}</td>
-                <td style="font-weight: 700; color: var(--text-main);">${debtFinalStr}</td>
-                <td>${timeBadge}</td>
-                <td style="text-align: center;">
-                  <button type="button" onclick="editSnowballDebtRow(${d.originalIdx})" class="debt-row-action-btn" title="Editar saldo o cuota">✏️</button>
-                  <button type="button" onclick="removeSnowballDebtRow(${d.originalIdx})" class="debt-row-action-btn" style="color: #ef4444;" title="Eliminar compromiso">✕</button>
-                </td>
-              </tr>
-            `;
-          });
-        }
-
-        tableHtml += `</tbody></table>`;
-        tableContainerEl.innerHTML = tableHtml;
+        tableHtml += `</tbody></table></div>`;
+        tableContainerEl.innerHTML = cardsHtml + tableHtml;
       }
     }
     window.calculateAndRenderDebtPlan = calculateAndRenderDebtPlan;
