@@ -6257,7 +6257,10 @@
     body.privacy-active .goal-target-val,
     body.privacy-active .sensitive-amount,
     body.privacy-active .exec-pill-val,
-    body.privacy-active .donut-legend-amount {
+    body.privacy-active .donut-legend-amount,
+    body.privacy-active .rescue-banner b,
+    body.privacy-active #rescueDashBanner b,
+    body.privacy-active .rescue-banner-amount {
       position: relative !important;
       color: transparent !important;
       user-select: none !important;
@@ -6477,6 +6480,22 @@
       justify-content: center;
       pointer-events: none;
       border-radius: inherit;
+    }
+
+    body.privacy-active .rescue-banner b::after,
+    body.privacy-active #rescueDashBanner b::after,
+    body.privacy-active .rescue-banner-amount::after {
+      content: var(--privacy-mask-text, "S/ •••••") !important;
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      color: #ef4444 !important;
+      font-weight: 800;
+      display: inline-flex;
+      align-items: center;
+      pointer-events: none;
+      letter-spacing: 0.06em;
     }
 
     /* Revelar temporalmente al tocar/mantener presionado un monto específico (Peek) */

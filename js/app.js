@@ -2919,8 +2919,11 @@
       if (setPrivLabel) setPrivLabel.textContent = isActive ? 'Mostrar Saldos' : 'Ocultar Saldos';
       if (setPrivBtn) setPrivBtn.classList.toggle('active', isActive);
 
-      if (typeof renderDesktopExecutiveCharts === 'function' && (desktopCashflowChartObj || desktopCategoryChartObj)) {
+      if (typeof renderDesktopExecutiveCharts === 'function') {
         renderDesktopExecutiveCharts();
+      }
+      if (typeof renderRescueDashBanner === 'function') {
+        renderRescueDashBanner();
       }
     }
 
@@ -5522,6 +5525,7 @@
       const cashflowEl = document.getElementById('desktopCashflowChart');
       if (cashflowEl) {
         const isDark = document.body.classList.contains('theme-twilight');
+        const isPriv = typeof isPrivacyModeActive === 'function' && isPrivacyModeActive();
         const allSorted = (typeof getSortedMonths === 'function' ? getSortedMonths() : Object.keys(appState.transactions || {})).filter(m => /^\w+\s+\d{4}$/.test(m));
         const monthsList = allSorted.slice(-6);
         const displayMonths = monthsList.length >= 2 ? monthsList : (allSorted.length > 0 ? allSorted : [appState.currentMonth || 'Octubre 2026']);
@@ -5627,6 +5631,7 @@
                     drawBorder: false
                   },
                   ticks: {
+                    display: !isPriv,
                     color: isDark ? '#94a3b8' : '#64748b',
                     font: { family: '-apple-system, SF Pro Text, sans-serif', size: 10.5, weight: '500' },
                     callback: v => getCurrencySymbol() + ' ' + (v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v)
@@ -10347,7 +10352,10 @@ Plazo de respuesta: Máximo 24 a 48 horas hábiles directas a tu correo.`;
         return;
       }
       el.style.display = 'flex';
-      el.innerHTML = `<span>Cierre proyectado <b>${rescueMoney(cov.projected)}</b></span><span class="rescue-banner-cta">Ver plan ›</span>`;
+      const isPriv = typeof isPrivacyModeActive === 'function' && isPrivacyModeActive();
+      const sym = (typeof getCurrencySymbol === 'function') ? getCurrencySymbol() : 'S/';
+      const projText = isPriv ? `-${sym} •••••` : rescueMoney(cov.projected);
+      el.innerHTML = `<span>Cierre proyectado <b class="rescue-banner-amount">${projText}</b></span><span class="rescue-banner-cta">Ver plan ›</span>`;
     }
     window.renderRescueDashBanner = renderRescueDashBanner;
 
