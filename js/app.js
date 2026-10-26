@@ -1801,9 +1801,9 @@
         let isRefreshing = false;
         // Solo recargar ante una ACTUALIZACIÓN (ya había un SW controlando); en la 1ª visita no
         const hadController = !!navigator.serviceWorker.controller;
-        navigator.serviceWorker.register('./sw.js?v=77.1')
+        navigator.serviceWorker.register('./sw.js?v=77.2')
           .then(reg => {
-            console.log('SW v77.1 registrado:', reg.scope);
+            console.log('SW v77.2 registrado:', reg.scope);
             // Forzar actualización inmediata del SW en todos los dispositivos
             reg.update();
             if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
@@ -2754,6 +2754,50 @@
         // handleAppWakeup() (listener 'online' superior) ya recarga el estado: evitamos doble sync
       });
       document.addEventListener('keydown', (e) => {
+        const quickModal = document.getElementById('quickExpenseModal');
+        const isQuickOpen = quickModal && (quickModal.style.display === 'flex' || quickModal.style.display === 'block');
+
+        if (isQuickOpen) {
+          if (e.key === 'Escape' || e.key === 'Esc') {
+            closeQuickExpenseModal();
+            return;
+          }
+
+          const smartInput = document.getElementById('smartQuickExpenseInput');
+          const amountInput = document.getElementById('quickDisplayAmount');
+
+          if (document.activeElement === smartInput) {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              saveQuickExpense();
+            }
+            return;
+          }
+
+          if (document.activeElement === amountInput) {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              saveQuickExpense();
+            }
+            return;
+          }
+
+          if ((e.key >= '0' && e.key <= '9') || e.key === '.' || e.key === ',') {
+            e.preventDefault();
+            const char = (e.key === ',') ? '.' : e.key;
+            handleQuickKeypad(char);
+            if (amountInput) amountInput.focus();
+          } else if (e.key === 'Backspace' || e.key === 'Delete') {
+            e.preventDefault();
+            handleQuickKeypad('backspace');
+            if (amountInput) amountInput.focus();
+          } else if (e.key === 'Enter') {
+            e.preventDefault();
+            saveQuickExpense();
+          }
+          return;
+        }
+
         if (e.key === 'Escape' || e.key === 'Esc') {
           closeAllModals();
         }
@@ -3821,6 +3865,14 @@
       });
 
       openModalById('quickExpenseModal');
+
+      setTimeout(() => {
+        const amtInput = document.getElementById('quickDisplayAmount');
+        if (amtInput && window.innerWidth >= 768) {
+          amtInput.focus();
+          amtInput.select();
+        }
+      }, 100);
     }
 
     function closeQuickExpenseModal() {
@@ -3838,12 +3890,42 @@
     function updateQuickDisplay() {
       const el = document.getElementById('quickDisplayAmount');
       if (!el) return;
-      if (_quickAmountBuffer === '' || _quickAmountBuffer === '0') {
-        el.textContent = '0.00';
-        el.style.opacity = '0.55';
+      const displayVal = (_quickAmountBuffer === '' || _quickAmountBuffer === '0') ? '0.00' : _quickAmountBuffer;
+      if (el.tagName === 'INPUT') {
+        el.value = displayVal;
       } else {
-        el.textContent = _quickAmountBuffer;
-        el.style.opacity = '1';
+        el.textContent = displayVal;
+      }
+      el.style.opacity = (displayVal === '0.00') ? '0.55' : '1';
+    }
+
+    function handleQuickAmountInput(val) {
+      let clean = String(val).replace(/[^0-9.]/g, '');
+      const parts = clean.split('.');
+      if (parts.length > 2) {
+        clean = parts[0] + '.' + parts.slice(1).join('');
+      }
+      if (clean.includes('.')) {
+        const dec = clean.split('.');
+        if (dec[1] && dec[1].length > 2) clean = dec[0] + '.' + dec[1].slice(0, 2);
+      }
+      _quickAmountBuffer = clean || '0';
+      const el = document.getElementById('quickDisplayAmount');
+      if (el && el.value !== clean) {
+        el.value = clean;
+      }
+      if (el) {
+        el.style.opacity = (clean === '' || clean === '0' || clean === '0.00') ? '0.55' : '1';
+      }
+    }
+
+    function focusQuickAmountInput() {
+      const el = document.getElementById('quickDisplayAmount');
+      if (el) {
+        el.focus();
+        if (el.value === '0.00' || el.value === '0') {
+          el.select();
+        }
       }
     }
 
@@ -3854,13 +3936,13 @@
         } else {
           _quickAmountBuffer = '0';
         }
-      } else if (key === '.') {
+      } else if (key === '.' || key === ',') {
         if (!_quickAmountBuffer.includes('.')) {
           _quickAmountBuffer += '.';
         }
       } else {
         // Dígitos 0-9
-        if (_quickAmountBuffer === '0') {
+        if (_quickAmountBuffer === '0' || _quickAmountBuffer === '0.00' || _quickAmountBuffer === '') {
           _quickAmountBuffer = key;
         } else {
           // Si ya tiene punto, limitar a 2 decimales
@@ -10211,6 +10293,9 @@ window.closeQuickExpenseModal = closeQuickExpenseModal;
 window.selectQuickCategory = selectQuickCategory;
 window.selectQuickMethod = selectQuickMethod;
 window.saveQuickExpense = saveQuickExpense;
+window.handleQuickKeypad = handleQuickKeypad;
+window.handleQuickAmountInput = handleQuickAmountInput;
+window.focusQuickAmountInput = focusQuickAmountInput;
 window.handleSmartQuickInputChange = handleSmartQuickInputChange;
 window.handleSmartQuickInputEnter = handleSmartQuickInputEnter;
 window.toggleVoiceDictation = toggleVoiceDictation;

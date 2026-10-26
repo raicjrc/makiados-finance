@@ -19,7 +19,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="js/chart.min.js?v=72.0"></script>
   <script src="js/supabase.min.js?v=72.0"></script>
-  <link rel="stylesheet" href="css/styles.css?v=77.1">
+  <link rel="stylesheet" href="css/styles.css?v=77.2">
 
   <style>
     /* Estilos Críticos Inmediatos: Paleta Unificada AliviaFin Light & Emerald */
@@ -2209,10 +2209,22 @@
         </div>
       </div>
 
-      <!-- Display del Monto Gigante -->
-      <div class="quick-display-card">
+      <!-- Display del Monto Gigante (Editable directamente en teclado y táctil) -->
+      <div class="quick-display-card" onclick="focusQuickAmountInput()">
         <div class="quick-currency app-currency-symbol">S/</div>
-        <div id="quickDisplayAmount" class="quick-amount-digits">0.00</div>
+        <input 
+          type="text" 
+          id="quickDisplayAmount" 
+          class="quick-amount-digits" 
+          value="0.00" 
+          inputmode="decimal"
+          autocomplete="off"
+          autocorrect="off"
+          spellcheck="false"
+          oninput="handleQuickAmountInput(this.value)"
+          onfocus="if(this.value==='0.00'||this.value==='0') this.select();"
+          aria-label="Monto del gasto"
+        />
         <button type="button" id="quickBackspaceBtn" onclick="handleQuickKeypad('backspace')" class="quick-backspace-inline" title="Borrar">⌫</button>
       </div>
 
@@ -3684,6 +3696,6 @@
     </div>
   </div>
 
-  <script src="js/app.js?v=77.1"></script>
+  <script src="js/app.js?v=77.2"></script>
 </body>
 </html>
