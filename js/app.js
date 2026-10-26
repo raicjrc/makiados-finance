@@ -1801,9 +1801,9 @@
         let isRefreshing = false;
         // Solo recargar ante una ACTUALIZACIÓN (ya había un SW controlando); en la 1ª visita no
         const hadController = !!navigator.serviceWorker.controller;
-        navigator.serviceWorker.register('./sw.js?v=77.0')
+        navigator.serviceWorker.register('./sw.js?v=77.1')
           .then(reg => {
-            console.log('SW v77.0 registrado:', reg.scope);
+            console.log('SW v77.1 registrado:', reg.scope);
             // Forzar actualización inmediata del SW en todos los dispositivos
             reg.update();
             if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
@@ -3765,8 +3765,11 @@
           _isVoiceRecording = false;
           if (btn) btn.classList.remove('is-recording');
           if (icon) icon.textContent = '🎙️';
-          if (event.error !== 'no-speech') {
-            showToast('⚠️ No se detectó audio o faltan permisos de micrófono', 'warning');
+          if (event.error === 'not-allowed') {
+            showToast('⚠️ Permiso de micrófono no habilitado en este navegador. Puedes escribir directamente.', 'warning');
+          } else if (event.error !== 'no-speech' && event.error !== 'aborted') {
+            // Silencioso o informativo leve para evitar alertas falsas por pausas normales de silencio
+            console.info('Voice recognition ended with state:', event.error);
           }
         };
 
