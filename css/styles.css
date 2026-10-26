@@ -592,23 +592,113 @@
       line-height: 1;
     }
 
-    /* ====== CARDS FROSTED CRYSTAL ====== */
-    .card {
-      background: var(--card-bg);
+    /* ====== UNIVERSAL LIQUID GLASS & APPLE SPRING HOVER (ALL CARDS ACROSS PLATFORM) ====== */
+    .card,
+    .upcoming-bills-card,
+    .executive-chart-card,
+    .stat-card,
+    .luxury-goal-card,
+    .quick-tool-card,
+    .master-kpi-card,
+    .master-table-card,
+    .fh-header-card,
+    .fh-chart-card,
+    .debt-kpi-card,
+    .loans-kpi-card,
+    .glass-card-subpanel {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.78) 0%, rgba(255, 255, 255, 0.52) 100%);
       backdrop-filter: blur(28px) saturate(190%);
       -webkit-backdrop-filter: blur(28px) saturate(190%);
       border-radius: var(--radius-xl);
       padding: 18px;
       margin-bottom: 16px;
-      box-shadow: var(--shadow-md);
-      border: 1.5px solid var(--card-glass-border);
-      transition: box-shadow 0.2s ease, background 0.2s ease;
+      border: 1.5px solid rgba(255, 255, 255, 0.88);
+      box-shadow: 
+        inset 0 1.5px 1.5px 0 rgba(255, 255, 255, 0.95),
+        inset 0 -1px 1px 0 rgba(0, 0, 0, 0.02),
+        0 12px 30px -4px rgba(15, 23, 42, 0.05),
+        0 2px 6px rgba(0, 0, 0, 0.02);
+      transition: transform 0.22s var(--apple-spring, cubic-bezier(0.34, 1.56, 0.64, 1)), 
+                  box-shadow 0.22s var(--apple-spring, cubic-bezier(0.34, 1.56, 0.64, 1)), 
+                  border-color 0.22s ease;
+      position: relative;
     }
-    @media (min-width: 768px) {
-      .card:hover {
-        background: var(--card-hover-bg);
-        box-shadow: var(--shadow-hover);
-      }
+    .card:hover,
+    .upcoming-bills-card:hover,
+    .executive-chart-card:hover,
+    .stat-card:hover,
+    .luxury-goal-card:hover,
+    .quick-tool-card:hover,
+    .master-kpi-card:hover,
+    .master-table-card:hover,
+    .fh-header-card:hover,
+    .fh-chart-card:hover,
+    .debt-kpi-card:hover,
+    .loans-kpi-card:hover,
+    .glass-card-subpanel:hover {
+      transform: translateY(-2px);
+      box-shadow: 
+        inset 0 1.5px 1.5px 0 rgba(255, 255, 255, 1),
+        0 18px 40px -6px rgba(15, 23, 42, 0.09),
+        0 0 25px rgba(16, 185, 129, 0.1);
+      border-color: rgba(16, 185, 129, 0.35);
+    }
+    .card:active,
+    .upcoming-bills-card:active,
+    .executive-chart-card:active,
+    .stat-card:active,
+    .luxury-goal-card:active,
+    .quick-tool-card:active,
+    .master-kpi-card:active,
+    .master-table-card:active,
+    .fh-header-card:active,
+    .fh-chart-card:active,
+    .debt-kpi-card:active,
+    .loans-kpi-card:active,
+    .glass-card-subpanel:active {
+      transform: scale(0.985);
+    }
+    body.theme-twilight .card,
+    body.theme-twilight .upcoming-bills-card,
+    body.theme-twilight .executive-chart-card,
+    body.theme-twilight .stat-card,
+    body.theme-twilight .luxury-goal-card,
+    body.theme-twilight .quick-tool-card,
+    body.theme-twilight .master-kpi-card,
+    body.theme-twilight .master-table-card,
+    body.theme-twilight .fh-header-card,
+    body.theme-twilight .fh-chart-card,
+    body.theme-twilight .debt-kpi-card,
+    body.theme-twilight .loans-kpi-card,
+    body.theme-twilight .glass-card-subpanel {
+      background: linear-gradient(135deg, rgba(28, 38, 62, 0.72) 0%, rgba(15, 22, 38, 0.52) 100%);
+      border: 1.5px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 
+        inset 0 1.5px 1.5px 0 rgba(255, 255, 255, 0.18),
+        inset 0 -1px 1px 0 rgba(0, 0, 0, 0.4),
+        0 20px 48px rgba(0, 0, 0, 0.5),
+        0 0 30px rgba(16, 185, 129, 0.08);
+      backdrop-filter: blur(28px) saturate(190%);
+      -webkit-backdrop-filter: blur(28px) saturate(190%);
+    }
+    body.theme-twilight .card:hover,
+    body.theme-twilight .upcoming-bills-card:hover,
+    body.theme-twilight .executive-chart-card:hover,
+    body.theme-twilight .stat-card:hover,
+    body.theme-twilight .luxury-goal-card:hover,
+    body.theme-twilight .quick-tool-card:hover,
+    body.theme-twilight .master-kpi-card:hover,
+    body.theme-twilight .master-table-card:hover,
+    body.theme-twilight .fh-header-card:hover,
+    body.theme-twilight .fh-chart-card:hover,
+    body.theme-twilight .debt-kpi-card:hover,
+    body.theme-twilight .loans-kpi-card:hover,
+    body.theme-twilight .glass-card-subpanel:hover {
+      box-shadow: 
+        inset 0 1.5px 1.5px 0 rgba(255, 255, 255, 0.25),
+        0 26px 58px rgba(0, 0, 0, 0.62),
+        0 0 40px rgba(16, 185, 129, 0.14);
+      border-color: rgba(16, 185, 129, 0.4);
     }
     @media (max-width: 600px) {
       .card {
@@ -673,23 +763,10 @@
     }
 
     .stat-card {
-      background: var(--card-bg);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
       padding: 14px;
       border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-md);
-      border: 1px solid var(--card-glass-border);
       position: relative;
       overflow: hidden;
-      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
-    }
-    @media (min-width: 768px) {
-      .stat-card:hover {
-        transform: translateY(-2px);
-        background: var(--card-hover-bg);
-        box-shadow: var(--shadow-hover);
-      }
     }
     .stat-card::after {
       content: '';
@@ -3835,36 +3912,24 @@
 
     /* ====== 0. EXECUTIVE BALANCE CARD & APPLE LIQUID GLASS (v68.2) ====== */
     .executive-balance-card {
-      /* Liquid Glass Apple: Translucidez media sobre fondo ambiental */
-      background: linear-gradient(135deg, rgba(255, 255, 255, 0.72) 0%, rgba(255, 255, 255, 0.42) 100%);
+      /* Liquid Glass Apple: Cristalino, puro y sin franjas ni cortes */
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.84) 0%, rgba(255, 255, 255, 0.60) 100%);
       border-radius: 28px;
       padding: 24px 26px;
       margin-bottom: 18px;
-      border: 1.5px solid rgba(255, 255, 255, 0.88);
+      border: 1.5px solid rgba(255, 255, 255, 0.90);
       box-shadow: 
-        inset 0 2px 2px 0 rgba(255, 255, 255, 1),
-        inset 0 -1.5px 2px 0 rgba(0, 0, 0, 0.03),
+        inset 0 1.5px 1.5px 0 rgba(255, 255, 255, 1),
+        inset 0 -1px 1px 0 rgba(0, 0, 0, 0.02),
         0 20px 48px -10px rgba(15, 23, 42, 0.08),
         0 4px 14px -2px rgba(15, 23, 42, 0.04);
       position: relative;
       overflow: hidden;
-      transition: transform 0.22s var(--apple-spring), box-shadow 0.22s var(--apple-spring), border-color 0.22s ease;
+      transition: transform 0.22s var(--apple-spring, cubic-bezier(0.34, 1.56, 0.64, 1)), 
+                  box-shadow 0.22s var(--apple-spring, cubic-bezier(0.34, 1.56, 0.64, 1)), 
+                  border-color 0.22s ease;
       backdrop-filter: blur(36px) saturate(210%);
       -webkit-backdrop-filter: blur(36px) saturate(210%);
-    }
-
-    /* Reflejo especular y glow interno de cristal Apple */
-    .executive-balance-card::before {
-      content: '';
-      position: absolute;
-      top: -30%;
-      left: -20%;
-      width: 140%;
-      height: 120%;
-      background: radial-gradient(circle at 25% 20%, rgba(255, 255, 255, 0.75) 0%, rgba(255, 255, 255, 0) 55%),
-                  radial-gradient(circle at 85% 85%, rgba(16, 185, 129, 0.08) 0%, rgba(99, 102, 241, 0.05) 40%, transparent 65%);
-      pointer-events: none;
-      z-index: 0;
     }
 
     .executive-balance-card > * {
@@ -3875,7 +3940,7 @@
     .executive-balance-card:hover {
       transform: translateY(-2px);
       box-shadow: 
-        inset 0 2px 2px 0 rgba(255, 255, 255, 1),
+        inset 0 1.5px 1.5px 0 rgba(255, 255, 255, 1),
         0 24px 54px rgba(15, 23, 42, 0.1), 
         0 0 30px rgba(16, 185, 129, 0.14);
       border-color: rgba(16, 185, 129, 0.4);
@@ -3886,23 +3951,19 @@
 
     /* Dark Mode: Apple Obsidian Liquid Glass */
     body.theme-twilight .executive-balance-card {
-      background: linear-gradient(135deg, rgba(28, 38, 62, 0.70) 0%, rgba(15, 22, 38, 0.50) 100%);
+      background: linear-gradient(135deg, rgba(28, 38, 62, 0.74) 0%, rgba(15, 22, 38, 0.54) 100%);
       border: 1.5px solid rgba(255, 255, 255, 0.16);
       box-shadow: 
-        inset 0 2px 2px 0 rgba(255, 255, 255, 0.25),
+        inset 0 1.5px 1.5px 0 rgba(255, 255, 255, 0.25),
         inset 0 -1.5px 2px 0 rgba(0, 0, 0, 0.5),
         0 24px 56px rgba(0, 0, 0, 0.55), 
         0 0 35px rgba(16, 185, 129, 0.12);
       backdrop-filter: blur(36px) saturate(210%);
       -webkit-backdrop-filter: blur(36px) saturate(210%);
     }
-    body.theme-twilight .executive-balance-card::before {
-      background: radial-gradient(circle at 25% 20%, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0) 55%),
-                  radial-gradient(circle at 85% 85%, rgba(16, 185, 129, 0.14) 0%, rgba(99, 102, 241, 0.08) 40%, transparent 65%);
-    }
     body.theme-twilight .executive-balance-card:hover {
       box-shadow: 
-        inset 0 2px 2px 0 rgba(255, 255, 255, 0.3),
+        inset 0 1.5px 1.5px 0 rgba(255, 255, 255, 0.3),
         0 28px 64px rgba(0, 0, 0, 0.65), 
         0 0 45px rgba(16, 185, 129, 0.16);
       border-color: rgba(16, 185, 129, 0.4);
@@ -5062,27 +5123,8 @@
     }
 
     .executive-chart-card {
-      background: rgba(255, 255, 255, 0.85);
       border-radius: 20px;
       padding: 16px 20px;
-      border: 1px solid rgba(226, 232, 240, 0.85);
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
-      backdrop-filter: blur(24px) saturate(180%);
-      -webkit-backdrop-filter: blur(24px) saturate(180%);
-      transition: all 0.22s var(--apple-spring);
-    }
-    body.theme-twilight .executive-chart-card {
-      background: rgba(15, 23, 42, 0.78);
-      border-color: rgba(255, 255, 255, 0.09);
-      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
-    }
-    .executive-chart-card:hover {
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
-      border-color: rgba(16, 185, 129, 0.3);
-    }
-    body.theme-twilight .executive-chart-card:hover {
-      border-color: rgba(16, 185, 129, 0.4);
-      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
     }
 
     .desktop-donut-legend {
@@ -5361,20 +5403,9 @@
        APPLE FINTECH: RADAR DE PRÓXIMOS VENCIMIENTOS (WIDGET INICIO)
        ================================================================ */
     .upcoming-bills-card {
-      background: rgba(255, 255, 255, 0.85);
-      backdrop-filter: blur(20px) saturate(180%);
-      -webkit-backdrop-filter: blur(20px) saturate(180%);
-      border: 1px solid rgba(226, 232, 240, 0.9);
       border-radius: 20px;
       padding: 16px;
       margin-bottom: 16px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
-      transition: all 0.25s ease;
-    }
-    body.theme-twilight .upcoming-bills-card {
-      background: rgba(15, 23, 42, 0.75);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
     }
     .upcoming-bills-header {
       display: flex;
