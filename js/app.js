@@ -3347,9 +3347,9 @@
               <span>🗓️</span>
               <span>Vencimientos</span>
             </div>
-            <div style="display: flex; align-items: center; gap: 6px;">
-              <div class="upcoming-bills-sum-badge">
-                ${pendingTxs.length} · ${sym} ${totalUpcomingSum.toLocaleString(loc, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+            <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: flex-end;">
+              <div class="upcoming-bills-sum-badge" title="Total de compromisos pendientes de pago este mes">
+                ${pendingTxs.length} pendientes · Total ${sym} ${totalUpcomingSum.toLocaleString(loc, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
               </div>
               <div class="upcoming-view-switcher">
                 <button type="button" class="upcoming-switch-btn ${_upcomingViewMode === 'calendar' ? 'active' : ''}" onclick="setUpcomingViewMode('calendar')" title="Vista Calendario Mensual">📅 Mes</button>
