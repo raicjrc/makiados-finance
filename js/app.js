@@ -1801,9 +1801,9 @@
         let isRefreshing = false;
         // Solo recargar ante una ACTUALIZACIÓN (ya había un SW controlando); en la 1ª visita no
         const hadController = !!navigator.serviceWorker.controller;
-        navigator.serviceWorker.register('./sw.js?v=77.4')
+        navigator.serviceWorker.register('./sw.js?v=77.6')
           .then(reg => {
-            console.log('SW v77.4 registrado:', reg.scope);
+            console.log('SW v77.6 registrado:', reg.scope);
             // Forzar actualización inmediata del SW en todos los dispositivos
             reg.update();
             if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
@@ -3676,32 +3676,124 @@
         return;
       }
 
-      // Ordenar: últimos añadidos primero (slice de 4)
-      const sorted = [...txs].reverse().slice(0, 4);
+      const sym = getCurrencySymbol();
+      const loc = getActiveCurrency().locale;
+      const now = new Date();
+      const today = now.getDate();
+      const curMonthName = appState.currentMonth || getCurrentCalendarMonthName();
+      const isCurrentRealMonth = (curMonthName === getCurrentCalendarMonthName());
 
-      container.innerHTML = sorted.map(t => {
-        const catInfo = CATEGORIES[t.category] || { icon: '🏷️', color: '#6366f1' };
-        const icon = catInfo.icon || '🏷️';
-        const isPagado = (t.status || 'Pagado') === 'Pagado';
-        const methodTag = t.paymentMethod ? `· <span>${t.paymentMethod}</span>` : '';
+      // Helper para extraer el día numérico de una transacción
+      function getTxDayNum(t) {
+        if (t.date) {
+          const parts = t.date.split('-');
+          if (parts.length === 3) {
+            const d = parseInt(parts[2]);
+            if (!isNaN(d)) return d;
+          }
+        }
+        if (t.dueDate) {
+          const d = parseInt(t.dueDate);
+          if (!isNaN(d)) return d;
+        }
+        return 1;
+      }
 
-        return `
-          <div class="recent-tx-item" onclick="openEditExpenseModal('${t.id}')" title="Toca para ver o editar">
-            <div class="recent-tx-left">
-              <div class="recent-tx-icon-box">${icon}</div>
-              <div class="recent-tx-info">
-                <div class="recent-tx-name">${escapeHtml(t.name)}</div>
-                <div class="recent-tx-meta">
-                  <span class="recent-tx-cat-pill">${escapeHtml(t.category)}</span>
-                  ${isPagado ? '' : '<span title="Pendiente">⏳</span>'}
-                  ${methodTag}
-                </div>
+      // Agrupar transacciones por día
+      const dayGroups = {};
+      txs.forEach(t => {
+        const d = getTxDayNum(t);
+        if (!dayGroups[d]) dayGroups[d] = [];
+        dayGroups[d].push(t);
+      });
+
+      // Ordenar días descendente (días más recientes primero)
+      const sortedDays = Object.keys(dayGroups).map(Number).sort((a, b) => b - a);
+
+      // Mostrar los 2 días más recientes en Inicio para mantener la pantalla ordenada y limpia
+      const displayDays = sortedDays.slice(0, 2);
+
+      let html = '';
+      displayDays.forEach(d => {
+        const items = dayGroups[d];
+        const daySubtotal = items.reduce((s, x) => s + (x.amount || 0), 0);
+        
+        let dayTitle = `Día ${d}`;
+        let isToday = false;
+        if (isCurrentRealMonth) {
+          if (d === today) {
+            dayTitle = `Hoy · Día ${d}`;
+            isToday = true;
+          } else if (d === today - 1) {
+            dayTitle = `Ayer · Día ${d}`;
+          }
+        }
+
+        html += `
+          <div class="timeline-day-group">
+            <div class="timeline-day-header">
+              <div class="timeline-day-title">
+                <span>${dayTitle}</span>
+                ${isToday ? '<span class="timeline-day-badge-today">Hoy</span>' : ''}
+              </div>
+              <div class="timeline-day-total">
+                ${sym} ${daySubtotal.toLocaleString(loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
             </div>
-            <div class="recent-tx-amount">${getCurrencySymbol()} ${(t.amount || 0).toLocaleString(getActiveCurrency().locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+            <div class="timeline-day-list">
+              ${items.slice(0, 4).map(t => {
+                const catInfo = CATEGORIES[t.category] || { icon: '🏷️', color: '#6366f1' };
+                const icon = catInfo.icon || '🏷️';
+                const baseColor = catInfo.color || '#6366f1';
+                const isPagado = (t.status || 'Pagado') === 'Pagado';
+                const methodText = t.paymentMethod ? escapeHtml(t.paymentMethod) : '';
+
+                const squircleStyle = `background: ${baseColor}18; color: ${baseColor};`;
+
+                return `
+                  <div class="timeline-tx-row" onclick="openEditExpenseModal('${t.id}')" title="Toca para ver o editar">
+                    <div class="timeline-tx-left">
+                      <div class="timeline-squircle-icon" style="${squircleStyle}">
+                        ${icon}
+                      </div>
+                      <div class="timeline-tx-info">
+                        <div class="timeline-tx-name">${escapeHtml(t.name)}</div>
+                        <div class="timeline-tx-meta">
+                          <span class="timeline-meta-pill">${escapeHtml(t.category)}</span>
+                          ${methodText ? `<span class="timeline-meta-pill">💳 ${methodText}</span>` : ''}
+                          ${isPagado ? '' : '<span title="Pendiente de pago" style="color: #f59e0b; font-size: 11px;">⏳</span>'}
+                        </div>
+                      </div>
+                    </div>
+                    <div class="timeline-tx-amount ${isPagado ? '' : 'is-pending'}">
+                      ${sym} ${(t.amount || 0).toLocaleString(loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+              ${items.length > 4 ? `
+                <div style="text-align: center; padding: 4px 0 2px 0;">
+                  <button type="button" onclick="switchTab('movimientos')" style="background: none; border: none; font-size: 11px; font-weight: 700; color: var(--primary); cursor: pointer;">
+                    + Ver ${items.length - 4} más de este día ➔
+                  </button>
+                </div>
+              ` : ''}
+            </div>
           </div>
         `;
-      }).join('');
+      });
+
+      if (sortedDays.length > 2 || txs.length > 6) {
+        html += `
+          <div style="text-align: center; margin-top: 8px;">
+            <button type="button" onclick="switchTab('movimientos')" style="background: none; border: none; color: var(--primary); font-size: 11.5px; font-weight: 800; cursor: pointer; padding: 4px;">
+              Ver todos los ${txs.length} movimientos del mes ➔
+            </button>
+          </div>
+        `;
+      }
+
+      container.innerHTML = html;
     }
 
     /* ====== REGISTRO RÁPIDO EXPRESS & SMART QUICK-INPUT (MONAI & APPLE) ====== */
