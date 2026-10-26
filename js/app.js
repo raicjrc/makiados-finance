@@ -1801,9 +1801,9 @@
         let isRefreshing = false;
         // Solo recargar ante una ACTUALIZACIÓN (ya había un SW controlando); en la 1ª visita no
         const hadController = !!navigator.serviceWorker.controller;
-        navigator.serviceWorker.register('./sw.js?v=77.6')
+        navigator.serviceWorker.register('./sw.js?v=77.7')
           .then(reg => {
-            console.log('SW v77.6 registrado:', reg.scope);
+            console.log('SW v77.7 registrado:', reg.scope);
             // Forzar actualización inmediata del SW en todos los dispositivos
             reg.update();
             if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
@@ -3193,8 +3193,10 @@
       const targetSlot = hasUpcomingBills ? slotLeft : slotRight;
       if (distCard.parentElement !== targetSlot) {
         targetSlot.appendChild(distCard);
-        if (typeof desktopCategoryChartObj !== 'undefined' && desktopCategoryChartObj) {
-          try { desktopCategoryChartObj.resize(); } catch(e) {}
+        if (typeof renderDesktopExecutiveCharts === 'function') {
+          setTimeout(() => {
+            renderDesktopExecutiveCharts();
+          }, 10);
         }
       }
     }
@@ -3683,109 +3685,72 @@
       const curMonthName = appState.currentMonth || getCurrentCalendarMonthName();
       const isCurrentRealMonth = (curMonthName === getCurrentCalendarMonthName());
 
-      // Helper para extraer el día numérico de una transacción
-      function getTxDayNum(t) {
-        if (t.date) {
+      // Helper seguro para extraer el día numérico de una transacción
+      function getTxDayLabel(t) {
+        let d = null;
+        if (typeof t.date === 'string' && t.date.includes('-')) {
           const parts = t.date.split('-');
-          if (parts.length === 3) {
-            const d = parseInt(parts[2]);
-            if (!isNaN(d)) return d;
+          d = parseInt(parts[2]);
+        } else if (typeof t.date === 'number' && !isNaN(t.date)) {
+          d = t.date;
+        } else if (typeof t.date === 'string' && !isNaN(parseInt(t.date))) {
+          d = parseInt(t.date);
+        } else if (t.dueDate) {
+          d = parseInt(t.dueDate);
+        }
+        if (d && !isNaN(d)) {
+          if (isCurrentRealMonth) {
+            if (d === today) return 'Hoy';
+            if (d === today - 1) return 'Ayer';
           }
+          return `Día ${d}`;
         }
-        if (t.dueDate) {
-          const d = parseInt(t.dueDate);
-          if (!isNaN(d)) return d;
-        }
-        return 1;
+        return '';
       }
 
-      // Agrupar transacciones por día
-      const dayGroups = {};
-      txs.forEach(t => {
-        const d = getTxDayNum(t);
-        if (!dayGroups[d]) dayGroups[d] = [];
-        dayGroups[d].push(t);
-      });
+      // Tomar los últimos 3 o 4 movimientos registrados en el mes
+      const recentItems = [...txs].reverse().slice(0, 4);
 
-      // Ordenar días descendente (días más recientes primero)
-      const sortedDays = Object.keys(dayGroups).map(Number).sort((a, b) => b - a);
+      let html = '<div class="timeline-day-list" style="display: flex; flex-direction: column; gap: 4px;">';
 
-      // Mostrar los 2 días más recientes en Inicio para mantener la pantalla ordenada y limpia
-      const displayDays = sortedDays.slice(0, 2);
+      recentItems.forEach(t => {
+        const catInfo = CATEGORIES[t.category] || { icon: '🏷️', color: '#6366f1' };
+        const icon = catInfo.icon || '🏷️';
+        const baseColor = catInfo.color || '#6366f1';
+        const isPagado = (t.status || 'Pagado') === 'Pagado';
+        const methodText = t.paymentMethod ? escapeHtml(t.paymentMethod) : '';
+        const dayLabel = getTxDayLabel(t);
 
-      let html = '';
-      displayDays.forEach(d => {
-        const items = dayGroups[d];
-        const daySubtotal = items.reduce((s, x) => s + (x.amount || 0), 0);
-        
-        let dayTitle = `Día ${d}`;
-        let isToday = false;
-        if (isCurrentRealMonth) {
-          if (d === today) {
-            dayTitle = `Hoy · Día ${d}`;
-            isToday = true;
-          } else if (d === today - 1) {
-            dayTitle = `Ayer · Día ${d}`;
-          }
-        }
+        const squircleStyle = `background: ${baseColor}18; color: ${baseColor};`;
 
         html += `
-          <div class="timeline-day-group">
-            <div class="timeline-day-header">
-              <div class="timeline-day-title">
-                <span>${dayTitle}</span>
-                ${isToday ? '<span class="timeline-day-badge-today">Hoy</span>' : ''}
+          <div class="timeline-tx-row" onclick="openEditExpenseModal('${t.id}')" title="Toca para ver o editar" style="cursor: pointer; padding: 8px 10px; border-radius: 12px; transition: background 0.15s ease;">
+            <div class="timeline-tx-left">
+              <div class="timeline-squircle-icon" style="${squircleStyle}">
+                ${icon}
               </div>
-              <div class="timeline-day-total">
-                ${sym} ${daySubtotal.toLocaleString(loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              <div class="timeline-tx-info">
+                <div class="timeline-tx-name" style="font-weight: 700; font-size: 13px;">${escapeHtml(t.name)}</div>
+                <div class="timeline-tx-meta" style="display: flex; align-items: center; gap: 5px; flex-wrap: wrap; margin-top: 2px;">
+                  <span class="timeline-meta-pill">${escapeHtml(t.category)}</span>
+                  ${dayLabel ? `<span class="timeline-meta-pill" style="font-weight: 700;">📅 ${dayLabel}</span>` : ''}
+                  ${methodText ? `<span class="timeline-meta-pill">💳 ${methodText}</span>` : ''}
+                  ${isPagado ? '<span style="color: #059669; font-size: 10.5px; font-weight: 700; background: #ecfdf5; padding: 1px 6px; border-radius: 6px;">✓ Pagado</span>' : '<span style="color: #d97706; font-size: 10.5px; font-weight: 700; background: #fef3c7; padding: 1px 6px; border-radius: 6px;">⏳ Pendiente</span>'}
+                </div>
               </div>
             </div>
-            <div class="timeline-day-list">
-              ${items.slice(0, 4).map(t => {
-                const catInfo = CATEGORIES[t.category] || { icon: '🏷️', color: '#6366f1' };
-                const icon = catInfo.icon || '🏷️';
-                const baseColor = catInfo.color || '#6366f1';
-                const isPagado = (t.status || 'Pagado') === 'Pagado';
-                const methodText = t.paymentMethod ? escapeHtml(t.paymentMethod) : '';
-
-                const squircleStyle = `background: ${baseColor}18; color: ${baseColor};`;
-
-                return `
-                  <div class="timeline-tx-row" onclick="openEditExpenseModal('${t.id}')" title="Toca para ver o editar">
-                    <div class="timeline-tx-left">
-                      <div class="timeline-squircle-icon" style="${squircleStyle}">
-                        ${icon}
-                      </div>
-                      <div class="timeline-tx-info">
-                        <div class="timeline-tx-name">${escapeHtml(t.name)}</div>
-                        <div class="timeline-tx-meta">
-                          <span class="timeline-meta-pill">${escapeHtml(t.category)}</span>
-                          ${methodText ? `<span class="timeline-meta-pill">💳 ${methodText}</span>` : ''}
-                          ${isPagado ? '' : '<span title="Pendiente de pago" style="color: #f59e0b; font-size: 11px;">⏳</span>'}
-                        </div>
-                      </div>
-                    </div>
-                    <div class="timeline-tx-amount ${isPagado ? '' : 'is-pending'}">
-                      ${sym} ${(t.amount || 0).toLocaleString(loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </div>
-                  </div>
-                `;
-              }).join('')}
-              ${items.length > 4 ? `
-                <div style="text-align: center; padding: 4px 0 2px 0;">
-                  <button type="button" onclick="switchTab('movimientos')" style="background: none; border: none; font-size: 11px; font-weight: 700; color: var(--primary); cursor: pointer;">
-                    + Ver ${items.length - 4} más de este día ➔
-                  </button>
-                </div>
-              ` : ''}
+            <div class="timeline-tx-amount ${isPagado ? '' : 'is-pending'}" style="font-weight: 800; font-size: 13.5px; text-align: right; white-space: nowrap;">
+              ${sym} ${(t.amount || 0).toLocaleString(loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
           </div>
         `;
       });
 
-      if (sortedDays.length > 2 || txs.length > 6) {
+      html += '</div>';
+
+      if (txs.length > 4) {
         html += `
-          <div style="text-align: center; margin-top: 8px;">
+          <div style="text-align: center; margin-top: 10px; padding-top: 4px; border-top: 1px solid var(--border-light, rgba(0,0,0,0.05));">
             <button type="button" onclick="switchTab('movimientos')" style="background: none; border: none; color: var(--primary); font-size: 11.5px; font-weight: 800; cursor: pointer; padding: 4px;">
               Ver todos los ${txs.length} movimientos del mes ➔
             </button>
@@ -4682,14 +4647,14 @@
       ensureMonthTransactions(appState.currentMonth);
       ensureMonthIncomes(appState.currentMonth);
 
-      renderMetrics();
-      renderSafeToSpendCard();
-      renderUpcomingDueDates();
-      renderRecentTransactions();
-      renderCuotasTracker();
-      renderDonutChart();
-      renderDesktopExecutiveCharts();
-      renderCategoryChips();
+      try { renderMetrics(); } catch(e) { console.warn('renderMetrics err:', e); }
+      try { renderSafeToSpendCard(); } catch(e) { console.warn('renderSafeToSpendCard err:', e); }
+      try { renderUpcomingDueDates(); } catch(e) { console.warn('renderUpcomingDueDates err:', e); }
+      try { renderRecentTransactions(); } catch(e) { console.warn('renderRecentTransactions err:', e); }
+      try { renderCuotasTracker(); } catch(e) { console.warn('renderCuotasTracker err:', e); }
+      try { renderDonutChart(); } catch(e) { console.warn('renderDonutChart err:', e); }
+      try { renderDesktopExecutiveCharts(); } catch(e) { console.warn('renderDesktopExecutiveCharts err:', e); }
+      try { renderCategoryChips(); } catch(e) { console.warn('renderCategoryChips err:', e); }
 
       document.getElementById('chipStateAll').className = 'chip ' + (currentStatusFilter === 'TODOS' ? 'active' : '');
       document.getElementById('chipStatePagado').className = 'chip ' + (currentStatusFilter === 'Pagado' ? 'active' : '');
@@ -5495,6 +5460,7 @@
 
     /* ====== GRÁFICOS EJECUTIVOS DESKTOP (APPLE MAC FINTECH) ====== */
     function renderDesktopExecutiveCharts() {
+      if (typeof Chart === 'undefined') return;
       // 1. Chart Flujo de Caja (Cashflow Mensual Proyectado)
       const cashflowEl = document.getElementById('desktopCashflowChart');
       if (cashflowEl) {
@@ -5739,6 +5705,18 @@
         }
       }
     }
+
+    let _desktopChartsResizeTimer = null;
+    window.addEventListener('resize', () => {
+      if (window.innerWidth >= 1024) {
+        clearTimeout(_desktopChartsResizeTimer);
+        _desktopChartsResizeTimer = setTimeout(() => {
+          if (typeof renderDesktopExecutiveCharts === 'function') {
+            renderDesktopExecutiveCharts();
+          }
+        }, 150);
+      }
+    });
 
     function renderTransactions() {
       const container = document.getElementById('txTableBody');
