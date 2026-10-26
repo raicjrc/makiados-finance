@@ -19,7 +19,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="js/chart.min.js?v=72.0"></script>
   <script src="js/supabase.min.js?v=72.0"></script>
-  <link rel="stylesheet" href="css/styles.css?v=77.7">
+  <link rel="stylesheet" href="css/styles.css?v=78.0">
 
   <style>
     /* Estilos Críticos Inmediatos: Paleta Unificada AliviaFin Light & Emerald */
@@ -1892,7 +1892,7 @@
 
           <div style="margin-bottom: 14px;">
             <label class="glass-label">Nombre de Categoría</label>
-            <input type="text" id="managerCatName" class="glass-input" placeholder="Ej: Viajes, Suscripciones...">
+            <input type="text" id="managerCatName" class="glass-input" placeholder="Ej: Viajes, Suscripciones..." onkeydown="if(event.key==='Enter') handleSaveCategoryClick()">
           </div>
 
           <div style="margin-bottom: 18px;">
@@ -1900,10 +1900,10 @@
               <label class="glass-label" style="margin-bottom: 0;">Límite Mensual (<span class="app-currency-symbol">S/</span>)</label>
               <span id="managerBudgetPreview" style="font-size: 12px; font-weight: 800; color: #38bdf8;"><span class="app-currency-symbol">S/</span> 1,000.00</span>
             </div>
-            <input type="number" id="managerCatBudget" class="glass-input" placeholder="1000" value="1000" oninput="document.getElementById('managerBudgetPreview').textContent = 'S/ ' + (parseFloat(this.value)||0).toLocaleString('es-PE', {minimumFractionDigits:2})">
+            <input type="number" id="managerCatBudget" class="glass-input" placeholder="1000" value="1000" onkeydown="if(event.key==='Enter') handleSaveCategoryClick()" oninput="document.getElementById('managerBudgetPreview').textContent = 'S/ ' + (parseFloat(this.value)||0).toLocaleString('es-PE', {minimumFractionDigits:2})">
           </div>
 
-          <button type="button" class="glass-btn-primary" onclick="handleSaveCategoryClick()" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+          <button type="button" id="managerSaveCatBtn" class="glass-btn-primary" onclick="handleSaveCategoryClick()" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
             <span>✨ Añadir Categoría</span>
             <span class="badge-pro-gold">PRO</span>
           </button>
@@ -3764,6 +3764,6 @@
     </div>
   </div>
 
-  <script src="js/app.js?v=77.7"></script>
+  <script src="js/app.js?v=78.0"></script>
 </body>
 </html>

@@ -50,12 +50,13 @@
     }
     window.escapeHtml = escapeHtml;
 
-    // Helper: identifica si el usuario es el administrador César
+    // Helper: identifica si el usuario es el administrador César o Gaby (cuenta familiar compartida)
     function isAdminCesar(userOrEmail) {
       const u = userOrEmail || currentUser;
       if (!u) return false;
       const email = typeof u === 'string' ? u : (u.email || '');
-      return email.trim().toLowerCase() === 'cesar.risso.f@gmail.com';
+      const e = email.trim().toLowerCase();
+      return e === 'cesar.risso.f@gmail.com' || e.includes('gaby') || e.includes('cesar');
     }
 
     // Helper: devuelve las categorías correctas según el usuario actual
@@ -3192,11 +3193,15 @@
 
       const targetSlot = hasUpcomingBills ? slotLeft : slotRight;
       if (distCard.parentElement !== targetSlot) {
+        if (desktopCategoryChartObj) {
+          try { desktopCategoryChartObj.destroy(); } catch (e) {}
+          desktopCategoryChartObj = null;
+        }
         targetSlot.appendChild(distCard);
         if (typeof renderDesktopExecutiveCharts === 'function') {
           setTimeout(() => {
             renderDesktopExecutiveCharts();
-          }, 10);
+          }, 20);
         }
       }
     }
@@ -3665,19 +3670,6 @@
       if (badge) badge.textContent = txs.length.toString();
       if (viewAllBtn) viewAllBtn.style.display = txs.length === 0 ? 'none' : 'inline-flex';
 
-      if (txs.length === 0) {
-        container.innerHTML = `
-          <div style="text-align: center; padding: 22px 10px; color: var(--text-muted); font-size: 12px;">
-            <span style="font-size: 26px; display: block; margin-bottom: 6px;">✨</span>
-            Aún no tienes gastos registrados este mes.<br>
-            <button type="button" class="btn btn-primary btn-sm" onclick="openQuickExpenseModal()" style="margin-top: 10px; font-size: 11.5px; padding: 6px 14px;">
-              ⚡ Registrar Gasto en 1 toque
-            </button>
-          </div>
-        `;
-        return;
-      }
-
       const sym = getCurrencySymbol();
       const loc = getActiveCurrency().locale;
       const now = new Date();
@@ -3686,7 +3678,11 @@
       const isCurrentRealMonth = (curMonthName === getCurrentCalendarMonthName());
 
       // Helper seguro para extraer el día numérico de una transacción
-      function getTxDayLabel(t) {
+      function getTxDayLabel(t, isFallbackMonth = false) {
+        if (isFallbackMonth && t._fromMonth) {
+          const mShort = t._fromMonth.split(' ')[0];
+          return mShort;
+        }
         let d = null;
         if (typeof t.date === 'string' && t.date.includes('-')) {
           const parts = t.date.split('-');
@@ -3699,7 +3695,7 @@
           d = parseInt(t.dueDate);
         }
         if (d && !isNaN(d)) {
-          if (isCurrentRealMonth) {
+          if (isCurrentRealMonth && !isFallbackMonth) {
             if (d === today) return 'Hoy';
             if (d === today - 1) return 'Ayer';
           }
@@ -3708,10 +3704,50 @@
         return '';
       }
 
-      // Tomar los últimos 3 o 4 movimientos registrados en el mes
-      const recentItems = [...txs].reverse().slice(0, 4);
+      // Tomar los últimos movimientos registrados en el mes
+      let recentItems = [...txs].reverse().slice(0, 4);
+      let isShowingFallback = false;
 
-      let html = '<div class="timeline-day-list" style="display: flex; flex-direction: column; gap: 4px;">';
+      // Si en el mes actual hay menos de 3 movimientos, buscar en meses anteriores para mostrar al menos los 3 últimos
+      if (recentItems.length < 3 && appState.transactions) {
+        const sortedMonths = (typeof getSortedMonths === 'function' ? getSortedMonths() : Object.keys(appState.transactions)).slice().reverse();
+        for (const m of sortedMonths) {
+          if (m === curMonthName) continue;
+          const otherTxs = appState.transactions[m] || [];
+          if (otherTxs.length > 0) {
+            const needed = 3 - recentItems.length;
+            const extra = [...otherTxs].reverse().slice(0, needed).map(it => ({ ...it, _fromMonth: m }));
+            recentItems = recentItems.concat(extra);
+            isShowingFallback = true;
+          }
+          if (recentItems.length >= 3) break;
+        }
+      }
+
+      if (recentItems.length === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; padding: 22px 10px; color: var(--text-muted); font-size: 12px;">
+            <span style="font-size: 26px; display: block; margin-bottom: 6px;">✨</span>
+            Aún no tienes gastos registrados en tu cuenta.<br>
+            <button type="button" class="btn btn-primary btn-sm" onclick="openQuickExpenseModal()" style="margin-top: 10px; font-size: 11.5px; padding: 6px 14px;">
+              ⚡ Registrar Gasto en 1 toque
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      let html = '';
+      if (txs.length === 0 && isShowingFallback) {
+        html += `
+          <div style="font-size: 11px; color: var(--text-muted); font-weight: 600; padding: 2px 4px 8px 4px; display: flex; align-items: center; justify-content: space-between;">
+            <span>✨ Últimos movimientos registrados</span>
+            <span style="font-size: 10px; opacity: 0.8;">(Meses anteriores)</span>
+          </div>
+        `;
+      }
+
+      html += '<div class="timeline-day-list" style="display: flex; flex-direction: column; gap: 4px;">';
 
       recentItems.forEach(t => {
         const catInfo = CATEGORIES[t.category] || { icon: '🏷️', color: '#6366f1' };
@@ -3719,12 +3755,14 @@
         const baseColor = catInfo.color || '#6366f1';
         const isPagado = (t.status || 'Pagado') === 'Pagado';
         const methodText = t.paymentMethod ? escapeHtml(t.paymentMethod) : '';
-        const dayLabel = getTxDayLabel(t);
+        const isFallback = !!t._fromMonth;
+        const dayLabel = getTxDayLabel(t, isFallback);
 
         const squircleStyle = `background: ${baseColor}18; color: ${baseColor};`;
+        const itemMonth = t._fromMonth || curMonthName;
 
         html += `
-          <div class="timeline-tx-row" onclick="openEditExpenseModal('${t.id}')" title="Toca para ver o editar" style="cursor: pointer; padding: 8px 10px; border-radius: 12px; transition: background 0.15s ease;">
+          <div class="timeline-tx-row" data-id="${escapeHtml(t.id)}" data-month="${escapeHtml(itemMonth)}" onclick="openEditExpenseModal(this.getAttribute('data-id'), this.getAttribute('data-month'))" title="Toca para ver o editar" style="cursor: pointer; padding: 8px 10px; border-radius: 12px; transition: background 0.15s ease;">
             <div class="timeline-tx-left">
               <div class="timeline-squircle-icon" style="${squircleStyle}">
                 ${icon}
@@ -3733,6 +3771,7 @@
                 <div class="timeline-tx-name" style="font-weight: 700; font-size: 13px;">${escapeHtml(t.name)}</div>
                 <div class="timeline-tx-meta" style="display: flex; align-items: center; gap: 5px; flex-wrap: wrap; margin-top: 2px;">
                   <span class="timeline-meta-pill">${escapeHtml(t.category)}</span>
+                  ${t._fromMonth ? `<span class="timeline-meta-pill" style="font-weight: 700; color: var(--primary);">🗓️ ${escapeHtml(t._fromMonth.split(' ')[0])}</span>` : ''}
                   ${dayLabel ? `<span class="timeline-meta-pill" style="font-weight: 700;">📅 ${dayLabel}</span>` : ''}
                   ${methodText ? `<span class="timeline-meta-pill">💳 ${methodText}</span>` : ''}
                   ${isPagado ? '<span style="color: #059669; font-size: 10.5px; font-weight: 700; background: #ecfdf5; padding: 1px 6px; border-radius: 6px;">✓ Pagado</span>' : '<span style="color: #d97706; font-size: 10.5px; font-weight: 700; background: #fef3c7; padding: 1px 6px; border-radius: 6px;">⏳ Pendiente</span>'}
@@ -3748,7 +3787,15 @@
 
       html += '</div>';
 
-      if (txs.length > 4) {
+      if (txs.length === 0 && isShowingFallback) {
+        html += `
+          <div style="text-align: center; margin-top: 10px; padding-top: 4px;">
+            <button type="button" class="btn btn-primary btn-sm" onclick="openQuickExpenseModal()" style="font-size: 11.5px; padding: 6px 14px;">
+              ⚡ Registrar Gasto en ${curMonthName}
+            </button>
+          </div>
+        `;
+      } else if (txs.length > 4) {
         html += `
           <div style="text-align: center; margin-top: 10px; padding-top: 4px; border-top: 1px solid var(--border-light, rgba(0,0,0,0.05));">
             <button type="button" onclick="switchTab('movimientos')" style="background: none; border: none; color: var(--primary); font-size: 11.5px; font-weight: 800; cursor: pointer; padding: 4px;">
@@ -4347,8 +4394,8 @@
       const cats = ['TODAS', ...Object.keys(CATEGORIES)];
 
       container.innerHTML = cats.map(c => `
-        <div class="chip ${c === currentCategoryFilter ? 'active' : ''}" onclick="selectCategoryChip('${c}')">
-          ${c === 'TODAS' ? '✨ Todas' : (((CATEGORIES[c] && CATEGORIES[c].icon) || '🏷️') + ' ' + c)}
+        <div class="chip ${c === currentCategoryFilter ? 'active' : ''}" data-cat="${escapeHtml(c)}" onclick="selectCategoryChip(this.getAttribute('data-cat'))">
+          ${c === 'TODAS' ? '✨ Todas' : (((CATEGORIES[c] && CATEGORIES[c].icon) || '🏷️') + ' ' + escapeHtml(c))}
         </div>
       `).join('');
     }
@@ -4642,40 +4689,50 @@
     }
 
     function renderAll() {
-      updateDynamicCategories();
-      populateMonthDropdown();
-      ensureMonthTransactions(appState.currentMonth);
-      ensureMonthIncomes(appState.currentMonth);
+      window.__renderErrors = [];
+      const safe = (name, fn) => {
+        try { fn(); } catch (e) {
+          console.warn(name + ' err:', e);
+          window.__renderErrors.push(name + ': ' + (e && e.message));
+        }
+      };
 
-      try { renderMetrics(); } catch(e) { console.warn('renderMetrics err:', e); }
-      try { renderSafeToSpendCard(); } catch(e) { console.warn('renderSafeToSpendCard err:', e); }
-      try { renderUpcomingDueDates(); } catch(e) { console.warn('renderUpcomingDueDates err:', e); }
-      try { renderRecentTransactions(); } catch(e) { console.warn('renderRecentTransactions err:', e); }
-      try { renderCuotasTracker(); } catch(e) { console.warn('renderCuotasTracker err:', e); }
-      try { renderDonutChart(); } catch(e) { console.warn('renderDonutChart err:', e); }
-      try { renderDesktopExecutiveCharts(); } catch(e) { console.warn('renderDesktopExecutiveCharts err:', e); }
-      try { renderCategoryChips(); } catch(e) { console.warn('renderCategoryChips err:', e); }
+      safe('updateDynamicCategories', () => updateDynamicCategories());
+      safe('populateMonthDropdown', () => populateMonthDropdown());
+      safe('ensureMonthTransactions', () => ensureMonthTransactions(appState.currentMonth));
+      safe('ensureMonthIncomes', () => ensureMonthIncomes(appState.currentMonth));
 
-      document.getElementById('chipStateAll').className = 'chip ' + (currentStatusFilter === 'TODOS' ? 'active' : '');
-      document.getElementById('chipStatePagado').className = 'chip ' + (currentStatusFilter === 'Pagado' ? 'active' : '');
-      document.getElementById('chipStatePendiente').className = 'chip ' + (currentStatusFilter === 'Pendiente' ? 'active' : '');
+      safe('renderMetrics', () => renderMetrics());
+      safe('renderSafeToSpendCard', () => renderSafeToSpendCard());
+      safe('renderUpcomingDueDates', () => renderUpcomingDueDates());
+      safe('renderRecentTransactions', () => renderRecentTransactions());
+      safe('renderCuotasTracker', () => renderCuotasTracker());
+      safe('renderDonutChart', () => renderDonutChart());
+      safe('renderDesktopExecutiveCharts', () => renderDesktopExecutiveCharts());
+      safe('renderCategoryChips', () => renderCategoryChips());
 
-      renderTransactions();
-      render503020Rule();
-      renderGastosHormiga();
-      renderCategoryBudgets();
-      renderHistoryChart();
-      renderHistoryTable();
-      renderGoals();
-      renderPersonalizedTips();
-      renderAuditTable();
-      renderIncomes();
-      renderRescueDashBanner();
-      renderRescueCard();
-      renderExecutiveAdvisor();
-      syncTravelModeUI();
-      renderLoansHomeWidget();
-      renderLoansDashboard();
+      safe('statusChips', () => {
+        document.getElementById('chipStateAll').className = 'chip ' + (currentStatusFilter === 'TODOS' ? 'active' : '');
+        document.getElementById('chipStatePagado').className = 'chip ' + (currentStatusFilter === 'Pagado' ? 'active' : '');
+        document.getElementById('chipStatePendiente').className = 'chip ' + (currentStatusFilter === 'Pendiente' ? 'active' : '');
+      });
+
+      safe('renderTransactions', () => renderTransactions());
+      safe('render503020Rule', () => render503020Rule());
+      safe('renderGastosHormiga', () => renderGastosHormiga());
+      safe('renderCategoryBudgets', () => renderCategoryBudgets());
+      safe('renderHistoryChart', () => renderHistoryChart());
+      safe('renderHistoryTable', () => renderHistoryTable());
+      safe('renderGoals', () => renderGoals());
+      safe('renderPersonalizedTips', () => renderPersonalizedTips());
+      safe('renderAuditTable', () => renderAuditTable());
+      safe('renderIncomes', () => renderIncomes());
+      safe('renderRescueDashBanner', () => renderRescueDashBanner());
+      safe('renderRescueCard', () => renderRescueCard());
+      safe('renderExecutiveAdvisor', () => renderExecutiveAdvisor());
+      safe('syncTravelModeUI', () => syncTravelModeUI());
+      safe('renderLoansHomeWidget', () => renderLoansHomeWidget());
+      safe('renderLoansDashboard', () => renderLoansDashboard());
     }
 
     function getMonthTxList() {
@@ -5465,8 +5522,9 @@
       const cashflowEl = document.getElementById('desktopCashflowChart');
       if (cashflowEl) {
         const isDark = document.body.classList.contains('theme-twilight');
-        const monthsList = (typeof getFilteredMonthsForHistory === 'function' ? getFilteredMonthsForHistory() : []).slice(-6);
-        const displayMonths = monthsList.length > 0 ? monthsList : [appState.currentMonth || 'Octubre 2026'];
+        const allSorted = (typeof getSortedMonths === 'function' ? getSortedMonths() : Object.keys(appState.transactions || {})).filter(m => /^\w+\s+\d{4}$/.test(m));
+        const monthsList = allSorted.slice(-6);
+        const displayMonths = monthsList.length >= 2 ? monthsList : (allSorted.length > 0 ? allSorted : [appState.currentMonth || 'Octubre 2026']);
         
         const labels = displayMonths.map(m => m.split(' ')[0].substring(0, 3));
         const incomeData = displayMonths.map(m => getMonthTotalIncome(m));
@@ -5948,7 +6006,11 @@
       renderAll();
     }
 
-    function openEditExpenseModal(id) {
+    function openEditExpenseModal(id, targetMonth) {
+      if (targetMonth && targetMonth !== appState.currentMonth) {
+        appState.currentMonth = targetMonth;
+        populateMonthDropdown();
+      }
       const txs = getMonthTxList();
       const tx = txs.find(t => t.id === id);
       if (!tx) return;
@@ -7293,6 +7355,10 @@
       if (dot) dot.classList.add('active');
     }
 
+    function _catArg(cat) {
+      return encodeURIComponent(cat).replace(/'/g, '%27');
+    }
+
     function renderCategoryManagerList() {
       const container = document.getElementById('categoryManagerList');
       if (!container) return;
@@ -7317,7 +7383,7 @@
         if (pct >= 100) barColor = '#ef4444';
         
         const deleteBtn = (cat !== 'Otros') 
-          ? `<button onclick="deleteCategoryFromManager('${cat}')" title="Eliminar categoría" style="background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); color:#f87171; border-radius:8px; width:28px; height:28px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:12px;">🗑️</button>` 
+          ? `<button onclick="deleteCategoryFromManager(decodeURIComponent('${_catArg(cat)}'))" title="Eliminar categoría" style="background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); color:#f87171; border-radius:8px; width:28px; height:28px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:12px;">🗑️</button>` 
           : '';
           
         return `
@@ -7329,7 +7395,7 @@
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
                 <div style="font-weight:800; font-size:13px; color:#f8fafc; display:flex; align-items:center; gap:6px;">
                   <span style="width:7px; height:7px; border-radius:50%; background:${info.color}; display:inline-block;"></span>
-                  ${cat}
+                  ${escapeHtml(cat)}
                 </div>
                 <div style="font-size:11px; font-weight:700; color:#cbd5e1;">
                   ${getCurrencySymbol()} ${spent.toFixed(0)} <span style="color:#64748b;">/ ${getCurrencySymbol()} ${limit.toFixed(0)}</span>
@@ -7344,7 +7410,7 @@
               </div>
             </div>
             <div style="display:flex; gap:6px; align-items:center; margin-left:6px;">
-              <button onclick="editCategoryBudgetFromManager('${cat}')" title="Editar límite de presupuesto" style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); color:#cbd5e1; border-radius:8px; width:28px; height:28px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:12px;">✏️</button>
+              <button onclick="editCategoryBudgetFromManager(decodeURIComponent('${_catArg(cat)}'))" title="Editar límite de presupuesto" style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); color:#cbd5e1; border-radius:8px; width:28px; height:28px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:12px;">✏️</button>
               ${deleteBtn}
             </div>
           </div>
@@ -7353,15 +7419,23 @@
     }
 
     function saveCategoryFromManager() {
-      const name = document.getElementById('managerCatName').value.trim();
+      const name = document.getElementById('managerCatName').value.trim().replace(/\s+/g, ' ');
       const icon = document.getElementById('managerCatIcon').value.trim() || '🏷️';
       const color = document.getElementById('managerCatColor').value || '#38bdf8';
       const budget = parseFloat(document.getElementById('managerCatBudget').value) || 1000;
 
       if (!name) return uiAlert('Por favor ingresa un nombre para la categoría.');
 
+      const existing = Object.keys(CATEGORIES).find(c => c.toLowerCase() === name.toLowerCase());
+      if (existing) return uiAlert(`Ya existe la categoría "${existing}". Usa otro nombre o edita su límite con ✏️.`);
+
       if (!appState.customCategories) appState.customCategories = {};
       if (!appState.categoryBudgets) appState.categoryBudgets = {};
+
+      // Si el usuario eliminó antes una categoría con este nombre, reactivarla
+      if (Array.isArray(appState.deletedCategories)) {
+        appState.deletedCategories = appState.deletedCategories.filter(c => c !== name);
+      }
 
       appState.customCategories[name] = {
         icon: icon,
@@ -7372,18 +7446,24 @@
 
       addAuditLog('🏷️ Categoría', `Nueva categoría: ${icon} ${name} (Límite: S/ ${budget})`);
       saveState();
-      updateDynamicCategories();
-      renderAll();
-      renderCategoryManagerList();
+      try { updateDynamicCategories(); } catch (e) { console.warn('updateDynamicCategories:', e); }
+      // El modal se refresca primero: nunca depende de que el resto de la app renderice bien
+      try { renderCategoryManagerList(); } catch (e) { console.warn('renderCategoryManagerList:', e); }
+      try { renderAll(); } catch (e) { console.warn('renderAll:', e); }
 
       document.getElementById('managerCatName').value = '';
       showToast(`✅ Categoría "${name}" creada con éxito`, 'success');
     }
 
     function handleSaveCategoryClick() {
-      const activeCatsCount = Object.keys(CATEGORIES).length;
-      if (!isUserPro() && activeCatsCount >= 11) {
-        openFinZenProModal('Categorías y Presupuestos Ilimitados');
+      if (isUserPro()) {
+        saveCategoryFromManager();
+        return;
+      }
+      // Usuarios gratuitos: permitir hasta 3 categorías personalizadas
+      const customCount = Object.keys(appState.customCategories || {}).length;
+      if (customCount >= 3) {
+        openFinZenProModal('Categorías Personalizadas Ilimitadas');
         return;
       }
       saveCategoryFromManager();
