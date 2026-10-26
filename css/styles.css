@@ -4930,6 +4930,135 @@
       background: rgba(255, 255, 255, 0.2);
       color: #ffffff;
     }
+
+    /* ====== SMART QUICK-INPUT (TEXTO & DICTADO POR VOZ APPLE) ====== */
+    .smart-input-container {
+      margin-bottom: 12px;
+    }
+    .smart-input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1.5px solid rgba(255, 255, 255, 0.16);
+      border-radius: 16px;
+      padding: 6px 8px 6px 14px;
+      transition: all 0.22s var(--apple-spring, ease);
+      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
+    }
+    .smart-input-wrapper:focus-within {
+      background: rgba(255, 255, 255, 0.13);
+      border-color: #34d399;
+      box-shadow: 0 0 20px rgba(52, 211, 153, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+    }
+    .smart-input-icon {
+      font-size: 16px;
+      margin-right: 8px;
+      flex-shrink: 0;
+    }
+    .smart-quick-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #ffffff;
+      font-size: 16px; /* Evita auto-zoom no deseado en iOS Safari */
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      min-width: 0;
+    }
+    .smart-quick-input::placeholder {
+      color: rgba(148, 163, 184, 0.75);
+      font-weight: 500;
+      font-size: 13px;
+    }
+    .smart-voice-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      color: #ffffff;
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: all 0.2s var(--apple-spring, ease);
+    }
+    .smart-voice-btn:hover {
+      background: rgba(255, 255, 255, 0.18);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+    .smart-voice-btn.is-recording {
+      background: rgba(239, 68, 68, 0.35);
+      border-color: #ef4444;
+      animation: micPulse 1.2s infinite;
+    }
+    @keyframes micPulse {
+      0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
+      70% { transform: scale(1.08); box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+      100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
+    .smart-chips-preview {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+      animation: fadeInDown 0.2s ease;
+    }
+    .smart-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 9px;
+      border-radius: 10px;
+      font-size: 11.5px;
+      font-weight: 700;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      color: #f1f5f9;
+    }
+    .smart-chip-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #10b981;
+    }
+    .smart-chip-amount {
+      background: rgba(16, 185, 129, 0.16);
+      border-color: rgba(16, 185, 129, 0.4);
+      color: #34d399;
+    }
+    .smart-chip-method {
+      background: rgba(99, 102, 241, 0.18);
+      border-color: rgba(129, 140, 248, 0.4);
+      color: #c7d2fe;
+    }
+    .smart-quick-confirm-pill {
+      margin-left: auto;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: #ffffff;
+      border: none;
+      padding: 5px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+      transition: transform 0.15s ease;
+    }
+    .smart-quick-confirm-pill:hover {
+      transform: translateY(-1px);
+    }
+    .smart-quick-confirm-pill:active {
+      transform: scale(0.96);
+    }
+
     .quick-display-card {
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid rgba(255, 255, 255, 0.1);

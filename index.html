@@ -2164,6 +2164,51 @@
         <button type="button" class="quick-sheet-close" onclick="closeQuickExpenseModal()" title="Cerrar">✕</button>
       </div>
 
+      <!-- SMART QUICK-INPUT (APPLE & MONAI): CAJA INTELIGENTE DE TEXTO Y DICTADO POR VOZ -->
+      <div class="smart-input-container">
+        <div class="smart-input-wrapper">
+          <span class="smart-input-icon">✨</span>
+          <input 
+            type="text" 
+            id="smartQuickExpenseInput" 
+            class="smart-quick-input" 
+            placeholder="Escribe o dicta: ej. 35 almuerzo yape" 
+            autocomplete="off"
+            autocorrect="off"
+            spellcheck="false"
+            oninput="handleSmartQuickInputChange(this.value)"
+            onkeydown="if(event.key === 'Enter') handleSmartQuickInputEnter(event)"
+          />
+          <button 
+            type="button" 
+            id="smartVoiceBtn" 
+            class="smart-voice-btn" 
+            onclick="toggleVoiceDictation()" 
+            title="Dictar gasto por voz">
+            <span id="voiceMicIcon">🎙️</span>
+          </button>
+        </div>
+
+        <!-- Chips dinámicos de confirmación express -->
+        <div id="smartChipsPreview" class="smart-chips-preview" style="display: none;">
+          <span class="smart-chip smart-chip-amount" id="smartChipAmount">
+            <span class="smart-chip-dot"></span>
+            <span id="smartChipAmountText">S/ 0.00</span>
+          </span>
+          <span class="smart-chip smart-chip-cat" id="smartChipCategory">
+            <span id="smartChipCatIcon">🍽️</span>
+            <span id="smartChipCatText">Almuerzo</span>
+          </span>
+          <span class="smart-chip smart-chip-method" id="smartChipMethod">
+            <span id="smartChipMethodIcon">💜</span>
+            <span id="smartChipMethodText">Yape</span>
+          </span>
+          <button type="button" class="smart-quick-confirm-pill" onclick="saveQuickExpense()" title="Guardar este gasto en 1 toque">
+            <span>⚡ Listo</span>
+          </button>
+        </div>
+      </div>
+
       <!-- Display del Monto Gigante -->
       <div class="quick-display-card">
         <div class="quick-currency app-currency-symbol">S/</div>

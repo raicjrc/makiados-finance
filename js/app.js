@@ -3542,16 +3542,270 @@
       }).join('');
     }
 
-    /* ====== REGISTRO RÁPIDO EXPRESS (2 TOQUES) ====== */
+    /* ====== REGISTRO RÁPIDO EXPRESS & SMART QUICK-INPUT (MONAI & APPLE) ====== */
     let _quickAmountBuffer = '0';
     let _quickSelectedMethod = 'Yape';
     let _quickSelectedCategory = 'Comida fuera';
+    let _quickCustomName = '';
+    let _voiceRecognition = null;
+    let _isVoiceRecording = false;
+
+    function parseSmartQuickExpenseText(rawText) {
+      if (!rawText || typeof rawText !== 'string') return null;
+      const text = rawText.trim();
+      if (!text) return null;
+
+      let working = text;
+      let parsedAmount = null;
+      let parsedMethod = null;
+      let parsedCategory = null;
+      let parsedName = '';
+
+      // 1. Extraer Monto (ej. "S/ 35.50", "35,50", "35", "S/35")
+      const amountRegex = /(?:s\/?\.?\s*)?(\d+(?:[.,]\d{1,2})?)/i;
+      const amountMatch = working.match(amountRegex);
+      if (amountMatch) {
+        const rawNum = amountMatch[1].replace(',', '.');
+        const val = parseFloat(rawNum);
+        if (!isNaN(val) && val > 0) {
+          parsedAmount = Math.round((val + Number.EPSILON) * 100) / 100;
+          working = working.replace(amountMatch[0], ' ');
+        }
+      }
+
+      // 2. Extraer Método / Cuenta
+      const methodMap = [
+        { regex: /\b(yape|plin|billetera)\b/i, method: 'Yape' },
+        { regex: /\b(efectivo|cash|monedas?|billetes?)\b/i, method: 'Efectivo' },
+        { regex: /\b(tarjeta|debito|débito|credito|crédito|bcp|bbva|interbank|scotiabank|pos)\b/i, method: 'Tarjeta' }
+      ];
+
+      for (const item of methodMap) {
+        if (item.regex.test(working)) {
+          parsedMethod = item.method;
+          working = working.replace(item.regex, ' ');
+          break;
+        }
+      }
+
+      // 3. Extraer Categoría (orden de precedencia intuitivo)
+      const categoryMap = [
+        {
+          cat: 'Comida casa',
+          icon: '🛒',
+          regex: /\b(supermercado|super|plaza\s*vea|tottus|vivanda|wong|metro|mercado|bodega|abarrotes|frutas|verduras|makro)\b/i
+        },
+        {
+          cat: 'Comida fuera',
+          icon: '🍽️',
+          regex: /\b(almuerzo|comida|cena|desayuno|menu|menú|restaurant|restaurante|chifa|pollito|pizza|hamburguesa|sushi|delivery|rappi|pedidosya)\b/i
+        },
+        {
+          cat: 'Carro',
+          icon: '🚕',
+          regex: /\b(taxi|uber|didi|cabify|pasaje|gasolina|cochera|peaje|estacionamiento|combustible|bus|corredor|tren)\b/i
+        },
+        {
+          cat: 'Otros',
+          icon: '☕',
+          regex: /\b(caf[eé]|cafeteria|cafetería|starbucks|antojo|helado|postre|snack|golosina|dulce|pan|galleta|gustito)\b/i
+        },
+        {
+          cat: 'Gimnasio & Salud',
+          icon: '💊',
+          regex: /\b(farmacia|medicina|pastillas|medicamento|doctor|clinica|clínica|salud|gym|gimnasio|smartfit|inkafarma|mifarma)\b/i
+        },
+        {
+          cat: 'Casa',
+          icon: '🏠',
+          regex: /\b(casa|luz|agua|gas|calidda|cálidda|enel|sedapal|alquiler|hogar|servicio|mantenimiento)\b/i
+        },
+        {
+          cat: 'Comida gatitos casa',
+          icon: '🐱',
+          regex: /\b(gatitos?|gatos?|michi|comida gato|arena gato|whiskas|ricocan|veterinaria)\b/i
+        },
+        {
+          cat: 'Suscripciones',
+          icon: '📺',
+          regex: /\b(netflix|spotify|disney|youtube|prime|icloud|apple|streaming)\b/i
+        }
+      ];
+
+      let matchedIcon = '🏷️';
+      for (const item of categoryMap) {
+        if (item.regex.test(working)) {
+          parsedCategory = item.cat;
+          matchedIcon = item.icon;
+          break;
+        }
+      }
+
+      // 4. Limpiar y formatear Concepto (Nombre)
+      let cleanName = working
+        .replace(/[,\-_/]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      if (cleanName.length > 0) {
+        parsedName = cleanName.charAt(0).toUpperCase() + cleanName.slice(1);
+      } else if (parsedCategory) {
+        parsedName = parsedCategory;
+      } else if (parsedMethod) {
+        parsedName = 'Gasto ' + parsedMethod;
+      }
+
+      return {
+        raw: text,
+        amount: parsedAmount,
+        method: parsedMethod,
+        category: parsedCategory,
+        categoryIcon: matchedIcon,
+        name: parsedName
+      };
+    }
+
+    function handleSmartQuickInputChange(rawText) {
+      const parsed = parseSmartQuickExpenseText(rawText);
+      const preview = document.getElementById('smartChipsPreview');
+      if (!parsed || (!parsed.amount && !parsed.name && !parsed.category)) {
+        if (preview) preview.style.display = 'none';
+        _quickCustomName = '';
+        return;
+      }
+
+      if (preview) preview.style.display = 'flex';
+
+      // Sincronizar Monto
+      if (parsed.amount !== null) {
+        _quickAmountBuffer = String(parsed.amount);
+        updateQuickDisplay();
+        const chipAmount = document.getElementById('smartChipAmountText');
+        if (chipAmount) chipAmount.textContent = `S/ ${parsed.amount.toFixed(2)}`;
+      }
+
+      // Sincronizar Método
+      if (parsed.method) {
+        selectQuickMethod(parsed.method);
+        const chipMethod = document.getElementById('smartChipMethodText');
+        if (chipMethod) chipMethod.textContent = parsed.method;
+        const chipMethodIcon = document.getElementById('smartChipMethodIcon');
+        if (chipMethodIcon) {
+          chipMethodIcon.textContent = parsed.method === 'Yape' ? '💜' : (parsed.method === 'Efectivo' ? '💵' : '💳');
+        }
+      }
+
+      // Sincronizar Categoría
+      if (parsed.category) {
+        _quickSelectedCategory = parsed.category;
+        document.querySelectorAll('.quick-cat-btn').forEach(b => {
+          b.classList.toggle('active', b.getAttribute('data-cat') === parsed.category);
+        });
+        const chipCat = document.getElementById('smartChipCatText');
+        if (chipCat) chipCat.textContent = parsed.name || parsed.category;
+        const chipCatIcon = document.getElementById('smartChipCatIcon');
+        if (chipCatIcon) chipCatIcon.textContent = parsed.categoryIcon;
+      }
+
+      _quickCustomName = parsed.name || '';
+    }
+
+    function handleSmartQuickInputEnter(event) {
+      if (event) event.preventDefault();
+      saveQuickExpense();
+    }
+
+    function toggleVoiceDictation() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        showToast('🎙️ Dictado por voz no disponible en este navegador. Usa Safari o Chrome.', 'warning');
+        return;
+      }
+
+      const btn = document.getElementById('smartVoiceBtn');
+      const icon = document.getElementById('voiceMicIcon');
+      const input = document.getElementById('smartQuickExpenseInput');
+
+      if (_isVoiceRecording) {
+        if (_voiceRecognition) {
+          try { _voiceRecognition.stop(); } catch(e) {}
+        }
+        _isVoiceRecording = false;
+        if (btn) btn.classList.remove('is-recording');
+        if (icon) icon.textContent = '🎙️';
+        return;
+      }
+
+      try {
+        _voiceRecognition = new SpeechRecognition();
+        _voiceRecognition.lang = 'es-PE';
+        _voiceRecognition.continuous = false;
+        _voiceRecognition.interimResults = true;
+
+        _voiceRecognition.onstart = () => {
+          _isVoiceRecording = true;
+          if (btn) btn.classList.add('is-recording');
+          if (icon) icon.textContent = '🔴';
+          showToast('🎙️ Escuchando... Di ej. "35 almuerzo yape"', 'info', 2000);
+        };
+
+        _voiceRecognition.onresult = (event) => {
+          let transcript = '';
+          for (let i = event.resultIndex; i < event.results.length; ++i) {
+            transcript += event.results[i][0].transcript;
+          }
+          if (input && transcript) {
+            input.value = transcript;
+            handleSmartQuickInputChange(transcript);
+          }
+        };
+
+        _voiceRecognition.onerror = (event) => {
+          console.warn('Speech recognition error:', event.error);
+          _isVoiceRecording = false;
+          if (btn) btn.classList.remove('is-recording');
+          if (icon) icon.textContent = '🎙️';
+          if (event.error !== 'no-speech') {
+            showToast('⚠️ No se detectó audio o faltan permisos de micrófono', 'warning');
+          }
+        };
+
+        _voiceRecognition.onend = () => {
+          _isVoiceRecording = false;
+          if (btn) btn.classList.remove('is-recording');
+          if (icon) icon.textContent = '🎙️';
+        };
+
+        _voiceRecognition.start();
+      } catch (err) {
+        console.error('Error starting voice recognition:', err);
+        _isVoiceRecording = false;
+        if (btn) btn.classList.remove('is-recording');
+        if (icon) icon.textContent = '🎙️';
+      }
+    }
 
     function openQuickExpenseModal() {
       _quickAmountBuffer = '0';
       _quickSelectedMethod = 'Yape';
       _quickSelectedCategory = 'Comida fuera';
+      _quickCustomName = '';
       updateQuickDisplay();
+
+      // Limpiar input inteligente y chips
+      const smartInput = document.getElementById('smartQuickExpenseInput');
+      if (smartInput) smartInput.value = '';
+      const preview = document.getElementById('smartChipsPreview');
+      if (preview) preview.style.display = 'none';
+
+      if (_isVoiceRecording && _voiceRecognition) {
+        try { _voiceRecognition.stop(); } catch(e) {}
+        _isVoiceRecording = false;
+        const voiceBtn = document.getElementById('smartVoiceBtn');
+        if (voiceBtn) voiceBtn.classList.remove('is-recording');
+        const icon = document.getElementById('voiceMicIcon');
+        if (icon) icon.textContent = '🎙️';
+      }
 
       // Resetear métodos
       document.querySelectorAll('.quick-method-pill').forEach(b => {
@@ -3567,6 +3821,14 @@
     }
 
     function closeQuickExpenseModal() {
+      if (_isVoiceRecording && _voiceRecognition) {
+        try { _voiceRecognition.stop(); } catch(e) {}
+        _isVoiceRecording = false;
+        const voiceBtn = document.getElementById('smartVoiceBtn');
+        if (voiceBtn) voiceBtn.classList.remove('is-recording');
+        const icon = document.getElementById('voiceMicIcon');
+        if (icon) icon.textContent = '🎙️';
+      }
       closeModal('quickExpenseModal');
     }
 
@@ -3670,10 +3932,12 @@
         return;
       }
 
+      const finalName = _quickCustomName || _quickSelectedCategory;
+
       // Detector de Gastos Duplicados (MonAi pattern)
-      const dup = findRecentDuplicateExpense(_quickSelectedCategory, amount, appState.currentMonth);
+      const dup = findRecentDuplicateExpense(finalName, amount, appState.currentMonth);
       if (dup) {
-        const proceed = confirm(`⚠️ Posible gasto duplicado:\nYa registraste "${_quickSelectedCategory}" por S/ ${amount.toFixed(2)} hace unos instantes.\n\n¿Deseas registrarlo de todos modos?`);
+        const proceed = confirm(`⚠️ Posible gasto duplicado:\nYa registraste "${finalName}" por S/ ${amount.toFixed(2)} hace unos instantes.\n\n¿Deseas registrarlo de todos modos?`);
         if (!proceed) return;
       }
 
@@ -3681,7 +3945,7 @@
       
       const newTx = {
         id: 'tx_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
-        name: _quickSelectedCategory,
+        name: finalName,
         amount: amount,
         category: _quickSelectedCategory,
         status: 'Pagado',
@@ -3692,11 +3956,11 @@
       };
 
       appState.transactions[appState.currentMonth].push(newTx);
-      addAuditLog('⚡ Gasto Rápido', `S/ ${amount.toFixed(2)} en ${_quickSelectedCategory} vía ${_quickSelectedMethod}`);
+      addAuditLog('⚡ Gasto Rápido', `S/ ${amount.toFixed(2)} en ${finalName} (${_quickSelectedCategory}) vía ${_quickSelectedMethod}`);
       
       saveState();
       closeQuickExpenseModal();
-      showToast(`✨ S/ ${amount.toFixed(2)} registrado en ${_quickSelectedCategory}`, 'success');
+      showToast(`✨ S/ ${amount.toFixed(2)} registrado en ${finalName}`, 'success');
       renderAll();
 
       if (currentUser && supabaseClient) {
@@ -9944,6 +10208,10 @@ window.closeQuickExpenseModal = closeQuickExpenseModal;
 window.selectQuickCategory = selectQuickCategory;
 window.selectQuickMethod = selectQuickMethod;
 window.saveQuickExpense = saveQuickExpense;
+window.handleSmartQuickInputChange = handleSmartQuickInputChange;
+window.handleSmartQuickInputEnter = handleSmartQuickInputEnter;
+window.toggleVoiceDictation = toggleVoiceDictation;
+window.parseSmartQuickExpenseText = parseSmartQuickExpenseText;
 window.openCategoryManagerModal = openCategoryManagerModal;
 window.openFeedbackModal = openFeedbackModal;
 window.openInstallmentsSimulatorModal = openInstallmentsSimulatorModal;
