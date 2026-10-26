@@ -1801,9 +1801,9 @@
         let isRefreshing = false;
         // Solo recargar ante una ACTUALIZACIÓN (ya había un SW controlando); en la 1ª visita no
         const hadController = !!navigator.serviceWorker.controller;
-        navigator.serviceWorker.register('./sw.js?v=74.0')
+        navigator.serviceWorker.register('./sw.js?v=77.0')
           .then(reg => {
-            console.log('SW v74.0 registrado:', reg.scope);
+            console.log('SW v77.0 registrado:', reg.scope);
             // Forzar actualización inmediata del SW en todos los dispositivos
             reg.update();
             if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
