@@ -19,7 +19,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="js/chart.min.js?v=72.0"></script>
   <script src="js/supabase.min.js?v=72.0"></script>
-  <link rel="stylesheet" href="css/styles.css?v=77.2">
+  <link rel="stylesheet" href="css/styles.css?v=77.4">
 
   <style>
     /* Estilos Críticos Inmediatos: Paleta Unificada AliviaFin Light & Emerald */
@@ -422,9 +422,10 @@
                     <span id="metricSavings" style="display: none;">S/ 0.00</span>
                   </div>
                   <!-- Widget Apple Liquid Glass: Límite Sugerido de Hoy -->
-                  <div class="exec-daily-limit-badge is-positive" id="execDailyLimitBadge" title="Presupuesto diario recomendado para llegar a fin de mes">
+                  <div class="exec-daily-limit-badge is-positive" id="execDailyLimitBadge" title="Toca para ver el desglose matemático y ajustar tu ciclo" onclick="openDailyLimitModal()" style="cursor: pointer;">
                     <span class="exec-daily-limit-icon">✨</span>
                     <span id="execDailyLimitText">Límite sugerido de hoy: S/ 0.00</span>
+                    <span style="font-size: 10px; opacity: 0.7; margin-left: 4px;">ℹ️</span>
                   </div>
                   <div class="exec-card-subtitle" id="balanceContextText" style="display: none !important;">
                     <span id="balanceContextSource"></span>
@@ -2293,6 +2294,73 @@
     </div>
   </div>
 
+  <!-- MODAL: DETALLE DEL LÍMITE SUGERIDO DE HOY & CICLO FINANCIERO (APPLE FINTECH) -->
+  <div class="glass-backdrop" id="dailyLimitModal" style="display: none; z-index: 100002;" onclick="if(event.target === this) closeDailyLimitModal()">
+    <div class="quick-expense-sheet" style="max-width: 420px;">
+      <div class="quick-sheet-header">
+        <div class="quick-sheet-title">
+          <span>✨</span>
+          <span>Límite Diario Seguro</span>
+          <span class="quick-sheet-tag">Safe-to-Spend</span>
+        </div>
+        <button type="button" class="quick-sheet-close" onclick="closeDailyLimitModal()" title="Cerrar">✕</button>
+      </div>
+
+      <!-- Hero Card del Límite -->
+      <div class="quick-display-card" style="flex-direction: column; padding: 16px; margin-bottom: 12px; text-align: center;">
+        <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px;">
+          Gasto diario recomendado
+        </div>
+        <div id="modalDailyLimitAmount" style="font-size: 32px; font-weight: 900; color: #059669; letter-spacing: -0.02em;">
+          S/ 0.00 <span style="font-size: 14px; font-weight: 700; color: #64748b;">/ día</span>
+        </div>
+        <div id="modalDailyLimitStatusText" style="font-size: 11.5px; font-weight: 600; color: #64748b; margin-top: 4px;">
+          Calculado con base en tu liquidez libre y días restantes
+        </div>
+      </div>
+
+      <!-- Desglose Matemático Transparente -->
+      <div class="daily-limit-breakdown">
+        <div class="daily-limit-row">
+          <span>🏦 Disponible real en banco</span>
+          <span id="modalDailyBalance" class="daily-limit-val">S/ 0.00</span>
+        </div>
+        <div class="daily-limit-row" style="color: #ef4444;">
+          <span>⏳ Facturas pendientes del ciclo</span>
+          <span id="modalDailyPending" class="daily-limit-val" style="color: #ef4444;">- S/ 0.00</span>
+        </div>
+        <div class="daily-limit-row highlight">
+          <span>💎 Margen libre para gastar</span>
+          <span id="modalDailyFree" class="daily-limit-val" style="color: #10b981;">S/ 0.00</span>
+        </div>
+        <div class="daily-limit-row" style="font-size: 11px; opacity: 0.85;">
+          <span>📅 Días restantes en este ciclo</span>
+          <span id="modalDailyDaysRemaining" class="daily-limit-val" style="font-size: 11px;">0 días</span>
+        </div>
+      </div>
+
+      <!-- Selector de Ciclo Adaptativo -->
+      <div style="margin-bottom: 14px;">
+        <div style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 6px;">
+          Ritmo de tu ciclo de ingresos:
+        </div>
+        <div style="display: flex; gap: 6px;">
+          <button type="button" id="btnCycleQuincenal" onclick="setBudgetCycle('quincenal')" class="quick-method-pill active" style="flex: 1; padding: 8px 4px; font-size: 11px;">
+            🌓 Quincenal (15 y 30)
+          </button>
+          <button type="button" id="btnCycleMensual" onclick="setBudgetCycle('mensual')" class="quick-method-pill" style="flex: 1; padding: 8px 4px; font-size: 11px;">
+            🌕 Mensual (1 al 30)
+          </button>
+        </div>
+      </div>
+
+      <button type="button" onclick="closeDailyLimitModal()" class="quick-save-btn" style="padding: 12px;">
+        <span>✓ Entendido</span>
+      </button>
+    </div>
+  </div>
+
+
   <!-- MODAL: ADD / EDIT EXPENSE -->
   <div class="modal-backdrop" id="addExpenseModal" onclick="handleBackdropClick(event, 'addExpenseModal')">
     <div class="modal">
@@ -3696,6 +3764,6 @@
     </div>
   </div>
 
-  <script src="js/app.js?v=77.2"></script>
+  <script src="js/app.js?v=77.4"></script>
 </body>
 </html>

@@ -1801,9 +1801,9 @@
         let isRefreshing = false;
         // Solo recargar ante una ACTUALIZACIÓN (ya había un SW controlando); en la 1ª visita no
         const hadController = !!navigator.serviceWorker.controller;
-        navigator.serviceWorker.register('./sw.js?v=77.2')
+        navigator.serviceWorker.register('./sw.js?v=77.4')
           .then(reg => {
-            console.log('SW v77.2 registrado:', reg.scope);
+            console.log('SW v77.4 registrado:', reg.scope);
             // Forzar actualización inmediata del SW en todos los dispositivos
             reg.update();
             if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
@@ -3202,21 +3202,39 @@
     // ================================================================
     // RADAR DE PRÓXIMOS VENCIMIENTOS (APPLE FINTECH CARD v67.0)
     // ================================================================
+    let _upcomingViewMode = 'calendar';
+    let _upcomingSelectedDay = null;
+
+    function setUpcomingViewMode(mode) {
+      _upcomingViewMode = mode;
+      _upcomingSelectedDay = null;
+      renderUpcomingDueDates();
+    }
+
+    function selectUpcomingCalendarDay(day) {
+      _upcomingSelectedDay = (_upcomingSelectedDay === day) ? null : day;
+      renderUpcomingDueDates();
+    }
+
+    // ================================================================
+    // RADAR DE PRÓXIMOS VENCIMIENTOS & MINI CALENDARIO (APPLE FINTECH HIG)
+    // ================================================================
     function renderUpcomingDueDates() {
       const container = document.getElementById('upcomingBillsContainer');
       if (!container) return;
 
       const txs = getMonthTxList();
-      const today = new Date().getDate();
+      const now = new Date();
+      const today = now.getDate();
       const sym = getCurrencySymbol();
       const loc = getActiveCurrency().locale;
+      const isCurrentRealMonth = (appState.currentMonth === getCurrentCalendarMonthName());
 
       // Filtrar gastos pendientes del mes actual
       const pendingTxs = txs.filter(t => (t.status || 'Pagado') === 'Pendiente');
 
       if (pendingTxs.length === 0) {
         rebalanceDesktopDashboardLayout(false);
-        // Sin gastos en el mes no hay nada que celebrar: se evita una tarjeta vacía
         if (txs.length === 0) {
           container.innerHTML = '';
           return;
@@ -3232,7 +3250,7 @@
         return;
       }
 
-      // Mapear con días restantes
+      // Mapear con días restantes y fecha efectiva
       const withDue = pendingTxs.map(t => {
         const dueDay = parseInt(getEffectiveDueDate(t)) || 15;
         const daysDiff = dueDay - today;
@@ -3243,51 +3261,150 @@
         };
       });
 
-      // Filtrar: vencidos en el mes (daysDiff < 0) o que vencen en los próximos 5 días (daysDiff >= 0 && daysDiff <= 5)
-      const upcoming = withDue.filter(t => t.daysDiff <= 5);
-
-      if (upcoming.length === 0) {
-        rebalanceDesktopDashboardLayout(false);
-        const future = withDue.filter(t => t.daysDiff > 5).sort((a, b) => a.daysDiff - b.daysDiff);
-        const nextIn = future.length > 0 ? ` · Próximo pago en ${future[0].daysDiff} días (${escapeHtml(future[0].name)})` : '';
-        container.innerHTML = `
-          <div class="upcoming-bills-card" style="margin-bottom: 14px; padding: 12px 16px;">
-            <div class="upcoming-bills-zen">
-              <span>✨</span>
-              <span>Todo al día por los próximos 5 días${nextIn}.</span>
-            </div>
-          </div>
-        `;
-        return;
-      }
-
-      // Si hay vencimientos urgentes, rebalancear inmediatamente a la izquierda
+      // Si hay pendientes, mantener layout equilibrado
       rebalanceDesktopDashboardLayout(true);
 
-      // Ordenar por urgencia: días menores primero
-      upcoming.sort((a, b) => a.daysDiff - b.daysDiff);
+      const totalUpcomingSum = pendingTxs.reduce((acc, curr) => acc + (curr.amount || 0), 0);
 
-      const totalUpcomingSum = upcoming.reduce((acc, curr) => acc + (curr.amount || 0), 0);
-      const displayItems = upcoming.slice(0, 3); // Máximo 3 visibles para no saturar la mente
+      // Agrupar facturas por día
+      const billsByDay = {};
+      withDue.forEach(t => {
+        if (!billsByDay[t.dueDay]) billsByDay[t.dueDay] = [];
+        billsByDay[t.dueDay].push(t);
+      });
+
+      // Cálculo de días del mes actual para el Mini-Calendario
+      const curMonthStr = appState.currentMonth || getCurrentCalendarMonthName();
+      const monthParts = curMonthStr.split(' ');
+      const monthName = monthParts[0] || 'Octubre';
+      const yearNum = parseInt(monthParts[1]) || now.getFullYear();
+      const monthsEs = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+      let monthIdx = monthsEs.indexOf(monthName);
+      if (monthIdx === -1) monthIdx = now.getMonth();
+      const daysInMonth = new Date(yearNum, monthIdx + 1, 0).getDate();
+      const firstWeekday = (new Date(yearNum, monthIdx, 1).getDay() + 6) % 7; // Lunes = 0, Domingo = 6
+
+      // Determinar qué facturas mostrar en la lista
+      let displayItems = [];
+      let listTitle = '';
+      let isFilteredByDay = false;
+
+      if (_upcomingViewMode === 'calendar' && _upcomingSelectedDay !== null) {
+        isFilteredByDay = true;
+        displayItems = billsByDay[_upcomingSelectedDay] || [];
+        listTitle = `Día ${_upcomingSelectedDay} (${displayItems.length} pago${displayItems.length !== 1 ? 's' : ''})`;
+      } else {
+        const sorted = [...withDue].sort((a, b) => a.daysDiff - b.daysDiff);
+        displayItems = _upcomingViewMode === 'calendar' ? sorted.slice(0, 3) : sorted;
+        listTitle = 'Próximos a vencer';
+      }
+
+      // Generar Grilla del Mini-Calendario
+      let calendarGridHtml = '';
+      if (_upcomingViewMode === 'calendar') {
+        const weekdays = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
+        calendarGridHtml += weekdays.map(w => `<div class="mini-calendar-weekday">${w}</div>`).join('');
+
+        for (let e = 0; e < firstWeekday; e++) {
+          calendarGridHtml += `<div class="mini-calendar-day is-empty"></div>`;
+        }
+
+        for (let d = 1; d <= daysInMonth; d++) {
+          const isToday = (d === today && isCurrentRealMonth);
+          const dayBills = billsByDay[d] || [];
+          const hasBills = dayBills.length > 0;
+          const isSelected = (_upcomingSelectedDay === d);
+
+          let dotsHtml = '';
+          if (hasBills) {
+            const hasCard = dayBills.some(b => b.isInstallment || b.paymentMethod === 'Tarjeta' || (b.category && b.category.toLowerCase().includes('tarjeta')));
+            const isOverdue = isCurrentRealMonth && (d < today);
+            const dotType = isOverdue ? 'dot-urgent' : (hasCard ? 'dot-card' : 'dot-normal');
+            dotsHtml = `<div class="mini-calendar-dot-wrap"><span class="mini-cal-dot ${dotType}"></span></div>`;
+          }
+
+          const dayClasses = [
+            'mini-calendar-day',
+            isToday ? 'is-today' : '',
+            isSelected ? 'is-selected' : '',
+            hasBills ? 'has-bills' : ''
+          ].filter(Boolean).join(' ');
+
+          calendarGridHtml += `
+            <div class="${dayClasses}" onclick="selectUpcomingCalendarDay(${d})" title="${hasBills ? dayBills.length + ' pago(s) el día ' + d : 'Día ' + d}">
+              <span>${d}</span>
+              ${dotsHtml}
+            </div>
+          `;
+        }
+      }
 
       container.innerHTML = `
         <div class="upcoming-bills-card">
+          <!-- Cabecera con Switcher Calendario / Lista -->
           <div class="upcoming-bills-header">
             <div class="upcoming-bills-title">
-              <span>📅</span>
-              <span>Próximos Vencimientos</span>
+              <span>🗓️</span>
+              <span>Vencimientos</span>
             </div>
-            <div class="upcoming-bills-sum-badge">
-              ${upcoming.length} pendientes · ${sym} ${totalUpcomingSum.toLocaleString(loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <div class="upcoming-bills-sum-badge">
+                ${pendingTxs.length} · ${sym} ${totalUpcomingSum.toLocaleString(loc, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+              </div>
+              <div class="upcoming-view-switcher">
+                <button type="button" class="upcoming-switch-btn ${_upcomingViewMode === 'calendar' ? 'active' : ''}" onclick="setUpcomingViewMode('calendar')" title="Vista Calendario Mensual">📅 Mes</button>
+                <button type="button" class="upcoming-switch-btn ${_upcomingViewMode === 'list' ? 'active' : ''}" onclick="setUpcomingViewMode('list')" title="Vista Lista Completa">📋 Lista</button>
+              </div>
             </div>
           </div>
+
+          <!-- Vista Calendario Activa -->
+          ${_upcomingViewMode === 'calendar' ? `
+            <div class="mini-calendar-widget">
+              <div class="mini-calendar-nav">
+                <span class="mini-calendar-month-label">${monthName} ${yearNum}</span>
+                ${_upcomingSelectedDay !== null ? `
+                  <button type="button" onclick="selectUpcomingCalendarDay(${_upcomingSelectedDay})" style="background: none; border: none; font-size: 11px; font-weight: 700; color: #6366f1; cursor: pointer; padding: 0;">
+                    ✕ Ver todos
+                  </button>
+                ` : `
+                  <span style="font-size: 10.5px; color: #64748b; font-weight: 600;">Toca un día para filtrar</span>
+                `}
+              </div>
+              <div class="mini-calendar-grid">
+                ${calendarGridHtml}
+              </div>
+              <div class="mini-calendar-legend">
+                <span class="mini-cal-legend-item"><span class="mini-cal-dot dot-card"></span> Tarjetas/Cuotas</span>
+                <span class="mini-cal-legend-item"><span class="mini-cal-dot dot-normal"></span> Vencimientos</span>
+                <span class="mini-cal-legend-item"><span class="mini-cal-dot dot-urgent"></span> Vencidos</span>
+              </div>
+            </div>
+          ` : ''}
+
+          <!-- Lista de Pagos / Vencimientos -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <div style="font-size: 11.5px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.02em;">
+              ${listTitle}
+            </div>
+            ${isFilteredByDay ? `
+              <button type="button" onclick="selectUpcomingCalendarDay(${_upcomingSelectedDay})" style="background:none; border:none; font-size:11px; font-weight:700; color:#6366f1; cursor:pointer;">
+                Mostrar próximos
+              </button>
+            ` : ''}
+          </div>
+
           <div class="upcoming-bills-list">
-            ${displayItems.map(item => {
+            ${displayItems.length === 0 ? `
+              <div style="text-align: center; padding: 14px; font-size: 11.5px; color: #64748b; background: rgba(0,0,0,0.02); border-radius: 12px;">
+                No hay pagos pendientes registrados para este día.
+              </div>
+            ` : displayItems.map(item => {
               const catInfo = CATEGORIES[item.category] || { icon: '💳' };
               const icon = catInfo.icon || '💳';
               
               let pillClass = 'due-pill-soon';
-              let pillText = `En ${item.daysDiff} días`;
+              let pillText = `En ${item.daysDiff}d`;
               if (item.daysDiff < 0) {
                 pillClass = 'due-pill-urgent';
                 pillText = `⚠️ Venció hace ${Math.abs(item.daysDiff)}d`;
@@ -3321,10 +3438,11 @@
               `;
             }).join('')}
           </div>
-          ${upcoming.length > 3 ? `
+
+          ${(_upcomingViewMode === 'calendar' && !isFilteredByDay && withDue.length > 3) ? `
             <div style="text-align: center; margin-top: 10px;">
-              <button type="button" onclick="switchTab('movimientos'); selectStatusFilter('Pendiente');" style="background:none; border:none; color:var(--primary); font-size:11.5px; font-weight:800; cursor:pointer;">
-                Ver los ${upcoming.length} pagos pendientes ➔
+              <button type="button" onclick="setUpcomingViewMode('list')" style="background:none; border:none; color:#6366f1; font-size:11.5px; font-weight:800; cursor:pointer;">
+                Ver los ${withDue.length} pagos pendientes en lista ➔
               </button>
             </div>
           ` : ''}
@@ -4766,6 +4884,133 @@
       renderAll();
     }
 
+    // ================================================================
+    // GASTO DIARIO SEGURO (SAFE-TO-SPEND) & CICLOS QUINCENALES (FASE 3)
+    // ================================================================
+    function calculateSafeDailySpend() {
+      const now = new Date();
+      const currentDay = now.getDate();
+      const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+      const cycle = appState.budgetCycle || 'quincenal';
+
+      let daysRemaining = 1;
+      let cycleName = '';
+      let cycleStartDay = 1;
+      let cycleEndDay = daysInMonth;
+
+      if (cycle === 'quincenal') {
+        if (currentDay <= 15) {
+          daysRemaining = Math.max(1, (15 - currentDay) + 1);
+          cycleName = '1ª Quincena (1 al 15)';
+          cycleStartDay = 1;
+          cycleEndDay = 15;
+        } else {
+          daysRemaining = Math.max(1, (daysInMonth - currentDay) + 1);
+          cycleName = `2ª Quincena (16 al ${daysInMonth})`;
+          cycleStartDay = 16;
+          cycleEndDay = daysInMonth;
+        }
+      } else {
+        daysRemaining = Math.max(1, (daysInMonth - currentDay) + 1);
+        cycleName = `Mes completo (1 al ${daysInMonth})`;
+        cycleStartDay = 1;
+        cycleEndDay = daysInMonth;
+      }
+
+      const txs = getMonthTxList();
+      const pendingTxs = txs.filter(t => (t.status || 'Pagado') === 'Pendiente');
+      
+      let pendingCycleSum = 0;
+      pendingTxs.forEach(t => {
+        const dueDay = parseInt(getEffectiveDueDate(t)) || 15;
+        if (cycle === 'quincenal') {
+          if (currentDay <= 15) {
+            if (dueDay <= 15) pendingCycleSum += (Number(t.amount) || 0);
+          } else {
+            pendingCycleSum += (Number(t.amount) || 0);
+          }
+        } else {
+          pendingCycleSum += (Number(t.amount) || 0);
+        }
+      });
+
+      const currentBalance = roundCurrency(getAccumulatedBalance(appState.currentMonth));
+      const freeMargin = roundCurrency(currentBalance - pendingCycleSum);
+      const dailyLimit = freeMargin > 0 ? roundCurrency(freeMargin / daysRemaining) : 0;
+
+      return {
+        cycle,
+        cycleName,
+        currentDay,
+        daysRemaining,
+        currentBalance,
+        pendingCycleSum: roundCurrency(pendingCycleSum),
+        freeMargin: Math.max(0, freeMargin),
+        dailyLimit
+      };
+    }
+
+    function openDailyLimitModal() {
+      updateDailyLimitModalContent();
+      openModalById('dailyLimitModal');
+    }
+
+    function closeDailyLimitModal() {
+      closeModal('dailyLimitModal');
+    }
+
+    function updateDailyLimitModalContent() {
+      const safeData = calculateSafeDailySpend();
+      const sym = getCurrencySymbol();
+      const loc = getActiveCurrency().locale;
+
+      const amtEl = document.getElementById('modalDailyLimitAmount');
+      if (amtEl) {
+        amtEl.innerHTML = `${sym} ${safeData.dailyLimit.toLocaleString(loc, {minimumFractionDigits: 2, maximumFractionDigits: 2})} <span style="font-size: 14px; font-weight: 700; color: #64748b;">/ día</span>`;
+        amtEl.style.color = safeData.dailyLimit > 0 ? '#059669' : '#d97706';
+      }
+
+      const statusEl = document.getElementById('modalDailyLimitStatusText');
+      if (statusEl) {
+        if (safeData.dailyLimit > 0) {
+          statusEl.textContent = `✓ Puedes gastar hasta ${sym} ${safeData.dailyLimit.toFixed(2)} por día sin comprometer tus compromisos pendientes.`;
+          statusEl.style.color = '#059669';
+        } else {
+          statusEl.textContent = `⚠️ Tus compromisos pendientes superan tu saldo disponible en banco. Prioriza los pagos pendientes.`;
+          statusEl.style.color = '#d97706';
+        }
+      }
+
+      const balEl = document.getElementById('modalDailyBalance');
+      if (balEl) balEl.textContent = `${sym} ${safeData.currentBalance.toLocaleString(loc, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+
+      const pendEl = document.getElementById('modalDailyPending');
+      if (pendEl) pendEl.textContent = `- ${sym} ${safeData.pendingCycleSum.toLocaleString(loc, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+
+      const freeEl = document.getElementById('modalDailyFree');
+      if (freeEl) freeEl.textContent = `${sym} ${safeData.freeMargin.toLocaleString(loc, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+
+      const daysEl = document.getElementById('modalDailyDaysRemaining');
+      if (daysEl) daysEl.textContent = `${safeData.daysRemaining} días (${safeData.cycleName})`;
+
+      const btnQ = document.getElementById('btnCycleQuincenal');
+      const btnM = document.getElementById('btnCycleMensual');
+      const curCycle = appState.budgetCycle || 'quincenal';
+      if (btnQ) btnQ.classList.toggle('active', curCycle === 'quincenal');
+      if (btnM) btnM.classList.toggle('active', curCycle === 'mensual');
+    }
+
+    function setBudgetCycle(cycle) {
+      appState.budgetCycle = cycle;
+      saveState();
+      if (currentUser && supabaseClient) {
+        syncStateToServer().catch(e => console.warn('Sync cycle error:', e));
+      }
+      updateDailyLimitModalContent();
+      renderAll();
+      showToast(cycle === 'quincenal' ? '🌓 Ciclo Quincenal activado (1-15 y 16-Fin de mes)' : '🌕 Ciclo Mensual activado', 'info');
+    }
+
     function renderMetrics() {
       const txs = getMonthTxList();
       const totalSpent = roundCurrency(txs.reduce((sum, item) => sum + (item.amount || 0), 0));
@@ -4862,14 +5107,8 @@
       const elDailyText = document.getElementById('execDailyLimitText');
       if (elDailyBadge && elDailyText) {
         if (isCurrentRealMonth) {
-          const now = new Date();
-          const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-          const currentDay = now.getDate();
-          const daysRemaining = Math.max(1, (daysInMonth - currentDay) + 1);
-          
-          // Liquidez libre descontando facturas pendientes
-          const availableFree = roundCurrency(currentBalance - totalPending);
-          const suggestedDaily = availableFree > 0 ? roundCurrency(availableFree / daysRemaining) : 0;
+          const safeData = calculateSafeDailySpend();
+          const suggestedDaily = safeData.dailyLimit;
           
           elDailyBadge.style.display = 'inline-flex';
           if (suggestedDaily > 0) {
@@ -10296,6 +10535,12 @@ window.saveQuickExpense = saveQuickExpense;
 window.handleQuickKeypad = handleQuickKeypad;
 window.handleQuickAmountInput = handleQuickAmountInput;
 window.focusQuickAmountInput = focusQuickAmountInput;
+window.openDailyLimitModal = openDailyLimitModal;
+window.closeDailyLimitModal = closeDailyLimitModal;
+window.setBudgetCycle = setBudgetCycle;
+window.setUpcomingViewMode = setUpcomingViewMode;
+window.selectUpcomingCalendarDay = selectUpcomingCalendarDay;
+window.calculateSafeDailySpend = calculateSafeDailySpend;
 window.handleSmartQuickInputChange = handleSmartQuickInputChange;
 window.handleSmartQuickInputEnter = handleSmartQuickInputEnter;
 window.toggleVoiceDictation = toggleVoiceDictation;

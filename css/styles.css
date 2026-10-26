@@ -5882,6 +5882,219 @@
       color: #34d399;
     }
 
+    /* Switcher de Vista: Calendario vs Lista */
+    .upcoming-view-switcher {
+      display: inline-flex;
+      background: rgba(226, 232, 240, 0.7);
+      padding: 2px;
+      border-radius: 10px;
+      gap: 2px;
+    }
+    body.theme-twilight .upcoming-view-switcher {
+      background: rgba(255, 255, 255, 0.08);
+    }
+    .upcoming-switch-btn {
+      background: transparent;
+      border: none;
+      padding: 3px 8px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #64748b;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .upcoming-switch-btn.active {
+      background: #ffffff;
+      color: #0f172a;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+    body.theme-twilight .upcoming-switch-btn {
+      color: #94a3b8;
+    }
+    body.theme-twilight .upcoming-switch-btn.active {
+      background: rgba(255, 255, 255, 0.18);
+      color: #ffffff;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Mini Calendario Mensual de Vencimientos (macOS & iOS HIG) */
+    .mini-calendar-widget {
+      background: rgba(248, 250, 252, 0.65);
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      border-radius: 16px;
+      padding: 10px 12px;
+      margin-bottom: 12px;
+    }
+    body.theme-twilight .mini-calendar-widget {
+      background: rgba(15, 23, 42, 0.4);
+      border-color: rgba(255, 255, 255, 0.08);
+    }
+    .mini-calendar-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .mini-calendar-month-label {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--text-main);
+      text-transform: capitalize;
+    }
+    .mini-calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 3px;
+      text-align: center;
+    }
+    .mini-calendar-weekday {
+      font-size: 10px;
+      font-weight: 700;
+      color: #94a3b8;
+      padding-bottom: 4px;
+      user-select: none;
+    }
+    .mini-calendar-day {
+      min-height: 28px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #334155;
+      cursor: pointer;
+      position: relative;
+      background: transparent;
+      border: 1px solid transparent;
+      transition: all 0.12s ease;
+      user-select: none;
+    }
+    body.theme-twilight .mini-calendar-day {
+      color: #cbd5e1;
+    }
+    .mini-calendar-day:hover {
+      background: rgba(0, 0, 0, 0.05);
+    }
+    body.theme-twilight .mini-calendar-day:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+    .mini-calendar-day.is-empty {
+      cursor: default;
+      opacity: 0.15;
+    }
+    .mini-calendar-day.is-empty:hover {
+      background: transparent;
+    }
+    .mini-calendar-day.is-today {
+      font-weight: 800;
+      color: #059669;
+      border: 1.5px solid #10b981;
+      background: rgba(16, 185, 129, 0.08);
+    }
+    body.theme-twilight .mini-calendar-day.is-today {
+      color: #34d399;
+      background: rgba(16, 185, 129, 0.18);
+    }
+    .mini-calendar-day.is-selected {
+      background: #6366f1 !important;
+      color: #ffffff !important;
+      font-weight: 800;
+      box-shadow: 0 2px 8px rgba(99, 102, 241, 0.35);
+      border-color: #6366f1;
+    }
+    .mini-calendar-dot-wrap {
+      display: flex;
+      gap: 2px;
+      align-items: center;
+      justify-content: center;
+      height: 4px;
+      margin-top: 1px;
+    }
+    .mini-cal-dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+    }
+    .mini-cal-dot.dot-card {
+      background: #8b5cf6;
+    }
+    .mini-cal-dot.dot-urgent {
+      background: #ef4444;
+    }
+    .mini-cal-dot.dot-normal {
+      background: #f59e0b;
+    }
+    .mini-calendar-day.is-selected .mini-cal-dot {
+      background: #ffffff !important;
+    }
+    .mini-calendar-legend {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      font-size: 10px;
+      font-weight: 600;
+      color: #64748b;
+      margin-top: 8px;
+      padding-top: 6px;
+      border-top: 1px dashed rgba(226, 232, 240, 0.8);
+      user-select: none;
+    }
+    body.theme-twilight .mini-calendar-legend {
+      color: #94a3b8;
+      border-top-color: rgba(255, 255, 255, 0.08);
+    }
+    .mini-cal-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Desglose Matemático del Límite Diario Seguro (Apple Fintech) */
+    .daily-limit-breakdown {
+      background: rgba(248, 250, 252, 0.85);
+      border: 1px solid rgba(226, 232, 240, 0.9);
+      border-radius: 16px;
+      padding: 12px 14px;
+      margin-bottom: 14px;
+      font-size: 12px;
+      transition: background 0.2s ease, border-color 0.2s ease;
+    }
+    body.theme-twilight .daily-limit-breakdown {
+      background: rgba(30, 41, 59, 0.55);
+      border-color: rgba(255, 255, 255, 0.08);
+    }
+    .daily-limit-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 5px 0;
+      color: var(--text-secondary, #475569);
+    }
+    .daily-limit-row.highlight {
+      border-top: 1px solid rgba(226, 232, 240, 0.8);
+      margin-top: 4px;
+      padding-top: 8px;
+      font-weight: 800;
+      color: var(--text-main, #0f172a);
+    }
+    body.theme-twilight .daily-limit-row.highlight {
+      border-top-color: rgba(255, 255, 255, 0.08);
+      color: #f8fafc;
+    }
+    .daily-limit-val {
+      font-weight: 700;
+      font-family: 'JetBrains Mono', -apple-system, monospace;
+      letter-spacing: -0.01em;
+      color: var(--text-main, #0f172a);
+    }
+    body.theme-twilight .daily-limit-val {
+      color: #f8fafc;
+    }
+
     /* ================================================================
        CONCILIACIÓN BANCARIA (MODAL & CARD STYLES)
        ================================================================ */
