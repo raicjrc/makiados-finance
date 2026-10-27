@@ -37,7 +37,7 @@ async function openApp({ port = 8110, width = 1400, height = 900, pro = false } 
     window.currentUser = currentUser;
     appState = db;
     if (pro) window.isUserPro = () => true;
-    document.getElementById('loginModalScreen').style.display = 'none';
+    if (window.hideLoginScreen) window.hideLoginScreen(); else document.getElementById('loginModalScreen').style.display = 'none';
     const w = document.getElementById('appMainWrapper');
     w.style.display = ''; w.classList.add('authenticated');
     CATEGORIES = Object.assign({}, getUserDefaultCategories(), appState.customCategories || {});

@@ -426,6 +426,49 @@
     window.openLegalModal = openLegalModal;
     window.openLegalModalImpl = openLegalModal;
 
+    // Helpers robustos e infalibles para ocultar/mostrar la pantalla de acceso
+    function hideLoginScreen() {
+      const modal = document.getElementById('loginModalScreen');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.style.setProperty('display', 'none', 'important');
+        modal.style.visibility = 'hidden';
+        modal.style.opacity = '0';
+        modal.style.pointerEvents = 'none';
+      }
+      const mainWrap = document.getElementById('appMainWrapper');
+      if (mainWrap) {
+        mainWrap.classList.add('authenticated');
+        mainWrap.style.removeProperty('display');
+        if (window.innerWidth >= 1024) {
+          mainWrap.style.display = 'flex';
+        } else {
+          mainWrap.style.display = 'block';
+        }
+      }
+    }
+
+    function showLoginScreen() {
+      const modal = document.getElementById('loginModalScreen');
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.style.removeProperty('display');
+        modal.style.removeProperty('visibility');
+        modal.style.removeProperty('opacity');
+        modal.style.display = 'flex';
+        modal.style.visibility = 'visible';
+        modal.style.opacity = '1';
+        modal.style.pointerEvents = 'auto';
+      }
+      const mainWrap = document.getElementById('appMainWrapper');
+      if (mainWrap) {
+        mainWrap.style.setProperty('display', 'none', 'important');
+        mainWrap.classList.remove('authenticated');
+      }
+    }
+    window.hideLoginScreen = hideLoginScreen;
+    window.showLoginScreen = showLoginScreen;
+
     if (typeof window !== 'undefined') {
       window.addEventListener('DOMContentLoaded', () => {
         if (loginSlideTimer) clearInterval(loginSlideTimer);
@@ -448,7 +491,7 @@
       }
       if (!client) {
         console.warn('Supabase aún no inicializado en checkLoginStatus, mostrando login.');
-        document.getElementById('loginModalScreen').style.display = 'flex';
+        showLoginScreen();
         return;
       }
 
@@ -469,8 +512,7 @@
 
       // Soporte para depuración / vista previa local (?debug_tour=1 o ?demo=1 o ?preview=1 o ?view_login=1)
       if (window.location.search.includes('view_login=1')) {
-        document.getElementById('loginModalScreen').style.display = 'flex';
-        document.getElementById('appMainWrapper').style.display = 'none';
+        showLoginScreen();
         return;
       }
 
@@ -487,8 +529,7 @@
         recordUserHeartbeat(session.user, true);
         await onLoginSuccess(session.user);
       } else {
-        document.getElementById('loginModalScreen').style.display = 'flex';
-        document.getElementById('appMainWrapper').style.display = 'none';
+        showLoginScreen();
         if (window.location.search.includes('mode=register') || window.location.search.includes('register=1')) {
           switchAuthTab('register');
         }
@@ -532,12 +573,8 @@
       const deskUser = document.getElementById('deskSidebarUser');
       if (deskUser) deskUser.textContent = displayName;
 
-      document.getElementById('loginModalScreen').style.display = 'none';
-      const mainWrap = document.getElementById('appMainWrapper');
-      if (mainWrap) {
-        mainWrap.style.display = '';
-        mainWrap.classList.add('authenticated');
-      }
+      // Ocultar pantalla de login de forma definitiva
+      hideLoginScreen();
 
       // Inicializar app con datos del usuario
       window._serverStateLoaded = false;
@@ -1567,8 +1604,7 @@
 
     function openResetPasswordModal() {
       const modal = document.getElementById('resetPasswordModal');
-      const loginModal = document.getElementById('loginModalScreen');
-      if (loginModal) loginModal.style.display = 'none';
+      hideLoginScreen();
       if (modal) {
         modal.style.display = 'flex';
         modal.classList.add('active');
@@ -1691,7 +1727,7 @@
       appState = getCleanUserState();
       syncAdminUI();
       closeModal('onboardingWizardModal');
-      document.getElementById('loginModalScreen').style.display = 'flex';
+      showLoginScreen();
       document.getElementById('appMainWrapper').style.display = 'none';
       // Limpiar datos locales de este usuario
       try { localStorage.removeItem(getStorageKey()); } catch(e) {}

@@ -2085,20 +2085,25 @@
     #loginModalScreen {
       position: fixed;
       inset: 0;
-      background: 
-        radial-gradient(circle at 85% 15%, rgba(16, 185, 129, 0.12) 0%, transparent 45%),
-        radial-gradient(circle at 15% 70%, rgba(5, 150, 105, 0.08) 0%, transparent 50%),
-        #f8fafc;
+      background: #ffffff;
       display: flex;
       align-items: center;
       justify-content: center;
       z-index: 99999;
-      padding: max(20px, env(safe-area-inset-top)) 20px max(20px, env(safe-area-inset-bottom)) 20px;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
+      padding: 0;
+      overflow: hidden;
       min-height: 100dvh;
       box-sizing: border-box;
       color: #0f172a;
+    }
+
+    #loginModalScreen.hidden,
+    #loginModalScreen[style*="display: none"],
+    #loginModalScreen[style*="display:none"] {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
     }
 
     .login-layout-container {
@@ -2561,14 +2566,21 @@
     /* Adaptación Móvil (< 900px) */
     @media (max-width: 899px) {
       #loginModalScreen {
-        display: block !important;
-        width: 100% !important;
-        height: 100vh !important;
-        height: 100dvh !important;
-        overflow-y: auto !important;
+        width: 100%;
+        height: 100vh;
+        height: 100dvh;
+        overflow-y: auto;
         -webkit-overflow-scrolling: touch;
         padding: max(22px, env(safe-area-inset-top, 22px)) 14px max(20px, env(safe-area-inset-bottom, 20px)) 14px;
         box-sizing: border-box;
+      }
+      #loginModalScreen.hidden,
+      #loginModalScreen[style*="display: none"],
+      #loginModalScreen[style*="display:none"] {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
       }
       .login-layout-container {
         width: 100% !important;
