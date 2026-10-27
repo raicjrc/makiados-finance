@@ -19,7 +19,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="js/chart.min.js?v=72.0"></script>
   <script src="js/supabase.min.js?v=72.0"></script>
-  <link rel="stylesheet" href="css/styles.css?v=78.2">
+  <link rel="stylesheet" href="css/styles.css?v=78.3">
 
   <style>
     /* Estilos Críticos Inmediatos: Paleta Unificada AliviaFin Light & Emerald */
@@ -775,33 +775,50 @@
       <!-- TAB 2: PLAN DE ACCIÓN -->
       <div id="tab-plan" class="tab-content">
         
-        <div class="flex-between mb-2" style="margin-bottom: 12px;">
+        <div class="flex-between mb-2" style="margin-bottom: 12px; align-items: center; flex-wrap: wrap; gap: 8px;">
           <div>
             <h2 style="font-size: 17px; font-weight: 800; letter-spacing: -0.01em; margin: 0;">Plan Financiero 50/30/20</h2>
             <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Distribución inteligente de tus ingresos de este mes</div>
           </div>
+          <button type="button" id="btnToggleAllPlanCards" class="plan-toggle-all-btn" onclick="toggleAllPlanCards()" title="Alternar entre ver todo o contraer para una vista compacta">
+            <span id="iconToggleAllPlanCards">↕️</span>
+            <span id="textToggleAllPlanCards">Contraer Todo</span>
+          </button>
         </div>
 
-
-        <!-- Fila 1 Desktop (2 Columnas): Disciplina 50/30/20 + Radar de Fugas (Fiel al Mockup 3) -->
+        <!-- Fila 1 Desktop (2 Columnas): Disciplina 50/30/20 + Radar de Fugas -->
         <div class="executive-plan-grid" id="planExecutiveTopGrid">
           <!-- Columna Izquierda: Disciplina Financiera 50/30/20 & Índice de Salud -->
           <div class="card executive-card" id="discipline503020Card">
-            <div class="card-header" style="margin-bottom: 12px;">
-              <div class="card-title" style="font-size: 15px; font-weight: 800;">⚖️ Regla 50/30/20</div>
+            <div class="card-header plan-collapsible-header" onclick="togglePlanCard('discipline503020Card')" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0;">
+              <div class="card-title" style="font-size: 15px; font-weight: 800; display: flex; align-items: center; gap: 6px;">
+                <span>⚖️ Regla 50/30/20</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="plan-card-mini-summary" id="miniSummary503020">Básicos · Deseos · Deuda</span>
+                <span class="plan-collapse-arrow" id="arrow_discipline503020Card">▼</span>
+              </div>
             </div>
-            <div id="rule503020ExecutiveContainer"></div>
+            <div class="plan-collapsible-body" id="body_discipline503020Card" style="margin-top: 12px;">
+              <div id="rule503020ExecutiveContainer"></div>
+            </div>
           </div>
 
           <!-- Columna Derecha: Radar de Servicios Fijos & Gastos Hormiga -->
           <div class="card executive-card" id="radarFugasCard">
-            <div class="card-header" style="margin-bottom: 14px;">
+            <div class="card-header plan-collapsible-header" onclick="togglePlanCard('radarFugasCard')" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0;">
               <div>
-                <div class="card-title" style="font-size: 15.5px; font-weight: 800; letter-spacing: -0.01em;">Radar de Servicios Fijos & Gastos Hormiga</div>
-                <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">Monitoreo de suscripciones activas y pequeñas salidas cotidianas de dinero</div>
+                <div class="card-title" style="font-size: 15px; font-weight: 800; letter-spacing: -0.01em;">Radar de Servicios & Hormiga</div>
+                <div class="plan-card-sub" style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Suscripciones y pequeñas salidas</div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="plan-card-mini-summary" id="miniSummaryRadar">Monitoreo activo</span>
+                <span class="plan-collapse-arrow" id="arrow_radarFugasCard">▼</span>
               </div>
             </div>
-            <div id="radarFugasExecutiveContainer"></div>
+            <div class="plan-collapsible-body" id="body_radarFugasCard" style="margin-top: 14px;">
+              <div id="radarFugasExecutiveContainer"></div>
+            </div>
           </div>
         </div>
 
@@ -809,43 +826,54 @@
         <div class="desktop-plan-grid-2" id="planExecutiveBottomGrid">
           <!-- Columna Izquierda: Presupuesto por Categoría -->
           <div class="plan-subcolumn">
-            <div class="card">
-              <div class="card-header">
+            <div class="card" id="cardCategoryBudgets">
+              <div class="card-header plan-collapsible-header" onclick="togglePlanCard('cardCategoryBudgets')" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0;">
                 <div class="card-title" style="font-size: 15px; font-weight: 800;">🎯 Presupuesto por Categoría</div>
-                <button type="button" class="btn btn-outline btn-sm" onclick="event.stopPropagation(); openCategoryManagerModal();" style="font-size:11px; padding:3px 10px; border-radius:12px; margin-left:auto; border-color:var(--border); font-weight:700;">⚙️ Gestionar</button>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span class="plan-card-mini-summary" id="miniSummaryBudgets">Topes activos</span>
+                  <button type="button" class="btn btn-outline btn-sm" onclick="event.stopPropagation(); openCategoryManagerModal();" style="font-size:11px; padding:3px 10px; border-radius:12px; border-color:var(--border); font-weight:700;">⚙️ Gestionar</button>
+                  <span class="plan-collapse-arrow" id="arrow_cardCategoryBudgets">▼</span>
+                </div>
               </div>
-              <div id="categoryBudgetsContainer"></div>
+              <div class="plan-collapsible-body" id="body_cardCategoryBudgets" style="margin-top: 12px;">
+                <div id="categoryBudgetsContainer"></div>
+              </div>
             </div>
           </div>
 
           <!-- Columna Derecha: Cuotas Pendientes & Rendimiento Histórico -->
           <div class="plan-subcolumn">
-            <div class="card plan-card-right">
-              <div class="card-header flex-between" style="margin-bottom: 12px;">
-                <div class="card-title" style="font-size: 15px; font-weight: 800;">💳 Cuotas & Rendimiento 2026</div>
-                <div class="segmented-switch" style="margin: 0;">
-                  <button class="segmented-btn active" id="segPlanCuotasBtn" onclick="togglePlanLowerView('cuotas')">💳 Cuotas</button>
-                  <button class="segmented-btn" id="segPlanHistoryBtn" onclick="togglePlanLowerView('history')">📈 Historial</button>
+            <div class="card plan-card-right" id="cardCuotasRendimiento">
+              <div class="card-header flex-between plan-collapsible-header" onclick="togglePlanCard('cardCuotasRendimiento')" style="margin-bottom: 0; align-items: center;">
+                <div class="card-title" style="font-size: 15px; font-weight: 800;">💳 Cuotas & Rendimiento</div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span class="plan-card-mini-summary" id="miniSummaryCuotas">Cuotas / Historial</span>
+                  <div class="segmented-switch" style="margin: 0;" onclick="event.stopPropagation();">
+                    <button class="segmented-btn active" id="segPlanCuotasBtn" onclick="togglePlanLowerView('cuotas')">💳 Cuotas</button>
+                    <button class="segmented-btn" id="segPlanHistoryBtn" onclick="togglePlanLowerView('history')">📈 Historial</button>
+                  </div>
+                  <span class="plan-collapse-arrow" id="arrow_cardCuotasRendimiento">▼</span>
                 </div>
               </div>
-
-              <!-- Cuotas Pendientes Box -->
-              <div id="segmentCuotasBox">
-                <div id="cuotasTrackerContainer"></div>
-              </div>
-
-              <!-- Historial & Rendimiento Box -->
-              <div id="segmentHistoryBox" style="display: none;">
-                <div class="chip-group" style="margin-bottom: 10px;">
-                  <div class="chip active" id="periodFilterALL" onclick="setHistoryPeriodFilter('ALL')">✨ Todo 2026</div>
-                  <div class="chip" id="periodFilterCURR" onclick="setHistoryPeriodFilter('CURR')">📍 Mes Actual</div>
-                  <div class="chip" id="periodFilterLAST3" onclick="setHistoryPeriodFilter('LAST3')">⏱️ Últimos 3 Meses</div>
+              <div class="plan-collapsible-body" id="body_cardCuotasRendimiento" style="margin-top: 12px;">
+                <!-- Cuotas Pendientes Box -->
+                <div id="segmentCuotasBox">
+                  <div id="cuotasTrackerContainer"></div>
                 </div>
 
-                <div class="chart-container" style="height: 200px; position: relative;">
-                  <canvas id="historyChart"></canvas>
+                <!-- Historial & Rendimiento Box -->
+                <div id="segmentHistoryBox" style="display: none;">
+                  <div class="chip-group" style="margin-bottom: 10px;">
+                    <div class="chip active" id="periodFilterALL" onclick="setHistoryPeriodFilter('ALL')">✨ Todo 2026</div>
+                    <div class="chip" id="periodFilterCURR" onclick="setHistoryPeriodFilter('CURR')">📍 Mes Actual</div>
+                    <div class="chip" id="periodFilterLAST3" onclick="setHistoryPeriodFilter('LAST3')">⏱️ Últimos 3 Meses</div>
+                  </div>
+
+                  <div class="chart-container" style="height: 200px; position: relative;">
+                    <canvas id="historyChart"></canvas>
+                  </div>
+                  <div id="historyTableContainer" class="mt-4"></div>
                 </div>
-                <div id="historyTableContainer" class="mt-4"></div>
               </div>
             </div>
           </div>
@@ -4059,6 +4087,6 @@
     </div>
   </div>
 
-  <script src="js/app.js?v=78.2"></script>
+  <script src="js/app.js?v=78.3"></script>
 </body>
 </html>

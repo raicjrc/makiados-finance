@@ -4482,6 +4482,7 @@
           renderCategoryBudgets();
           renderCuotasTracker();
           renderHistoryChart();
+          if (typeof initPlanCollapsibleCards === 'function') initPlanCollapsibleCards();
         }, 80);
       } else if (tabId === 'metas') {
         renderGoals();
@@ -7560,6 +7561,61 @@
       }
     }
     window.togglePlanLowerView = togglePlanLowerView;
+
+    // ====== GESTIÓN DE TARJETAS COLAPSABLES Y BOTÓN MAESTRO EN FINANZAS (v78.3) ======
+    const PLAN_CARDS = ['discipline503020Card', 'radarFugasCard', 'cardCategoryBudgets', 'cardCuotasRendimiento'];
+
+    function togglePlanCard(cardId) {
+      const card = document.getElementById(cardId);
+      if (!card) return;
+      const isCollapsed = card.classList.toggle('plan-card-collapsed');
+      localStorage.setItem('pref_plancard_' + cardId, isCollapsed ? 'collapsed' : 'expanded');
+      updateToggleAllPlanCardsButtonText();
+    }
+    window.togglePlanCard = togglePlanCard;
+
+    function toggleAllPlanCards() {
+      // Si al menos una tarjeta está expandida, contraer todas. De lo contrario, expandir todas.
+      const anyExpanded = PLAN_CARDS.some(id => {
+        const c = document.getElementById(id);
+        return c && !c.classList.contains('plan-card-collapsed');
+      });
+
+      const shouldCollapse = anyExpanded;
+      PLAN_CARDS.forEach(id => {
+        const c = document.getElementById(id);
+        if (c) {
+          c.classList.toggle('plan-card-collapsed', shouldCollapse);
+          localStorage.setItem('pref_plancard_' + id, shouldCollapse ? 'collapsed' : 'expanded');
+        }
+      });
+      updateToggleAllPlanCardsButtonText();
+    }
+    window.toggleAllPlanCards = toggleAllPlanCards;
+
+    function updateToggleAllPlanCardsButtonText() {
+      const anyExpanded = PLAN_CARDS.some(id => {
+        const c = document.getElementById(id);
+        return c && !c.classList.contains('plan-card-collapsed');
+      });
+      const txt = document.getElementById('textToggleAllPlanCards');
+      const icon = document.getElementById('iconToggleAllPlanCards');
+      if (txt) txt.textContent = anyExpanded ? 'Contraer Todo' : 'Expandir Todo';
+      if (icon) icon.textContent = anyExpanded ? '↕️' : '⏬';
+    }
+    window.updateToggleAllPlanCardsButtonText = updateToggleAllPlanCardsButtonText;
+
+    function initPlanCollapsibleCards() {
+      PLAN_CARDS.forEach(id => {
+        const pref = localStorage.getItem('pref_plancard_' + id);
+        const card = document.getElementById(id);
+        if (card && pref === 'collapsed') {
+          card.classList.add('plan-card-collapsed');
+        }
+      });
+      updateToggleAllPlanCardsButtonText();
+    }
+    window.initPlanCollapsibleCards = initPlanCollapsibleCards;
 
     function filterHormigaGroup(key) {
       switchTab('movimientos');

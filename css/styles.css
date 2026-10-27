@@ -361,6 +361,7 @@
       }
       .container {
         padding: 8px 10px;
+        padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
         width: 100%;
         max-width: 100vw;
         box-sizing: border-box;
@@ -10037,4 +10038,152 @@ body.privacy-active .timeline-tx-amount::after {
   font-family: -apple-system, sans-serif;
   letter-spacing: 1px;
 }
+
+/* ====== FINANZAS: BOTÓN MAESTRO & TARJETAS COLAPSABLES (v78.3) ====== */
+.plan-toggle-all-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  font-size: 11.5px;
+  font-weight: 700;
+  border-radius: 999px;
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border, #e2e8f0);
+  color: var(--text-main, #0f172a);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+  min-height: 34px;
+}
+.plan-toggle-all-btn:hover {
+  background: var(--border-light, #f8fafc);
+  border-color: #cbd5e1;
+}
+.plan-toggle-all-btn:active {
+  transform: scale(0.96);
+}
+.plan-collapsible-header {
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: opacity 0.15s ease;
+}
+.plan-collapsible-header:hover {
+  opacity: 0.9;
+}
+.plan-collapse-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--border-light, #f1f5f9);
+  color: var(--text-muted, #64748b);
+  font-size: 10px;
+  font-weight: 800;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.plan-card-collapsed .plan-collapse-arrow {
+  transform: rotate(-90deg);
+}
+.plan-card-mini-summary {
+  display: none;
+  font-size: 11px;
+  font-weight: 700;
+  color: #059669;
+  background: #ecfdf5;
+  padding: 3px 8px;
+  border-radius: 8px;
+  border: 1px solid #d1fae5;
+  white-space: nowrap;
+}
+body.theme-twilight .plan-card-mini-summary {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: #34d399;
+}
+.plan-card-collapsed .plan-card-mini-summary {
+  display: inline-flex !important;
+}
+.plan-collapsible-body {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.plan-card-collapsed .plan-collapsible-body {
+  display: none !important;
+}
+
+/* ====== OPTIMIZACIÓN MÓVIL: MOVIMIENTOS DESAHOGADO & RESPIRABLE ====== */
+@media (max-width: 600px) {
+  #tab-movimientos .card {
+    padding: 12px 10px !important;
+    border-radius: 16px !important;
+  }
+  #tab-movimientos .card-header {
+    margin-bottom: 8px !important;
+  }
+  #tab-movimientos .tx-summary-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 6px !important;
+    margin-bottom: 8px !important;
+  }
+  #tab-movimientos .tx-summary-cell {
+    padding: 6px 6px !important;
+    border-radius: 10px !important;
+    text-align: center !important;
+  }
+  #tab-movimientos .tx-summary-label {
+    font-size: 8px !important;
+    letter-spacing: 0.2px !important;
+    margin-bottom: 2px !important;
+  }
+  #tab-movimientos .tx-summary-val {
+    font-size: 12.5px !important;
+    font-weight: 800 !important;
+    margin-top: 1px !important;
+  }
+  #tab-movimientos .filter-bar {
+    gap: 6px !important;
+    margin-bottom: 6px !important;
+  }
+  #tab-movimientos .filter-search-wrap input {
+    font-size: 13px !important;
+    padding: 7px 8px 7px 28px !important;
+    border-radius: 10px !important;
+  }
+  #tab-movimientos .filter-select {
+    font-size: 11.5px !important;
+    padding: 7px 8px !important;
+    border-radius: 10px !important;
+  }
+  #tab-movimientos .filter-stats-bar {
+    font-size: 11px !important;
+    padding: 4px 2px !important;
+    margin-bottom: 6px !important;
+  }
+  #tab-movimientos .chip-group {
+    gap: 5px !important;
+    margin-bottom: 8px !important;
+  }
+  #tab-movimientos .chip {
+    padding: 5px 9px !important;
+    font-size: 11px !important;
+    border-radius: 8px !important;
+  }
+  /* Ajuste de tarjetas de gastos para mayor ligereza */
+  .tx-table tr.tx-row-item {
+    padding: 9px 10px !important;
+    margin-bottom: 6px !important;
+    border-radius: 12px !important;
+  }
+  .tx-concept-title {
+    font-size: 13px !important;
+  }
+  .tx-table td.tx-cell-amount {
+    font-size: 14.5px !important;
+  }
+}
+
 
