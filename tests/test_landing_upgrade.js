@@ -1,14 +1,39 @@
 const { chromium } = require('playwright');
 const path = require('path');
+const http = require('http');
+const fs = require('fs');
+
+const root = path.resolve(__dirname, '..');
+const mime = {
+  '.html': 'text/html',
+  '.js': 'text/javascript',
+  '.css': 'text/css',
+  '.json': 'application/json',
+  '.png': 'image/png',
+  '.svg': 'image/svg+xml'
+};
+
+const server = http.createServer((req, res) => {
+  let p = decodeURIComponent(req.url.split('?')[0]);
+  if (p === '/') p = '/landing.html';
+  const f = path.join(root, p);
+  if (!f.startsWith(root) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) {
+    res.writeHead(404);
+    return res.end();
+  }
+  res.writeHead(200, { 'Content-Type': mime[path.extname(f)] || 'application/octet-stream' });
+  fs.createReadStream(f).pipe(res);
+});
 
 (async () => {
-  console.log('--- INICIANDO TEST PLAYWRIGHT DE LANDING UPGRADE ---');
+  console.log('--- INICIANDO TEST PLAYWRIGHT DE LANDING CON SHOWCASE REAL ---');
+  const port = 4788;
+  await new Promise(r => server.listen(port, r));
+
   const browser = await chromium.launch({
     channel: 'chrome',
     headless: true
-  });
-
-  const fileUrl = 'file://' + path.resolve(__dirname, '../landing.html');
+  }).catch(() => chromium.launch({ headless: true }));
 
   // 1. MOBILE TEST (iPhone 14 Pro: 390x844)
   console.log('[mobile] Probando landing en iPhone (390x844)...');
@@ -17,108 +42,113 @@ const path = require('path');
     userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1'
   });
 
-  await pageMobile.goto(fileUrl, { waitUntil: 'domcontentloaded' });
-
-  // Verificar elementos del Hero
+  await pageMobile.goto(`http://localhost:${port}/landing.html`, { waitUntil: 'load' });
   await pageMobile.waitForSelector('.hero-title');
-  await pageMobile.waitForSelector('#demoMobileFrame');
+  await pageMobile.waitForSelector('#showcasePhoneFrame');
 
-  // Screenshot 1: Mobile Hero y Demo Diario
-  await pageMobile.screenshot({ path: path.resolve(__dirname, 'landing_mobile_hero_daily.png') });
-  console.log('[mobile] Screenshot tomado: landing_mobile_hero_daily.png');
+  // Verificar copy para personas de a pie
+  const badgeText = await pageMobile.locator('.pill-badge').textContent();
+  console.log('[mobile] Badge texto:', badgeText.trim());
+  if (!badgeText.includes('personas de a pie')) {
+    throw new Error('El badge de personas de a pie no está presente');
+  }
 
-  // Simular gasto en demo diario
-  const btnAlmuerzo = pageMobile.locator('button.demo-quick-btn:has-text("Almuerzo")').first();
-  await btnAlmuerzo.click();
+  // Verificar imagen inicial (Inicio)
+  const initialMobileSrc = await pageMobile.locator('#showcaseMobileImg').getAttribute('src');
+  console.log('[mobile] Imagen inicial:', initialMobileSrc);
+  if (!initialMobileSrc.includes('real_mobile_inicio.png')) {
+    throw new Error('La imagen inicial debe ser real_mobile_inicio.png');
+  }
+
+  // Screenshot 1: Mobile Inicio
+  await pageMobile.screenshot({ path: path.resolve(__dirname, 'landing_mobile_showcase_inicio.png') });
+  console.log('✓ Screenshot mobile inicio tomado');
+
+  // Cambiar a Cero Deudas
+  console.log('[mobile] Cambiando a Plan Cero Deudas...');
+  await pageMobile.locator('#modPill_deudas').click();
   await pageMobile.waitForTimeout(300);
 
-  // Verificar que el saldo bajó
-  const balText = await pageMobile.locator('#mobileBalanceDisplay').textContent();
-  console.log('[mobile] Saldo tras simular gasto:', balText);
-  if (!balText.includes('3,425')) {
-    throw new Error('El saldo no se actualizó correctamente tras simular gasto de S/ 25');
+  const debtsMobileSrc = await pageMobile.locator('#showcaseMobileImg').getAttribute('src');
+  console.log('[mobile] Imagen tras cambiar a deudas:', debtsMobileSrc);
+  if (!debtsMobileSrc.includes('real_mobile_deudas.png')) {
+    throw new Error('La imagen de deudas no cambió a real_mobile_deudas.png');
   }
 
-  // Filtrar por César
-  const btnUserCesar = pageMobile.locator('#btnUserCesarM');
-  await btnUserCesar.click();
-  await pageMobile.waitForTimeout(200);
-
-  // Cambiar experiencia a Plan Cero Deudas
-  console.log('[mobile] Cambiando experiencia a Plan Cero Deudas...');
-  const btnExpDebts = pageMobile.locator('#btnExpDebts');
-  await btnExpDebts.click();
-  await pageMobile.waitForTimeout(300);
-
-  // Verificar que el pane de deudas está visible
-  await pageMobile.waitForSelector('#demoMobileDebtsPane', { state: 'visible' });
-  const debtDate = await pageMobile.locator('#mDebtTargetDate').textContent();
-  console.log('[mobile] Fecha de libertad Cero Deudas en demo:', debtDate);
-
-  // Screenshot 2: Mobile Cero Deudas
-  await pageMobile.screenshot({ path: path.resolve(__dirname, 'landing_mobile_hero_debts.png') });
-  console.log('[mobile] Screenshot tomado: landing_mobile_hero_debts.png');
-
-  // Probar Preset +S/ 200
-  const btnPreset200 = pageMobile.locator('#demoMobileDebtsPane button.demo-preset-btn:has-text("+S/ 200")');
-  await btnPreset200.click();
-  await pageMobile.waitForTimeout(200);
-  const newDebtDate = await pageMobile.locator('#mDebtTargetDate').textContent();
-  console.log('[mobile] Fecha tras acelerador +S/ 200:', newDebtDate);
-  if (!newDebtDate.includes('Julio 2027')) {
-    throw new Error('El acelerador +S/ 200 no actualizó la fecha a Julio 2027');
+  const expTitle = await pageMobile.locator('#showcaseExplainerTitle').textContent();
+  console.log('[mobile] Título explicativo:', expTitle);
+  if (!expTitle.includes('Plan Cero Deudas')) {
+    throw new Error('El título explicativo no cambió a Plan Cero Deudas');
   }
 
-  // Probar Modal de Pago con WhatsApp
-  console.log('[mobile] Probando modal de pago...');
-  await pageMobile.evaluate(() => {
-    openPlanModal('Plan Anual PRO', '29.90', 'al año');
-  });
-  await pageMobile.waitForSelector('#planModalOverlay', { state: 'visible' });
-  const waHref = await pageMobile.locator('#btnPlanWhatsApp').getAttribute('href');
-  console.log('[mobile] Enlace de WhatsApp generado:', waHref);
-  if (!waHref.includes('wa.me/51914688135') || !waHref.includes('Plan%20Anual%20PRO')) {
-    throw new Error('El enlace de WhatsApp no contiene el número o el plan esperado');
-  }
+  // Screenshot 2: Mobile Deudas
+  await pageMobile.screenshot({ path: path.resolve(__dirname, 'landing_mobile_showcase_deudas.png') });
+  console.log('✓ Screenshot mobile deudas tomado');
 
-  await pageMobile.screenshot({ path: path.resolve(__dirname, 'landing_mobile_payment_modal.png') });
-  console.log('[mobile] Screenshot tomado: landing_mobile_payment_modal.png');
-
-  await pageMobile.close();
-
-  // 2. DESKTOP TEST (Mac: 1280x860)
-  console.log('[desktop] Probando landing en Desktop (1280x860)...');
+  // 2. DESKTOP TEST (MacBook Pro: 1440x900)
+  console.log('[desktop] Probando landing en Desktop (1440x900)...');
   const pageDesk = await browser.newPage({
-    viewport: { width: 1280, height: 860 }
+    viewport: { width: 1440, height: 900 }
   });
 
-  await pageDesk.goto(fileUrl, { waitUntil: 'domcontentloaded' });
-  await pageDesk.waitForSelector('.hero-title');
+  await pageDesk.goto(`http://localhost:${port}/landing.html`, { waitUntil: 'load' });
+  await pageDesk.waitForSelector('#tabDeviceDesktop');
 
-  // Cambiar a vista Computadora en switcher
-  const btnSwitchDesktop = pageDesk.locator('#btnSwitchDesktop');
-  await btnSwitchDesktop.click();
+  // Cambiar a vista Computadora
+  await pageDesk.locator('#tabDeviceDesktop').click();
   await pageDesk.waitForTimeout(300);
 
-  // Verificar que el frame desktop está visible
-  await pageDesk.waitForSelector('#demoDesktopFrame', { state: 'visible' });
+  // Verificar que el marco de Mac es visible y el de celular se ocultó
+  const macVisible = await pageDesk.locator('#showcaseMacFrame').isVisible();
+  const phoneVisible = await pageDesk.locator('#showcasePhoneFrame').isVisible();
+  console.log('[desktop] Mac visible:', macVisible, '| Phone visible:', phoneVisible);
+  if (!macVisible || phoneVisible) {
+    throw new Error('El marco de Mac debería estar visible y el de celular oculto');
+  }
 
-  // Screenshot 3: Desktop Hero
-  await pageDesk.screenshot({ path: path.resolve(__dirname, 'landing_desktop_hero.png') });
-  console.log('[desktop] Screenshot tomado: landing_desktop_hero.png');
+  const deskImgSrc = await pageDesk.locator('#showcaseDesktopImg').getAttribute('src');
+  console.log('[desktop] Imagen escritorio:', deskImgSrc);
+  if (!deskImgSrc.includes('real_desktop_inicio.png')) {
+    throw new Error('La imagen de escritorio debe ser real_desktop_inicio.png');
+  }
+
+  // Screenshot 3: Desktop Inicio
+  await pageDesk.screenshot({ path: path.resolve(__dirname, 'landing_desktop_showcase_inicio.png') });
+  console.log('✓ Screenshot desktop inicio tomado');
 
   // Cambiar a Cero Deudas en Desktop
-  const btnDeskDebts = pageDesk.locator('#btnExpDebts');
-  await btnDeskDebts.click();
+  await pageDesk.locator('#modPill_deudas').click();
   await pageDesk.waitForTimeout(300);
-  await pageDesk.waitForSelector('#demoDesktopDebtsPane', { state: 'visible' });
+  const deskDebtsImg = await pageDesk.locator('#showcaseDesktopImg').getAttribute('src');
+  if (!deskDebtsImg.includes('real_desktop_deudas.png')) {
+    throw new Error('La imagen de escritorio de deudas no cambió');
+  }
 
-  // Screenshot 4: Desktop Cero Deudas
-  await pageDesk.screenshot({ path: path.resolve(__dirname, 'landing_desktop_debts.png') });
-  console.log('[desktop] Screenshot tomado: landing_desktop_debts.png');
+  // Screenshot 4: Desktop Deudas
+  await pageDesk.screenshot({ path: path.resolve(__dirname, 'landing_desktop_showcase_deudas.png') });
+  console.log('✓ Screenshot desktop deudas tomado');
 
-  await pageDesk.close();
+  // Verificar sección de historia
+  const storyEyebrow = await pageDesk.locator('.story-section .section-eyebrow').textContent();
+  console.log('[desktop] Story eyebrow:', storyEyebrow.trim());
+  if (!storyEyebrow.includes('personas de a pie')) {
+    throw new Error('La sección de historia para personas de a pie no está presente');
+  }
+
+  // Probar modal de suscripción
+  console.log('[modal] Probando botón de WhatsApp...');
+  await pageDesk.evaluate(() => openPlanModal('Plan Anual PRO', '29.90', 'al año'));
+  await pageDesk.waitForSelector('#planModalOverlay', { state: 'visible' });
+
+  const btnWsp = pageDesk.locator('#btnPlanWhatsApp');
+  const wspVisible = await btnWsp.isVisible();
+  const wspHref = await btnWsp.getAttribute('href');
+  console.log('[modal] WhatsApp link visible:', wspVisible, '| Href:', wspHref);
+  if (!wspVisible || !wspHref.includes('wa.me/51914688135')) {
+    throw new Error('El botón de WhatsApp no tiene el número o enlace correcto');
+  }
+
   await browser.close();
-
-  console.log('✅ TODAS LAS PRUEBAS DE LANDING UPGRADE COMPLETADAS EXITOSAMENTE!');
+  server.close();
+  console.log('--- ¡TODOS LOS TESTS DE LANDING CON SHOWCASE REAL PASARON EXITOSAMENTE! ---');
 })();

@@ -436,153 +436,275 @@
       box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
     }
 
-    /* CONTENEDOR PRINCIPAL DEL DEMO INTERACTIVO */
-    .mockup-wrapper {
+    /* SHOWCASE REAL DE LA APLICACIÓN (MÓVIL IPHONE & COMPUTADORA MAC) */
+    .showcase-wrapper {
       position: relative;
-      max-width: 920px;
+      max-width: 1040px;
       width: 100%;
       margin: 0 auto 36px;
       padding: 0;
-      background: transparent;
-      border: none;
-      box-shadow: none;
       display: flex;
-      justify-content: center;
-    }
-
-    /* VISTA 1: CELULAR */
-    .demo-mobile-frame {
-      max-width: 380px;
-      margin: 0 auto;
-      background: #ffffff;
-      border-radius: 36px;
-      border: 3px solid #cbd5e1;
-      box-shadow: 0 20px 50px -10px rgba(15, 23, 42, 0.15);
-      overflow: hidden;
-      text-align: left;
-    }
-
-    .mobile-notch-bar {
-      height: 26px;
-      background: #f8fafc;
-      display: flex;
+      flex-direction: column;
       align-items: center;
-      justify-content: space-between;
-      padding: 0 20px;
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--text-muted);
-      border-bottom: 1px solid var(--border-light);
     }
 
-    .mobile-app-header {
-      padding: 12px 18px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-bottom: 1px solid var(--border-light);
-    }
-
-    .mobile-brand-tag {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 14px;
-      font-weight: 800;
-      color: var(--text-main);
-    }
-
-    .mobile-brand-tag img {
-      width: 22px;
-      height: 22px;
-      border-radius: 6px;
-    }
-
-    /* VISTA 2: NAVEGADOR WEB (DESKTOP) */
-    .demo-desktop-frame {
-      display: none;
-      width: 100%;
-      background: #ffffff;
-      border-radius: 20px;
-      border: 1px solid #cbd5e1;
-      box-shadow: 0 20px 50px -10px rgba(15, 23, 42, 0.12);
-      overflow: hidden;
-      text-align: left;
-    }
-
-    .browser-toolbar {
+    /* Selector de Dispositivo (Pill redonda superior) */
+    .showcase-device-bar {
+      display: inline-flex;
       background: #f1f5f9;
-      padding: 10px 16px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .browser-dots {
-      display: flex;
+      padding: 5px;
+      border-radius: 999px;
+      border: 1px solid #e2e8f0;
+      margin-bottom: 16px;
       gap: 6px;
     }
 
-    .browser-dot {
-      width: 10px;
-      height: 10px;
+    .showcase-dev-btn {
+      padding: 8px 18px;
+      border-radius: 999px;
+      border: none;
+      background: transparent;
+      font-size: 13px;
+      font-weight: 700;
+      color: #64748b;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .showcase-dev-btn:hover {
+      color: #0f172a;
+    }
+
+    .showcase-dev-btn.active {
+      background: #ffffff;
+      color: #0f172a;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+    }
+
+    /* Selector de Módulos Reales (4 Pills) */
+    .showcase-module-pills {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 22px;
+      width: 100%;
+    }
+
+    .showcase-pill-btn {
+      padding: 10px 18px;
+      border-radius: 12px;
+      border: 1.5px solid #e2e8f0;
+      background: #ffffff;
+      color: #475569;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+    }
+
+    .showcase-pill-btn:hover {
+      border-color: #cbd5e1;
+      background: #f8fafc;
+      color: #0f172a;
+    }
+
+    .showcase-pill-btn.active {
+      background: #ecfdf5;
+      border-color: #10b981;
+      color: #059669;
+      box-shadow: 0 4px 14px -2px rgba(16, 185, 129, 0.18);
+    }
+
+    /* 1. CHASIS IPHONE 16 PRO */
+    .showcase-phone-frame {
+      max-width: 375px;
+      width: 100%;
+      background: #0f172a;
+      border-radius: 46px;
+      padding: 11px;
+      box-shadow: 0 25px 65px -12px rgba(15, 23, 42, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.12);
+      position: relative;
+      margin: 0 auto;
+    }
+
+    .showcase-island {
+      position: absolute;
+      top: 19px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 110px;
+      height: 25px;
+      background: #000000;
+      border-radius: 20px;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 9px;
+    }
+
+    .showcase-island-cam {
+      width: 9px;
+      height: 9px;
+      background: #1e293b;
+      border-radius: 50%;
+      border: 1.5px solid #0f172a;
+    }
+
+    .showcase-phone-screen {
+      width: 100%;
+      border-radius: 37px;
+      overflow: hidden;
+      background: #0a0f1d;
+      position: relative;
+    }
+
+    .showcase-phone-screen img {
+      width: 100%;
+      height: auto;
+      display: block;
+      transition: opacity 0.22s ease;
+    }
+
+    /* 2. VENTANA MACBOOK PRO / SAFARI */
+    .showcase-mac-frame {
+      display: none;
+      width: 100%;
+      max-width: 980px;
+      background: #ffffff;
+      border-radius: 18px;
+      border: 1px solid #cbd5e1;
+      box-shadow: 0 25px 70px -15px rgba(15, 23, 42, 0.16);
+      overflow: hidden;
+      margin: 0 auto;
+    }
+
+    .showcase-mac-titlebar {
+      background: #f1f5f9;
+      padding: 10px 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .showcase-mac-dots {
+      display: flex;
+      gap: 7px;
+    }
+
+    .showcase-mac-dot {
+      width: 11px;
+      height: 11px;
       border-radius: 50%;
     }
 
-    .browser-address-bar {
+    .showcase-mac-url {
       flex-grow: 1;
+      max-width: 440px;
+      margin: 0 auto;
       background: #ffffff;
-      border: 1px solid var(--border);
+      border: 1px solid #cbd5e1;
       border-radius: 8px;
       padding: 4px 12px;
       font-size: 12px;
-      color: var(--text-secondary);
+      color: #475569;
       font-family: var(--font-mono);
       display: flex;
       align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .showcase-mac-screen {
+      width: 100%;
+      background: #090e17;
+      overflow: hidden;
+    }
+
+    .showcase-mac-screen img {
+      width: 100%;
+      height: auto;
+      display: block;
+      transition: opacity 0.22s ease;
+    }
+
+    /* TARJETA EXPLICATIVA DINÁMICA INFERIOR */
+    .showcase-explainer-card {
+      max-width: 820px;
+      width: 100%;
+      margin-top: 24px;
+      background: #ffffff;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 20px;
+      padding: 24px 28px;
+      box-shadow: 0 8px 30px -4px rgba(15, 23, 42, 0.05);
+      text-align: left;
+    }
+
+    .showcase-explainer-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11.5px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #059669;
+      background: #ecfdf5;
+      padding: 4px 10px;
+      border-radius: 999px;
+      margin-bottom: 10px;
+    }
+
+    .showcase-explainer-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: #0f172a;
+      margin-bottom: 8px;
+      letter-spacing: -0.01em;
+    }
+
+    .showcase-explainer-desc {
+      font-size: 14.5px;
+      color: #334155;
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+
+    .showcase-explainer-bullets {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 20px;
+      display: flex;
+      flex-direction: column;
       gap: 8px;
     }
 
-    .desktop-app-layout {
-      display: grid;
-      grid-template-columns: 210px 1fr;
-      min-height: 480px;
-    }
-
-    .desktop-sidebar {
-      background: #f8fafc;
-      border-right: 1px solid var(--border);
-      padding: 20px 14px;
-    }
-
-    .desktop-sidebar-item {
+    .showcase-explainer-bullets li {
       display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 13.5px;
+      color: #1e293b;
+    }
+
+    .showcase-explainer-actions {
+      display: flex;
+      flex-wrap: wrap;
       align-items: center;
-      gap: 10px;
-      padding: 9px 12px;
-      border-radius: 10px;
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--text-muted);
-      margin-bottom: 4px;
-      cursor: pointer;
+      gap: 12px;
+      padding-top: 14px;
+      border-top: 1px solid #edf2f7;
     }
-
-    .desktop-sidebar-item.active {
-      background: var(--primary-light);
-      color: var(--primary);
-    }
-
-    .desktop-main-content {
-      padding: 24px;
-      background: #ffffff;
-    }
-
-    /* COMPONENTES COMPARTIDOS DEL DEMO (EXECUTIVE BALANCE CARD EXACTA A LA REAL) */
-    .demo-exec-card {
-      background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
-      border: 1.5px solid var(--primary-border);
       border-radius: 20px;
       padding: 20px;
       margin-bottom: 18px;
@@ -1917,15 +2039,15 @@
       <div class="container">
         
         <div class="pill-badge">
-          <span>✨ Control Financiero Sin Estrés</span>
+          <span>✨ Creado para personas de a pie, como tú y como yo</span>
         </div>
 
         <h1 class="hero-title">
-          Toma el control de tu dinero sin Excel y en <span>5 segundos al día</span>
+          Toma el control de tu dinero con total claridad, <span>sin enredos ni Excel</span>
         </h1>
 
         <p class="hero-subtitle">
-          La plataforma minimalista pensada para Perú. Compatible con <strong>Yape, Plin y compras en cuotas con tarjeta</strong>. Conoce tu <strong>límite seguro para gastar hoy</strong> y liquida tus deudas con el <strong>Plan Cero Deudas</strong>.
+          Una plataforma simple y honesta creada para la vida real. Olvídate de tablas de 50 columnas y términos de banco que confunden. Aquí sabes exactamente <strong>cuánto dinero tienes disponible</strong>, <strong>cuánto puedes gastar hoy sin culpa</strong> y cómo ir pagando tus tarjetas paso a paso.
         </p>
 
         <div class="hero-cta-group">
@@ -1953,456 +2075,112 @@
           </div>
         </div>
 
-        <!-- SELECTOR DE EXPERIENCIA Y VISTA DEL DEMO -->
-        <div id="demo" style="display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%; margin: 28px auto 16px;">
-          <!-- 1. Experiencia: Registro Diario vs Cero Deudas -->
-          <div class="demo-experience-bar">
-            <button type="button" class="demo-exp-pill active" id="btnExpDaily" onclick="setDemoExperience('daily')">
-              <span>⚡ Registro Diario & Gasto Seguro</span>
-            </button>
-            <button type="button" class="demo-exp-pill" id="btnExpDebts" onclick="setDemoExperience('debts')">
-              <span>🏔️ Plan Cero Deudas (Bola de Nieve)</span>
-            </button>
-          </div>
-
-          <!-- 2. Dispositivo: Celular vs Computadora -->
-          <div class="demo-view-switcher">
-            <button type="button" class="switch-btn active" id="btnSwitchMobile" onclick="setDemoView('mobile')">
-              <span>📱 Vista Celular</span>
-            </button>
-            <button type="button" class="switch-btn" id="btnSwitchDesktop" onclick="setDemoView('desktop')">
-              <span>💻 Vista Computadora</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- CONTENEDOR DEL DEMO INTERACTIVO (100% FIEL A LA APP REAL) -->
-        <div class="mockup-wrapper" style="margin-top: 10px;">
+        <!-- SHOWCASE REAL DE ALIVIAFIN (PANTALLAS AUTÉNTICAS MÓVIL Y DESKTOP) -->
+        <div id="demo" class="showcase-wrapper" style="margin-top: 32px;">
           
-          <!-- 1. VISTA CELULAR (DEFAULT) -->
-          <div class="demo-mobile-frame" id="demoMobileFrame">
-            <div class="mobile-notch-bar">
-              <span>9:41</span>
-              <span>●●● 5G 100%</span>
+          <!-- 1. SELECTOR DE DISPOSITIVO (CELULAR VS COMPUTADORA) -->
+          <div class="showcase-device-bar">
+            <button type="button" class="showcase-dev-btn active" id="tabDeviceMobile" onclick="setShowcaseDevice('mobile')">
+              <span>📱 Vista Celular (iPhone / Android)</span>
+            </button>
+            <button type="button" class="showcase-dev-btn" id="tabDeviceDesktop" onclick="setShowcaseDevice('desktop')">
+              <span>💻 Vista Computadora (Mac / Windows)</span>
+            </button>
+          </div>
+
+          <!-- 2. SELECTOR DE MÓDULOS REALES DE LA APP (LOS 4 PILARES) -->
+          <div class="showcase-module-pills">
+            <button type="button" class="showcase-pill-btn active" id="modPill_inicio" onclick="setShowcaseModule('inicio')">
+              <span>🏠 1. Día a Día & Límite Hoy</span>
+            </button>
+            <button type="button" class="showcase-pill-btn" id="modPill_deudas" onclick="setShowcaseModule('deudas')">
+              <span>❄️ 2. Plan Cero Deudas</span>
+            </button>
+            <button type="button" class="showcase-pill-btn" id="modPill_plan" onclick="setShowcaseModule('plan')">
+              <span>📊 3. Regla 50/30/20</span>
+            </button>
+            <button type="button" class="showcase-pill-btn" id="modPill_cuentas" onclick="setShowcaseModule('cuentas')">
+              <span>🤝 4. Cuentas Claras</span>
+            </button>
+          </div>
+
+          <!-- 3. MARCO DE DISPOSITIVO: IPHONE REAL -->
+          <div class="showcase-phone-frame" id="showcasePhoneFrame">
+            <div class="showcase-island">
+              <div class="showcase-island-cam"></div>
             </div>
-
-            <div class="mobile-app-header">
-              <div class="mobile-brand-tag">
-                <img src="logo.png" alt="logo" onerror="this.src='apple-touch-icon.png'">
-                <div style="display: flex; flex-direction: column; align-items: flex-start; line-height: 1.15;">
-                  <span style="font-size: 15px; font-weight: 800; color: #0f172a;">aliviafin</span>
-                  <span style="font-size: 10px; color: #059669; font-weight: 700;">🟢 Sincronizado</span>
-                </div>
-              </div>
-              <div style="display: flex; align-items: center; gap: 6px;">
-                <span style="font-size: 11.5px; font-weight: 700; color: #0f172a; background: #f1f5f9; padding: 4px 8px; border-radius: 8px; border: 1px solid #e2e8f0;">Octubre 2026</span>
-                <span style="font-size: 13px; background: #f1f5f9; padding: 3px 6px; border-radius: 8px; border: 1px solid #e2e8f0;">👁️</span>
-              </div>
-            </div>
-
-            <div style="padding: 16px;">
-              
-              <!-- PANE A: REGISTRO DIARIO MÓVIL -->
-              <div id="demoMobileDailyPane">
-                <!-- Tarjeta Liquid Glass con Gasto Diario Seguro -->
-                <div class="demo-exec-card">
-                  <div class="demo-exec-top">
-                    <span class="demo-exec-label">Disponible en banco</span>
-                    <div class="demo-safe-spend-pill" id="mobileSafeSpendPill">✨ S/ 65.00 al día seguro</div>
-                  </div>
-
-                  <div class="demo-balance-amount" id="mobileBalanceDisplay">S/ 3,450.00</div>
-
-                  <div class="demo-metrics-cluster">
-                    <div class="demo-metric-pill">
-                      <span class="demo-metric-label">Ingresos Percibidos</span>
-                      <span class="demo-metric-val income">S/ 5,200.00</span>
-                    </div>
-                    <div class="demo-metric-pill">
-                      <span class="demo-metric-label">Gastos Totales</span>
-                      <span class="demo-metric-val expense" id="mobileSpentDisplay">S/ 1,750.00</span>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Switch de Pareja Interactivo -->
-                <div class="demo-user-toggle">
-                  <button type="button" class="demo-user-btn active" id="btnUserAllM" onclick="setDemoUserFilter('all')">✨ Ambos</button>
-                  <button type="button" class="demo-user-btn" id="btnUserCesarM" onclick="setDemoUserFilter('cesar')">👤 César</button>
-                  <button type="button" class="demo-user-btn" id="btnUserGabyM" onclick="setDemoUserFilter('gaby')">👩 Gaby</button>
-                </div>
-
-                <!-- Simulación de Registro en 1 Toque -->
-                <div class="demo-section-title">⚡ Registro en 1 Toque (Toca una categoría para probar):</div>
-                <div class="demo-quick-grid">
-                  <button type="button" class="demo-quick-btn" onclick="triggerDemoExpense('Almuerzo / Comida', 25.00, '🍱', 'cesar')">
-                    <span class="demo-btn-icon">🍱</span>
-                    <span class="demo-btn-label">Almuerzo</span>
-                    <span class="demo-btn-sub">S/ 25</span>
-                  </button>
-                  <button type="button" class="demo-quick-btn" onclick="triggerDemoExpense('Taxi / Transporte', 15.00, '🚕', 'gaby')">
-                    <span class="demo-btn-icon">🚕</span>
-                    <span class="demo-btn-label">Taxi</span>
-                    <span class="demo-btn-sub">S/ 15</span>
-                  </button>
-                  <button type="button" class="demo-quick-btn" onclick="triggerDemoExpense('Café / Antojo', 8.00, '☕', 'gaby')">
-                    <span class="demo-btn-icon">☕</span>
-                    <span class="demo-btn-label">Café</span>
-                    <span class="demo-btn-sub">S/ 8</span>
-                  </button>
-                </div>
-
-                <!-- Timeline Agrupado por Día estilo MonAi -->
-                <div class="demo-section-title">Timeline Diario de Movimientos</div>
-                <div id="mobileRecentFeed">
-                  <!-- Grupo Hoy -->
-                  <div class="demo-day-group">
-                    <div class="demo-day-header">
-                      <span class="demo-day-title">Hoy</span>
-                      <span class="demo-day-total" id="mobileDayTotalToday">S/ 40.00</span>
-                    </div>
-                    <div class="demo-tx-item" data-user="cesar">
-                      <div class="demo-tx-left">
-                        <div class="demo-tx-icon">🍱</div>
-                        <div>
-                          <div class="demo-tx-name">Almuerzo Ejecutivo <span class="demo-tx-avatar">C</span></div>
-                          <div class="demo-tx-cat"><span class="demo-tx-badge">Yape</span>Comida · Hoy</div>
-                        </div>
-                      </div>
-                      <div class="demo-tx-amount">- S/ 25.00</div>
-                    </div>
-                    <div class="demo-tx-item" data-user="gaby">
-                      <div class="demo-tx-left">
-                        <div class="demo-tx-icon">🚕</div>
-                        <div>
-                          <div class="demo-tx-name">Taxi San Isidro <span class="demo-tx-avatar">G</span></div>
-                          <div class="demo-tx-cat"><span class="demo-tx-badge">Plin</span>Transporte · Hoy</div>
-                        </div>
-                      </div>
-                      <div class="demo-tx-amount">- S/ 15.00</div>
-                    </div>
-                  </div>
-
-                  <!-- Grupo Ayer -->
-                  <div class="demo-day-group">
-                    <div class="demo-day-header">
-                      <span class="demo-day-title">Ayer</span>
-                      <span class="demo-day-total">S/ 85.00</span>
-                    </div>
-                    <div class="demo-tx-item" data-user="all">
-                      <div class="demo-tx-left">
-                        <div class="demo-tx-icon">⚡</div>
-                        <div>
-                          <div class="demo-tx-name">Servicio Luz <span class="demo-tx-avatar">C&G</span></div>
-                          <div class="demo-tx-cat"><span class="demo-tx-badge">BCP</span>Servicios Fijos</div>
-                        </div>
-                      </div>
-                      <div class="demo-tx-amount">- S/ 85.00</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- PANE B: PLAN CERO DEUDAS MÓVIL -->
-              <div id="demoMobileDebtsPane" class="demo-debt-pane">
-                <div class="demo-debt-hero">
-                  <div class="demo-debt-hero-top">
-                    <span class="demo-exec-label">Tu Meta Cero Deudas</span>
-                    <span class="demo-debt-badge" id="mDebtSpeedBadge">⚡ Acelerado (-3 meses)</span>
-                  </div>
-                  <div class="demo-debt-target-date" id="mDebtTargetDate">Octubre 2027</div>
-                  <div class="demo-debt-kpis">
-                    <div class="demo-debt-kpi">
-                      <span class="demo-debt-kpi-lbl">Total Debes</span>
-                      <span class="demo-debt-kpi-val">S/ 4,200</span>
-                    </div>
-                    <div class="demo-debt-kpi">
-                      <span class="demo-debt-kpi-lbl">Pago al mes</span>
-                      <span class="demo-debt-kpi-val" id="mDebtMonthlyVal">S/ 380</span>
-                    </div>
-                    <div class="demo-debt-kpi">
-                      <span class="demo-debt-kpi-lbl">Tiempo</span>
-                      <span class="demo-debt-kpi-val" id="mDebtMonthsVal">11 meses</span>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Acelerador Interactivo -->
-                <div class="demo-accelerator-box">
-                  <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11.5px; font-weight: 800; color: var(--text-main);">
-                    <span>🚀 Acelerador Mensual:</span>
-                    <span style="color: var(--primary); font-family: var(--font-mono);" id="mDebtExtraLabel">+ S/ 100/mes</span>
-                  </div>
-                  <div class="demo-preset-group">
-                    <button type="button" class="demo-preset-btn" onclick="setDemoDebtPreset(0, this)">S/ 0</button>
-                    <button type="button" class="demo-preset-btn" onclick="setDemoDebtPreset(50, this)">+S/ 50</button>
-                    <button type="button" class="demo-preset-btn active" onclick="setDemoDebtPreset(100, this)">+S/ 100</button>
-                    <button type="button" class="demo-preset-btn" onclick="setDemoDebtPreset(200, this)">+S/ 200</button>
-                  </div>
-                  <div class="demo-debt-impact" id="mDebtImpactText">
-                    💡 Aportando S/ 100 extra, te liberas 3 meses antes y te ahorras S/ 380 en intereses.
-                  </div>
-                </div>
-
-                <!-- Tarjetas de Deudas Adaptativas -->
-                <div class="demo-section-title">Tus Compras en Cuotas (En Orden Estratégico)</div>
-                <div class="demo-debt-item attacking">
-                  <div class="demo-debt-header">
-                    <span class="demo-debt-title">💳 Tarjeta BCP (Visa)</span>
-                    <span class="demo-debt-pill attack">EN ATAQUE ⚡</span>
-                  </div>
-                  <div class="demo-debt-track">
-                    <div class="demo-debt-fill" style="width: 45%;"></div>
-                  </div>
-                  <div class="demo-debt-meta">
-                    <span>Cuota 4 de 12 (33%)</span>
-                    <span style="font-weight: 800; color: var(--text-main);">Debes: S/ 1,200</span>
-                  </div>
-                </div>
-
-                <div class="demo-debt-item">
-                  <div class="demo-debt-header">
-                    <span class="demo-debt-title">🚗 Préstamo Auto</span>
-                    <span class="demo-debt-pill hold">Pago Mínimo 🔒</span>
-                  </div>
-                  <div class="demo-debt-track">
-                    <div class="demo-debt-fill green" style="width: 30%;"></div>
-                  </div>
-                  <div class="demo-debt-meta">
-                    <span>Cuota 8 de 24 (33%)</span>
-                    <span style="font-weight: 800; color: var(--text-main);">Debes: S/ 3,000</span>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-
-            <!-- Barra de navegación inferior móvil idéntica a la real -->
-            <div style="display: flex; justify-content: space-around; background: #ffffff; border-top: 1px solid #e2e8f0; padding: 10px 4px; font-size: 10px; font-weight: 700; color: #64748b;">
-              <div style="display: flex; flex-direction: column; align-items: center; gap: 2px; color: #059669; cursor: pointer;" onclick="setDemoExperience('daily')">
-                <span style="font-size: 16px;">🏠</span>
-                <span>Inicio</span>
-              </div>
-              <div style="display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer;" onclick="setDemoExperience('daily')">
-                <span style="font-size: 16px;">💳</span>
-                <span>Movimientos</span>
-              </div>
-              <div style="display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer;" onclick="setDemoExperience('debts')">
-                <span style="font-size: 16px;">🏔️</span>
-                <span>Cero Deudas</span>
-              </div>
-              <div style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
-                <span style="font-size: 16px;">📊</span>
-                <span>50/30/20</span>
-              </div>
-              <div style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
-                <span style="font-size: 16px;">⚙️</span>
-                <span>Ajustes</span>
-              </div>
+            <div class="showcase-phone-screen">
+              <img id="showcaseMobileImg" src="assets/app_screens/real_mobile_inicio.png" alt="Pantalla de AliviaFin en Celular">
             </div>
           </div>
 
-          <!-- 2. VISTA NAVEGADOR WEB (DESKTOP WINDOW IDÉNTICA A LA APP REAL) -->
-          <div class="demo-desktop-frame" id="demoDesktopFrame">
-            <!-- Barra superior del navegador -->
-            <div class="browser-toolbar">
-              <div class="browser-dots">
-                <div class="browser-dot" style="background: #ef4444;"></div>
-                <div class="browser-dot" style="background: #eab308;"></div>
-                <div class="browser-dot" style="background: #22c55e;"></div>
+          <!-- 4. MARCO DE DISPOSITIVO: COMPUTADORA / MAC REAL -->
+          <div class="showcase-mac-frame" id="showcaseMacFrame">
+            <div class="showcase-mac-titlebar">
+              <div class="showcase-mac-dots">
+                <div class="showcase-mac-dot" style="background: #ef4444;"></div>
+                <div class="showcase-mac-dot" style="background: #f59e0b;"></div>
+                <div class="showcase-mac-dot" style="background: #10b981;"></div>
               </div>
-              <div class="browser-address-bar">
-                <span>🔒 https://mifinzen.vercel.app/</span>
-              </div>
-            </div>
-
-            <!-- Header Real de la App Desktop -->
-            <div style="background: #ffffff; border-bottom: 1px solid #e2e8f0; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between;">
-              <div style="display: flex; align-items: center; gap: 10px;">
-                <img src="logo.png" alt="logo" width="32" height="32" style="border-radius: 8px;" onerror="this.src='apple-touch-icon.png'">
-                <div>
-                  <strong style="font-size: 16px; color: #0f172a; letter-spacing: -0.02em;">aliviafin</strong>
-                  <div style="font-size: 10.5px; color: #059669; font-weight: 700;">🟢 Sincronizado</div>
-                </div>
-              </div>
-
-              <div style="display: flex; align-items: center; gap: 10px;">
-                <button type="button" onclick="setDemoExperience('daily')" style="background: #ecfdf5; border: 1px solid #a7f3d0; color: #059669; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px;">
-                  <span>⚡</span> Gasto Rápido
-                </button>
-                <button type="button" onclick="setDemoExperience('debts')" style="background: #eff6ff; border: 1px solid #bfdbfe; color: #2563eb; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px;">
-                  <span>🏔️</span> Cero Deudas
-                </button>
-                <div style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; color: #0f172a;">
-                  Octubre 2026
-                </div>
-                <div style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 6px 10px; border-radius: 8px; font-size: 13px;">
-                  👁️
-                </div>
+              <div class="showcase-mac-url">
+                <span>🔒 https://aliviafin.com/inicio</span>
               </div>
             </div>
-
-            <!-- Contenido Principal Desktop -->
-            <div style="padding: 24px; background: #f8fafc;">
-              
-              <!-- PANE A: DESKTOP REGISTRO DIARIO -->
-              <div id="demoDesktopDailyPane">
-                <!-- Tarjeta de Saldo Desktop -->
-                <div class="demo-exec-card" style="margin-bottom: 20px;">
-                  <div class="demo-exec-top">
-                    <span class="demo-exec-label">Disponible en banco</span>
-                    <div class="demo-safe-spend-pill" id="desktopSafeSpendPill">✨ S/ 65.00 al día seguro</div>
-                  </div>
-
-                  <div class="demo-balance-amount" id="desktopBalanceDisplay">S/ 3,450.00</div>
-
-                  <div class="demo-metrics-cluster">
-                    <div class="demo-metric-pill">
-                      <span class="demo-metric-label">Ingresos Percibidos</span>
-                      <span class="demo-metric-val income">S/ 5,200.00</span>
-                    </div>
-                    <div class="demo-metric-pill">
-                      <span class="demo-metric-label">Gastos Totales</span>
-                      <span class="demo-metric-val expense" id="desktopSpentDisplay">S/ 1,750.00</span>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Botones de Acción Rápida Desktop -->
-                <div class="demo-section-title">⚡ Registro en 1 Toque (Toca una categoría para simular):</div>
-                <div class="demo-quick-grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 20px;">
-                  <button type="button" class="demo-quick-btn" onclick="triggerDemoExpense('Almuerzo / Comida', 25.00, '🍱', 'cesar')">
-                    <span class="demo-btn-icon">🍱</span>
-                    <span class="demo-btn-label">Almuerzo</span>
-                    <span class="demo-btn-sub">Simular S/ 25</span>
-                  </button>
-                  <button type="button" class="demo-quick-btn" onclick="triggerDemoExpense('Café / Antojo', 8.00, '☕', 'gaby')">
-                    <span class="demo-btn-icon">☕</span>
-                    <span class="demo-btn-label">Café</span>
-                    <span class="demo-btn-sub">Simular S/ 8</span>
-                  </button>
-                  <button type="button" class="demo-quick-btn" onclick="triggerDemoExpense('Taxi / Transporte', 15.00, '🚕', 'gaby')">
-                    <span class="demo-btn-icon">🚕</span>
-                    <span class="demo-btn-label">Taxi</span>
-                    <span class="demo-btn-sub">Simular S/ 15</span>
-                  </button>
-                  <button type="button" class="demo-quick-btn" onclick="triggerDemoExpense('Supermercado', 65.00, '🛒', 'cesar')">
-                    <span class="demo-btn-icon">🛒</span>
-                    <span class="demo-btn-label">Supermercado</span>
-                    <span class="demo-btn-sub">Simular S/ 65</span>
-                  </button>
-                </div>
-
-                <!-- Historial Desktop -->
-                <div class="demo-section-title">Timeline Diario del Mes</div>
-                <div id="desktopRecentFeed">
-                  <div class="demo-day-group">
-                    <div class="demo-day-header">
-                      <span class="demo-day-title">Hoy</span>
-                      <span class="demo-day-total" id="desktopDayTotalToday">S/ 40.00</span>
-                    </div>
-                    <div class="demo-tx-item" data-user="cesar">
-                      <div class="demo-tx-left">
-                        <div class="demo-tx-icon">🍱</div>
-                        <div>
-                          <div class="demo-tx-name">Almuerzo Ejecutivo <span class="demo-tx-avatar">C</span></div>
-                          <div class="demo-tx-cat"><span class="demo-tx-badge">Yape</span>Alimentación · Pagado hoy</div>
-                        </div>
-                      </div>
-                      <div class="demo-tx-amount">- S/ 25.00</div>
-                    </div>
-                    <div class="demo-tx-item" data-user="gaby">
-                      <div class="demo-tx-left">
-                        <div class="demo-tx-icon">🚕</div>
-                        <div>
-                          <div class="demo-tx-name">Taxi San Isidro <span class="demo-tx-avatar">G</span></div>
-                          <div class="demo-tx-cat"><span class="demo-tx-badge">Plin</span>Transporte · Pagado hoy</div>
-                        </div>
-                      </div>
-                      <div class="demo-tx-amount">- S/ 15.00</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- PANE B: DESKTOP PLAN CERO DEUDAS -->
-              <div id="demoDesktopDebtsPane" class="demo-debt-pane">
-                <div class="demo-debt-hero" style="margin-bottom: 20px;">
-                  <div class="demo-debt-hero-top">
-                    <span class="demo-exec-label">Tu Meta Cero Deudas</span>
-                    <span class="demo-debt-badge" id="dDebtSpeedBadge">⚡ Acelerado (-3 meses)</span>
-                  </div>
-                  <div class="demo-debt-target-date" id="dDebtTargetDate" style="font-size: 32px;">Octubre 2027</div>
-                  <div class="demo-debt-kpis" style="grid-template-columns: repeat(3, 1fr); padding-top: 14px;">
-                    <div class="demo-debt-kpi">
-                      <span class="demo-debt-kpi-lbl">Total Que Debes</span>
-                      <span class="demo-debt-kpi-val" style="font-size: 15px;">S/ 4,200.00</span>
-                    </div>
-                    <div class="demo-debt-kpi">
-                      <span class="demo-debt-kpi-lbl">Pagos este mes</span>
-                      <span class="demo-debt-kpi-val" id="dDebtMonthlyVal" style="font-size: 15px;">S/ 380.00</span>
-                    </div>
-                    <div class="demo-debt-kpi">
-                      <span class="demo-debt-kpi-lbl">Tiempo Estimado</span>
-                      <span class="demo-debt-kpi-val" id="dDebtMonthsVal" style="font-size: 15px;">11 meses</span>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Acelerador Desktop -->
-                <div class="demo-accelerator-box" style="margin-bottom: 20px;">
-                  <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 800; color: var(--text-main);">
-                    <span>🚀 Acelerador Mensual (Aporte adicional):</span>
-                    <span style="color: var(--primary); font-family: var(--font-mono); font-size: 14px;" id="dDebtExtraLabel">+ S/ 100/mes</span>
-                  </div>
-                  <div class="demo-preset-group" style="margin-top: 10px;">
-                    <button type="button" class="demo-preset-btn" onclick="setDemoDebtPreset(0, this)">S/ 0</button>
-                    <button type="button" class="demo-preset-btn" onclick="setDemoDebtPreset(50, this)">+S/ 50</button>
-                    <button type="button" class="demo-preset-btn active" onclick="setDemoDebtPreset(100, this)">+S/ 100</button>
-                    <button type="button" class="demo-preset-btn" onclick="setDemoDebtPreset(200, this)">+S/ 200</button>
-                  </div>
-                  <div class="demo-debt-impact" id="dDebtImpactText" style="font-size: 12px; padding: 10px 14px; margin-top: 10px;">
-                    💡 Aportando S/ 100 extra, te liberas 3 meses antes y te ahorras S/ 380 en intereses.
-                  </div>
-                </div>
-
-                <!-- Deudas Desktop -->
-                <div class="demo-section-title">Estrategia de Liquidación (Bola de Nieve)</div>
-                <div class="demo-debt-item attacking" style="margin-bottom: 12px; padding: 16px;">
-                  <div class="demo-debt-header">
-                    <span class="demo-debt-title" style="font-size: 14px;">💳 Tarjeta BCP (Visa)</span>
-                    <span class="demo-debt-pill attack">EN ATAQUE ⚡</span>
-                  </div>
-                  <div class="demo-debt-track" style="height: 8px;">
-                    <div class="demo-debt-fill" style="width: 45%;"></div>
-                  </div>
-                  <div class="demo-debt-meta" style="font-size: 12px;">
-                    <span>Cuota 4 de 12 (33% pagado) · S/ 180.00 / mes</span>
-                    <span style="font-weight: 800; color: var(--text-main);">Saldo Restante: S/ 1,200.00</span>
-                  </div>
-                </div>
-
-                <div class="demo-debt-item" style="padding: 16px;">
-                  <div class="demo-debt-header">
-                    <span class="demo-debt-title" style="font-size: 14px;">🚗 Préstamo Auto</span>
-                    <span class="demo-debt-pill hold">Pago Mínimo 🔒</span>
-                  </div>
-                  <div class="demo-debt-track" style="height: 8px;">
-                    <div class="demo-debt-fill green" style="width: 30%;"></div>
-                  </div>
-                  <div class="demo-debt-meta" style="font-size: 12px;">
-                    <span>Cuota 8 de 24 (33% pagado) · S/ 200.00 / mes</span>
-                    <span style="font-weight: 800; color: var(--text-main);">Saldo Restante: S/ 3,000.00</span>
-                  </div>
-                </div>
-              </div>
-
+            <div class="showcase-mac-screen">
+              <img id="showcaseDesktopImg" src="assets/app_screens/real_desktop_inicio.png" alt="Pantalla de AliviaFin en Computadora">
             </div>
           </div>
 
-        </div><!-- fin mockup-wrapper -->
+          <!-- 5. TARJETA EXPLICATIVA DINÁMICA (EN PALABRAS SIMPLES PARA PERSONAS DE A PIE) -->
+          <div class="showcase-explainer-card">
+            <div class="showcase-explainer-tag" id="showcaseExplainerTag">Pilar 1 · Tu Día a Día</div>
+            <h3 class="showcase-explainer-title" id="showcaseExplainerTitle">🏠 Inicio & Límite Diario: Sabes cuánto gastar hoy sin culpa</h3>
+            <p class="showcase-explainer-desc" id="showcaseExplainerDesc">
+              ¿Alguna vez has querido comprar algo pero no sabías si te alcanzaría para fin de mes? AliviaFin toma tu dinero disponible, separa tus pagos fijos comprometidos y te dice cuánto puedes gastar hoy con total tranquilidad.
+            </p>
+            <ul class="showcase-explainer-bullets" id="showcaseExplainerBullets">
+              <li><span>✨</span> <div><strong>Límite sugerido de hoy:</strong> Calculado en tiempo real según los días que faltan para tu próximo sueldo.</div></li>
+              <li><span>⚡</span> <div><strong>Registro en 3 segundos:</strong> Registra tus compras por Yape, Plin, tarjeta o efectivo en un toque.</div></li>
+              <li><span>👁️</span> <div><strong>Modo Privacidad en la calle:</strong> Toca el ojo para ocultar tus montos si estás en el bus o en el banco.</div></li>
+            </ul>
+
+            <div class="showcase-explainer-actions">
+              <a href="index.html?demo=1" target="_blank" class="btn btn-primary" style="padding: 10px 20px; font-size: 13.5px; text-decoration: none;">
+                <span>🚀 Probar la App Real en Vivo (Sin Registro)</span>
+              </a>
+              <a href="index.html?mode=register" class="btn btn-ghost" style="padding: 10px 18px; font-size: 13.5px; text-decoration: none;">
+                <span>Crear Mi Cuenta Gratis</span>
+              </a>
+            </div>
+          </div>
+
+        </div><!-- fin showcase-wrapper -->
 
       </div><!-- fin container hero -->
+    </section>
+
+    <!-- SECCIÓN CERCANA: NUESTRA HISTORIA Y PROPÓSITO -->
+    <section class="story-section" style="padding: 70px 0; background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+      <div class="container" style="max-width: 820px; text-align: center;">
+        <div class="section-eyebrow" style="color: var(--primary); font-weight: 800; text-transform: uppercase; font-size: 12px; letter-spacing: 0.08em; margin-bottom: 8px;">De personas de a pie, para personas de a pie</div>
+        <h2 class="section-title" style="font-size: clamp(26px, 4vw, 36px); font-weight: 800; color: var(--text-main); margin-bottom: 18px; letter-spacing: -0.02em;">
+          ¿Por qué nació AliviaFin?
+        </h2>
+        <div style="font-size: 15.5px; line-height: 1.75; color: var(--text-secondary); text-align: left; display: flex; flex-direction: column; gap: 16px; background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 20px; padding: 32px 34px; box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04);">
+          <p>
+            A todos nos pasa: llega la quincena o fin de mes, pagas un par de cosas, haces unos cuantos Yapes o compras del mercado, y a los pocos días te preguntas: <em>"¿A dónde se fue la plata?"</em>.
+          </p>
+          <p>
+            Intentamos con hojas de cálculo de 50 columnas, pero seamos sinceros: nadie abre una computadora en el mercado, en el taxi o en la calle. También probamos aplicaciones extranjeras llenas de gráficos raros y términos en inglés que nadie en casa entiende.
+          </p>
+          <p>
+            Por eso creamos <strong>AliviaFin</strong>: una aplicación honesta y cercana pensada para personas de a pie como tú y como nosotros. Para saber al instante si hoy te alcanza para ese gustito sin descuidar el pago de la luz, el alquiler o la cuota de la tarjeta a fin de mes.
+          </p>
+          <div style="background: #ecfdf5; border-left: 4px solid #10b981; padding: 14px 18px; border-radius: 0 12px 12px 0; font-weight: 600; color: #065f46; font-size: 14.5px;">
+            💡 Sin fórmulas raras, sin conectar tus cuentas de banco y sin cobrarte de más. Una herramienta sencilla para aprender juntos y vivir con paz mental.
+          </div>
+        </div>
+      </div>
     </section>
 
     <!-- CALCULADORA INTERACTIVA DE AHORRO Y FUGA DE DINERO -->
@@ -2821,222 +2599,113 @@
     </div>
   </footer>
 
-  <!-- LÓGICA DEL DEMO INTERACTIVO Y SWITCHER DE VISTAS -->
+  <!-- LÓGICA DEL SHOWCASE REAL DE ALIVIAFIN -->
   <script>
-    let demoBalance = 3450.00;
-    let demoSpent = 1750.00;
-    let demoSafeSpend = 65.00;
-    let demoTodayTotal = 40.00;
-
-    // Cambiar entre Registro Diario y Plan Cero Deudas
-    function setDemoExperience(exp) {
-      const btnDaily = document.getElementById('btnExpDaily');
-      const btnDebts = document.getElementById('btnExpDebts');
-      const mDaily = document.getElementById('demoMobileDailyPane');
-      const mDebts = document.getElementById('demoMobileDebtsPane');
-      const dDaily = document.getElementById('demoDesktopDailyPane');
-      const dDebts = document.getElementById('demoDesktopDebtsPane');
-
-      if (exp === 'daily') {
-        if (btnDaily) btnDaily.classList.add('active');
-        if (btnDebts) btnDebts.classList.remove('active');
-        if (mDaily) mDaily.style.display = 'block';
-        if (mDebts) mDebts.style.display = 'none';
-        if (dDaily) dDaily.style.display = 'block';
-        if (dDebts) dDebts.style.display = 'none';
-      } else {
-        if (btnDebts) btnDebts.classList.add('active');
-        if (btnDaily) btnDaily.classList.remove('active');
-        if (mDaily) mDaily.style.display = 'none';
-        if (mDebts) mDebts.style.display = 'block';
-        if (dDaily) dDaily.style.display = 'none';
-        if (dDebts) dDebts.style.display = 'block';
+    const showcaseData = {
+      inicio: {
+        tag: 'Pilar 1 · Tu Día a Día',
+        title: '🏠 Inicio & Límite Diario: Sabes cuánto gastar hoy sin culpa',
+        desc: '¿Alguna vez has querido comprar algo pero no sabías si te alcanzaría para fin de mes? AliviaFin toma tu dinero disponible, separa tus pagos fijos comprometidos y te dice cuánto puedes gastar hoy con total tranquilidad.',
+        bullets: [
+          '✨ <strong>Límite sugerido de hoy:</strong> Calculado en tiempo real según los días que faltan para tu próximo sueldo.',
+          '⚡ <strong>Registro en 3 segundos:</strong> Registra tus compras por Yape, Plin, tarjeta o efectivo en un toque.',
+          '👁️ <strong>Modo Privacidad en la calle:</strong> Toca el ojo para ocultar tus montos si estás en el bus o en el banco.'
+        ],
+        mobileImg: 'assets/app_screens/real_mobile_inicio.png',
+        desktopImg: 'assets/app_screens/real_desktop_inicio.png'
+      },
+      deudas: {
+        tag: 'Pilar 2 · Centro Cero Deudas',
+        title: '❄️ Plan Cero Deudas: Bola de nieve para compras en cuotas',
+        desc: 'Las cuotas de las tarjetas son silenciosas: S/ 100 aquí, S/ 200 allá, y de pronto la mitad de tu sueldo está atrapada. Con el método Bola de Nieve, liquidas primero la deuda más pequeña para motivarte y pasar a la siguiente con más fuerza.',
+        bullets: [
+          '🎯 <strong>Fecha exacta de libertad:</strong> Sabes con precisión el mes en que serás 100% libre de deudas.',
+          '🚀 <strong>Acelerador interactivo:</strong> Mueve el control y mira cómo aportando S/ 50 o S/ 100 extra te liberas meses antes.',
+          '💰 <strong>Ahorro en intereses:</strong> Descubre cuánto dinero dejas de regalarle al banco en comisiones.'
+        ],
+        mobileImg: 'assets/app_screens/real_mobile_deudas.png',
+        desktopImg: 'assets/app_screens/real_desktop_deudas.png'
+      },
+      plan: {
+        tag: 'Pilar 3 · Presupuesto Inteligente',
+        title: '📊 Regla 50/30/20: Tu sueldo organizado sin fórmulas raras',
+        desc: 'Sin hojas de cálculo de 40 categorías que nadie llena. Solo 3 baldes simples: 50% para lo que sí o sí tienes que pagar (casa, comida, servicios), 30% para tus gustos (salidas, cine, café), y 20% para tu colchón de ahorro y deudas.',
+        bullets: [
+          '⚖️ <strong>Semáforo visual:</strong> Mira de un vistazo si te estás pasando en gustos o si vas en equilibrio.',
+          '🐜 <strong>Radar de gastos hormiga:</strong> Detecta esas pequeñas compras diarias de S/ 10 o S/ 20 que suman cientos al mes.',
+          '🌱 <strong>Índice de salud financiera:</strong> Una puntuación clara que te guía para mejorar mes a mes.'
+        ],
+        mobileImg: 'assets/app_screens/real_mobile_plan.png',
+        desktopImg: 'assets/app_screens/real_desktop_plan.png'
+      },
+      cuentas: {
+        tag: 'Pilar 4 · Gastos Compartidos',
+        title: '🤝 Cuentas Claras: Divide gastos en pareja o familia sin discusiones',
+        desc: 'Compartir casa o vivir en pareja no debería terminar en peleas por la plata. Uno paga el súper, el otro la luz o el internet. La aplicación calcula automáticamente quién le debe a quién para quedar a mano sin cobrar con vergüenza.',
+        bullets: [
+          '👫 <strong>Equilibrio automático:</strong> Te dice exactamente cuánto transferir por Yape o Plin para estar a mano.',
+          '🔒 <strong>Privacidad respetada:</strong> Cada persona mantiene sus gastos personales aparte de los compartidos.',
+          '📋 <strong>Historial transparente:</strong> Se acabaron los "¿quién pagó la última vez?". Todo queda registrado con fecha.'
+        ],
+        mobileImg: 'assets/app_screens/real_mobile_cuentas_claras.png',
+        desktopImg: 'assets/app_screens/real_desktop_cuentas_claras.png'
       }
-    }
+    };
 
-    // Cambiar entre Celular y Computadora
-    function setDemoView(view) {
-      const btnMobile = document.getElementById('btnSwitchMobile');
-      const btnDesktop = document.getElementById('btnSwitchDesktop');
-      const frameMobile = document.getElementById('demoMobileFrame');
-      const frameDesktop = document.getElementById('demoDesktopFrame');
+    let currentShowcaseModule = 'inicio';
+    let currentShowcaseDevice = 'mobile';
 
-      if (view === 'mobile') {
-        btnMobile.classList.add('active');
-        btnDesktop.classList.remove('active');
-        frameMobile.style.display = 'block';
-        frameDesktop.style.display = 'none';
-      } else {
-        btnDesktop.classList.add('active');
-        btnMobile.classList.remove('active');
-        frameMobile.style.display = 'none';
-        frameDesktop.style.display = 'block';
-      }
-    }
-
-    // Filtro de Pareja en el Demo (Ambos / César / Gaby)
-    function setDemoUserFilter(user) {
-      ['All', 'Cesar', 'Gaby'].forEach(k => {
-        const btnM = document.getElementById('btnUser' + k + 'M');
-        if (btnM) btnM.classList.toggle('active', k.toLowerCase() === user);
-      });
-
-      const items = document.querySelectorAll('.demo-tx-item[data-user]');
-      items.forEach(el => {
-        const u = el.getAttribute('data-user');
-        if (user === 'all' || u === user || u === 'all') {
-          el.style.display = 'flex';
+    function setShowcaseDevice(device) {
+      currentShowcaseDevice = device;
+      const btnM = document.getElementById('tabDeviceMobile');
+      const btnD = document.getElementById('tabDeviceDesktop');
+      if (btnM) btnM.classList.toggle('active', device === 'mobile');
+      if (btnD) btnD.classList.toggle('active', device === 'desktop');
+      
+      const phoneFrame = document.getElementById('showcasePhoneFrame');
+      const macFrame = document.getElementById('showcaseMacFrame');
+      if (phoneFrame && macFrame) {
+        if (device === 'mobile') {
+          phoneFrame.style.display = 'block';
+          macFrame.style.display = 'none';
         } else {
-          el.style.display = 'none';
+          phoneFrame.style.display = 'none';
+          macFrame.style.display = 'block';
         }
-      });
+      }
     }
 
-    // Acelerador Interactivo en Plan Cero Deudas
-    function setDemoDebtPreset(amount, btnEl) {
-      document.querySelectorAll('.demo-preset-btn').forEach(b => {
-        b.classList.toggle('active', b.textContent.includes(String(amount)));
+    function setShowcaseModule(modKey) {
+      if (!showcaseData[modKey]) return;
+      currentShowcaseModule = modKey;
+      
+      ['inicio', 'deudas', 'plan', 'cuentas'].forEach(k => {
+        const btn = document.getElementById('modPill_' + k);
+        if (btn) btn.classList.toggle('active', k === modKey);
       });
 
-      let targetDate = 'Octubre 2027';
-      let speedBadge = '⚡ Acelerado (-3 meses)';
-      let monthly = 'S/ 380';
-      let months = '11 meses';
-      let impactText = '💡 Aportando S/ 100 extra, te liberas 3 meses antes y te ahorras S/ 380 en intereses.';
-      let extraLabel = '+ S/ ' + amount + '/mes';
-
-      if (amount === 0) {
-        targetDate = 'Enero 2028';
-        speedBadge = '🔒 Ritmo Normal (Sin acelerador)';
-        monthly = 'S/ 380';
-        months = '14 meses';
-        impactText = '💡 Si aportas desde S/ 50 o S/ 100 al mes, te liberas mucho antes y dejas de pagar intereses.';
-        extraLabel = 'S/ 0/mes';
-      } else if (amount === 50) {
-        targetDate = 'Diciembre 2027';
-        speedBadge = '⚡ Acelerado (-1 mes)';
-        monthly = 'S/ 430';
-        months = '13 meses';
-        impactText = '💡 Aportando S/ 50 extra, te liberas 1 mes antes y te ahorras S/ 190 en intereses.';
-      } else if (amount === 100) {
-        targetDate = 'Octubre 2027';
-        speedBadge = '⚡ Acelerado (-3 meses)';
-        monthly = 'S/ 480';
-        months = '11 meses';
-        impactText = '💡 Aportando S/ 100 extra, te liberas 3 meses antes y te ahorras S/ 380 en intereses.';
-      } else if (amount === 200) {
-        targetDate = 'Julio 2027';
-        speedBadge = '🔥 Super Acelerado (-6 meses)';
-        monthly = 'S/ 580';
-        months = '8 meses';
-        impactText = '💡 ¡Brutal! Aportando S/ 200 extra, te liberas 6 meses antes y le perdonas más de S/ 750 al banco.';
+      const d = showcaseData[modKey];
+      const mImg = document.getElementById('showcaseMobileImg');
+      const dImg = document.getElementById('showcaseDesktopImg');
+      
+      if (mImg) {
+        mImg.src = d.mobileImg;
+      }
+      if (dImg) {
+        dImg.src = d.desktopImg;
       }
 
-      // Actualizar Móvil
-      const mDate = document.getElementById('mDebtTargetDate');
-      const mBadge = document.getElementById('mDebtSpeedBadge');
-      const mMon = document.getElementById('mDebtMonthlyVal');
-      const mMonths = document.getElementById('mDebtMonthsVal');
-      const mImpact = document.getElementById('mDebtImpactText');
-      const mExtra = document.getElementById('mDebtExtraLabel');
-      if (mDate) mDate.textContent = targetDate;
-      if (mBadge) mBadge.textContent = speedBadge;
-      if (mMon) mMon.textContent = monthly;
-      if (mMonths) mMonths.textContent = months;
-      if (mImpact) mImpact.textContent = impactText;
-      if (mExtra) mExtra.textContent = extraLabel;
+      const tagEl = document.getElementById('showcaseExplainerTag');
+      const titleEl = document.getElementById('showcaseExplainerTitle');
+      const descEl = document.getElementById('showcaseExplainerDesc');
+      const bList = document.getElementById('showcaseExplainerBullets');
 
-      // Actualizar Desktop
-      const dDate = document.getElementById('dDebtTargetDate');
-      const dBadge = document.getElementById('dDebtSpeedBadge');
-      const dMon = document.getElementById('dDebtMonthlyVal');
-      const dMonths = document.getElementById('dDebtMonthsVal');
-      const dImpact = document.getElementById('dDebtImpactText');
-      const dExtra = document.getElementById('dDebtExtraLabel');
-      if (dDate) dDate.textContent = targetDate;
-      if (dBadge) dBadge.textContent = speedBadge;
-      if (dMon) dMon.textContent = monthly;
-      if (dMonths) dMonths.textContent = months;
-      if (dImpact) dImpact.textContent = impactText;
-      if (dExtra) dExtra.textContent = extraLabel;
-    }
-
-    // Registro Simulado con Recálculo Dinámico de Gasto Seguro
-    function triggerDemoExpense(name, amount, icon, user) {
-      demoBalance -= amount;
-      demoSpent += amount;
-      demoTodayTotal += amount;
-      demoSafeSpend = Math.max(10, Math.round((demoSafeSpend - (amount / 26)) * 10) / 10);
-
-      if (demoBalance < 0) {
-        demoBalance = 3450.00;
-        demoSpent = 1750.00;
-        demoTodayTotal = 40.00;
-        demoSafeSpend = 65.00;
+      if (tagEl) tagEl.textContent = d.tag;
+      if (titleEl) titleEl.innerHTML = d.title;
+      if (descEl) descEl.textContent = d.desc;
+      if (bList) {
+        bList.innerHTML = d.bullets.map(b => '<li>' + b + '</li>').join('');
       }
-
-      const formattedBal = 'S/ ' + demoBalance.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-      const formattedSpent = 'S/ ' + demoSpent.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-      const formattedSafe = `✨ S/ ${demoSafeSpend.toFixed(2)} al día seguro`;
-      const formattedToday = 'S/ ' + demoTodayTotal.toFixed(2);
-
-      // Actualizar saldos móvil y desktop
-      const mBal = document.getElementById('mobileBalanceDisplay');
-      const mSpent = document.getElementById('mobileSpentDisplay');
-      const mSafe = document.getElementById('mobileSafeSpendPill');
-      const mToday = document.getElementById('mobileDayTotalToday');
-      if (mBal) mBal.textContent = formattedBal;
-      if (mSpent) mSpent.textContent = formattedSpent;
-      if (mSafe) mSafe.textContent = formattedSafe;
-      if (mToday) mToday.textContent = formattedToday;
-
-      const dBal = document.getElementById('desktopBalanceDisplay');
-      const dSpent = document.getElementById('desktopSpentDisplay');
-      const dSafe = document.getElementById('desktopSafeSpendPill');
-      const dToday = document.getElementById('desktopDayTotalToday');
-      if (dBal) dBal.textContent = formattedBal;
-      if (dSpent) dSpent.textContent = formattedSpent;
-      if (dSafe) dSafe.textContent = formattedSafe;
-      if (dToday) dToday.textContent = formattedToday;
-
-      // Micro animación en los saldos
-      [mBal, dBal].forEach(el => {
-        if (!el) return;
-        el.style.color = '#059669';
-        el.style.transform = 'scale(0.97)';
-        setTimeout(() => {
-          el.style.color = '#0f172a';
-          el.style.transform = 'scale(1)';
-        }, 180);
-      });
-
-      // Crear ítem de transacción
-      const avatarLetter = user === 'cesar' ? 'C' : (user === 'gaby' ? 'G' : 'C&G');
-      const itemHTML = `
-        <div class="demo-tx-left">
-          <div class="demo-tx-icon">${icon}</div>
-          <div>
-            <div class="demo-tx-name">${name} <span class="demo-tx-avatar">${avatarLetter}</span></div>
-            <div class="demo-tx-cat"><span class="demo-tx-badge">Yape</span>Gasto Rápido · Hace un momento</div>
-          </div>
-        </div>
-        <div class="demo-tx-amount">- S/ ${amount.toFixed(2)}</div>
-      `;
-
-      // Insertar en timeline móvil y desktop
-      ['mobileRecentFeed', 'desktopRecentFeed'].forEach(feedId => {
-        const feed = document.getElementById(feedId);
-        if (feed) {
-          const firstGroup = feed.querySelector('.demo-day-group');
-          if (firstGroup) {
-            const newItem = document.createElement('div');
-            newItem.className = 'demo-tx-item';
-            newItem.setAttribute('data-user', user || 'cesar');
-            newItem.innerHTML = itemHTML;
-            firstGroup.insertBefore(newItem, firstGroup.children[1] || null);
-          }
-        }
-      });
     }
 
     function toggleFaq(btn) {
