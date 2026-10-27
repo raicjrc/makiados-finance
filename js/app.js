@@ -395,6 +395,37 @@
     window.nextLoginSlide = nextLoginSlide;
     window.prevLoginSlide = prevLoginSlide;
 
+    // Apertura inmediata y segura de modal Legal y Privacidad
+    function openLegalModal(initialTab = 'terms') {
+      try {
+        if (typeof switchLegalTab === 'function') {
+          switchLegalTab(initialTab);
+        } else {
+          const termsSection = document.getElementById('legalSectionTerms');
+          const privacySection = document.getElementById('legalSectionPrivacy');
+          const refundsSection = document.getElementById('legalSectionRefunds');
+          const providerSection = document.getElementById('legalSectionProvider');
+          if (termsSection) termsSection.style.display = (initialTab === 'terms') ? 'block' : 'none';
+          if (privacySection) privacySection.style.display = (initialTab === 'privacy') ? 'block' : 'none';
+          if (refundsSection) refundsSection.style.display = (initialTab === 'refunds') ? 'block' : 'none';
+          if (providerSection) providerSection.style.display = (initialTab === 'provider') ? 'block' : 'none';
+        }
+        const modal = document.getElementById('legalModal');
+        if (modal) {
+          modal.classList.add('active');
+          modal.style.display = 'flex';
+          modal.style.visibility = 'visible';
+          modal.style.opacity = '1';
+          modal.style.pointerEvents = 'auto';
+          modal.style.zIndex = '100010';
+        }
+      } catch (err) {
+        console.error('Error opening legal modal:', err);
+      }
+    }
+    window.openLegalModal = openLegalModal;
+    window.openLegalModalImpl = openLegalModal;
+
     if (typeof window !== 'undefined') {
       window.addEventListener('DOMContentLoaded', () => {
         if (loginSlideTimer) clearInterval(loginSlideTimer);

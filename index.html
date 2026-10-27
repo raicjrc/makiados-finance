@@ -41,6 +41,44 @@
 </head>
 <body class="theme-twilight">
 
+  <script>
+    function openLegalModal(tab) {
+      if (typeof window.openLegalModalImpl === 'function') {
+        window.openLegalModalImpl(tab);
+        return;
+      }
+      var t = tab || 'terms';
+      var terms = document.getElementById('legalSectionTerms');
+      var priv = document.getElementById('legalSectionPrivacy');
+      var ref = document.getElementById('legalSectionRefunds');
+      var prov = document.getElementById('legalSectionProvider');
+      if (terms) terms.style.display = (t === 'terms') ? 'block' : 'none';
+      if (priv) priv.style.display = (t === 'privacy') ? 'block' : 'none';
+      if (ref) ref.style.display = (t === 'refunds') ? 'block' : 'none';
+      if (prov) prov.style.display = (t === 'provider') ? 'block' : 'none';
+      var m = document.getElementById('legalModal');
+      if (m) {
+        m.classList.add('active');
+        m.style.display = 'flex';
+        m.style.visibility = 'visible';
+        m.style.opacity = '1';
+        m.style.pointerEvents = 'auto';
+        m.style.zIndex = '100010';
+      }
+    }
+    if (typeof window.closeModal !== 'function') {
+      window.closeModal = function(id) {
+        var m = typeof id === 'string' ? document.getElementById(id) : id;
+        if (!m) return;
+        m.classList.remove('active');
+        m.style.display = 'none';
+        m.style.visibility = 'hidden';
+        m.style.opacity = '0';
+        m.style.pointerEvents = 'none';
+      };
+    }
+  </script>
+
   <!-- MANDATORY LOGIN/REGISTER SCREEN v70.1 (SPLIT-SCREEN EMERALD & DEEP SLATE) -->
   <div id="loginModalScreen">
     <div class="login-layout-container">
@@ -113,17 +151,14 @@
           </div>
         </div>
 
-        <!-- Footer legal desktop -->
-        <div class="desktop-only-footer">
+        <!-- Footer de Confianza (Mitad Izquierda) -->
+        <div class="desktop-only-footer" style="justify-content: center;">
           <div class="login-trust-pill">
             <span>🛡️ 100% Privado</span>
             <span>·</span>
             <span>Sin conectar bancos</span>
             <span>·</span>
             <span>Para personas de a pie</span>
-          </div>
-          <div class="login-version-tag" style="font-size: 11.5px; color: #64748b; font-weight: 500;">
-            AliviaFin · Paz mental para tu dinero
           </div>
         </div>
       </div>
