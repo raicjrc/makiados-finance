@@ -318,6 +318,9 @@
       const registerForm = document.getElementById('registerForm');
       const loginBtn = document.getElementById('tabLoginBtn');
       const registerBtn = document.getElementById('tabRegisterBtn');
+      const authPaneTitle = document.getElementById('authPaneTitle');
+      const authPaneSubtitle = document.getElementById('authPaneSubtitle');
+
       if (tab === 'login') {
         loginForm.style.display = 'block';
         registerForm.style.display = 'none';
@@ -327,6 +330,8 @@
         registerBtn.style.background = 'transparent';
         registerBtn.style.color = '#6b7280';
         registerBtn.style.boxShadow = 'none';
+        if (authPaneTitle) authPaneTitle.textContent = 'Bienvenido';
+        if (authPaneSubtitle) authPaneSubtitle.textContent = 'Toma el control de tus finanzas personales sin enredos.';
       } else {
         loginForm.style.display = 'none';
         registerForm.style.display = 'block';
@@ -336,6 +341,8 @@
         loginBtn.style.background = 'transparent';
         loginBtn.style.color = '#6b7280';
         loginBtn.style.boxShadow = 'none';
+        if (authPaneTitle) authPaneTitle.textContent = 'Crear Cuenta';
+        if (authPaneSubtitle) authPaneSubtitle.textContent = 'Empieza a gestionar tu dinero con total tranquilidad.';
       }
     }
 

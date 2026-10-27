@@ -2102,25 +2102,37 @@
     }
 
     .login-layout-container {
-      max-width: 1060px;
-      width: 100%;
+      width: 100vw;
+      height: 100vh;
       display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 44px;
-      margin: auto;
-      position: relative;
-      z-index: 2;
+      margin: 0;
+      padding: 0;
+      max-width: none;
       box-sizing: border-box;
+      overflow: hidden;
     }
 
-    /* Panel Izquierdo Desktop: Liquid Showcase con Carrusel */
+    /* ==========================================================================
+       MITAD IZQUIERDA: THE EXPERIENCE SHOWCASE (50% ANCHO, 100% ALTO)
+       ========================================================================== */
     .login-showcase-pane {
-      flex: 1.15;
-      max-width: 530px;
+      width: 50%;
+      height: 100%;
+      flex: 0 0 50%;
+      max-width: none;
+      background: 
+        radial-gradient(circle at 15% 20%, rgba(16, 185, 129, 0.18) 0%, transparent 45%),
+        radial-gradient(circle at 85% 85%, rgba(5, 150, 105, 0.14) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(56, 189, 248, 0.08) 0%, transparent 60%),
+        linear-gradient(160deg, #f0fdf4 0%, #ecfdf5 45%, #f8fafc 100%);
+      border-right: 1px solid rgba(226, 232, 240, 0.85);
+      padding: clamp(28px, 3.5vw, 44px);
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      justify-content: space-between;
+      overflow-y: auto;
+      position: relative;
+      box-sizing: border-box;
       color: #0f172a;
     }
 
@@ -2128,14 +2140,15 @@
       display: flex;
       align-items: center;
       gap: 14px;
+      z-index: 2;
     }
 
     .login-brand-logo {
-      width: 52px;
-      height: 52px;
+      width: 50px;
+      height: 50px;
       border-radius: 16px;
-      box-shadow: 0 8px 24px rgba(16, 185, 129, 0.25);
-      border: 1.5px solid rgba(255, 255, 255, 0.9);
+      box-shadow: 0 8px 20px rgba(16, 185, 129, 0.28);
+      border: 1.5px solid rgba(255, 255, 255, 0.95);
       flex-shrink: 0;
     }
 
@@ -2144,42 +2157,47 @@
       font-weight: 900;
       color: #0f172a;
       letter-spacing: -0.03em;
-      margin: 0;
       line-height: 1.1;
+      margin: 0;
     }
 
     .login-brand-tagline {
       font-size: 13px;
       color: #059669;
-      margin: 2px 0 0 0;
       font-weight: 700;
+      margin: 2px 0 0 0;
     }
 
-    /* Tarjeta Showcase Liquid con Carrusel */
+    /* Contenedor Central del Carrusel */
     .login-carousel-wrapper {
-      background: rgba(255, 255, 255, 0.84);
+      background: rgba(255, 255, 255, 0.85);
       backdrop-filter: blur(28px) saturate(180%);
       -webkit-backdrop-filter: blur(28px) saturate(180%);
-      border: 1px solid rgba(226, 232, 240, 0.9);
-      border-radius: 26px;
-      padding: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.95);
+      border-radius: 28px;
+      padding: clamp(20px, 2.5vw, 28px);
       box-shadow: 0 24px 50px -12px rgba(15, 23, 42, 0.08), 0 0 1px 1px rgba(0, 0, 0, 0.02);
-      position: relative;
-      overflow: hidden;
+      margin: auto 0;
       display: flex;
       flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      max-width: 580px;
+      align-self: center;
+      width: 100%;
+      box-sizing: border-box;
     }
 
     .login-carousel-slides {
       position: relative;
-      min-height: 440px;
+      min-height: 480px;
     }
 
     .login-carousel-slide {
       position: absolute;
       inset: 0;
       opacity: 0;
-      transform: translateY(10px) scale(0.99);
+      transform: translateY(12px) scale(0.98);
       pointer-events: none;
       transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
       display: flex;
@@ -2200,39 +2218,40 @@
       background: #ecfdf5;
       border: 1px solid rgba(16, 185, 129, 0.3);
       color: #065f46;
-      font-size: 11px;
+      font-size: 11.5px;
       font-weight: 800;
-      padding: 3px 10px;
+      padding: 4px 12px;
       border-radius: 999px;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
       width: fit-content;
     }
 
     .login-slide-title {
-      font-size: 21px;
+      font-size: clamp(22px, 2.2vw, 27px);
       font-weight: 900;
       color: #0f172a;
       letter-spacing: -0.02em;
       margin: 0 0 6px 0;
-      line-height: 1.25;
+      line-height: 1.2;
     }
 
     .login-slide-desc {
-      font-size: 13px;
-      color: #64748b;
+      font-size: 13.5px;
+      color: #475569;
       line-height: 1.55;
-      margin: 0 0 14px 0;
+      margin: 0 0 16px 0;
     }
 
+    /* Teléfono iPhone Mockup de Alta Presencia */
     .login-slide-preview-box {
-      width: 220px;
-      height: 310px;
-      margin: 8px auto 0 auto;
-      border-radius: 28px;
+      width: 250px;
+      height: 350px;
+      margin: 4px auto 0 auto;
+      border-radius: 30px;
       overflow: hidden;
       background: #0f172a;
-      border: 5px solid #0f172a;
-      box-shadow: 0 18px 40px -10px rgba(15, 23, 42, 0.25);
+      border: 6px solid #0f172a;
+      box-shadow: 0 20px 45px -10px rgba(15, 23, 42, 0.28);
       position: relative;
     }
 
@@ -2272,7 +2291,7 @@
     }
 
     .login-carousel-dot.active {
-      width: 24px;
+      width: 26px;
       background: linear-gradient(135deg, #059669, #10b981);
       box-shadow: 0 2px 8px rgba(16, 185, 129, 0.35);
     }
@@ -2283,13 +2302,13 @@
     }
 
     .login-arrow-btn {
-      width: 28px;
-      height: 28px;
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
       border: 1px solid #e2e8f0;
       background: #ffffff;
-      color: #475569;
-      font-size: 15px;
+      color: #334155;
+      font-size: 16px;
       font-weight: 700;
       display: flex;
       align-items: center;
@@ -2301,6 +2320,7 @@
     .login-arrow-btn:hover {
       background: #f1f5f9;
       color: #0f172a;
+      border-color: #cbd5e1;
     }
 
     .login-trust-pill {
@@ -2308,13 +2328,87 @@
       align-items: center;
       gap: 8px;
       font-size: 11.5px;
-      color: #64748b;
+      color: #475569;
       font-weight: 600;
-      background: rgba(255, 255, 255, 0.75);
+      background: rgba(255, 255, 255, 0.85);
       padding: 6px 14px;
       border-radius: 999px;
-      border: 1px solid rgba(226, 232, 240, 0.8);
+      border: 1px solid rgba(226, 232, 240, 0.9);
       width: fit-content;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    /* ==========================================================================
+       MITAD DERECHA: AUTHENTICATION FORM (50% ANCHO, 100% ALTO)
+       ========================================================================== */
+    .login-auth-pane {
+      width: 50%;
+      height: 100%;
+      flex: 0 0 50%;
+      max-width: none;
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: clamp(28px, 3.5vw, 44px);
+      overflow-y: auto;
+      position: relative;
+      box-sizing: border-box;
+    }
+
+    .login-card {
+      max-width: 440px;
+      width: 100%;
+      margin: auto 0;
+      padding: 8px 0;
+      background: transparent;
+      border: none;
+      box-shadow: none;
+      position: relative;
+      box-sizing: border-box;
+    }
+
+    .login-auth-header {
+      text-align: left;
+      margin-bottom: 22px;
+    }
+
+    .login-auth-header h2 {
+      font-size: 28px;
+      font-weight: 900;
+      color: #0f172a;
+      letter-spacing: -0.03em;
+      margin: 0 0 6px 0;
+    }
+
+    .login-auth-header p {
+      font-size: 14px;
+      color: #64748b;
+      margin: 0;
+    }
+
+    .auth-bottom-footer {
+      width: 100%;
+      max-width: 440px;
+      margin-top: auto;
+      padding-top: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    .auth-bottom-footer a {
+      color: #64748b;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .auth-bottom-footer a:hover {
+      color: #0f172a;
     }
 
     /* Mobile Compact Benefit Card */
@@ -2329,23 +2423,6 @@
       font-weight: 700;
       color: #065f46;
       text-align: center;
-    }
-
-    /* Panel Derecho: Tarjeta de Acceso Liquid Glass */
-    .login-auth-pane {
-      flex: 0.95;
-      max-width: 420px;
-      width: 100%;
-    }
-
-    .login-card {
-      background: #ffffff;
-      border-radius: 26px;
-      padding: 32px 28px;
-      box-shadow: 0 20px 50px -10px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(226, 232, 240, 0.85);
-      position: relative;
-      width: 100%;
-      box-sizing: border-box;
     }
 
     /* Garantizar texto oscuro y legible al 100% en inputs dentro de la tarjeta blanca de login */
@@ -2450,8 +2527,17 @@
       font-weight: 500;
     }
 
-    .desktop-only-footer {
+    .desktop-only-header {
       display: block;
+    }
+
+    .desktop-only-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      width: 100%;
+      z-index: 2;
       margin-top: 6px;
     }
 
@@ -2462,20 +2548,40 @@
     /* Adaptación Móvil (< 900px) */
     @media (max-width: 899px) {
       #loginModalScreen {
-        align-items: flex-start;
+        display: block !important;
+        width: 100% !important;
+        height: 100vh !important;
+        height: 100dvh !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
         padding: max(22px, env(safe-area-inset-top, 22px)) 14px max(20px, env(safe-area-inset-bottom, 20px)) 14px;
+        box-sizing: border-box;
       }
       .login-layout-container {
-        flex-direction: column;
+        width: 100% !important;
+        height: auto !important;
+        min-height: 100%;
+        flex-direction: column !important;
         gap: 16px;
-        padding-top: max(10px, env(safe-area-inset-top));
-        padding-bottom: max(16px, env(safe-area-inset-bottom));
+        padding: 0 !important;
+        overflow: visible !important;
       }
       .login-showcase-pane {
-        display: none;
+        display: none !important;
+      }
+      .login-auth-pane {
+        width: 100% !important;
+        flex: 1 1 auto !important;
+        padding: 0 !important;
+        height: auto !important;
+        min-height: 100% !important;
+        justify-content: center !important;
+      }
+      .desktop-only-header {
+        display: none !important;
       }
       .desktop-only-footer {
-        display: none;
+        display: none !important;
       }
       .login-mobile-brand {
         display: flex;

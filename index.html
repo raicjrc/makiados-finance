@@ -26,16 +26,14 @@
     #loginModalScreen {
       position: fixed;
       inset: 0;
-      background: radial-gradient(circle at 85% 15%, rgba(16, 185, 129, 0.12) 0%, transparent 45%),
-                  radial-gradient(circle at 15% 70%, rgba(5, 150, 105, 0.08) 0%, transparent 50%),
-                  #f8fafc;
+      width: 100vw;
+      height: 100vh;
+      background: #ffffff;
       display: flex;
-      align-items: center;
-      justify-content: center;
       z-index: 99999;
-      padding: max(20px, env(safe-area-inset-top)) 20px max(20px, env(safe-area-inset-bottom)) 20px;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
+      overflow: hidden;
+      padding: 0;
+      margin: 0;
       box-sizing: border-box;
       color: #0f172a;
     }
@@ -116,7 +114,7 @@
         </div>
 
         <!-- Footer legal desktop -->
-        <div class="desktop-only-footer" style="display: flex; flex-direction: column; gap: 8px;">
+        <div class="desktop-only-footer">
           <div class="login-trust-pill">
             <span>🛡️ 100% Privado</span>
             <span>·</span>
@@ -124,11 +122,8 @@
             <span>·</span>
             <span>Para personas de a pie</span>
           </div>
-          <div style="display: flex; align-items: center; justify-content: space-between; font-size: 11.5px; color: #64748b; margin-top: 4px;">
-            <a href="javascript:void(0)" onclick="openLegalModal('terms')" class="login-unified-legal-link">
-              <span>⚖️ Términos, Privacidad & Reclamaciones</span>
-            </a>
-            <p id="loginFooterVersionDesk" class="login-version-tag">AliviaFin v78.2 · Paz mental para tu dinero</p>
+          <div class="login-version-tag" style="font-size: 11.5px; color: #64748b; font-weight: 500;">
+            AliviaFin · Paz mental para tu dinero
           </div>
         </div>
       </div>
@@ -142,6 +137,12 @@
             <img src="logo.png?v=70.1" alt="aliviafin" class="login-mobile-logo">
             <h2 class="login-mobile-title">aliviafin</h2>
             <p class="login-mobile-tagline">Paz mental para tu dinero</p>
+          </div>
+
+          <!-- Header Desktop Elegante -->
+          <div class="login-auth-header desktop-only-header">
+            <h2 id="authPaneTitle">Bienvenido</h2>
+            <p id="authPaneSubtitle">Toma el control de tus finanzas personales sin enredos.</p>
           </div>
 
           <!-- Pill de Valor en Móvil -->
@@ -221,13 +222,21 @@
             </button>
           </div>
 
-          <div style="text-align: center; margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(255, 255, 255, 0.08);">
+          <div style="text-align: center; margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(0, 0, 0, 0.06);">
             <a href="/landing" style="font-size: 13px; color: #10b981; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
               <span>✨ ¿Primera vez aquí? Conoce AliviaFin</span>
               <span>→</span>
             </a>
           </div>
 
+        </div>
+
+        <!-- Footer desktop en columna derecha -->
+        <div class="auth-bottom-footer desktop-only-footer">
+          <a href="javascript:void(0)" onclick="openLegalModal('terms')" class="login-unified-legal-link">
+            <span>⚖️ Términos, Privacidad & Reclamaciones</span>
+          </a>
+          <span id="loginFooterVersionDesk" style="font-size: 11.5px; color: #94a3b8; font-weight: 600;">AliviaFin v78.2</span>
         </div>
 
         <!-- Footer mobile limpio con botón legal discreto -->
