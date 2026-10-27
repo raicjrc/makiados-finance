@@ -792,6 +792,374 @@
       margin-top: 14px;
     }
 
+    /* EXPERIENCIA DEMO: REGISTRO DIARIO VS PLAN CERO DEUDAS */
+    .demo-experience-bar {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .demo-exp-pill {
+      background: rgba(255, 255, 255, 0.9);
+      border: 1.5px solid var(--border);
+      color: var(--text-secondary);
+      font-size: 12.5px;
+      font-weight: 800;
+      padding: 9px 18px;
+      border-radius: 999px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      font-family: inherit;
+    }
+
+    .demo-exp-pill:hover {
+      border-color: var(--primary);
+      transform: translateY(-1px);
+    }
+
+    .demo-exp-pill.active {
+      background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+      color: #ffffff;
+      border-color: #059669;
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+    }
+
+    /* Gasto Diario Seguro Pill en Demo */
+    .demo-safe-spend-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      color: #047857;
+      font-size: 12px;
+      font-weight: 800;
+      padding: 4px 12px;
+      border-radius: 999px;
+      box-shadow: 0 2px 6px rgba(16, 185, 129, 0.1);
+      letter-spacing: -0.01em;
+      transition: all 0.2s ease;
+    }
+
+    /* Switch de Pareja en Demo */
+    .demo-user-toggle {
+      display: flex;
+      gap: 6px;
+      background: #f1f5f9;
+      padding: 3px;
+      border-radius: 12px;
+      margin-bottom: 14px;
+      border: 1px solid var(--border-light);
+    }
+
+    .demo-user-btn {
+      flex: 1;
+      border: none;
+      background: transparent;
+      padding: 6px 4px;
+      border-radius: 9px;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-family: inherit;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .demo-user-btn.active {
+      background: #ffffff;
+      color: var(--text-main);
+      box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08);
+      font-weight: 800;
+    }
+
+    /* Timeline Agrupado por Día estilo MonAi */
+    .demo-day-group {
+      margin-bottom: 12px;
+    }
+
+    .demo-day-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 6px 6px;
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--text-muted);
+      border-bottom: 1px dashed var(--border-light);
+      margin-bottom: 6px;
+    }
+
+    .demo-day-total {
+      font-family: var(--font-mono);
+      font-weight: 800;
+      color: var(--text-secondary);
+    }
+
+    .demo-tx-avatar {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #e2e8f0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      font-weight: 800;
+      color: #475569;
+      margin-left: 4px;
+    }
+
+    .demo-tx-badge {
+      display: inline-block;
+      font-size: 9.5px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 6px;
+      background: #ecfdf5;
+      color: #059669;
+      border: 1px solid #a7f3d0;
+      margin-right: 4px;
+    }
+
+    /* PANE DEMO: PLAN CERO DEUDAS */
+    .demo-debt-pane {
+      display: none;
+    }
+
+    .demo-debt-hero {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.96) 0%, rgba(240, 253, 244, 0.9) 100%);
+      border: 1.5px solid var(--primary-border);
+      border-radius: 20px;
+      padding: 18px;
+      margin-bottom: 16px;
+      box-shadow: 0 8px 24px -4px rgba(5, 150, 105, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.9);
+      position: relative;
+    }
+
+    .demo-debt-hero-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .demo-debt-target-date {
+      font-size: 26px;
+      font-weight: 900;
+      color: var(--text-main);
+      font-family: var(--font-mono);
+      letter-spacing: -0.02em;
+      margin: 4px 0 8px;
+    }
+
+    .demo-debt-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: #ecfdf5;
+      color: #059669;
+      border: 1px solid #a7f3d0;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .demo-debt-kpis {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(5, 150, 105, 0.15);
+    }
+
+    .demo-debt-kpi {
+      background: #ffffff;
+      padding: 6px 8px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .demo-debt-kpi-lbl {
+      font-size: 9.5px;
+      color: var(--text-muted);
+      font-weight: 700;
+      display: block;
+    }
+
+    .demo-debt-kpi-val {
+      font-size: 12.5px;
+      font-weight: 900;
+      font-family: var(--font-mono);
+      color: var(--text-main);
+    }
+
+    /* Acelerador Presets en Demo */
+    .demo-accelerator-box {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+      margin-bottom: 14px;
+    }
+
+    .demo-preset-group {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .demo-preset-btn {
+      flex: 1;
+      background: #ffffff;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 2px;
+      font-size: 11.5px;
+      font-weight: 800;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s ease;
+    }
+
+    .demo-preset-btn.active {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+      box-shadow: 0 2px 6px rgba(5, 150, 105, 0.25);
+    }
+
+    .demo-debt-impact {
+      font-size: 11px;
+      color: #047857;
+      background: #ecfdf5;
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: 1px solid #a7f3d0;
+      margin-top: 8px;
+      line-height: 1.4;
+      font-weight: 600;
+    }
+
+    /* Tarjetas de Deuda en Demo */
+    .demo-debt-item {
+      background: #ffffff;
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+      margin-bottom: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .demo-debt-item.attacking {
+      border-color: rgba(234, 88, 12, 0.4);
+      background: linear-gradient(180deg, #fffaf5 0%, #ffffff 100%);
+      box-shadow: 0 4px 12px rgba(234, 88, 12, 0.08);
+    }
+
+    .demo-debt-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .demo-debt-title {
+      font-size: 12.5px;
+      font-weight: 800;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .demo-debt-pill {
+      font-size: 9.5px;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+
+    .demo-debt-pill.attack {
+      background: #ffedd5;
+      color: #c2410c;
+      border: 1px solid #fdba74;
+    }
+
+    .demo-debt-pill.hold {
+      background: #f1f5f9;
+      color: #64748b;
+      border: 1px solid #cbd5e1;
+    }
+
+    .demo-debt-track {
+      height: 5px;
+      background: #e2e8f0;
+      border-radius: 999px;
+      overflow: hidden;
+      margin: 8px 0;
+    }
+
+    .demo-debt-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #f97316, #ea580c);
+      border-radius: 999px;
+      transition: width 0.3s ease;
+    }
+
+    .demo-debt-fill.green {
+      background: linear-gradient(90deg, #10b981, #059669);
+    }
+
+    .demo-debt-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    /* Botón WhatsApp en Modal */
+    .btn-whatsapp-confirm {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 12px;
+      background: #25D366;
+      color: #ffffff;
+      border-radius: 14px;
+      font-weight: 800;
+      font-size: 13.5px;
+      text-decoration: none;
+      box-shadow: 0 4px 12px rgba(37, 211, 102, 0.25);
+      transition: all 0.2s ease;
+      margin-top: 10px;
+    }
+
+    .btn-whatsapp-confirm:hover {
+      background: #20ba5a;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(37, 211, 102, 0.35);
+    }
+
     /* SECCIÓN DE COMPARACIÓN (EXCEL VS ALIVIAFIN) */
     .comparison-section {
       padding: 80px 0 60px;
@@ -1009,6 +1377,27 @@
     }
 
     @media (max-width: 640px) {
+      .navbar {
+        height: 60px;
+      }
+      .brand-name {
+        font-size: 16px;
+      }
+      .brand-logo {
+        width: 30px;
+        height: 30px;
+      }
+      .nav-links {
+        display: none;
+      }
+      .nav-actions {
+        gap: 6px;
+      }
+      .nav-actions .btn {
+        padding: 6px 11px;
+        font-size: 12px;
+        border-radius: 9px;
+      }
       .pricing-trust-banner {
         flex-direction: column;
         text-align: center;
@@ -1536,7 +1925,7 @@
         </h1>
 
         <p class="hero-subtitle">
-          La plataforma de finanzas personales con <strong>diseño minimalista</strong> creada para darte paz mental. Registra con Yape o Plin, simula cuotas de tarjetas y llega a fin de mes con claridad absoluta.
+          La plataforma minimalista pensada para Perú. Compatible con <strong>Yape, Plin y compras en cuotas con tarjeta</strong>. Conoce tu <strong>límite seguro para gastar hoy</strong> y liquida tus deudas con el <strong>Plan Cero Deudas</strong>.
         </p>
 
         <div class="hero-cta-group">
@@ -1552,7 +1941,7 @@
         <div class="trust-bar">
           <div class="trust-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            <span>100% Privado (Sin Gmail ni bancos)</span>
+            <span>100% Privado (Sin conectar bancos)</span>
           </div>
           <div class="trust-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
@@ -1564,14 +1953,25 @@
           </div>
         </div>
 
-        <!-- SELECTOR DE VISTA DEL DEMO (CELULAR VS NAVEGADOR WEB) -->
-        <div id="demo">
+        <!-- SELECTOR DE EXPERIENCIA Y VISTA DEL DEMO -->
+        <div id="demo" style="display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%; margin: 28px auto 16px;">
+          <!-- 1. Experiencia: Registro Diario vs Cero Deudas -->
+          <div class="demo-experience-bar">
+            <button type="button" class="demo-exp-pill active" id="btnExpDaily" onclick="setDemoExperience('daily')">
+              <span>⚡ Registro Diario & Gasto Seguro</span>
+            </button>
+            <button type="button" class="demo-exp-pill" id="btnExpDebts" onclick="setDemoExperience('debts')">
+              <span>🏔️ Plan Cero Deudas (Bola de Nieve)</span>
+            </button>
+          </div>
+
+          <!-- 2. Dispositivo: Celular vs Computadora -->
           <div class="demo-view-switcher">
-            <button class="switch-btn active" id="btnSwitchMobile" onclick="setDemoView('mobile')">
+            <button type="button" class="switch-btn active" id="btnSwitchMobile" onclick="setDemoView('mobile')">
               <span>📱 Vista Celular</span>
             </button>
-            <button class="switch-btn" id="btnSwitchDesktop" onclick="setDemoView('desktop')">
-              <span>💻 Vista Navegador Web</span>
+            <button type="button" class="switch-btn" id="btnSwitchDesktop" onclick="setDemoView('desktop')">
+              <span>💻 Vista Computadora</span>
             </button>
           </div>
         </div>
@@ -1601,103 +2001,199 @@
             </div>
 
             <div style="padding: 16px;">
-              <!-- Tarjeta de Saldo (Exacta a la real) -->
-              <div class="demo-exec-card">
-                <div class="demo-exec-top">
-                  <span class="demo-exec-label">Disponible en banco</span>
-                  <div class="demo-live-badge">
-                    <span class="demo-pulse-dot"></span>
-                    <span>En Vivo</span>
+              
+              <!-- PANE A: REGISTRO DIARIO MÓVIL -->
+              <div id="demoMobileDailyPane">
+                <!-- Tarjeta Liquid Glass con Gasto Diario Seguro -->
+                <div class="demo-exec-card">
+                  <div class="demo-exec-top">
+                    <span class="demo-exec-label">Disponible en banco</span>
+                    <div class="demo-safe-spend-pill" id="mobileSafeSpendPill">✨ S/ 65.00 al día seguro</div>
+                  </div>
+
+                  <div class="demo-balance-amount" id="mobileBalanceDisplay">S/ 3,450.00</div>
+
+                  <div class="demo-metrics-cluster">
+                    <div class="demo-metric-pill">
+                      <span class="demo-metric-label">Ingresos Percibidos</span>
+                      <span class="demo-metric-val income">S/ 5,200.00</span>
+                    </div>
+                    <div class="demo-metric-pill">
+                      <span class="demo-metric-label">Gastos Totales</span>
+                      <span class="demo-metric-val expense" id="mobileSpentDisplay">S/ 1,750.00</span>
+                    </div>
                   </div>
                 </div>
 
-                <div class="demo-balance-amount" id="mobileBalanceDisplay">S/ 3,450.00</div>
+                <!-- Switch de Pareja Interactivo -->
+                <div class="demo-user-toggle">
+                  <button type="button" class="demo-user-btn active" id="btnUserAllM" onclick="setDemoUserFilter('all')">✨ Ambos</button>
+                  <button type="button" class="demo-user-btn" id="btnUserCesarM" onclick="setDemoUserFilter('cesar')">👤 César</button>
+                  <button type="button" class="demo-user-btn" id="btnUserGabyM" onclick="setDemoUserFilter('gaby')">👩 Gaby</button>
+                </div>
 
-                <div class="demo-metrics-cluster">
-                  <div class="demo-metric-pill">
-                    <span class="demo-metric-label">Ingresos Percibidos</span>
-                    <span class="demo-metric-val income">S/ 5,200.00</span>
+                <!-- Simulación de Registro en 1 Toque -->
+                <div class="demo-section-title">⚡ Registro en 1 Toque (Toca una categoría para probar):</div>
+                <div class="demo-quick-grid">
+                  <button type="button" class="demo-quick-btn" onclick="triggerDemoExpense('Almuerzo / Comida', 25.00, '🍱', 'cesar')">
+                    <span class="demo-btn-icon">🍱</span>
+                    <span class="demo-btn-label">Almuerzo</span>
+                    <span class="demo-btn-sub">S/ 25</span>
+                  </button>
+                  <button type="button" class="demo-quick-btn" onclick="triggerDemoExpense('Taxi / Transporte', 15.00, '🚕', 'gaby')">
+                    <span class="demo-btn-icon">🚕</span>
+                    <span class="demo-btn-label">Taxi</span>
+                    <span class="demo-btn-sub">S/ 15</span>
+                  </button>
+                  <button type="button" class="demo-quick-btn" onclick="triggerDemoExpense('Café / Antojo', 8.00, '☕', 'gaby')">
+                    <span class="demo-btn-icon">☕</span>
+                    <span class="demo-btn-label">Café</span>
+                    <span class="demo-btn-sub">S/ 8</span>
+                  </button>
+                </div>
+
+                <!-- Timeline Agrupado por Día estilo MonAi -->
+                <div class="demo-section-title">Timeline Diario de Movimientos</div>
+                <div id="mobileRecentFeed">
+                  <!-- Grupo Hoy -->
+                  <div class="demo-day-group">
+                    <div class="demo-day-header">
+                      <span class="demo-day-title">Hoy</span>
+                      <span class="demo-day-total" id="mobileDayTotalToday">S/ 40.00</span>
+                    </div>
+                    <div class="demo-tx-item" data-user="cesar">
+                      <div class="demo-tx-left">
+                        <div class="demo-tx-icon">🍱</div>
+                        <div>
+                          <div class="demo-tx-name">Almuerzo Ejecutivo <span class="demo-tx-avatar">C</span></div>
+                          <div class="demo-tx-cat"><span class="demo-tx-badge">Yape</span>Comida · Hoy</div>
+                        </div>
+                      </div>
+                      <div class="demo-tx-amount">- S/ 25.00</div>
+                    </div>
+                    <div class="demo-tx-item" data-user="gaby">
+                      <div class="demo-tx-left">
+                        <div class="demo-tx-icon">🚕</div>
+                        <div>
+                          <div class="demo-tx-name">Taxi San Isidro <span class="demo-tx-avatar">G</span></div>
+                          <div class="demo-tx-cat"><span class="demo-tx-badge">Plin</span>Transporte · Hoy</div>
+                        </div>
+                      </div>
+                      <div class="demo-tx-amount">- S/ 15.00</div>
+                    </div>
                   </div>
-                  <div class="demo-metric-pill">
-                    <span class="demo-metric-label">Gastos Totales</span>
-                    <span class="demo-metric-val expense" id="mobileSpentDisplay">S/ 1,750.00</span>
+
+                  <!-- Grupo Ayer -->
+                  <div class="demo-day-group">
+                    <div class="demo-day-header">
+                      <span class="demo-day-title">Ayer</span>
+                      <span class="demo-day-total">S/ 85.00</span>
+                    </div>
+                    <div class="demo-tx-item" data-user="all">
+                      <div class="demo-tx-left">
+                        <div class="demo-tx-icon">⚡</div>
+                        <div>
+                          <div class="demo-tx-name">Servicio Luz <span class="demo-tx-avatar">C&G</span></div>
+                          <div class="demo-tx-cat"><span class="demo-tx-badge">BCP</span>Servicios Fijos</div>
+                        </div>
+                      </div>
+                      <div class="demo-tx-amount">- S/ 85.00</div>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <!-- Simulación de Registro en 1 Toque -->
-              <div class="demo-section-title">⚡ Registro en 1 Toque (Toca una categoría para probar):</div>
-              <div class="demo-quick-grid">
-                <button class="demo-quick-btn" onclick="triggerDemoExpense('Almuerzo / Comida', 25.00, '🍱')">
-                  <span class="demo-btn-icon">🍱</span>
-                  <span class="demo-btn-label">Almuerzo / Comida</span>
-                  <span class="demo-btn-sub">Simular S/ 25</span>
-                </button>
-                <button class="demo-quick-btn" onclick="triggerDemoExpense('Taxi / Transporte', 15.00, '🚕')">
-                  <span class="demo-btn-icon">🚕</span>
-                  <span class="demo-btn-label">Taxi / Transporte</span>
-                  <span class="demo-btn-sub">Simular S/ 15</span>
-                </button>
-                <button class="demo-quick-btn" onclick="triggerDemoExpense('Café / Antojo', 8.00, '☕')">
-                  <span class="demo-btn-icon">☕</span>
-                  <span class="demo-btn-label">Café / Antojo</span>
-                  <span class="demo-btn-sub">Simular S/ 8</span>
-                </button>
+              <!-- PANE B: PLAN CERO DEUDAS MÓVIL -->
+              <div id="demoMobileDebtsPane" class="demo-debt-pane">
+                <div class="demo-debt-hero">
+                  <div class="demo-debt-hero-top">
+                    <span class="demo-exec-label">Tu Meta Cero Deudas</span>
+                    <span class="demo-debt-badge" id="mDebtSpeedBadge">⚡ Acelerado (-3 meses)</span>
+                  </div>
+                  <div class="demo-debt-target-date" id="mDebtTargetDate">Octubre 2027</div>
+                  <div class="demo-debt-kpis">
+                    <div class="demo-debt-kpi">
+                      <span class="demo-debt-kpi-lbl">Total Debes</span>
+                      <span class="demo-debt-kpi-val">S/ 4,200</span>
+                    </div>
+                    <div class="demo-debt-kpi">
+                      <span class="demo-debt-kpi-lbl">Pago al mes</span>
+                      <span class="demo-debt-kpi-val" id="mDebtMonthlyVal">S/ 380</span>
+                    </div>
+                    <div class="demo-debt-kpi">
+                      <span class="demo-debt-kpi-lbl">Tiempo</span>
+                      <span class="demo-debt-kpi-val" id="mDebtMonthsVal">11 meses</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Acelerador Interactivo -->
+                <div class="demo-accelerator-box">
+                  <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11.5px; font-weight: 800; color: var(--text-main);">
+                    <span>🚀 Acelerador Mensual:</span>
+                    <span style="color: var(--primary); font-family: var(--font-mono);" id="mDebtExtraLabel">+ S/ 100/mes</span>
+                  </div>
+                  <div class="demo-preset-group">
+                    <button type="button" class="demo-preset-btn" onclick="setDemoDebtPreset(0, this)">S/ 0</button>
+                    <button type="button" class="demo-preset-btn" onclick="setDemoDebtPreset(50, this)">+S/ 50</button>
+                    <button type="button" class="demo-preset-btn active" onclick="setDemoDebtPreset(100, this)">+S/ 100</button>
+                    <button type="button" class="demo-preset-btn" onclick="setDemoDebtPreset(200, this)">+S/ 200</button>
+                  </div>
+                  <div class="demo-debt-impact" id="mDebtImpactText">
+                    💡 Aportando S/ 100 extra, te liberas 3 meses antes y te ahorras S/ 380 en intereses.
+                  </div>
+                </div>
+
+                <!-- Tarjetas de Deudas Adaptativas -->
+                <div class="demo-section-title">Tus Compras en Cuotas (En Orden Estratégico)</div>
+                <div class="demo-debt-item attacking">
+                  <div class="demo-debt-header">
+                    <span class="demo-debt-title">💳 Tarjeta BCP (Visa)</span>
+                    <span class="demo-debt-pill attack">EN ATAQUE ⚡</span>
+                  </div>
+                  <div class="demo-debt-track">
+                    <div class="demo-debt-fill" style="width: 45%;"></div>
+                  </div>
+                  <div class="demo-debt-meta">
+                    <span>Cuota 4 de 12 (33%)</span>
+                    <span style="font-weight: 800; color: var(--text-main);">Debes: S/ 1,200</span>
+                  </div>
+                </div>
+
+                <div class="demo-debt-item">
+                  <div class="demo-debt-header">
+                    <span class="demo-debt-title">🚗 Préstamo Auto</span>
+                    <span class="demo-debt-pill hold">Pago Mínimo 🔒</span>
+                  </div>
+                  <div class="demo-debt-track">
+                    <div class="demo-debt-fill green" style="width: 30%;"></div>
+                  </div>
+                  <div class="demo-debt-meta">
+                    <span>Cuota 8 de 24 (33%)</span>
+                    <span style="font-weight: 800; color: var(--text-main);">Debes: S/ 3,000</span>
+                  </div>
+                </div>
               </div>
 
-              <!-- Actividad Reciente -->
-              <div class="demo-section-title">Últimos Movimientos</div>
-              <div id="mobileRecentFeed">
-                <div class="demo-tx-item">
-                  <div class="demo-tx-left">
-                    <div class="demo-tx-icon">⚡</div>
-                    <div>
-                      <div class="demo-tx-name">Servicio Luz</div>
-                      <div class="demo-tx-cat">Servicios Fijos · Pagado hoy</div>
-                    </div>
-                  </div>
-                  <div class="demo-tx-amount">- S/ 85.00</div>
-                </div>
-                <div class="demo-tx-item">
-                  <div class="demo-tx-left">
-                    <div class="demo-tx-icon">🛒</div>
-                    <div>
-                      <div class="demo-tx-name">Supermercado Metro</div>
-                      <div class="demo-tx-cat">Alimentación · Pagado</div>
-                    </div>
-                  </div>
-                  <div class="demo-tx-amount">- S/ 142.50</div>
-                </div>
-                <div class="demo-tx-item">
-                  <div class="demo-tx-left">
-                    <div class="demo-tx-icon">📱</div>
-                    <div>
-                      <div class="demo-tx-name">Plan Móvil Entel</div>
-                      <div class="demo-tx-cat">Telefonía · Pagado</div>
-                    </div>
-                  </div>
-                  <div class="demo-tx-amount">- S/ 39.90</div>
-                </div>
-              </div>
             </div>
 
             <!-- Barra de navegación inferior móvil idéntica a la real -->
             <div style="display: flex; justify-content: space-around; background: #ffffff; border-top: 1px solid #e2e8f0; padding: 10px 4px; font-size: 10px; font-weight: 700; color: #64748b;">
-              <div style="display: flex; flex-direction: column; align-items: center; gap: 2px; color: #059669;">
-                <span style="font-size: 16px;">📊</span>
+              <div style="display: flex; flex-direction: column; align-items: center; gap: 2px; color: #059669; cursor: pointer;" onclick="setDemoExperience('daily')">
+                <span style="font-size: 16px;">🏠</span>
                 <span>Inicio</span>
               </div>
-              <div style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
+              <div style="display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer;" onclick="setDemoExperience('daily')">
                 <span style="font-size: 16px;">💳</span>
-                <span>Gastos</span>
+                <span>Movimientos</span>
+              </div>
+              <div style="display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer;" onclick="setDemoExperience('debts')">
+                <span style="font-size: 16px;">🏔️</span>
+                <span>Cero Deudas</span>
               </div>
               <div style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
-                <span style="font-size: 16px;">📅</span>
-                <span>Calendario</span>
-              </div>
-              <div style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
-                <span style="font-size: 16px;">🎯</span>
-                <span>Metas</span>
+                <span style="font-size: 16px;">📊</span>
+                <span>50/30/20</span>
               </div>
               <div style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
                 <span style="font-size: 16px;">⚙️</span>
@@ -1716,7 +2212,7 @@
                 <div class="browser-dot" style="background: #22c55e;"></div>
               </div>
               <div class="browser-address-bar">
-                <span>🔒 https://aliviafin.vercel.app/</span>
+                <span>🔒 https://mifinzen.vercel.app/</span>
               </div>
             </div>
 
@@ -1731,11 +2227,11 @@
               </div>
 
               <div style="display: flex; align-items: center; gap: 10px;">
-                <button type="button" style="background: #ecfdf5; border: 1px solid #a7f3d0; color: #059669; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px;">
-                  <span>⚡</span> Gasto
+                <button type="button" onclick="setDemoExperience('daily')" style="background: #ecfdf5; border: 1px solid #a7f3d0; color: #059669; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                  <span>⚡</span> Gasto Rápido
                 </button>
-                <button type="button" style="background: #f0fdf4; border: 1px solid #bbf7d0; color: #16a34a; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px;">
-                  <span>💵</span> Ingreso
+                <button type="button" onclick="setDemoExperience('debts')" style="background: #eff6ff; border: 1px solid #bfdbfe; color: #2563eb; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                  <span>🏔️</span> Cero Deudas
                 </button>
                 <div style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; color: #0f172a;">
                   Octubre 2026
@@ -1748,79 +2244,159 @@
 
             <!-- Contenido Principal Desktop -->
             <div style="padding: 24px; background: #f8fafc;">
-              <!-- Tarjeta de Saldo Desktop -->
-              <div class="demo-exec-card" style="margin-bottom: 20px;">
-                <div class="demo-exec-top">
-                  <span class="demo-exec-label">Disponible en banco</span>
-                  <div class="demo-live-badge">
-                    <span class="demo-pulse-dot"></span>
-                    <span>En Vivo</span>
+              
+              <!-- PANE A: DESKTOP REGISTRO DIARIO -->
+              <div id="demoDesktopDailyPane">
+                <!-- Tarjeta de Saldo Desktop -->
+                <div class="demo-exec-card" style="margin-bottom: 20px;">
+                  <div class="demo-exec-top">
+                    <span class="demo-exec-label">Disponible en banco</span>
+                    <div class="demo-safe-spend-pill" id="desktopSafeSpendPill">✨ S/ 65.00 al día seguro</div>
                   </div>
-                </div>
 
-                <div class="demo-balance-amount" id="desktopBalanceDisplay">S/ 3,450.00</div>
+                  <div class="demo-balance-amount" id="desktopBalanceDisplay">S/ 3,450.00</div>
 
-                <div class="demo-metrics-cluster">
-                  <div class="demo-metric-pill">
-                    <span class="demo-metric-label">Ingresos Percibidos</span>
-                    <span class="demo-metric-val income">S/ 5,200.00</span>
-                  </div>
-                  <div class="demo-metric-pill">
-                    <span class="demo-metric-label">Gastos Totales</span>
-                    <span class="demo-metric-val expense" id="desktopSpentDisplay">S/ 1,750.00</span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Botones de Acción Rápida Desktop -->
-              <div class="demo-section-title">⚡ Registro en 1 Toque (Toca una categoría para simular):</div>
-              <div class="demo-quick-grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 20px;">
-                <button class="demo-quick-btn" onclick="triggerDemoExpense('Almuerzo / Comida', 25.00, '🍱')">
-                  <span class="demo-btn-icon">🍱</span>
-                  <span class="demo-btn-label">Almuerzo / Comida</span>
-                  <span class="demo-btn-sub">Simular S/ 25</span>
-                </button>
-                <button class="demo-quick-btn" onclick="triggerDemoExpense('Café / Antojo', 8.00, '☕')">
-                  <span class="demo-btn-icon">☕</span>
-                  <span class="demo-btn-label">Café / Antojo</span>
-                  <span class="demo-btn-sub">Simular S/ 8</span>
-                </button>
-                <button class="demo-quick-btn" onclick="triggerDemoExpense('Taxi / Transporte', 15.00, '🚕')">
-                  <span class="demo-btn-icon">🚕</span>
-                  <span class="demo-btn-label">Taxi / Transporte</span>
-                  <span class="demo-btn-sub">Simular S/ 15</span>
-                </button>
-                <button class="demo-quick-btn" onclick="triggerDemoExpense('Supermercado', 65.00, '🛒')">
-                  <span class="demo-btn-icon">🛒</span>
-                  <span class="demo-btn-label">Supermercado</span>
-                  <span class="demo-btn-sub">Simular S/ 65</span>
-                </button>
-              </div>
-
-              <!-- Historial Desktop -->
-              <div class="demo-section-title">Últimos Movimientos del Mes</div>
-              <div id="desktopRecentFeed">
-                <div class="demo-tx-item">
-                  <div class="demo-tx-left">
-                    <div class="demo-tx-icon">⚡</div>
-                    <div>
-                      <div class="demo-tx-name">Servicio Luz</div>
-                      <div class="demo-tx-cat">Servicios Fijos · Pagado hoy</div>
+                  <div class="demo-metrics-cluster">
+                    <div class="demo-metric-pill">
+                      <span class="demo-metric-label">Ingresos Percibidos</span>
+                      <span class="demo-metric-val income">S/ 5,200.00</span>
+                    </div>
+                    <div class="demo-metric-pill">
+                      <span class="demo-metric-label">Gastos Totales</span>
+                      <span class="demo-metric-val expense" id="desktopSpentDisplay">S/ 1,750.00</span>
                     </div>
                   </div>
-                  <div class="demo-tx-amount">- S/ 85.00</div>
                 </div>
-                <div class="demo-tx-item">
-                  <div class="demo-tx-left">
-                    <div class="demo-tx-icon">🛒</div>
-                    <div>
-                      <div class="demo-tx-name">Supermercado Metro</div>
-                      <div class="demo-tx-cat">Alimentación · Pagado</div>
+
+                <!-- Botones de Acción Rápida Desktop -->
+                <div class="demo-section-title">⚡ Registro en 1 Toque (Toca una categoría para simular):</div>
+                <div class="demo-quick-grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 20px;">
+                  <button type="button" class="demo-quick-btn" onclick="triggerDemoExpense('Almuerzo / Comida', 25.00, '🍱', 'cesar')">
+                    <span class="demo-btn-icon">🍱</span>
+                    <span class="demo-btn-label">Almuerzo</span>
+                    <span class="demo-btn-sub">Simular S/ 25</span>
+                  </button>
+                  <button type="button" class="demo-quick-btn" onclick="triggerDemoExpense('Café / Antojo', 8.00, '☕', 'gaby')">
+                    <span class="demo-btn-icon">☕</span>
+                    <span class="demo-btn-label">Café</span>
+                    <span class="demo-btn-sub">Simular S/ 8</span>
+                  </button>
+                  <button type="button" class="demo-quick-btn" onclick="triggerDemoExpense('Taxi / Transporte', 15.00, '🚕', 'gaby')">
+                    <span class="demo-btn-icon">🚕</span>
+                    <span class="demo-btn-label">Taxi</span>
+                    <span class="demo-btn-sub">Simular S/ 15</span>
+                  </button>
+                  <button type="button" class="demo-quick-btn" onclick="triggerDemoExpense('Supermercado', 65.00, '🛒', 'cesar')">
+                    <span class="demo-btn-icon">🛒</span>
+                    <span class="demo-btn-label">Supermercado</span>
+                    <span class="demo-btn-sub">Simular S/ 65</span>
+                  </button>
+                </div>
+
+                <!-- Historial Desktop -->
+                <div class="demo-section-title">Timeline Diario del Mes</div>
+                <div id="desktopRecentFeed">
+                  <div class="demo-day-group">
+                    <div class="demo-day-header">
+                      <span class="demo-day-title">Hoy</span>
+                      <span class="demo-day-total" id="desktopDayTotalToday">S/ 40.00</span>
+                    </div>
+                    <div class="demo-tx-item" data-user="cesar">
+                      <div class="demo-tx-left">
+                        <div class="demo-tx-icon">🍱</div>
+                        <div>
+                          <div class="demo-tx-name">Almuerzo Ejecutivo <span class="demo-tx-avatar">C</span></div>
+                          <div class="demo-tx-cat"><span class="demo-tx-badge">Yape</span>Alimentación · Pagado hoy</div>
+                        </div>
+                      </div>
+                      <div class="demo-tx-amount">- S/ 25.00</div>
+                    </div>
+                    <div class="demo-tx-item" data-user="gaby">
+                      <div class="demo-tx-left">
+                        <div class="demo-tx-icon">🚕</div>
+                        <div>
+                          <div class="demo-tx-name">Taxi San Isidro <span class="demo-tx-avatar">G</span></div>
+                          <div class="demo-tx-cat"><span class="demo-tx-badge">Plin</span>Transporte · Pagado hoy</div>
+                        </div>
+                      </div>
+                      <div class="demo-tx-amount">- S/ 15.00</div>
                     </div>
                   </div>
-                  <div class="demo-tx-amount">- S/ 142.50</div>
                 </div>
               </div>
+
+              <!-- PANE B: DESKTOP PLAN CERO DEUDAS -->
+              <div id="demoDesktopDebtsPane" class="demo-debt-pane">
+                <div class="demo-debt-hero" style="margin-bottom: 20px;">
+                  <div class="demo-debt-hero-top">
+                    <span class="demo-exec-label">Tu Meta Cero Deudas</span>
+                    <span class="demo-debt-badge" id="dDebtSpeedBadge">⚡ Acelerado (-3 meses)</span>
+                  </div>
+                  <div class="demo-debt-target-date" id="dDebtTargetDate" style="font-size: 32px;">Octubre 2027</div>
+                  <div class="demo-debt-kpis" style="grid-template-columns: repeat(3, 1fr); padding-top: 14px;">
+                    <div class="demo-debt-kpi">
+                      <span class="demo-debt-kpi-lbl">Total Que Debes</span>
+                      <span class="demo-debt-kpi-val" style="font-size: 15px;">S/ 4,200.00</span>
+                    </div>
+                    <div class="demo-debt-kpi">
+                      <span class="demo-debt-kpi-lbl">Pagos este mes</span>
+                      <span class="demo-debt-kpi-val" id="dDebtMonthlyVal" style="font-size: 15px;">S/ 380.00</span>
+                    </div>
+                    <div class="demo-debt-kpi">
+                      <span class="demo-debt-kpi-lbl">Tiempo Estimado</span>
+                      <span class="demo-debt-kpi-val" id="dDebtMonthsVal" style="font-size: 15px;">11 meses</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Acelerador Desktop -->
+                <div class="demo-accelerator-box" style="margin-bottom: 20px;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 800; color: var(--text-main);">
+                    <span>🚀 Acelerador Mensual (Aporte adicional):</span>
+                    <span style="color: var(--primary); font-family: var(--font-mono); font-size: 14px;" id="dDebtExtraLabel">+ S/ 100/mes</span>
+                  </div>
+                  <div class="demo-preset-group" style="margin-top: 10px;">
+                    <button type="button" class="demo-preset-btn" onclick="setDemoDebtPreset(0, this)">S/ 0</button>
+                    <button type="button" class="demo-preset-btn" onclick="setDemoDebtPreset(50, this)">+S/ 50</button>
+                    <button type="button" class="demo-preset-btn active" onclick="setDemoDebtPreset(100, this)">+S/ 100</button>
+                    <button type="button" class="demo-preset-btn" onclick="setDemoDebtPreset(200, this)">+S/ 200</button>
+                  </div>
+                  <div class="demo-debt-impact" id="dDebtImpactText" style="font-size: 12px; padding: 10px 14px; margin-top: 10px;">
+                    💡 Aportando S/ 100 extra, te liberas 3 meses antes y te ahorras S/ 380 en intereses.
+                  </div>
+                </div>
+
+                <!-- Deudas Desktop -->
+                <div class="demo-section-title">Estrategia de Liquidación (Bola de Nieve)</div>
+                <div class="demo-debt-item attacking" style="margin-bottom: 12px; padding: 16px;">
+                  <div class="demo-debt-header">
+                    <span class="demo-debt-title" style="font-size: 14px;">💳 Tarjeta BCP (Visa)</span>
+                    <span class="demo-debt-pill attack">EN ATAQUE ⚡</span>
+                  </div>
+                  <div class="demo-debt-track" style="height: 8px;">
+                    <div class="demo-debt-fill" style="width: 45%;"></div>
+                  </div>
+                  <div class="demo-debt-meta" style="font-size: 12px;">
+                    <span>Cuota 4 de 12 (33% pagado) · S/ 180.00 / mes</span>
+                    <span style="font-weight: 800; color: var(--text-main);">Saldo Restante: S/ 1,200.00</span>
+                  </div>
+                </div>
+
+                <div class="demo-debt-item" style="padding: 16px;">
+                  <div class="demo-debt-header">
+                    <span class="demo-debt-title" style="font-size: 14px;">🚗 Préstamo Auto</span>
+                    <span class="demo-debt-pill hold">Pago Mínimo 🔒</span>
+                  </div>
+                  <div class="demo-debt-track" style="height: 8px;">
+                    <div class="demo-debt-fill green" style="width: 30%;"></div>
+                  </div>
+                  <div class="demo-debt-meta" style="font-size: 12px;">
+                    <span>Cuota 8 de 24 (33% pagado) · S/ 200.00 / mes</span>
+                    <span style="font-weight: 800; color: var(--text-main);">Saldo Restante: S/ 3,000.00</span>
+                  </div>
+                </div>
+              </div>
+
             </div>
           </div>
 
@@ -1974,39 +2550,39 @@
 
         <div class="features-grid">
           <div class="feature-card">
+            <div class="feature-icon-box">🛡️</div>
+            <h3 class="feature-title">Gasto Diario Seguro (Safe-to-Spend)</h3>
+            <p class="feature-desc">Tu brújula en tiempo real. Cada mañana sabes con exactitud cuánto dinero puedes gastar hoy sin asfixiarte el día 15 o fin de mes.</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon-box">🏔️</div>
+            <h3 class="feature-title">Plan Cero Deudas (Bola de Nieve)</h3>
+            <p class="feature-desc">Paga tus cuotas en orden estratégico. Descubre el mes exacto en que serás 100% libre y cuánto te ahorras en intereses con aportes extra.</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon-box">👥</div>
+            <h3 class="feature-title">Timeline Diario en Pareja o Solo</h3>
+            <p class="feature-desc">Monitorea tus gastos agrupados por día con subtotales automáticos y avatares individuales. Cuentas claras en el hogar sin discusiones.</p>
+          </div>
+
+          <div class="feature-card">
             <div class="feature-icon-box">⚡</div>
-            <h3 class="feature-title">Gasto Rápido Instantáneo</h3>
-            <p class="feature-desc">Diseñado para la velocidad de la calle. Registra un café, el taxi o el almuerzo con 2 toques sin formularios tediosos.</p>
-          </div>
-
-          <div class="feature-card">
-            <div class="feature-icon-box">💳</div>
-            <h3 class="feature-title">Simulador de Cuotas</h3>
-            <p class="feature-desc">¿Vas a comprar algo a plazos? Ingresa el monto y las cuotas y AliviaFin proyectará automáticamente el gasto mes a mes.</p>
-          </div>
-
-          <div class="feature-card">
-            <div class="feature-icon-box">🎯</div>
-            <h3 class="feature-title">Metas de Ahorro Claras</h3>
-            <p class="feature-desc">Asigna fondos a tus vacaciones, fondo de emergencia o compras especiales y visualiza tu avance sin complicaciones.</p>
-          </div>
-
-          <div class="feature-card">
-            <div class="feature-icon-box">🔒</div>
-            <h3 class="feature-title">100% Privado y Seguro</h3>
-            <p class="feature-desc">Cero acceso a tu Gmail y sin claves de banco. Tus finanzas están cifradas y bajo tu control total, sin intermediarios.</p>
+            <h3 class="feature-title">Smart Quick-Input por Voz o Texto</h3>
+            <p class="feature-desc">Escribe <em>"35 almuerzo yape"</em> o díctalo con tu voz. El motor inteligente extrae el monto, la categoría y la cuenta en 2 segundos.</p>
           </div>
 
           <div class="feature-card">
             <div class="feature-icon-box">🇵🇪</div>
-            <h3 class="feature-title">Pensada para Perú (S/ y $)</h3>
-            <p class="feature-desc">Soporte nativo para Soles y Dólares, pagos por Yape, Plin, efectivo y tarjetas, adaptada a tu realidad cotidiana.</p>
+            <h3 class="feature-title">Hecha para la Realidad de Perú</h3>
+            <p class="feature-desc">Compatible con Yape, Plin, BCP, BBVA, Interbank y tarjetas de crédito; cortes quincenales (15 y 30) y compras en cuotas.</p>
           </div>
 
           <div class="feature-card">
-            <div class="feature-icon-box">📶</div>
-            <h3 class="feature-title">Modo Offline Instantáneo</h3>
-            <p class="feature-desc">¿Estás en un sótano o sin señal en la calle? Registra tus gastos sin internet y se sincronizarán solos al reconectar.</p>
+            <div class="feature-icon-box">🔒</div>
+            <h3 class="feature-title">100% Privado (Cero Claves de Banco)</h3>
+            <p class="feature-desc">Jamás te pediremos contraseñas bancarias ni acceso a tu correo. Tus finanzas están cifradas y bajo tu control absoluto.</p>
           </div>
         </div>
       </div>
@@ -2249,7 +2825,36 @@
   <script>
     let demoBalance = 3450.00;
     let demoSpent = 1750.00;
+    let demoSafeSpend = 65.00;
+    let demoTodayTotal = 40.00;
 
+    // Cambiar entre Registro Diario y Plan Cero Deudas
+    function setDemoExperience(exp) {
+      const btnDaily = document.getElementById('btnExpDaily');
+      const btnDebts = document.getElementById('btnExpDebts');
+      const mDaily = document.getElementById('demoMobileDailyPane');
+      const mDebts = document.getElementById('demoMobileDebtsPane');
+      const dDaily = document.getElementById('demoDesktopDailyPane');
+      const dDebts = document.getElementById('demoDesktopDebtsPane');
+
+      if (exp === 'daily') {
+        if (btnDaily) btnDaily.classList.add('active');
+        if (btnDebts) btnDebts.classList.remove('active');
+        if (mDaily) mDaily.style.display = 'block';
+        if (mDebts) mDebts.style.display = 'none';
+        if (dDaily) dDaily.style.display = 'block';
+        if (dDebts) dDebts.style.display = 'none';
+      } else {
+        if (btnDebts) btnDebts.classList.add('active');
+        if (btnDaily) btnDaily.classList.remove('active');
+        if (mDaily) mDaily.style.display = 'none';
+        if (mDebts) mDebts.style.display = 'block';
+        if (dDaily) dDaily.style.display = 'none';
+        if (dDebts) dDebts.style.display = 'block';
+      }
+    }
+
+    // Cambiar entre Celular y Computadora
     function setDemoView(view) {
       const btnMobile = document.getElementById('btnSwitchMobile');
       const btnDesktop = document.getElementById('btnSwitchDesktop');
@@ -2269,82 +2874,186 @@
       }
     }
 
-    function triggerDemoExpense(name, amount, icon) {
+    // Filtro de Pareja en el Demo (Ambos / César / Gaby)
+    function setDemoUserFilter(user) {
+      ['All', 'Cesar', 'Gaby'].forEach(k => {
+        const btnM = document.getElementById('btnUser' + k + 'M');
+        if (btnM) btnM.classList.toggle('active', k.toLowerCase() === user);
+      });
+
+      const items = document.querySelectorAll('.demo-tx-item[data-user]');
+      items.forEach(el => {
+        const u = el.getAttribute('data-user');
+        if (user === 'all' || u === user || u === 'all') {
+          el.style.display = 'flex';
+        } else {
+          el.style.display = 'none';
+        }
+      });
+    }
+
+    // Acelerador Interactivo en Plan Cero Deudas
+    function setDemoDebtPreset(amount, btnEl) {
+      document.querySelectorAll('.demo-preset-btn').forEach(b => {
+        b.classList.toggle('active', b.textContent.includes(String(amount)));
+      });
+
+      let targetDate = 'Octubre 2027';
+      let speedBadge = '⚡ Acelerado (-3 meses)';
+      let monthly = 'S/ 380';
+      let months = '11 meses';
+      let impactText = '💡 Aportando S/ 100 extra, te liberas 3 meses antes y te ahorras S/ 380 en intereses.';
+      let extraLabel = '+ S/ ' + amount + '/mes';
+
+      if (amount === 0) {
+        targetDate = 'Enero 2028';
+        speedBadge = '🔒 Ritmo Normal (Sin acelerador)';
+        monthly = 'S/ 380';
+        months = '14 meses';
+        impactText = '💡 Si aportas desde S/ 50 o S/ 100 al mes, te liberas mucho antes y dejas de pagar intereses.';
+        extraLabel = 'S/ 0/mes';
+      } else if (amount === 50) {
+        targetDate = 'Diciembre 2027';
+        speedBadge = '⚡ Acelerado (-1 mes)';
+        monthly = 'S/ 430';
+        months = '13 meses';
+        impactText = '💡 Aportando S/ 50 extra, te liberas 1 mes antes y te ahorras S/ 190 en intereses.';
+      } else if (amount === 100) {
+        targetDate = 'Octubre 2027';
+        speedBadge = '⚡ Acelerado (-3 meses)';
+        monthly = 'S/ 480';
+        months = '11 meses';
+        impactText = '💡 Aportando S/ 100 extra, te liberas 3 meses antes y te ahorras S/ 380 en intereses.';
+      } else if (amount === 200) {
+        targetDate = 'Julio 2027';
+        speedBadge = '🔥 Super Acelerado (-6 meses)';
+        monthly = 'S/ 580';
+        months = '8 meses';
+        impactText = '💡 ¡Brutal! Aportando S/ 200 extra, te liberas 6 meses antes y le perdonas más de S/ 750 al banco.';
+      }
+
+      // Actualizar Móvil
+      const mDate = document.getElementById('mDebtTargetDate');
+      const mBadge = document.getElementById('mDebtSpeedBadge');
+      const mMon = document.getElementById('mDebtMonthlyVal');
+      const mMonths = document.getElementById('mDebtMonthsVal');
+      const mImpact = document.getElementById('mDebtImpactText');
+      const mExtra = document.getElementById('mDebtExtraLabel');
+      if (mDate) mDate.textContent = targetDate;
+      if (mBadge) mBadge.textContent = speedBadge;
+      if (mMon) mMon.textContent = monthly;
+      if (mMonths) mMonths.textContent = months;
+      if (mImpact) mImpact.textContent = impactText;
+      if (mExtra) mExtra.textContent = extraLabel;
+
+      // Actualizar Desktop
+      const dDate = document.getElementById('dDebtTargetDate');
+      const dBadge = document.getElementById('dDebtSpeedBadge');
+      const dMon = document.getElementById('dDebtMonthlyVal');
+      const dMonths = document.getElementById('dDebtMonthsVal');
+      const dImpact = document.getElementById('dDebtImpactText');
+      const dExtra = document.getElementById('dDebtExtraLabel');
+      if (dDate) dDate.textContent = targetDate;
+      if (dBadge) dBadge.textContent = speedBadge;
+      if (dMon) dMon.textContent = monthly;
+      if (dMonths) dMonths.textContent = months;
+      if (dImpact) dImpact.textContent = impactText;
+      if (dExtra) dExtra.textContent = extraLabel;
+    }
+
+    // Registro Simulado con Recálculo Dinámico de Gasto Seguro
+    function triggerDemoExpense(name, amount, icon, user) {
       demoBalance -= amount;
       demoSpent += amount;
+      demoTodayTotal += amount;
+      demoSafeSpend = Math.max(10, Math.round((demoSafeSpend - (amount / 26)) * 10) / 10);
+
       if (demoBalance < 0) {
         demoBalance = 3450.00;
         demoSpent = 1750.00;
+        demoTodayTotal = 40.00;
+        demoSafeSpend = 65.00;
       }
 
       const formattedBal = 'S/ ' + demoBalance.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       const formattedSpent = 'S/ ' + demoSpent.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const formattedSafe = `✨ S/ ${demoSafeSpend.toFixed(2)} al día seguro`;
+      const formattedToday = 'S/ ' + demoTodayTotal.toFixed(2);
 
-      // Actualizar en vista móvil
+      // Actualizar saldos móvil y desktop
       const mBal = document.getElementById('mobileBalanceDisplay');
       const mSpent = document.getElementById('mobileSpentDisplay');
+      const mSafe = document.getElementById('mobileSafeSpendPill');
+      const mToday = document.getElementById('mobileDayTotalToday');
       if (mBal) mBal.textContent = formattedBal;
       if (mSpent) mSpent.textContent = formattedSpent;
+      if (mSafe) mSafe.textContent = formattedSafe;
+      if (mToday) mToday.textContent = formattedToday;
 
-      // Actualizar en vista desktop
       const dBal = document.getElementById('desktopBalanceDisplay');
       const dSpent = document.getElementById('desktopSpentDisplay');
+      const dSafe = document.getElementById('desktopSafeSpendPill');
+      const dToday = document.getElementById('desktopDayTotalToday');
       if (dBal) dBal.textContent = formattedBal;
       if (dSpent) dSpent.textContent = formattedSpent;
+      if (dSafe) dSafe.textContent = formattedSafe;
+      if (dToday) dToday.textContent = formattedToday;
 
-      // Animación en balance
+      // Micro animación en los saldos
       [mBal, dBal].forEach(el => {
         if (!el) return;
         el.style.color = '#059669';
-        el.style.transform = 'scale(0.98)';
+        el.style.transform = 'scale(0.97)';
         setTimeout(() => {
           el.style.color = '#0f172a';
           el.style.transform = 'scale(1)';
         }, 180);
       });
 
-      // Crear elemento para el feed
-      const createItemHTML = () => `
+      // Crear ítem de transacción
+      const avatarLetter = user === 'cesar' ? 'C' : (user === 'gaby' ? 'G' : 'C&G');
+      const itemHTML = `
         <div class="demo-tx-left">
           <div class="demo-tx-icon">${icon}</div>
           <div>
-            <div class="demo-tx-name">${name}</div>
-            <div class="demo-tx-cat">Gasto Rápido · Hace un momento</div>
+            <div class="demo-tx-name">${name} <span class="demo-tx-avatar">${avatarLetter}</span></div>
+            <div class="demo-tx-cat"><span class="demo-tx-badge">Yape</span>Gasto Rápido · Hace un momento</div>
           </div>
         </div>
         <div class="demo-tx-amount">- S/ ${amount.toFixed(2)}</div>
       `;
 
-      // Insertar en feed móvil
-      const mFeed = document.getElementById('mobileRecentFeed');
-      if (mFeed) {
-        const itemM = document.createElement('div');
-        itemM.className = 'demo-tx-item';
-        itemM.innerHTML = createItemHTML();
-        mFeed.prepend(itemM);
-        if (mFeed.children.length > 3) mFeed.removeChild(mFeed.lastChild);
-      }
-
-      // Insertar en feed desktop
-      const dFeed = document.getElementById('desktopRecentFeed');
-      if (dFeed) {
-        const itemD = document.createElement('div');
-        itemD.className = 'demo-tx-item';
-        itemD.innerHTML = createItemHTML();
-        dFeed.prepend(itemD);
-        if (dFeed.children.length > 3) dFeed.removeChild(dFeed.lastChild);
-      }
+      // Insertar en timeline móvil y desktop
+      ['mobileRecentFeed', 'desktopRecentFeed'].forEach(feedId => {
+        const feed = document.getElementById(feedId);
+        if (feed) {
+          const firstGroup = feed.querySelector('.demo-day-group');
+          if (firstGroup) {
+            const newItem = document.createElement('div');
+            newItem.className = 'demo-tx-item';
+            newItem.setAttribute('data-user', user || 'cesar');
+            newItem.innerHTML = itemHTML;
+            firstGroup.insertBefore(newItem, firstGroup.children[1] || null);
+          }
+        }
+      });
     }
 
     function toggleFaq(btn) {
       btn.parentElement.classList.toggle('open');
     }
 
-    // GESTIÓN DE MODAL DE PAGO / SUSCRIPCIÓN
+    // GESTIÓN DE MODAL DE PAGO / SUSCRIPCIÓN CON WHATSAPP
     function openPlanModal(name, price, period) {
       document.getElementById('planModalTitle').textContent = `Activar ${name}`;
       document.getElementById('planModalPrice').textContent = `S/ ${price}`;
       document.getElementById('planModalPeriod').textContent = `/ ${period}`;
+
+      const waBtn = document.getElementById('btnPlanWhatsApp');
+      if (waBtn) {
+        const msg = encodeURIComponent(`Hola César, acabo de transferir mi suscripción a AliviaFin (${name} - S/ ${price} ${period}) por Yape. Envío mi constancia para activar mi cuenta.`);
+        waBtn.href = `https://wa.me/51914688135?text=${msg}`;
+      }
 
       const modal = document.getElementById('planModalOverlay');
       modal.style.display = 'flex';
@@ -2476,9 +3185,14 @@
           </button>
         </div>
 
-        <!-- Botón confirmar en app -->
-        <a href="index.html?mode=register" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 14px; background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
-          <span>✅ Continuar a la App para Registrarme</span>
+        <!-- Botón confirmar por WhatsApp directo -->
+        <a id="btnPlanWhatsApp" href="https://wa.me/51914688135?text=Hola%20C%C3%A9sar,%20acabo%20de%20transferir%20mi%20suscripci%C3%B3n%20a%20AliviaFin%20por%20Yape.%20Env%C3%ADo%20mi%20constancia%20para%20activar%20mi%20cuenta." target="_blank" rel="noopener" class="btn-whatsapp-confirm">
+          <span>💬 Enviar Constancia por WhatsApp</span>
+        </a>
+
+        <!-- Botón registrarse en app -->
+        <a href="index.html?mode=register" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 14px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); margin-top: 8px;">
+          <span>✅ Abrir la App para Registrarme</span>
         </a>
       </div>
 
