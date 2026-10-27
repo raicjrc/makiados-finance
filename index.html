@@ -853,23 +853,67 @@
 
       </div>
 
-      <!-- TAB 3: METAS DE AHORRO -->
+      <!-- TAB 3: METAS DE AHORRO (APPLE SAVINGS & BÓVEDAS BLINDADAS) -->
       <div id="tab-metas" class="tab-content">
-        <div class="flex-between mb-2" style="margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
+        <!-- CABECERA PRINCIPAL -->
+        <div class="savings-page-header">
           <div>
-            <h2 style="font-size: 16px; font-weight: 800; margin: 0;">Metas y Fondos de Ahorro</h2>
-            <div style="font-size: 11px; color: var(--text-muted); font-weight: 600;">Proyección matemática con IA según tu ritmo real de ahorro</div>
+            <div class="savings-pill-tag">🛡️ Bóvedas de Paz Mental</div>
+            <h2 class="savings-page-title">Metas y Fondos de Ahorro</h2>
+            <p class="savings-page-subtitle">Ahorro con propósito protegido de tus gastos diarios (Págate a ti primero)</p>
           </div>
-          <button class="btn btn-primary btn-sm" onclick="handleOpenAddGoalClick()">+ Nueva Meta</button>
+          <button type="button" class="btn btn-primary btn-sm savings-new-goal-btn" onclick="handleOpenAddGoalClick()">
+            <span>✨</span> Nueva Meta
+          </button>
         </div>
         
-        <!-- Ahorro Acumulado (Moved from Top Metrics) -->
-        <div class="card" style="margin-bottom: 15px;">
-          <div class="card-title" style="display: flex; align-items: center; gap: 6px;">
-            <span style="font-size: 16px;">🛡️</span> AHORRO ACUMULADO
+        <!-- HERO CARD APPLE SAVINGS (RESUMEN CONSOLIDADO) -->
+        <div class="savings-hero-card" id="savingsOverviewCard">
+          <div class="savings-hero-top">
+            <div>
+              <span class="savings-hero-label">CAPITAL TOTAL EN BÓVEDAS</span>
+              <div class="savings-hero-amount" id="metricEmergencyFund">S/ 0.00</div>
+              <div class="savings-hero-sub">Dinero blindado y protegido fuera de tus gastos corrientes</div>
+            </div>
+            <div class="savings-hero-badge" id="savingsCycleStatusBadge">
+              <span class="savings-status-dot"></span>
+              <span id="savingsCycleStatusText">Calculando ritmo...</span>
+            </div>
           </div>
-          <div class="stat-value text-warning" id="metricEmergencyFund" style="font-size: 22px; font-weight: 900; margin-top: 4px;">S/ 0.00</div>
-          <div class="text-muted" style="font-size: 11px; font-weight: 600;">Fondo Emergencia Base</div>
+
+          <div class="savings-hero-progress-block">
+            <div class="savings-hero-progress-labels">
+              <span id="savingsGlobalPctText">Progreso Global: 0%</span>
+              <span id="savingsGlobalTargetText">Meta Total: S/ 0</span>
+            </div>
+            <div class="savings-hero-progress-track">
+              <div class="savings-hero-progress-fill" id="savingsGlobalProgressFill" style="width: 0%;"></div>
+            </div>
+          </div>
+
+          <div class="savings-hero-kpis-row">
+            <div class="savings-mini-kpi">
+              <span class="mini-kpi-label">METAS ACTIVAS</span>
+              <span class="mini-kpi-val" id="kpiActiveGoalsCount">0</span>
+            </div>
+            <div class="savings-mini-kpi">
+              <span class="mini-kpi-label">APORTE ESTE MES</span>
+              <span class="mini-kpi-val text-success" id="kpiMonthDeposited">S/ 0.00</span>
+            </div>
+            <div class="savings-mini-kpi">
+              <span class="mini-kpi-label">RITMO MENSUAL</span>
+              <span class="mini-kpi-val" id="kpiMonthlyPace">S/ 0 / mes</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- FILTROS DE METAS (SEGMENTED CHIPS) -->
+        <div class="savings-filter-bar">
+          <div class="savings-chips-group">
+            <button type="button" class="savings-chip active" id="chipGoalFilterAll" onclick="setGoalsFilter('all')">Todas (<span id="countGoalAll">0</span>)</button>
+            <button type="button" class="savings-chip" id="chipGoalFilterActive" onclick="setGoalsFilter('active')">En Curso (<span id="countGoalActive">0</span>)</button>
+            <button type="button" class="savings-chip" id="chipGoalFilterCompleted" onclick="setGoalsFilter('completed')">Cumplidas 🎉 (<span id="countGoalCompleted">0</span>)</button>
+          </div>
         </div>
 
         <div id="goalsContainer" class="luxury-goals-grid"></div>
@@ -2703,65 +2747,171 @@
     </div>
   </div>
 
-  <!-- MODAL: ADD SAVINGS GOAL -->
+  <!-- MODAL: ADD SAVINGS GOAL (CON PLANTILLAS RÁPIDAS) -->
   <div class="modal-backdrop" id="addGoalModal" onclick="handleBackdropClick(event, 'addGoalModal')">
-    <div class="modal">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-        <div class="modal-title" style="margin: 0;">🎯 Crear Nueva Meta de Ahorro</div>
+    <div class="modal" style="max-width: 480px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+        <div class="modal-title" style="margin: 0; font-size: 17px; font-weight: 800;">🎯 Crear Bóveda de Ahorro</div>
         <button type="button" onclick="closeModal('addGoalModal')" aria-label="Cerrar" style="background: #f1f5f9; border: 1px solid #cbd5e1; width: 30px; height: 30px; border-radius: 50%; font-size: 15px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #475569;">✕</button>
       </div>
+
+      <!-- Plantillas Rápidas -->
+      <div class="form-group" style="margin-bottom: 14px;">
+        <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Plantillas Rápidas en 1 Toque</label>
+        <div class="goal-templates-grid">
+          <button type="button" class="goal-tpl-chip active" id="tplEmergencia" onclick="selectGoalTemplate('emergencia')">
+            <span>🛡️</span> Fondo Emergencia
+          </button>
+          <button type="button" class="goal-tpl-chip" id="tplViaje" onclick="selectGoalTemplate('viaje')">
+            <span>✈️</span> Viaje / Vacaciones
+          </button>
+          <button type="button" class="goal-tpl-chip" id="tplTecnologia" onclick="selectGoalTemplate('tecnologia')">
+            <span>💻</span> Laptop / Celular
+          </button>
+          <button type="button" class="goal-tpl-chip" id="tplAuto" onclick="selectGoalTemplate('auto')">
+            <span>🚗</span> Auto / Mantenimiento
+          </button>
+          <button type="button" class="goal-tpl-chip" id="tplEducacion" onclick="selectGoalTemplate('educacion')">
+            <span>🎓</span> Educación / Curso
+          </button>
+          <button type="button" class="goal-tpl-chip" id="tplLibre" onclick="selectGoalTemplate('libre')">
+            <span>✨</span> Personalizada
+          </button>
+        </div>
+      </div>
+
       <form onsubmit="handleAddGoal(event)">
         <div class="form-group">
           <label>Nombre de la Meta</label>
-          <input type="text" id="goalName" class="form-control" placeholder="Ej: Viaje Cusco..." required>
+          <input type="text" id="goalName" class="form-control" placeholder="Ej: Fondo de Emergencia..." required style="font-size: 16px;">
         </div>
-        <div class="form-group">
-          <label>Monto Objetivo (<span class="app-currency-symbol">S/</span>)</label>
-          <input type="number" id="goalTarget" class="form-control" placeholder="5000" required>
+        <div class="grid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div class="form-group">
+            <label>Monto Objetivo (<span class="app-currency-symbol">S/</span>)</label>
+            <input type="number" id="goalTarget" class="form-control" placeholder="5000" step="any" required style="font-size: 16px; font-weight: 700;">
+          </div>
+          <div class="form-group">
+            <label>Monto Ya Ahorrado (<span class="app-currency-symbol">S/</span>)</label>
+            <input type="number" id="goalCurrent" class="form-control" value="0" step="any" required style="font-size: 16px; font-weight: 700;">
+          </div>
         </div>
-        <div class="form-group">
-          <label>Monto Inicial Ahorrado (<span class="app-currency-symbol">S/</span>)</label>
-          <input type="number" id="goalCurrent" class="form-control" value="0" required>
+        <div class="grid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div class="form-group">
+            <label>Aporte Mensual (<span class="app-currency-symbol">S/</span>)</label>
+            <input type="number" id="goalMonthly" class="form-control" placeholder="300" step="any" required style="font-size: 16px; font-weight: 700;">
+          </div>
+          <div class="form-group">
+            <label>Ícono</label>
+            <select id="goalIcon" class="form-control" style="font-size: 16px;">
+              <option value="🛡️">🛡️ Fondo de Emergencia</option>
+              <option value="✈️">✈️ Viajes / Cumpleaños</option>
+              <option value="💻">💻 Tecnología / Trabajo</option>
+              <option value="🚗">🚗 Auto / Mantenimiento</option>
+              <option value="🎓">🎓 Educación / Cursos</option>
+              <option value="🏠">🏠 Vivienda / Hogar</option>
+              <option value="💳">💳 Liquidar Deuda</option>
+              <option value="🎯">🎯 Objetivo Libre</option>
+            </select>
+          </div>
         </div>
-        <div class="form-group">
-          <label>Aporte Mensual Programado (<span class="app-currency-symbol">S/</span>)</label>
-          <input type="number" id="goalMonthly" class="form-control" placeholder="300" required>
-        </div>
-        <div class="form-group">
-          <label>Ícono</label>
-          <select id="goalIcon" class="form-control">
-            <option value="🛡️">🛡️ Protección / Emergencia</option>
-            <option value="✈️">✈️ Viajes / Cumpleaños</option>
-            <option value="💳">💳 Liquidación de Deudas</option>
-            <option value="🏠">🏠 Vivienda / Muebles</option>
-            <option value="🚗">🚗 Vehículo</option>
-            <option value="🎓">🎓 Educación</option>
-          </select>
-        </div>
-        <div class="modal-actions">
+        <div class="modal-actions" style="margin-top: 18px;">
           <button type="button" class="btn btn-secondary" onclick="closeModal('addGoalModal')">Cancelar [ESC]</button>
-          <button type="submit" class="btn btn-primary">Crear Meta</button>
+          <button type="submit" class="btn btn-primary" style="font-weight: 800;">Crear Bóveda ✨</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- MODAL: DEPOSIT TO GOAL -->
+  <!-- MODAL: DEPOSIT TO GOAL (APORTAR DINERO) -->
   <div class="modal-backdrop" id="depositGoalModal" onclick="handleBackdropClick(event, 'depositGoalModal')">
-    <div class="modal">
+    <div class="modal" style="max-width: 440px;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-        <div class="modal-title" style="margin: 0;">💰 Agregar Aporte a Meta</div>
+        <div class="modal-title" style="margin: 0; font-size: 16px; font-weight: 800;">💰 Aportar a Meta de Ahorro</div>
         <button type="button" onclick="closeModal('depositGoalModal')" aria-label="Cerrar" style="background: #f1f5f9; border: 1px solid #cbd5e1; width: 30px; height: 30px; border-radius: 50%; font-size: 15px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #475569;">✕</button>
       </div>
       <form onsubmit="handleDepositGoal(event)">
         <input type="hidden" id="depositGoalId">
+        
+        <div id="depositGoalTargetInfo" class="deposit-goal-info-card">
+          <!-- Relleno dinámico -->
+        </div>
+
+        <div class="form-group" style="margin-bottom: 10px;">
+          <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Montos Rápidos en 1 Toque</label>
+          <div class="quick-deposit-pills">
+            <button type="button" class="btn-quick-amt" onclick="setDepositQuickAmount(10)">+ S/ 10</button>
+            <button type="button" class="btn-quick-amt" onclick="setDepositQuickAmount(20)">+ S/ 20</button>
+            <button type="button" class="btn-quick-amt" onclick="setDepositQuickAmount(50)">+ S/ 50</button>
+            <button type="button" class="btn-quick-amt" onclick="setDepositQuickAmount(100)">+ S/ 100</button>
+            <button type="button" class="btn-quick-amt" onclick="setDepositQuickAmount(250)">+ S/ 250</button>
+          </div>
+        </div>
+
         <div class="form-group">
           <label>Monto a Depositar (<span class="app-currency-symbol">S/</span>)</label>
-          <input type="number" id="depositAmount" class="form-control" placeholder="100" required>
+          <input type="number" id="depositAmount" class="form-control" placeholder="100" step="any" required style="font-size: 18px; font-weight: 800;">
         </div>
+
+        <div class="form-group">
+          <label>Nota u Origen (Opcional)</label>
+          <input type="text" id="depositNote" class="form-control" placeholder="Ej: Ahorro quincena BCP, vuelto del súper..." style="font-size: 16px;">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer; background: rgba(16, 185, 129, 0.08); padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.2);">
+            <input type="checkbox" id="depositDeductFromBudget" checked style="margin-top: 3px; width: 18px; height: 18px; accent-color: var(--primary);">
+            <span style="font-size: 12px; line-height: 1.4; color: var(--text-main);">
+              <strong>🛡️ Blindar en mis movimientos de este mes</strong><br>
+              <span style="color: var(--text-muted); font-size: 11px;">Registra el aporte en tus movimientos como gasto pagado para que tu <em>Gasto Diario Seguro</em> lo descuente y no te lo gastes.</span>
+            </span>
+          </label>
+        </div>
+
         <div class="modal-actions">
           <button type="button" class="btn btn-secondary" onclick="closeModal('depositGoalModal')">Cancelar [ESC]</button>
-          <button type="submit" class="btn btn-primary">Sumar Ahorro</button>
+          <button type="submit" class="btn btn-primary" style="font-weight: 800;">Sumar al Ahorro ✨</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: WITHDRAW FROM GOAL (RETIRAR / USAR DINERO) -->
+  <div class="modal-backdrop" id="withdrawGoalModal" onclick="handleBackdropClick(event, 'withdrawGoalModal')">
+    <div class="modal" style="max-width: 440px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <div class="modal-title" style="margin: 0; font-size: 16px; font-weight: 800;">💸 Retirar / Usar Dinero de Bóveda</div>
+        <button type="button" onclick="closeModal('withdrawGoalModal')" aria-label="Cerrar" style="background: #f1f5f9; border: 1px solid #cbd5e1; width: 30px; height: 30px; border-radius: 50%; font-size: 15px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #475569;">✕</button>
+      </div>
+      <form onsubmit="handleWithdrawGoal(event)">
+        <input type="hidden" id="withdrawGoalId">
+        
+        <div id="withdrawGoalTargetInfo" class="withdraw-goal-info-card">
+          <!-- Relleno dinámico -->
+        </div>
+
+        <div class="form-group">
+          <label>Monto a Retirar (<span class="app-currency-symbol">S/</span>)</label>
+          <input type="number" id="withdrawAmount" class="form-control" placeholder="100" step="any" required style="font-size: 18px; font-weight: 800;">
+        </div>
+
+        <div class="form-group">
+          <label>Motivo del Retiro / Destino</label>
+          <input type="text" id="withdrawNote" class="form-control" placeholder="Ej: Pago de hotel de viaje, emergencia..." required style="font-size: 16px;">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer; background: rgba(59, 130, 246, 0.08); padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.2);">
+            <input type="checkbox" id="withdrawCreditToIncomes" checked style="margin-top: 3px; width: 18px; height: 18px; accent-color: #2563eb;">
+            <span style="font-size: 12px; line-height: 1.4; color: var(--text-main);">
+              <strong>📥 Reintegrar a mi saldo disponible de este mes</strong><br>
+              <span style="color: var(--text-muted); font-size: 11px;">Crea un ingreso en el mes actual para que tu saldo en banco aumente y cubra este gasto.</span>
+            </span>
+          </label>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('withdrawGoalModal')">Cancelar [ESC]</button>
+          <button type="submit" class="btn" style="background: #e11d48; color: white; font-weight: 800;">Confirmar Retiro</button>
         </div>
       </form>
     </div>

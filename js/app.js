@@ -5365,11 +5365,12 @@
       }
 
       // Termómetro Fondo Emergencia (Opción F)
-      const emFund = appState.savingsGoals.find(g => g.name.includes('Emergencia'));
+      const isNewSavingsHero = !!document.getElementById('savingsOverviewCard');
+      const emFund = appState.savingsGoals ? appState.savingsGoals.find(g => g.name.includes('Emergencia')) : null;
       const emAmount = emFund ? emFund.current : 0;
       
       const elEmergency = document.getElementById('metricEmergencyFund');
-      if (elEmergency) {
+      if (elEmergency && !isNewSavingsHero) {
         elEmergency.textContent = sym + ' ' + emAmount.toLocaleString(loc, {minimumFractionDigits: 2});
         
         let emProgress = document.getElementById('emergencyProgress');
@@ -6762,88 +6763,306 @@
     function renderChecklist() { /* disabled */ }
     function toggleChecklist(id) { /* disabled */ }
 
-    /* ====== 1. METAS DE AHORRO CON PROYECCIÓN INTELIGENTE ====== */
+    /* ====== 1. METAS DE AHORRO & BÓVEDAS BLINDADAS (APPLE SAVINGS ENGINE v78.3) ====== */
+    let goalsActiveFilter = 'all'; // 'all' | 'active' | 'completed'
+
+    const GOAL_TEMPLATES = {
+      emergencia: {
+        name: 'Fondo de Tranquilidad (Emergencias)',
+        target: 5000,
+        monthly: 300,
+        icon: '🛡️'
+      },
+      viaje: {
+        name: 'Vacaciones & Viaje Soñado',
+        target: 3500,
+        monthly: 250,
+        icon: '✈️'
+      },
+      tecnologia: {
+        name: 'Laptop / Celular Nuevo',
+        target: 4000,
+        monthly: 350,
+        icon: '💻'
+      },
+      auto: {
+        name: 'Mantenimiento / Enganche Auto',
+        target: 2500,
+        monthly: 200,
+        icon: '🚗'
+      },
+      educacion: {
+        name: 'Educación / Curso / Certificación',
+        target: 1800,
+        monthly: 200,
+        icon: '🎓'
+      },
+      libre: {
+        name: 'Mi Objetivo Personal',
+        target: 2000,
+        monthly: 200,
+        icon: '🎯'
+      }
+    };
+
+    function selectGoalTemplate(tplKey) {
+      const tpl = GOAL_TEMPLATES[tplKey] || GOAL_TEMPLATES.libre;
+      const nameInput = document.getElementById('goalName');
+      const targetInput = document.getElementById('goalTarget');
+      const monthlyInput = document.getElementById('goalMonthly');
+      const iconSelect = document.getElementById('goalIcon');
+
+      if (nameInput) nameInput.value = tpl.name;
+      if (targetInput) targetInput.value = tpl.target;
+      if (monthlyInput) monthlyInput.value = tpl.monthly;
+      if (iconSelect) iconSelect.value = tpl.icon;
+
+      // Actualizar estilo visual activo de los chips
+      document.querySelectorAll('.goal-tpl-chip').forEach(btn => {
+        btn.classList.toggle('active', btn.id === 'tpl' + tplKey.charAt(0).toUpperCase() + tplKey.slice(1));
+      });
+    }
+    window.selectGoalTemplate = selectGoalTemplate;
+
+    function setGoalsFilter(filter) {
+      goalsActiveFilter = filter;
+      const chipAll = document.getElementById('chipGoalFilterAll');
+      const chipActive = document.getElementById('chipGoalFilterActive');
+      const chipComp = document.getElementById('chipGoalFilterCompleted');
+
+      if (chipAll) chipAll.classList.toggle('active', filter === 'all');
+      if (chipActive) chipActive.classList.toggle('active', filter === 'active');
+      if (chipComp) chipComp.classList.toggle('active', filter === 'completed');
+
+      renderGoals();
+    }
+    window.setGoalsFilter = setGoalsFilter;
+
+    function setDepositQuickAmount(amount) {
+      const input = document.getElementById('depositAmount');
+      if (input) {
+        input.value = amount;
+        input.focus();
+      }
+    }
+    window.setDepositQuickAmount = setDepositQuickAmount;
+
+    function toggleGoalHistory(goalId) {
+      const el = document.getElementById('goalHistory_' + goalId);
+      if (el) {
+        el.style.display = (el.style.display === 'none' || !el.style.display) ? 'block' : 'none';
+      }
+    }
+    window.toggleGoalHistory = toggleGoalHistory;
+
     function renderGoals() {
       const container = document.getElementById('goalsContainer');
-      if (!container) return;
-      const goals = appState.savingsGoals || [];
+      const rawGoals = appState.savingsGoals || [];
+      const sym = getCurrencySymbol();
+      const loc = getActiveCurrency().locale;
+      const now = new Date();
+      const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
-      if (goals.length === 0) {
+      // Cálculos agregados consolidados
+      const totalSaved = roundCurrency(rawGoals.reduce((sum, g) => sum + (g.current || 0), 0));
+      const totalTarget = roundCurrency(rawGoals.reduce((sum, g) => sum + (g.target || 0), 0));
+      const totalMonthlyPace = roundCurrency(rawGoals.reduce((sum, g) => sum + (g.monthlyContribution || 0), 0));
+      const globalPct = totalTarget > 0 ? Math.min(100, Math.round((totalSaved / totalTarget) * 100)) : 0;
+
+      const activeCount = rawGoals.filter(g => (g.current || 0) < (g.target || 1)).length;
+      const completedCount = rawGoals.filter(g => (g.current || 0) >= (g.target || 1)).length;
+
+      // Calcular aportes de ahorro registrados en este mes en transacciones
+      const currentMonthTxs = appState.transactions[appState.currentMonth] || [];
+      const monthDeposited = roundCurrency(
+        currentMonthTxs
+          .filter(t => (t.category === 'Ahorro' || (t.name && t.name.toLowerCase().includes('aporte'))) && t.status === 'Pagado')
+          .reduce((sum, t) => sum + (t.amount || 0), 0)
+      );
+
+      // Actualizar contadores de los filtros
+      const cAll = document.getElementById('countGoalAll');
+      const cAct = document.getElementById('countGoalActive');
+      const cCmp = document.getElementById('countGoalCompleted');
+      if (cAll) cAll.textContent = rawGoals.length;
+      if (cAct) cAct.textContent = activeCount;
+      if (cCmp) cCmp.textContent = completedCount;
+
+      // Actualizar Hero Card Consolidada
+      const elHeroAmount = document.getElementById('metricEmergencyFund');
+      if (elHeroAmount) {
+        elHeroAmount.textContent = sym + ' ' + totalSaved.toLocaleString(loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      }
+
+      const elGlobalPct = document.getElementById('savingsGlobalPctText');
+      if (elGlobalPct) elGlobalPct.textContent = `Progreso Global: ${globalPct}%`;
+
+      const elGlobalTarget = document.getElementById('savingsGlobalTargetText');
+      if (elGlobalTarget) elGlobalTarget.textContent = `Meta Total: ${sym} ${totalTarget.toLocaleString(loc, { minimumFractionDigits: 0 })}`;
+
+      const elGlobalFill = document.getElementById('savingsGlobalProgressFill');
+      if (elGlobalFill) elGlobalFill.style.width = globalPct + '%';
+
+      const elKpiActive = document.getElementById('kpiActiveGoalsCount');
+      if (elKpiActive) elKpiActive.textContent = activeCount;
+
+      const elKpiMonthDep = document.getElementById('kpiMonthDeposited');
+      if (elKpiMonthDep) elKpiMonthDep.textContent = sym + ' ' + monthDeposited.toLocaleString(loc, { minimumFractionDigits: 2 });
+
+      const elKpiMonthlyPace = document.getElementById('kpiMonthlyPace');
+      if (elKpiMonthlyPace) elKpiMonthlyPace.textContent = sym + ' ' + totalMonthlyPace.toLocaleString(loc, { minimumFractionDigits: 0 }) + ' / mes';
+
+      // Badge de estado del ciclo
+      const elCycleText = document.getElementById('savingsCycleStatusText');
+      const elCycleDot = document.querySelector('.savings-status-dot');
+      if (elCycleText) {
+        if (monthDeposited > 0) {
+          elCycleText.textContent = `Al día este mes (${sym} ${monthDeposited.toFixed(0)} aportados)`;
+          if (elCycleDot) elCycleDot.className = 'savings-status-dot';
+        } else {
+          elCycleText.textContent = 'Pendiente cuota en este ciclo';
+          if (elCycleDot) elCycleDot.className = 'savings-status-dot pending';
+        }
+      }
+
+      if (!container) return;
+
+      // Filtrar metas a renderizar
+      let filteredGoals = [...rawGoals];
+      if (goalsActiveFilter === 'active') {
+        filteredGoals = filteredGoals.filter(g => (g.current || 0) < (g.target || 1));
+      } else if (goalsActiveFilter === 'completed') {
+        filteredGoals = filteredGoals.filter(g => (g.current || 0) >= (g.target || 1));
+      }
+
+      if (filteredGoals.length === 0) {
+        const emptyMsg = rawGoals.length === 0
+          ? 'Define objetivos como Fondo de Emergencia, Vacaciones o Enganche de Auto.'
+          : (goalsActiveFilter === 'active' ? '¡No tienes metas pendientes! Todas tus metas están al 100%.' : 'Aún no has completado ninguna meta al 100%.');
+
         container.innerHTML = `
-          <div style="text-align: center; color: var(--text-muted); padding: 36px 20px; grid-column: 1 / -1; background: var(--card-bg); border-radius: 20px; border: 1px dashed var(--border);">
-            <div style="font-size: 32px; margin-bottom: 8px;">🎯</div>
-            <div style="font-size: 14px; font-weight: 800; color: var(--text-main);">Aún no tienes metas creadas</div>
-            <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px; margin-bottom: 14px;">Define objetivos como Fondo de Emergencia, Vacaciones o Enganche de Auto.</div>
-            <button class="btn btn-primary btn-sm" onclick="openAddGoalModal()">+ Crear Primera Meta</button>
+          <div style="text-align: center; color: var(--text-muted); padding: 40px 20px; grid-column: 1 / -1; background: var(--card-bg); border-radius: 22px; border: 1px dashed var(--border);">
+            <div style="font-size: 34px; margin-bottom: 8px;">🎯</div>
+            <div style="font-size: 15px; font-weight: 800; color: var(--text-main);">
+              ${rawGoals.length === 0 ? 'Aún no tienes bóvedas de ahorro' : 'Sin metas en esta vista'}
+            </div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px; margin-bottom: 16px;">
+              ${emptyMsg}
+            </div>
+            <button type="button" class="btn btn-primary btn-sm" onclick="handleOpenAddGoalClick()" style="border-radius: 12px; font-weight: 800; padding: 8px 18px;">
+              + Crear Primera Bóveda
+            </button>
           </div>
         `;
         return;
       }
 
-      const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-      const now = new Date();
-
-      container.innerHTML = goals.map(g => {
-        const current = g.current || 0;
-        const target = g.target || 1;
+      container.innerHTML = filteredGoals.map(g => {
+        const current = roundCurrency(g.current || 0);
+        const target = roundCurrency(g.target || 1);
+        const isCompleted = current >= target;
         const pct = Math.min(100, Math.round((current / target) * 100));
-        const remaining = Math.max(0, target - current);
-        const monthly = g.monthlyContribution || 250;
-        const monthsNeeded = remaining > 0 ? Math.ceil(remaining / monthly) : 0;
+        const remaining = roundCurrency(Math.max(0, target - current));
+        const monthly = roundCurrency(g.monthlyContribution || 200);
+        const monthsNeeded = remaining > 0 && monthly > 0 ? Math.ceil(remaining / monthly) : 0;
+        const quincenasNeeded = monthsNeeded * 2;
 
         const targetDate = new Date(now.getFullYear(), now.getMonth() + monthsNeeded, 1);
         const targetDateStr = `${monthNames[targetDate.getMonth()]} ${targetDate.getFullYear()}`;
 
         let aiText = '';
-        if (remaining <= 0) {
-          aiText = '🎉 <strong>¡Meta Cumplida!</strong> Has alcanzado el 100% de tu objetivo de ahorro.';
+        if (isCompleted) {
+          aiText = '🎉 <strong>¡Meta Cumplida!</strong> Has alcanzado el 100% del capital de esta bóveda. ¡Felicitaciones!';
         } else {
-          aiText = `A tu ritmo de <strong>S/ ${monthly.toFixed(0)}/mes</strong>, alcanzarás tu meta en <strong>${monthsNeeded} meses</strong> (${targetDateStr}).`;
+          aiText = `A tu ritmo de <strong>${sym} ${monthly.toFixed(0)}/mes</strong>, la cumples en <strong>${monthsNeeded} meses</strong> (${quincenasNeeded} quincenas — ${targetDateStr}).`;
           if (monthsNeeded > 2) {
             const fasterMonths = Math.ceil(remaining / (monthly + 100));
             const diff = monthsNeeded - fasterMonths;
             if (diff > 0) {
-              aiText += `<br><span style="color: var(--primary); font-weight: 700;">💡 Con S/ 100 más al mes llegarías ${diff} mes(es) antes.</span>`;
+              aiText += `<br><span style="color: #059669; font-weight: 700;">💡 Con S/ 100 más al mes llegarías ${diff} mes(es) antes.</span>`;
             }
           }
         }
 
+        const historyItems = (g.history || []).slice(0, 5);
+        const historyHtml = historyItems.length > 0
+          ? historyItems.map(h => `
+              <div class="goal-history-item ${h.type || 'deposit'}">
+                <div>
+                  <strong>${h.type === 'withdraw' ? '💸 Retiro' : '💰 Aporte'}:</strong> ${h.note || 'Movimiento'}
+                  <div style="font-size: 10px; color: var(--text-muted);">${h.date || ''}</div>
+                </div>
+                <div class="history-amt">${h.type === 'withdraw' ? '-' : '+'}${sym} ${(h.amount || 0).toLocaleString(loc, { minimumFractionDigits: 2 })}</div>
+              </div>
+            `).join('')
+          : '<div class="goal-history-item" style="color: var(--text-muted); justify-content: center; font-size: 11px;">Sin movimientos registrados aún</div>';
+
         return `
-          <div class="luxury-goal-card">
+          <div class="luxury-goal-card ${isCompleted ? 'completed' : ''}" id="card_goal_${g.id}">
             <div class="goal-top-row">
               <div class="goal-icon-title">
                 <div class="goal-emoji-bubble">${g.icon || '🎯'}</div>
                 <div>
                   <div class="goal-name-text">${g.name}</div>
-                  <div class="goal-target-date">🗓️ Estimado: ${targetDateStr}</div>
+                  <div class="goal-status-badge ${isCompleted ? 'completed' : 'active'}">
+                    ${isCompleted ? '🎉 Cumplida 100%' : '🟢 En Curso'}
+                  </div>
                 </div>
               </div>
-              <button class="btn-pill danger" onclick="deleteGoal('${g.id}')" title="Eliminar meta" style="opacity: 0.7;">🗑️</button>
+              <button type="button" class="btn-pill danger" onclick="deleteGoal('${g.id}')" title="Eliminar bóveda" style="opacity: 0.65; padding: 6px 10px;">🗑️</button>
             </div>
 
             <div class="goal-amounts-row">
-              <span class="goal-saved-val">${getCurrencySymbol()} ${current.toLocaleString(getActiveCurrency().locale, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
-              <span class="goal-target-val">Meta: ${getCurrencySymbol()} ${target.toLocaleString(getActiveCurrency().locale, { minimumFractionDigits: 0 })}</span>
+              <span class="goal-saved-val">${sym} ${current.toLocaleString(loc, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
+              <span class="goal-target-val">Meta: ${sym} ${target.toLocaleString(loc, { minimumFractionDigits: 0 })}</span>
             </div>
 
             <div class="goal-progress-track">
               <div class="goal-progress-fill" style="width: ${pct}%;"></div>
             </div>
 
-            <div class="flex-between" style="font-size: 11px; color: var(--text-muted); font-weight: 700;">
+            <div class="goal-subinfo-row">
               <span>Progreso: ${pct}%</span>
-              <span>Faltan: ${getCurrencySymbol()} ${remaining.toLocaleString(getActiveCurrency().locale, { minimumFractionDigits: 0 })}</span>
+              <span>${isCompleted ? '¡Completada!' : 'Faltan: ' + sym + ' ' + remaining.toLocaleString(loc, { minimumFractionDigits: 0 })}</span>
             </div>
 
             <div class="ai-projection-badge">
-              <span class="ai-tag">IA</span>
+              <span class="ai-tag">PROYECCIÓN</span>
               <div>${aiText}</div>
             </div>
 
+            <!-- Micro-Aportes Rápidos en 1 Toque -->
+            ${!isCompleted ? `
+              <div class="goal-micro-pills-row">
+                <span class="goal-micro-label">Aporte rápido:</span>
+                <button type="button" class="btn-micro-pill" onclick="quickDepositGoal('${g.id}', 10)">+ ${sym} 10</button>
+                <button type="button" class="btn-micro-pill" onclick="quickDepositGoal('${g.id}', 20)">+ ${sym} 20</button>
+                <button type="button" class="btn-micro-pill" onclick="quickDepositGoal('${g.id}', 50)">+ ${sym} 50</button>
+              </div>
+            ` : ''}
+
+            <!-- Acciones de Aportar, Retirar e Historial -->
             <div class="goal-actions-row">
-              <button class="btn btn-primary btn-sm" onclick="openDepositGoalModal('${g.id}')" style="flex: 1; border-radius: 12px; font-weight: 800;">
-                + Aportar Dinero
+              <button type="button" class="btn-goal-deposit" onclick="openDepositGoalModal('${g.id}')">
+                <span>💰</span> Aportar
               </button>
+              <button type="button" class="btn-goal-withdraw" onclick="openWithdrawGoalModal('${g.id}')" ${current <= 0 ? 'disabled style="opacity:0.4; pointer-events:none;"' : ''}>
+                <span>💸</span> Retirar
+              </button>
+              <button type="button" class="btn-goal-history-toggle" onclick="toggleGoalHistory('${g.id}')" title="Ver historial de movimientos">
+                📜
+              </button>
+            </div>
+
+            <!-- Cajón Desplegable de Historial -->
+            <div class="goal-history-drawer" id="goalHistory_${g.id}" style="display: none;">
+              <div class="goal-history-header">
+                <span>Últimos Movimientos</span>
+                <span>${(g.history || []).length} registros</span>
+              </div>
+              <div class="goal-history-list">
+                ${historyHtml}
+              </div>
             </div>
           </div>
         `;
@@ -6859,7 +7078,8 @@
       const cur = document.getElementById('goalCurrent');
       if (cur) cur.value = '0';
       const m = document.getElementById('goalMonthly');
-      if (m) m.value = '250';
+      if (m) m.value = '300';
+      selectGoalTemplate('emergencia');
       openModalById('addGoalModal');
     }
 
@@ -6880,38 +7100,121 @@
       const monthly = parseFloat(document.getElementById('goalMonthly').value) || 200;
       const icon = document.getElementById('goalIcon').value;
 
-      appState.savingsGoals.push({
+      if (!name || isNaN(target) || target <= 0) {
+        showToast('🚨 Por favor ingresa un nombre y monto objetivo válidos.', 'error');
+        return;
+      }
+
+      if (!appState.savingsGoals) appState.savingsGoals = [];
+
+      const newGoal = {
         id: 'g_' + Date.now(),
         name: name,
-        target: target,
-        current: current,
-        monthlyContribution: monthly,
-        icon: icon
-      });
+        target: roundCurrency(target),
+        current: roundCurrency(current),
+        monthlyContribution: roundCurrency(monthly),
+        icon: icon,
+        history: current > 0 ? [
+          {
+            id: 'gh_' + Date.now(),
+            date: new Date().toLocaleDateString('es-PE'),
+            type: 'deposit',
+            amount: roundCurrency(current),
+            note: 'Saldo inicial al crear bóveda'
+          }
+        ] : []
+      };
 
-      addAuditLog('🎯 Nueva Meta', `Creada: ${name}`);
+      appState.savingsGoals.push(newGoal);
+
+      addAuditLog('🎯 Nueva Bóveda', `Creada: ${name} (Meta: S/ ${target})`);
       saveState();
       closeModal('addGoalModal');
-      renderGoals();
+      renderAll();
       switchTab('metas');
-      showToast('🎯 Meta de ahorro creada con éxito', 'success');
+      showToast('🎯 Bóveda de ahorro creada con éxito', 'success');
     }
 
     async function deleteGoal(id) {
-      const g = appState.savingsGoals.find(item => item.id === id);
-      if (!await uiConfirm('¿Eliminar esta meta de ahorro?')) return;
-      if (g) addAuditLog('🗑️ Eliminar Meta', `Eliminada: ${g.name}`);
+      const g = (appState.savingsGoals || []).find(item => item.id === id);
+      if (!g) return;
+      if (!await uiConfirm(`¿Eliminar la bóveda "${g.name}"?\n(El saldo acumulado actual de S/ ${g.current.toFixed(2)} dejará de contabilizarse en metas).`)) return;
+      addAuditLog('🗑️ Eliminar Bóveda', `Eliminada: ${g.name}`);
       appState.savingsGoals = appState.savingsGoals.filter(item => item.id !== id);
       saveState();
-      renderGoals();
-      showToast('🗑️ Meta eliminada', 'info');
+      renderAll();
+      showToast('🗑️ Bóveda eliminada', 'info');
     }
 
+    // Micro-Aporte Rápido de 1 Toque
+    async function quickDepositGoal(id, amount) {
+      const g = (appState.savingsGoals || []).find(item => item.id === id);
+      if (!g || !amount || amount <= 0) return;
+
+      g.current = roundCurrency((g.current || 0) + amount);
+      if (!g.history) g.history = [];
+
+      const todayStr = new Date().toLocaleDateString('es-PE');
+      g.history.unshift({
+        id: 'gh_' + Date.now(),
+        date: todayStr,
+        type: 'deposit',
+        amount: roundCurrency(amount),
+        note: 'Micro-aporte rápido'
+      });
+
+      // Blindar en movimientos del mes para descontarlo del gasto diario
+      const nowDay = new Date().getDate();
+      if (!appState.transactions[appState.currentMonth]) appState.transactions[appState.currentMonth] = [];
+      appState.transactions[appState.currentMonth].push({
+        id: 'tx_save_' + Date.now(),
+        name: `Aporte: ${g.name}`,
+        amount: roundCurrency(amount),
+        category: 'Ahorro',
+        status: 'Pagado',
+        isInstallment: false,
+        installmentsTotal: 1,
+        installmentsCurrent: 1,
+        dueDate: String(nowDay),
+        note: 'Aporte rápido blindado'
+      });
+
+      addAuditLog('💰 Micro-Aporte Bóveda', `+S/ ${amount.toFixed(2)} a ${g.name}`);
+      saveState();
+      renderAll();
+      showToast(`✨ S/ ${amount} blindados en tu meta "${g.name}"`, 'success');
+    }
+    window.quickDepositGoal = quickDepositGoal;
+
     function openDepositGoalModal(id) {
-      const g = appState.savingsGoals.find(item => item.id === id);
+      const g = (appState.savingsGoals || []).find(item => item.id === id);
       if (!g) return;
+      const sym = getCurrencySymbol();
+      const loc = getActiveCurrency().locale;
+
+      const targetInfo = document.getElementById('depositGoalTargetInfo');
+      if (targetInfo) {
+        targetInfo.innerHTML = `
+          <div>
+            <div style="font-size: 14.5px; font-weight: 800; color: var(--text-main);">${g.icon || '🎯'} ${g.name}</div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
+              Ahorrado: <strong>${sym} ${(g.current || 0).toLocaleString(loc, { minimumFractionDigits: 2 })}</strong> / Meta: ${sym} ${(g.target || 0).toLocaleString(loc, { minimumFractionDigits: 0 })}
+            </div>
+          </div>
+          <span style="font-size: 13px; font-weight: 800; color: #059669; background: rgba(16, 185, 129, 0.12); padding: 4px 10px; border-radius: 999px;">
+            ${Math.min(100, Math.round(((g.current || 0) / (g.target || 1)) * 100))}%
+          </span>
+        `;
+      }
+
       document.getElementById('depositGoalId').value = id;
-      document.getElementById('depositAmount').value = '';
+      const depositAmtInput = document.getElementById('depositAmount');
+      if (depositAmtInput) depositAmtInput.value = '';
+      const depositNoteInput = document.getElementById('depositNote');
+      if (depositNoteInput) depositNoteInput.value = '';
+      const deductCheckbox = document.getElementById('depositDeductFromBudget');
+      if (deductCheckbox) deductCheckbox.checked = true;
+
       openModalById('depositGoalModal');
     }
 
@@ -6919,18 +7222,151 @@
       e.preventDefault();
       const id = document.getElementById('depositGoalId').value;
       const amount = parseFloat(document.getElementById('depositAmount').value);
-      if (!amount || amount <= 0) return;
+      const note = (document.getElementById('depositNote')?.value || '').trim();
+      const deductFromBudget = document.getElementById('depositDeductFromBudget')?.checked;
 
-      const g = appState.savingsGoals.find(item => item.id === id);
+      if (!amount || amount <= 0) {
+        showToast('🚨 Ingresa un monto de aporte válido.', 'error');
+        return;
+      }
+
+      const g = (appState.savingsGoals || []).find(item => item.id === id);
       if (g) {
-        g.current += amount;
-        addAuditLog('💰 Aporte Meta', `S/ ${amount.toFixed(2)} a ${g.name}`);
+        g.current = roundCurrency((g.current || 0) + amount);
+        if (!g.history) g.history = [];
+
+        const todayStr = new Date().toLocaleDateString('es-PE');
+        g.history.unshift({
+          id: 'gh_' + Date.now(),
+          date: todayStr,
+          type: 'deposit',
+          amount: roundCurrency(amount),
+          note: note || 'Aporte a bóveda'
+        });
+
+        // Registrar en transacciones del mes si está marcado
+        if (deductFromBudget) {
+          const nowDay = new Date().getDate();
+          if (!appState.transactions[appState.currentMonth]) appState.transactions[appState.currentMonth] = [];
+          appState.transactions[appState.currentMonth].push({
+            id: 'tx_save_' + Date.now(),
+            name: `Aporte: ${g.name}`,
+            amount: roundCurrency(amount),
+            category: 'Ahorro',
+            status: 'Pagado',
+            isInstallment: false,
+            installmentsTotal: 1,
+            installmentsCurrent: 1,
+            dueDate: String(nowDay),
+            note: note || 'Ahorro programado en meta'
+          });
+        }
+
+        addAuditLog('💰 Aporte Bóveda', `S/ ${amount.toFixed(2)} a ${g.name}`);
         saveState();
+        closeModal('depositGoalModal');
+        renderAll();
         showToast(`💰 S/ ${amount.toFixed(2)} sumados a ${g.name}`, 'success');
       }
-      closeModal('depositGoalModal');
-      renderGoals();
     }
+
+    function openWithdrawGoalModal(id) {
+      const g = (appState.savingsGoals || []).find(item => item.id === id);
+      if (!g) return;
+      const sym = getCurrencySymbol();
+      const loc = getActiveCurrency().locale;
+
+      const targetInfo = document.getElementById('withdrawGoalTargetInfo');
+      if (targetInfo) {
+        targetInfo.innerHTML = `
+          <div>
+            <div style="font-size: 14.5px; font-weight: 800; color: var(--text-main);">${g.icon || '🎯'} ${g.name}</div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
+              Disponible en esta bóveda: <strong style="color: #e11d48;">${sym} ${(g.current || 0).toLocaleString(loc, { minimumFractionDigits: 2 })}</strong>
+            </div>
+          </div>
+        `;
+      }
+
+      document.getElementById('withdrawGoalId').value = id;
+      const withdrawAmtInput = document.getElementById('withdrawAmount');
+      if (withdrawAmtInput) {
+        withdrawAmtInput.value = '';
+        withdrawAmtInput.max = g.current || 0;
+      }
+      const withdrawNoteInput = document.getElementById('withdrawNote');
+      if (withdrawNoteInput) withdrawNoteInput.value = '';
+      const creditCheckbox = document.getElementById('withdrawCreditToIncomes');
+      if (creditCheckbox) creditCheckbox.checked = true;
+
+      openModalById('withdrawGoalModal');
+    }
+
+    function handleWithdrawGoal(e) {
+      e.preventDefault();
+      const id = document.getElementById('withdrawGoalId').value;
+      const amount = parseFloat(document.getElementById('withdrawAmount').value);
+      const note = (document.getElementById('withdrawNote')?.value || '').trim();
+      const creditToIncomes = document.getElementById('withdrawCreditToIncomes')?.checked;
+
+      if (!amount || amount <= 0) {
+        showToast('🚨 Ingresa un monto a retirar válido.', 'error');
+        return;
+      }
+
+      const g = (appState.savingsGoals || []).find(item => item.id === id);
+      if (!g) return;
+
+      if (amount > (g.current || 0)) {
+        showToast(`🚨 El monto excede el saldo de la bóveda (S/ ${(g.current || 0).toFixed(2)}).`, 'error');
+        return;
+      }
+
+      g.current = roundCurrency(Math.max(0, (g.current || 0) - amount));
+      if (!g.history) g.history = [];
+
+      const todayStr = new Date().toLocaleDateString('es-PE');
+      g.history.unshift({
+        id: 'gh_' + Date.now(),
+        date: todayStr,
+        type: 'withdraw',
+        amount: roundCurrency(amount),
+        note: note || 'Retiro de ahorro'
+      });
+
+      // Si desea reintegrar a los ingresos del mes corriente
+      if (creditToIncomes) {
+        const curM = appState.currentMonth;
+        if (!appState.incomes) appState.incomes = {};
+        if (!appState.incomes[curM]) appState.incomes[curM] = [];
+        appState.incomes[curM].push({
+          id: 'inc_withdraw_' + Date.now(),
+          name: `Rescate Bóveda: ${g.name}`,
+          amount: roundCurrency(amount),
+          status: 'Recibido',
+          date: new Date().getDate(),
+          note: note || 'Retiro de bóveda de ahorro'
+        });
+      }
+
+      addAuditLog('💸 Retiro Bóveda', `S/ ${amount.toFixed(2)} de ${g.name}`);
+      saveState();
+      closeModal('withdrawGoalModal');
+      renderAll();
+      showToast(`💸 S/ ${amount.toFixed(2)} retirados de ${g.name}`, 'info');
+    }
+
+    window.renderGoals = renderGoals;
+    window.openAddGoalModal = openAddGoalModal;
+    window.handleOpenAddGoalClick = handleOpenAddGoalClick;
+    window.handleAddGoal = handleAddGoal;
+    window.deleteGoal = deleteGoal;
+    window.openDepositGoalModal = openDepositGoalModal;
+    window.handleDepositGoal = handleDepositGoal;
+    window.openWithdrawGoalModal = openWithdrawGoalModal;
+    window.handleWithdrawGoal = handleWithdrawGoal;
+
+    /* ====== 2. RADAR DE GASTOS HORMIGA & FUGAS ====== */
 
     /* ====== 2. RADAR DE GASTOS HORMIGA & FUGAS ====== */
     let radarActiveFilter = 'all'; // 'all', 'services', 'micro'
