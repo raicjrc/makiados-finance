@@ -47,7 +47,7 @@
   <div id="loginModalScreen">
     <div class="login-layout-container">
       
-      <!-- Panel Izquierdo Showcase (Desktop >= 900px) -->
+      <!-- Panel Izquierdo: Liquid Showcase con Carrusel Interactivo -->
       <div class="login-showcase-pane">
         <div class="login-brand-header">
           <img src="logo.png?v=70.1" alt="aliviafin" class="login-brand-logo">
@@ -57,27 +57,79 @@
           </div>
         </div>
 
-        <div class="login-hero-glass-card">
-          <div class="hero-card-header">
-            <span class="hero-card-pill">🛡️ 100% Privado</span>
-            <span class="hero-card-status">AliviaFin</span>
+        <div class="login-carousel-wrapper">
+          <div class="login-carousel-slides">
+            <!-- Slide 0: Límite Hoy -->
+            <div class="login-carousel-slide active" id="loginSlide_0">
+              <span class="login-slide-badge">✨ Control Diario en Tiempo Real</span>
+              <h3 class="login-slide-title">Límite sugerido de hoy</h3>
+              <p class="login-slide-desc">Calculado en tiempo real según los días que faltan para tu próximo sueldo. Gasta con tranquilidad hoy sin quedarte corto a fin de mes.</p>
+              <div class="login-slide-preview-box">
+                <img src="assets/app_screens/real_mobile_inicio.png" alt="Límite Hoy en AliviaFin">
+              </div>
+            </div>
+
+            <!-- Slide 1: Cero Deudas -->
+            <div class="login-carousel-slide" id="loginSlide_1">
+              <span class="login-slide-badge">❄️ Método Bola de Nieve</span>
+              <h3 class="login-slide-title">Adiós a las cuotas de tarjetas</h3>
+              <p class="login-slide-desc">Visualiza el orden exacto para liquidar tus deudas. Mueve el acelerador interactivo y mira cuánto te ahorras en intereses y comisiones.</p>
+              <div class="login-slide-preview-box">
+                <img src="assets/app_screens/real_mobile_deudas.png" alt="Plan Cero Deudas AliviaFin">
+              </div>
+            </div>
+
+            <!-- Slide 2: Regla 50/30/20 -->
+            <div class="login-carousel-slide" id="loginSlide_2">
+              <span class="login-slide-badge">📊 Presupuesto Inteligente</span>
+              <h3 class="login-slide-title">Regla 50 / 30 / 20</h3>
+              <p class="login-slide-desc">Sin hojas de cálculo de 50 columnas. Tu dinero ordenado en 3 grupos simples: lo indispensable (50%), tus gustos (30%) y tu ahorro (20%).</p>
+              <div class="login-slide-preview-box">
+                <img src="assets/app_screens/real_mobile_plan.png" alt="Plan 50/30/20 AliviaFin">
+              </div>
+            </div>
+
+            <!-- Slide 3: Cuentas Claras -->
+            <div class="login-carousel-slide" id="loginSlide_3">
+              <span class="login-slide-badge">🤝 Préstamos & Cobros Personales</span>
+              <h3 class="login-slide-title">Cuentas Claras al Día</h3>
+              <p class="login-slide-desc">¿Le prestaste a un amigo para la pichanga o el almuerzo? Anótalo en 2 segundos. Sabes con exactitud qué te deben y qué debes sin discusiones.</p>
+              <div class="login-slide-preview-box">
+                <img src="assets/app_screens/real_mobile_cuentas_claras.png" alt="Cuentas Claras AliviaFin">
+              </div>
+            </div>
           </div>
 
-          <div class="hero-card-metric">
-            <div class="hero-metric-label">Tu dinero en orden</div>
-            <div class="hero-metric-value">Claridad y paz mental</div>
+          <!-- Controles del Carrusel -->
+          <div class="login-carousel-controls">
+            <div class="login-carousel-dots">
+              <button type="button" class="login-carousel-dot active" id="loginDot_0" onclick="setLoginSlide(0)" title="Límite Hoy"></button>
+              <button type="button" class="login-carousel-dot" id="loginDot_1" onclick="setLoginSlide(1)" title="Cero Deudas"></button>
+              <button type="button" class="login-carousel-dot" id="loginDot_2" onclick="setLoginSlide(2)" title="Plan 50/30/20"></button>
+              <button type="button" class="login-carousel-dot" id="loginDot_3" onclick="setLoginSlide(3)" title="Cuentas Claras"></button>
+            </div>
+            <div class="login-carousel-arrows">
+              <button type="button" class="login-arrow-btn" onclick="prevLoginSlide()" title="Anterior">‹</button>
+              <button type="button" class="login-arrow-btn" onclick="nextLoginSlide()" title="Siguiente">›</button>
+            </div>
           </div>
-          <p style="font-size: 13.5px; color: #64748b; line-height: 1.6; margin-top: 14px;">
-            Diseñado para que sepas exactamente cuánto puedes gastar sin que las cuotas de tus tarjetas te sorprendan a fin de mes.
-          </p>
         </div>
 
         <!-- Footer legal desktop -->
-        <div class="desktop-only-footer">
-          <a href="javascript:void(0)" onclick="openLegalModal('terms')" class="login-unified-legal-link">
-            <span>⚖️ Términos, Privacidad & Reclamaciones</span>
-          </a>
-          <p id="loginFooterVersionDesk" class="login-version-tag">AliviaFin v76.6 · Paz mental para tu dinero</p>
+        <div class="desktop-only-footer" style="display: flex; flex-direction: column; gap: 8px;">
+          <div class="login-trust-pill">
+            <span>🛡️ 100% Privado</span>
+            <span>·</span>
+            <span>Sin conectar bancos</span>
+            <span>·</span>
+            <span>Para personas de a pie</span>
+          </div>
+          <div style="display: flex; align-items: center; justify-content: space-between; font-size: 11.5px; color: #64748b; margin-top: 4px;">
+            <a href="javascript:void(0)" onclick="openLegalModal('terms')" class="login-unified-legal-link">
+              <span>⚖️ Términos, Privacidad & Reclamaciones</span>
+            </a>
+            <p id="loginFooterVersionDesk" class="login-version-tag">AliviaFin v78.2 · Paz mental para tu dinero</p>
+          </div>
         </div>
       </div>
 
@@ -90,6 +142,11 @@
             <img src="logo.png?v=70.1" alt="aliviafin" class="login-mobile-logo">
             <h2 class="login-mobile-title">aliviafin</h2>
             <p class="login-mobile-tagline">Paz mental para tu dinero</p>
+          </div>
+
+          <!-- Pill de Valor en Móvil -->
+          <div class="mobile-benefit-pill" id="mobileBenefitPill">
+            ✨ Límite de hoy: Gasta con tranquilidad sin quedarte corto
           </div>
 
           <!-- Tabs Login / Registro -->

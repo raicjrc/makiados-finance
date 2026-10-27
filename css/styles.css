@@ -2102,155 +2102,238 @@
     }
 
     .login-layout-container {
-      max-width: 980px;
+      max-width: 1060px;
       width: 100%;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 48px;
+      gap: 44px;
       margin: auto;
       position: relative;
       z-index: 2;
       box-sizing: border-box;
     }
 
-    /* Panel Izquierdo Desktop: Marca y Confianza */
+    /* Panel Izquierdo Desktop: Liquid Showcase con Carrusel */
     .login-showcase-pane {
-      flex: 1;
-      max-width: 460px;
+      flex: 1.15;
+      max-width: 530px;
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
-      gap: 24px;
+      gap: 20px;
       color: #0f172a;
     }
 
     .login-brand-header {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 14px;
     }
 
     .login-brand-logo {
-      width: 58px;
-      height: 58px;
-      border-radius: 18px;
-      box-shadow: 0 8px 24px rgba(5, 150, 105, 0.22);
-      border: 1px solid rgba(226, 232, 240, 0.8);
+      width: 52px;
+      height: 52px;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(16, 185, 129, 0.25);
+      border: 1.5px solid rgba(255, 255, 255, 0.9);
       flex-shrink: 0;
     }
 
     .login-brand-title {
-      font-size: 28px;
-      font-weight: 800;
+      font-size: 26px;
+      font-weight: 900;
       color: #0f172a;
-      letter-spacing: -0.5px;
-      margin: 0 0 2px 0;
+      letter-spacing: -0.03em;
+      margin: 0;
       line-height: 1.1;
     }
 
     .login-brand-tagline {
-      font-size: 13.5px;
-      color: #64748b;
-      margin: 0;
-      font-weight: 500;
+      font-size: 13px;
+      color: #059669;
+      margin: 2px 0 0 0;
+      font-weight: 700;
     }
 
-    .login-hero-glass-card {
-      background: rgba(255, 255, 255, 0.9);
+    /* Tarjeta Showcase Liquid con Carrusel */
+    .login-carousel-wrapper {
+      background: rgba(255, 255, 255, 0.84);
       backdrop-filter: blur(28px) saturate(180%);
       -webkit-backdrop-filter: blur(28px) saturate(180%);
       border: 1px solid rgba(226, 232, 240, 0.9);
-      border-radius: 24px;
-      padding: 24px 22px;
-      box-shadow: 0 20px 45px -10px rgba(15, 23, 42, 0.08), 0 0 1px 1px rgba(0, 0, 0, 0.02);
+      border-radius: 26px;
+      padding: 24px;
+      box-shadow: 0 24px 50px -12px rgba(15, 23, 42, 0.08), 0 0 1px 1px rgba(0, 0, 0, 0.02);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .login-carousel-slides {
+      position: relative;
+      min-height: 440px;
+    }
+
+    .login-carousel-slide {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transform: translateY(10px) scale(0.99);
+      pointer-events: none;
+      transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .login-carousel-slide.active {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
       position: relative;
     }
 
-    .hero-card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 18px;
-    }
-
-    .hero-card-pill {
-      font-size: 11px;
-      font-weight: 800;
-      color: #059669;
-      background: #ecfdf5;
-      padding: 4px 10px;
-      border-radius: 20px;
-      border: 1px solid rgba(16, 185, 129, 0.25);
+    .login-slide-badge {
       display: inline-flex;
       align-items: center;
-      gap: 4px;
-    }
-
-    .hero-card-status {
+      gap: 6px;
+      background: #ecfdf5;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #065f46;
       font-size: 11px;
-      color: #64748b;
-      font-weight: 600;
-    }
-
-    .hero-card-metric {
-      margin-bottom: 18px;
-    }
-
-    .hero-metric-label {
-      font-size: 10.5px;
       font-weight: 800;
-      color: #64748b;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
+      padding: 3px 10px;
+      border-radius: 999px;
+      margin-bottom: 8px;
+      width: fit-content;
     }
 
-    .hero-metric-value {
-      font-size: 26px;
+    .login-slide-title {
+      font-size: 21px;
       font-weight: 900;
       color: #0f172a;
-      letter-spacing: -0.5px;
-      margin-top: 3px;
+      letter-spacing: -0.02em;
+      margin: 0 0 6px 0;
+      line-height: 1.25;
     }
 
-    .hero-card-badges {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      border-top: 1px solid rgba(226, 232, 240, 0.8);
-      padding-top: 16px;
+    .login-slide-desc {
+      font-size: 13px;
+      color: #64748b;
+      line-height: 1.55;
+      margin: 0 0 14px 0;
     }
 
-    .hero-badge-item {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      font-size: 12px;
-      line-height: 1.4;
+    .login-slide-preview-box {
+      width: 220px;
+      height: 310px;
+      margin: 8px auto 0 auto;
+      border-radius: 28px;
+      overflow: hidden;
+      background: #0f172a;
+      border: 5px solid #0f172a;
+      box-shadow: 0 18px 40px -10px rgba(15, 23, 42, 0.25);
+      position: relative;
     }
 
-    .hero-badge-icon {
-      font-size: 18px;
-      line-height: 1;
-      flex-shrink: 0;
-      margin-top: 1px;
-    }
-
-    .hero-badge-item strong {
-      color: #0f172a;
-      font-size: 12.5px;
+    .login-slide-preview-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top center;
       display: block;
     }
 
-    .hero-badge-item p {
-      margin: 1px 0 0 0;
-      color: #64748b;
-      font-size: 11px;
+    /* Controles de Carrusel */
+    .login-carousel-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 16px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(226, 232, 240, 0.8);
     }
 
-    /* Panel Derecho: Tarjeta de Acceso */
+    .login-carousel-dots {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .login-carousel-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #cbd5e1;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      transition: all 0.25s ease;
+    }
+
+    .login-carousel-dot.active {
+      width: 24px;
+      background: linear-gradient(135deg, #059669, #10b981);
+      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.35);
+    }
+
+    .login-carousel-arrows {
+      display: flex;
+      gap: 6px;
+    }
+
+    .login-arrow-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 1px solid #e2e8f0;
+      background: #ffffff;
+      color: #475569;
+      font-size: 15px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .login-arrow-btn:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+
+    .login-trust-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11.5px;
+      color: #64748b;
+      font-weight: 600;
+      background: rgba(255, 255, 255, 0.75);
+      padding: 6px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      width: fit-content;
+    }
+
+    /* Mobile Compact Benefit Card */
+    .mobile-benefit-pill {
+      display: none;
+      background: #ecfdf5;
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      border-radius: 14px;
+      padding: 10px 14px;
+      margin-bottom: 16px;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #065f46;
+      text-align: center;
+    }
+
+    /* Panel Derecho: Tarjeta de Acceso Liquid Glass */
     .login-auth-pane {
-      flex: 1;
+      flex: 0.95;
       max-width: 420px;
       width: 100%;
     }
@@ -2396,6 +2479,9 @@
       }
       .login-mobile-brand {
         display: flex;
+      }
+      .mobile-benefit-pill {
+        display: block;
       }
       .mobile-only-footer {
         display: flex;

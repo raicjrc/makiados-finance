@@ -2148,9 +2148,9 @@
               <a href="index.html?mode=register" class="btn btn-primary" style="padding: 11px 22px; font-size: 13.5px; text-decoration: none;">
                 <span>Comenzar Mi Control Gratis →</span>
               </a>
-              <button onclick="openPlanModal('Asesoría Personal')" class="btn btn-ghost" style="padding: 11px 18px; font-size: 13.5px; cursor: pointer;">
+              <a href="https://wa.me/51914688135?text=Hola%20C%C3%A9sar%2C%20tengo%20una%20consulta%20sobre%20AliviaFin%20y%20c%C3%B3mo%20empezar%20mi%20control%20financiero." target="_blank" rel="noopener" class="btn btn-ghost" style="padding: 11px 18px; font-size: 13.5px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
                 <span>💬 Consultar por WhatsApp</span>
-              </button>
+              </a>
             </div>
           </div>
 
@@ -2714,13 +2714,16 @@
 
     // GESTIÓN DE MODAL DE PAGO / SUSCRIPCIÓN CON WHATSAPP
     function openPlanModal(name, price, period) {
-      document.getElementById('planModalTitle').textContent = `Activar ${name}`;
-      document.getElementById('planModalPrice').textContent = `S/ ${price}`;
-      document.getElementById('planModalPeriod').textContent = `/ ${period}`;
+      const planName = name || 'Plan Anual PRO';
+      const planPrice = price || '29.90';
+      const planPeriod = period || 'al año';
+      document.getElementById('planModalTitle').textContent = `Activar ${planName}`;
+      document.getElementById('planModalPrice').textContent = `S/ ${planPrice}`;
+      document.getElementById('planModalPeriod').textContent = `/ ${planPeriod}`;
 
       const waBtn = document.getElementById('btnPlanWhatsApp');
       if (waBtn) {
-        const msg = encodeURIComponent(`Hola César, acabo de transferir mi suscripción a AliviaFin (${name} - S/ ${price} ${period}) por Yape. Envío mi constancia para activar mi cuenta.`);
+        const msg = encodeURIComponent(`Hola César, acabo de transferir mi suscripción a AliviaFin (${planName} - S/ ${planPrice} ${planPeriod}) por Yape. Envío mi constancia para activar mi cuenta.`);
         waBtn.href = `https://wa.me/51914688135?text=${msg}`;
       }
 
@@ -2859,9 +2862,9 @@
           <span>💬 Enviar Constancia por WhatsApp</span>
         </a>
 
-        <!-- Botón registrarse en app -->
-        <a href="index.html?mode=register" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 14px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); margin-top: 8px;">
-          <span>✅ Abrir la App para Registrarme</span>
+        <!-- Botón registrarse o entrar a app -->
+        <a href="index.html?mode=register" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 14px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); margin-top: 8px; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+          <span>✅ Ir a la App (o Crear Cuenta)</span>
         </a>
       </div>
 

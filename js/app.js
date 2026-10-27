@@ -353,6 +353,48 @@
       }
     }
 
+    // Carrusel Liquid Showcase en pantalla de acceso / login
+    let currentLoginSlide = 0;
+    let loginSlideTimer = null;
+    const totalLoginSlides = 4;
+    const mobLoginBenefits = [
+      '✨ Límite de hoy: Gasta con tranquilidad sin quedarte corto',
+      '❄️ Cero Deudas: Liquida tus tarjetas con bola de nieve',
+      '📊 Regla 50/30/20: Tu dinero ordenado en 3 grupos simples',
+      '🤝 Cuentas Claras: Préstamos y cobros sin olvidos ni vergüenza'
+    ];
+
+    function setLoginSlide(index) {
+      currentLoginSlide = index;
+      for (let i = 0; i < totalLoginSlides; i++) {
+        const slide = document.getElementById(`loginSlide_${i}`);
+        const dot = document.getElementById(`loginDot_${i}`);
+        if (slide) slide.classList.toggle('active', i === index);
+        if (dot) dot.classList.toggle('active', i === index);
+      }
+      const mobPill = document.getElementById('mobileBenefitPill');
+      if (mobPill) mobPill.textContent = mobLoginBenefits[index];
+    }
+
+    function nextLoginSlide() {
+      setLoginSlide((currentLoginSlide + 1) % totalLoginSlides);
+    }
+
+    function prevLoginSlide() {
+      setLoginSlide((currentLoginSlide - 1 + totalLoginSlides) % totalLoginSlides);
+    }
+
+    window.setLoginSlide = setLoginSlide;
+    window.nextLoginSlide = nextLoginSlide;
+    window.prevLoginSlide = prevLoginSlide;
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('DOMContentLoaded', () => {
+        if (loginSlideTimer) clearInterval(loginSlideTimer);
+        loginSlideTimer = setInterval(nextLoginSlide, 5000);
+      });
+    }
+
     // Verifica si hay sesión activa de Supabase al cargar la app
     async function checkLoginStatus() {
       // Detección de enlace de recuperación de contraseña desde correo
