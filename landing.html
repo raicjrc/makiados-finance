@@ -969,7 +969,7 @@
       transition: all 0.2s ease;
     }
 
-    /* Switch de Pareja en Demo */
+    /* Filtros en Demo */
     .demo-user-toggle {
       display: flex;
       gap: 6px;
@@ -2145,12 +2145,12 @@
             </ul>
 
             <div class="showcase-explainer-actions">
-              <a href="index.html?demo=1" target="_blank" class="btn btn-primary" style="padding: 10px 20px; font-size: 13.5px; text-decoration: none;">
-                <span>🚀 Probar la App Real en Vivo (Sin Registro)</span>
+              <a href="index.html?mode=register" class="btn btn-primary" style="padding: 11px 22px; font-size: 13.5px; text-decoration: none;">
+                <span>Comenzar Mi Control Gratis →</span>
               </a>
-              <a href="index.html?mode=register" class="btn btn-ghost" style="padding: 10px 18px; font-size: 13.5px; text-decoration: none;">
-                <span>Crear Mi Cuenta Gratis</span>
-              </a>
+              <button onclick="openPlanModal('Asesoría Personal')" class="btn btn-ghost" style="padding: 11px 18px; font-size: 13.5px; cursor: pointer;">
+                <span>💬 Consultar por WhatsApp</span>
+              </button>
             </div>
           </div>
 
@@ -2340,9 +2340,9 @@
           </div>
 
           <div class="feature-card">
-            <div class="feature-icon-box">👥</div>
-            <h3 class="feature-title">Timeline Diario en Pareja o Solo</h3>
-            <p class="feature-desc">Monitorea tus gastos agrupados por día con subtotales automáticos y avatares individuales. Cuentas claras en el hogar sin discusiones.</p>
+            <div class="feature-icon-box">📅</div>
+            <h3 class="feature-title">Timeline Diario de Gastos</h3>
+            <p class="feature-desc">Monitorea tus gastos agrupados día por día con subtotales automáticos. Ve al instante en qué se te fue el dinero y mantén el control total de tu semana sin sorpresas.</p>
           </div>
 
           <div class="feature-card">
@@ -2639,13 +2639,13 @@
         desktopImg: 'assets/app_screens/real_desktop_plan.png'
       },
       cuentas: {
-        tag: 'Pilar 4 · Gastos Compartidos',
-        title: '🤝 Cuentas Claras: Divide gastos en pareja o familia sin discusiones',
-        desc: 'Compartir casa o vivir en pareja no debería terminar en peleas por la plata. Uno paga el súper, el otro la luz o el internet. La aplicación calcula automáticamente quién le debe a quién para quedar a mano sin cobrar con vergüenza.',
+        tag: 'Pilar 4 · Préstamos & Cobros Personales',
+        title: '🤝 Cuentas Claras: Que nunca más se te olvide lo que prestaste ni lo que debes',
+        desc: '¿Le prestaste a un amigo para la pichanga o te pagaron el menú de la oficina? Anótalo en 2 segundos. Sabes con exactitud cuánto dinero tienes pendiente por cobrar en la calle y a quién le debes, para estar siempre al día y con la conciencia tranquila.',
         bullets: [
-          '👫 <strong>Equilibrio automático:</strong> Te dice exactamente cuánto transferir por Yape o Plin para estar a mano.',
-          '🔒 <strong>Privacidad respetada:</strong> Cada persona mantiene sus gastos personales aparte de los compartidos.',
-          '📋 <strong>Historial transparente:</strong> Se acabaron los "¿quién pagó la última vez?". Todo queda registrado con fecha.'
+          '📥 <strong>Me deben (Por cobrar):</strong> Lista clara de personas y montos pendientes para cobrar con tranquilidad sin dudar.',
+          '📤 <strong>Yo debo (Por pagar):</strong> Control de pequeños favores o préstamos para devolverlos siempre a tiempo.',
+          '⚖️ <strong>Balance neto personal:</strong> Visualiza en un toque si el saldo de la calle está a tu favor o en contra.'
         ],
         mobileImg: 'assets/app_screens/real_mobile_cuentas_claras.png',
         desktopImg: 'assets/app_screens/real_desktop_cuentas_claras.png'
