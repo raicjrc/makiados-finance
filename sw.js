@@ -1,6 +1,6 @@
-// Service Worker v78.7 - NETWORK FIRST para sincronización en tiempo real
+// Service Worker v78.8 - NETWORK FIRST para sincronización en tiempo real
 // Este SW NUNCA sirve datos de caché - siempre va a la red primero
-const CACHE_NAME = 'aliviafin-v187';
+const CACHE_NAME = 'aliviafin-v188';
 
 // Solo cachear assets estáticos (fonts, chart.js, supabase, html2pdf, xlsx)
 const STATIC_ASSETS = [
@@ -58,14 +58,17 @@ self.addEventListener('fetch', event => {
     return;
   }
   
-  // Para assets estáticos de CDN: cache first (fonts, chart.js)
-  const isStaticCDN = STATIC_ASSETS.some(pattern => url.startsWith(pattern));
+  // Para assets estáticos pesados (fonts, chart.js, supabase, html2pdf, xlsx): Cache First con fallback a red
+  const isStaticCDN = STATIC_ASSETS.some(pattern => url.includes(pattern));
   if (isStaticCDN) {
     event.respondWith(
-      caches.match(event.request).then(cached => {
-        return cached || fetch(event.request).then(response => {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+      caches.match(event.request, { ignoreSearch: true }).then(cached => {
+        if (cached) return cached;
+        return fetch(event.request).then(response => {
+          if (response && response.status === 200) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+          }
           return response;
         });
       })

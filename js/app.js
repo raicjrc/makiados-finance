@@ -428,6 +428,10 @@
 
     // Helpers robustos e infalibles para ocultar/mostrar la pantalla de acceso
     function hideLoginScreen() {
+      const isDark = document.body.classList.contains('theme-twilight');
+      const meta = document.getElementById('themeColorMeta') || document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.setAttribute('content', isDark ? '#090d16' : '#fbfbfd');
+
       const modal = document.getElementById('loginModalScreen');
       if (modal) {
         modal.classList.add('hidden');
@@ -449,6 +453,9 @@
     }
 
     function showLoginScreen() {
+      const meta = document.getElementById('themeColorMeta') || document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.setAttribute('content', '#ffffff');
+
       const modal = document.getElementById('loginModalScreen');
       if (modal) {
         modal.classList.remove('hidden');
@@ -2148,9 +2155,9 @@
         let isRefreshing = false;
         // Solo recargar ante una ACTUALIZACIÓN (ya había un SW controlando); en la 1ª visita no
         const hadController = !!navigator.serviceWorker.controller;
-        navigator.serviceWorker.register('./sw.js?v=78.7')
+        navigator.serviceWorker.register('./sw.js?v=78.8')
           .then(reg => {
-            console.log('SW v78.7 registrado:', reg.scope);
+            console.log('SW v78.8 registrado:', reg.scope);
             // Forzar actualización inmediata del SW en todos los dispositivos
             reg.update();
             if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
@@ -3075,17 +3082,6 @@
     let desktopCategoryChartObj = null;
 
     document.addEventListener('DOMContentLoaded', () => {
-      // Limpiar caché del Service Worker viejo para garantizar datos frescos
-      if ('serviceWorker' in navigator && 'caches' in window) {
-        caches.keys().then(names => {
-          names.forEach(name => {
-            if (name !== 'aliviafin-v136') {
-              caches.delete(name);
-              console.log('Caché viejo eliminado:', name);
-            }
-          });
-        });
-      }
 
       // Forzar actualización inmediata del Favicon en pestaña del navegador
       try {
