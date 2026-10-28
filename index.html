@@ -1520,6 +1520,9 @@
               <span id="masterRefreshSpinner">🔄</span>
               <span>Sincronizar</span>
             </button>
+            <button type="button" class="btn btn-secondary fh-btn" onclick="exportCompleteDatabaseJSON()" title="Descargar copia de seguridad JSON inmutable de la base de datos">
+              <span>🛡️ Respaldo JSON</span>
+            </button>
             <button type="button" class="btn btn-secondary fh-btn" onclick="switchTab('inicio')" title="Volver a tu panel personal de finanzas">
               <span>← Volver a Mis Finanzas</span>
             </button>
@@ -1997,10 +2000,6 @@
           <button type="button" class="settings-nav-btn" onclick="closeModal('settingsModal'); handleExportExcelCSVClick();">
             <span>📊 Exportar Historial a Excel / CSV</span>
             <span class="badge-pro-gold" style="font-size: 9.5px; padding: 2px 6px;">PRO 👑</span>
-          </button>
-          <button type="button" id="settingsJsonBackupBtn" class="settings-nav-btn master-admin-only" style="display: none;" onclick="exportCompleteDatabaseJSON();">
-            <span>🛡️ Descargar Respaldo JSON Completo</span>
-            <span style="font-size: 10px; font-weight: 700; color: #6366f1; background: rgba(99,102,241,0.1); padding: 2px 6px; border-radius: 6px;">100% Datos</span>
           </button>
         </div>
 

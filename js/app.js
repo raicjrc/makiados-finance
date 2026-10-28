@@ -2148,9 +2148,9 @@
         let isRefreshing = false;
         // Solo recargar ante una ACTUALIZACIÓN (ya había un SW controlando); en la 1ª visita no
         const hadController = !!navigator.serviceWorker.controller;
-        navigator.serviceWorker.register('./sw.js?v=78.6')
+        navigator.serviceWorker.register('./sw.js?v=78.7')
           .then(reg => {
-            console.log('SW v78.6 registrado:', reg.scope);
+            console.log('SW v78.7 registrado:', reg.scope);
             // Forzar actualización inmediata del SW en todos los dispositivos
             reg.update();
             if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
@@ -12286,8 +12286,6 @@ function syncAdminUI() {
   if (settMasterRow) settMasterRow.style.display = isCesar ? 'block' : 'none';
   const btnFounderHeader = document.getElementById('btnFounderHeader');
   if (btnFounderHeader) btnFounderHeader.style.display = 'none'; // Despejar cabecera: acceso en Ajustes y Sidebar
-  const jsonBackupBtn = document.getElementById('settingsJsonBackupBtn');
-  if (jsonBackupBtn) jsonBackupBtn.style.display = isCesar ? 'flex' : 'none';
 }
 
 // Compatibilidad: antes abría un modal; ahora abre el módulo de pantalla completa.
