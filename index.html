@@ -688,7 +688,11 @@
             <h2 style="font-size: 16px; font-weight: 800; margin: 0;">Movimientos del Mes</h2>
             <div style="font-size: 11px; color: var(--text-muted); font-weight: 600;">Control detallado de tus gastos e ingresos</div>
           </div>
-          <div style="display: flex; gap: 8px;">
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <button type="button" class="btn btn-outline btn-sm desktop-only" onclick="exportMonthlyReportPDF()" style="font-size: 12px; font-weight: 700; padding: 6px 12px; border-color: var(--border); background: var(--bg-card); display: inline-flex; align-items: center; gap: 5px;" title="Descargar balance del mes en PDF">
+              <span>📄</span>
+              <span>Exportar PDF</span>
+            </button>
             <button class="btn btn-primary btn-sm" onclick="openAddExpenseModal()" style="font-size: 12px; font-weight: 800; padding: 6px 12px; background: linear-gradient(135deg, #ef4444, #dc2626); border-color: #dc2626; color: white; box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);">+ Gasto Detallado</button>
             <button class="btn btn-secondary btn-sm" onclick="openAddExtraIncomeModal()" style="font-size: 12px; font-weight: 800; padding: 6px 12px; background: rgba(16, 185, 129, 0.12); border: 1.5px solid rgba(16, 185, 129, 0.35); color: #059669;">+ Ingreso</button>
           </div>

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>¡Bienvenido a AliviaFin! Tus primeros pasos</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #f1f5f9;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      color: #0f172a;
+      -webkit-font-smoothing: antialiased;
+    }
+    table {
+      border-spacing: 0;
+    }
+    td {
+      padding: 0;
+    }
+    img {
+      border: 0;
+    }
+    .wrapper {
+      width: 100%;
+      table-layout: fixed;
+      background-color: #f1f5f9;
+      padding: 30px 10px 40px;
+    }
+    .main-card {
+      max-width: 580px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      border-radius: 24px;
+      border: 1px solid #e2e8f0;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+    }
+    .btn-primary {
+      display: inline-block;
+      background-color: #10b981;
+      color: #ffffff !important;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 14px;
+      padding: 13px 28px;
+      border-radius: 14px;
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+    }
+    .btn-secondary {
+      display: inline-block;
+      background-color: #f8fafc;
+      color: #0f172a !important;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 13px;
+      padding: 11px 22px;
+      border-radius: 12px;
+      border: 1px solid #cbd5e1;
+    }
+    @media only screen and (max-width: 600px) {
+      .main-card {
+        border-radius: 18px !important;
+      }
+      .content-padding {
+        padding: 24px 20px !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <center class="wrapper">
+    <table class="main-card" width="100%" cellpadding="0" cellspacing="0">
+      
+      <!-- CABECERA DE MARCA -->
+      <tr>
+        <td style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); padding: 32px 30px; text-align: center;">
+          <div style="display: inline-block; background: rgba(255,255,255,0.1); padding: 8px 16px; border-radius: 999px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.15);">
+            <span style="font-size: 18px; font-weight: 800; color: #ffffff; letter-spacing: -0.02em;">🌿 alivia<span style="color: #34d399;">fin</span></span>
+          </div>
+          <h1 style="color: #ffffff; font-size: 22px; font-weight: 800; margin: 0 0 6px; letter-spacing: -0.01em;">
+            ¡Bienvenido a tu paz financiera!
+          </h1>
+          <p style="color: #94a3b8; font-size: 14px; margin: 0; font-weight: 500;">
+            Tu espacio privado, ágil y sin hojas de cálculo confusas
+          </p>
+        </td>
+      </tr>
+
+      <!-- CUERPO PRINCIPAL -->
+      <tr>
+        <td class="content-padding" style="padding: 32px 36px;">
+          
+          <p style="font-size: 15px; line-height: 1.6; color: #334155; margin: 0 0 20px;">
+            Hola <strong>{{nombre_usuario}}</strong>,
+          </p>
+          <p style="font-size: 14.5px; line-height: 1.6; color: #475569; margin: 0 0 24px;">
+            Nos alegra mucho tenerte aquí. Creamos <strong>AliviaFin</strong> con un solo objetivo: que sepas con total claridad <strong>cuánto dinero tienes disponible hoy</strong>, cuánto puedes gastar sin culpa y cómo liquidar cuotas pendientes sin enredarte con términos de banco.
+          </p>
+
+          <!-- BOTÓN DE ENTRADA -->
+          <div style="text-align: center; margin: 28px 0;">
+            <a href="https://aliviafin.vercel.app" class="btn-primary" target="_blank">
+              Ir a mi Cuenta en AliviaFin →
+            </a>
+          </div>
+
+          <!-- GUÍA VISUAL: CÓMO GUARDAR EN CELULAR (PWA) -->
+          <div style="background-color: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 18px; padding: 22px 20px; margin: 26px 0;">
+            <div style="font-size: 13.5px; font-weight: 800; color: #0f172a; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+              <span>📲</span>
+              <span>Paso Clave: Guarda AliviaFin en tu Celular</span>
+            </div>
+            <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 0 0 14px;">
+              AliviaFin funciona como una aplicación nativa sin tener que descargarla de tiendas. Para abrirla en 1 segundo todos los días:
+            </p>
+            
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 8px;">
+              <tr>
+                <td style="padding: 8px 10px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 8px;">
+                  <strong style="font-size: 12.5px; color: #0f172a;">🍎 En iPhone (Safari):</strong>
+                  <div style="font-size: 12px; color: #64748b; margin-top: 2px;">
+                    Toca el botón <strong>Compartir</strong> (icono de cuadrado con flecha hacia arriba) y selecciona <strong>"Agregar a pantalla de inicio"</strong>.
+                  </div>
+                </td>
+              </tr>
+              <tr><td style="height: 8px;"></td></tr>
+              <tr>
+                <td style="padding: 8px 10px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px;">
+                  <strong style="font-size: 12.5px; color: #0f172a;">🤖 En Android (Chrome):</strong>
+                  <div style="font-size: 12px; color: #64748b; margin-top: 2px;">
+                    Toca los <strong>3 puntos</strong> de la esquina superior derecha y selecciona <strong>"Instalar aplicación"</strong> o <strong>"Agregar a pantalla principal"</strong>.
+                  </div>
+                </td>
+              </tr>
+            </table>
+          </div>
+
+          <!-- CAJA DE PLAN PRO (YAPE / ACTIVACIÓN) -->
+          <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(6, 182, 212, 0.05) 100%); border: 1.5px solid rgba(16, 185, 129, 0.25); border-radius: 18px; padding: 20px; text-align: center; margin: 24px 0 16px;">
+            <span style="font-size: 10px; font-weight: 800; color: #059669; background: #ecfdf5; padding: 3px 10px; border-radius: 999px; text-transform: uppercase;">
+              Membresía Anual PRO
+            </span>
+            <h3 style="font-size: 17px; font-weight: 800; color: #0f172a; margin: 8px 0 4px;">
+              S/ 29.90 al año (Menos de S/ 2.50 al mes)
+            </h3>
+            <p style="font-size: 12.5px; color: #475569; margin: 0 0 14px;">
+              Desbloquea exportación a Excel, Bóvedas de Ahorro y Plan Cero Deudas pagando directo con Yape o Plin al <strong>914 688 135</strong> (César Risso).
+            </p>
+            <a href="https://wa.me/51914688135?text=Hola%20C%C3%A9sar%2C%20acabo%20de%20crear%20mi%20cuenta%20en%20AliviaFin%20({{email}})%20y%20quiero%20activar%20mi%20Plan%20PRO%20anual." class="btn-secondary" target="_blank">
+              💬 Activar Plan PRO por WhatsApp
+            </a>
+          </div>
+
+          <!-- GARANTÍA & PRIVACIDAD -->
+          <p style="font-size: 12px; color: #94a3b8; text-align: center; margin: 24px 0 0; line-height: 1.5;">
+            🔒 <strong>100% Privado:</strong> Nunca pediremos tus claves de bancos ni acceso a tus cuentas.<br>
+            Cuentas con 7 días de garantía total de satisfacción.
+          </p>
+
+        </td>
+      </tr>
+
+      <!-- FOOTER -->
+      <tr>
+        <td style="background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 20px; text-align: center;">
+          <p style="font-size: 11.5px; color: #94a3b8; margin: 0 0 6px;">
+            © 2026 AliviaFin · Hecho con dedicación en Lima, Perú
+          </p>
+          <p style="font-size: 11px; color: #94a3b8; margin: 0;">
+            ¿Tienes alguna consulta? Escríbenos directamente a <a href="mailto:aliviafin@gmail.com" style="color: #059669; text-decoration: none; font-weight: 700;">aliviafin@gmail.com</a> o por WhatsApp.
+          </p>
+        </td>
+      </tr>
+
+    </table>
+  </center>
+</body>
+</html>
