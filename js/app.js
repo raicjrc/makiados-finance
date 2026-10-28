@@ -1832,9 +1832,112 @@
         notifTgl.checked = (localStorage.getItem('aliviafin_notif_enabled') === 'true');
       }
 
+      const profileNameText = document.getElementById('settingsProfileNameText');
+      if (profileNameText) {
+        profileNameText.textContent = (currentUser && currentUser.name) ? currentUser.name : 'Usuario';
+      }
+      initUserAvatar();
+
       if (typeof syncVersionUI === 'function') syncVersionUI();
       openModalById('settingsModal');
     }
+
+    function initUserAvatar() {
+      const userKey = (currentUser && currentUser.id) ? currentUser.id : 'default';
+      const savedAvatar = localStorage.getItem('aliviafin_user_avatar_' + userKey) || localStorage.getItem('aliviafin_user_avatar');
+      applyUserAvatar(savedAvatar || '👤');
+    }
+
+    function applyUserAvatar(avatar) {
+      const settingsDisplay = document.getElementById('settingsAvatarDisplay');
+      const deskAvatar = document.getElementById('deskSidebarAvatar');
+      const isImg = avatar && (avatar.startsWith('data:image') || avatar.startsWith('http') || avatar.startsWith('/'));
+
+      if (settingsDisplay) {
+        if (isImg) {
+          settingsDisplay.innerHTML = `<img src="${avatar}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" alt="Foto">`;
+        } else {
+          settingsDisplay.innerHTML = `<span style="font-size: 26px;">${avatar || '👤'}</span>`;
+        }
+      }
+      if (deskAvatar) {
+        if (isImg) {
+          deskAvatar.innerHTML = `<img src="${avatar}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" alt="Foto">`;
+        } else {
+          deskAvatar.innerHTML = `<span style="font-size: 15px;">${avatar || '👤'}</span>`;
+        }
+      }
+    }
+
+    function handleUserAvatarUpload(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      if (file.size > 5 * 1024 * 1024) {
+        showToast('La imagen debe pesar menos de 5MB', 'error');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const rawData = e.target.result;
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          canvas.width = 180;
+          canvas.height = 180;
+          const ctx = canvas.getContext('2d');
+          const minDim = Math.min(img.width, img.height);
+          const sx = (img.width - minDim) / 2;
+          const sy = (img.height - minDim) / 2;
+          ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, 180, 180);
+          const optimizedData = canvas.toDataURL('image/jpeg', 0.85);
+
+          const userKey = (currentUser && currentUser.id) ? currentUser.id : 'default';
+          localStorage.setItem('aliviafin_user_avatar_' + userKey, optimizedData);
+          localStorage.setItem('aliviafin_user_avatar', optimizedData);
+          applyUserAvatar(optimizedData);
+          showToast('✅ Foto de perfil actualizada', 'success');
+        };
+        img.src = rawData;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function setUserAvatarEmoji(emoji) {
+      const userKey = (currentUser && currentUser.id) ? currentUser.id : 'default';
+      localStorage.setItem('aliviafin_user_avatar_' + userKey, emoji);
+      localStorage.setItem('aliviafin_user_avatar', emoji);
+      applyUserAvatar(emoji);
+      showToast(`✅ Avatar actualizado a ${emoji}`, 'success');
+    }
+
+    function removeUserAvatar() {
+      const userKey = (currentUser && currentUser.id) ? currentUser.id : 'default';
+      localStorage.removeItem('aliviafin_user_avatar_' + userKey);
+      localStorage.removeItem('aliviafin_user_avatar');
+      applyUserAvatar('👤');
+      showToast('Avatar restablecido a predeterminado', 'info');
+    }
+
+    function exportCompleteDatabaseJSON() {
+      try {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appState, null, 2));
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", `AliviaFin_Respaldo_Completo_${new Date().toISOString().slice(0,10)}.json`);
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+        showToast('🛡️ Copia de seguridad JSON descargada', 'success');
+      } catch (e) {
+        showToast('Error al exportar respaldo JSON', 'error');
+      }
+    }
+
+    window.initUserAvatar = initUserAvatar;
+    window.handleUserAvatarUpload = handleUserAvatarUpload;
+    window.setUserAvatarEmoji = setUserAvatarEmoji;
+    window.removeUserAvatar = removeUserAvatar;
+    window.exportCompleteDatabaseJSON = exportCompleteDatabaseJSON;
 
     async function saveCustomUserName() {
       const input = document.getElementById('settingsUserNameInput');
@@ -1854,6 +1957,8 @@
         if (badge) badge.textContent = newName;
         const deskUser = document.getElementById('deskSidebarUser');
         if (deskUser) deskUser.textContent = newName;
+        const profileNameText = document.getElementById('settingsProfileNameText');
+        if (profileNameText) profileNameText.textContent = newName;
 
         try {
           await supabaseClient.auth.updateUser({
@@ -4433,7 +4538,7 @@
       } else if (tabId === 'movimientos') {
         const btn = document.getElementById('navTabMovimientos');
         if (btn) btn.classList.add('active');
-      } else if (tabId === 'plan' || tabId === 'metas' || tabId === 'consejos' || tabId === 'deudas') {
+      } else if (tabId === 'plan' || tabId === 'metas' || tabId === 'consejos' || tabId === 'deudas' || tabId === 'simulador' || tabId === 'prestamos') {
         const btn = document.getElementById('navTabPlan');
         if (btn) btn.classList.add('active');
       }
@@ -4446,6 +4551,7 @@
         'metas': 'deskNavTabMetas',
         'consejos': 'deskNavTabConsejos',
         'deudas': 'deskNavTabDeudas',
+        'simulador': 'deskNavTabSimulador',
         'prestamos': 'deskNavTabLoans',
         'founder': 'deskNavMasterBtn'
       };
@@ -4465,6 +4571,10 @@
       } else {
         document.body.classList.remove('founder-mode-active');
         stopFounderTicker();
+      }
+
+      if (tabId === 'simulador') {
+        if (typeof initSimuladorView === 'function') initSimuladorView();
       }
 
       if (tabId === 'inicio') {
@@ -8155,11 +8265,14 @@
     }
 
     function openInstallmentsSimulatorModal() {
-      if (!checkFreeSimulationGate()) {
-        return;
+      if (typeof closeModal === 'function') {
+        closeModal('settingsModal');
+        closeModal('addExpenseModal');
       }
-      recordFreeSimulationUsed();
+      switchTab('simulador');
+    }
 
+    function initSimuladorView() {
       // Poblar selector de categorías
       const catSelect = document.getElementById('simCategory');
       if (catSelect) {
@@ -8180,19 +8293,36 @@
         ).join('');
       }
 
-      openModalById('installmentsSimulatorModal');
-      setTimeout(updateSimulation, 150);
+      updateSimulation();
     }
+    window.initSimuladorView = initSimuladorView;
+
+    function setSimPreset(concept, amount, cuotas, isZero) {
+      const elConcept = document.getElementById('simConcept');
+      const elAmount = document.getElementById('simAmount');
+      const elZero = document.getElementById('simZeroInterest');
+      if (elConcept) elConcept.value = concept;
+      if (elAmount) elAmount.value = amount;
+      if (elZero) {
+        elZero.checked = isZero;
+        const teaGroup = document.getElementById('simTeaGroup');
+        if (teaGroup) teaGroup.style.display = isZero ? 'none' : 'block';
+      }
+      const pill = document.querySelector(`#simCuotasPills .glass-pill-opt:nth-child(${cuotas === 3 ? 1 : cuotas === 6 ? 2 : cuotas === 12 ? 3 : cuotas === 18 ? 4 : 5})`);
+      setSimCuotas(cuotas, pill);
+    }
+    window.setSimPreset = setSimPreset;
 
     function setSimCuotas(n, el) {
       currentSimCuotas = n;
-      document.querySelectorAll('#simCuotasPills .glass-pill-opt').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('#simCuotasPills .glass-pill-opt, .sim-pill-opt').forEach(p => p.classList.remove('active'));
       if (el) el.classList.add('active');
       updateSimulation();
     }
 
     function toggleSimZeroInterest() {
-      const isZero = document.getElementById('simZeroInterest').checked;
+      const el = document.getElementById('simZeroInterest');
+      const isZero = el ? el.checked : true;
       const teaGroup = document.getElementById('simTeaGroup');
       if (teaGroup) {
         teaGroup.style.display = isZero ? 'none' : 'block';
@@ -8201,11 +8331,13 @@
     }
 
     function updateSimulation() {
-      const amount = parseFloat(document.getElementById('simAmount').value) || 0;
+      const elAmount = document.getElementById('simAmount');
+      if (!elAmount) return;
+      const amount = parseFloat(elAmount.value) || 0;
       const cuotas = currentSimCuotas || 12;
-      const startMonth = document.getElementById('simStartMonth').value || appState.currentMonth;
-      const isZero = document.getElementById('simZeroInterest').checked;
-      const teaInput = parseFloat(document.getElementById('simTea').value) || 0;
+      const startMonth = (document.getElementById('simStartMonth')?.value) || appState.currentMonth;
+      const isZero = document.getElementById('simZeroInterest')?.checked ?? true;
+      const teaInput = parseFloat(document.getElementById('simTea')?.value) || 0;
       
       let monthlyQuota = 0;
       let totalToPay = 0;
@@ -8221,12 +8353,52 @@
       }
 
       const sym = getCurrencySymbol();
-      document.getElementById('simMonthlyQuotaDisplay').textContent = `${sym} ${monthlyQuota.toFixed(2)}`;
-      document.getElementById('simTotalToPayDisplay').textContent = `${sym} ${totalToPay.toFixed(2)}`;
+      const elQuota = document.getElementById('simMonthlyQuotaDisplay');
+      if (elQuota) elQuota.textContent = `${sym} ${monthlyQuota.toFixed(2)}`;
+      const elTot = document.getElementById('simTotalToPayDisplay');
+      if (elTot) elTot.textContent = `${sym} ${totalToPay.toFixed(2)}`;
 
-      const totalIncome = getMonthTotalIncome() || 8800;
+      const totalIncome = (typeof getMonthTotalIncome === 'function' ? getMonthTotalIncome() : 0) || 8800;
       const pctImpact = totalIncome > 0 ? ((monthlyQuota / totalIncome) * 100).toFixed(1) : 0;
-      document.getElementById('simImpactDisplay').textContent = `-${pctImpact}% de tu ingreso mensual`;
+      const elImpact = document.getElementById('simImpactDisplay');
+      if (elImpact) elImpact.textContent = `-${pctImpact}% de tu ingreso mensual`;
+
+      // Renderizar cronograma de pagos en tabla
+      const schedContainer = document.getElementById('simScheduleTableContainer');
+      if (schedContainer) {
+        const allMonths = getSortedMonths();
+        let startIdx = allMonths.indexOf(startMonth);
+        if (startIdx === -1) startIdx = allMonths.indexOf(appState.currentMonth);
+        if (startIdx === -1) startIdx = 0;
+        const targetMonths = allMonths.slice(startIdx, startIdx + cuotas);
+        
+        let schedHtml = `
+          <table class="sim-schedule-table">
+            <thead>
+              <tr>
+                <th style="width: 40px;">#</th>
+                <th>Mes</th>
+                <th>Cuota</th>
+                <th style="text-align: right;">Saldo Restante</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+        let rem = totalToPay;
+        targetMonths.forEach((m, idx) => {
+          rem = Math.max(0, rem - monthlyQuota);
+          schedHtml += `
+            <tr>
+              <td><strong>#${idx + 1}</strong></td>
+              <td>${m}</td>
+              <td style="font-weight: 700; color: #0284c7;">${sym} ${monthlyQuota.toFixed(2)}</td>
+              <td style="text-align: right; color: var(--text-muted);">${sym} ${rem.toFixed(2)}</td>
+            </tr>
+          `;
+        });
+        schedHtml += `</tbody></table>`;
+        schedContainer.innerHTML = schedHtml;
+      }
 
       renderSimulationChart(startMonth, cuotas, monthlyQuota);
     }
@@ -11578,160 +11750,233 @@ window.handleTourCheckboxChange = function(val) {
 // EXPORTACIÓN A PDF (Fase D)
 // ================================================================
 window.generatePDFReport = function() {
-  const element = document.createElement('div');
-  element.style.padding = '30px';
-  element.style.fontFamily = '"Plus Jakarta Sans", sans-serif';
-  element.style.color = '#0f172a';
-  element.style.background = '#ffffff';
-  
-  const curM = appState.currentMonth || getCurrentCalendarMonthName();
-  const sym = getCurrencySymbol();
-  
-  // Header
-  let html = `
-    <div style="border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end;">
-      <div>
-        <h1 style="margin: 0; color: #0d9488; font-size: 28px; font-weight: 800;">AliviaFin</h1>
-        <p style="margin: 4px 0 0; color: #64748b; font-size: 14px;">Reporte Financiero Mensual</p>
-      </div>
-      <div style="text-align: right;">
-        <h2 style="margin: 0; color: #0f172a; font-size: 20px;">${curM}</h2>
-        <p style="margin: 4px 0 0; color: #64748b; font-size: 12px;">Generado el ${new Date().toLocaleDateString()}</p>
-      </div>
-    </div>
-  `;
-  
-  // Stats
-  const txs = appState.transactions && appState.transactions[curM] ? appState.transactions[curM] : [];
-  const sueldo = getMonthTotalIncome();
-  const gastos = txs.filter(t => (t.status || 'Pagado') === 'Pagado').reduce((a,b)=>a+b.amount,0);
-  const saldo = getAccumulatedBalance(curM);
-  
-  html += `
-    <div style="display: flex; gap: 15px; margin-bottom: 30px;">
-      <div style="flex: 1; padding: 15px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
-        <p style="margin: 0 0 5px; font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase;">Ingresos Totales</p>
-        <p style="margin: 0; font-size: 24px; font-weight: 800; color: #10b981;">${sym} ${sueldo.toFixed(2)}</p>
-      </div>
-      <div style="flex: 1; padding: 15px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
-        <p style="margin: 0 0 5px; font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase;">Gastos Reales</p>
-        <p style="margin: 0; font-size: 24px; font-weight: 800; color: #ef4444;">${sym} ${gastos.toFixed(2)}</p>
-      </div>
-      <div style="flex: 1; padding: 15px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
-        <p style="margin: 0 0 5px; font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase;">Saldo Disponible</p>
-        <p style="margin: 0; font-size: 24px; font-weight: 800; color: #3b82f6;">${sym} ${saldo.toFixed(2)}</p>
-      </div>
-    </div>
-  `;
-  
-  // Agregar gráfico si existe
-  const chartCanvas = document.getElementById('categoryChart');
-  if (chartCanvas) {
-    try {
-      const chartImg = chartCanvas.toDataURL('image/png');
-      html += `
-        <div style="text-align: center; margin-bottom: 30px; background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0;">
-          <h3 style="margin: 0 0 15px; color: #0f172a; font-size: 14px; text-transform: uppercase;">Distribución Visual</h3>
-          <img src="${chartImg}" style="max-width: 320px; height: auto; margin: 0 auto; display: block;" />
+  try {
+    const curM = appState.currentMonth || (typeof getCurrentCalendarMonthName === 'function' ? getCurrentCalendarMonthName() : 'Mes Actual');
+    const sym = typeof getCurrencySymbol === 'function' ? getCurrencySymbol() : 'S/';
+
+    const element = document.createElement('div');
+    element.id = 'aliviafinPdfReportContainer';
+    element.style.position = 'fixed';
+    element.style.left = '-9999px';
+    element.style.top = '0';
+    element.style.width = '794px';
+    element.style.padding = '36px 40px';
+    element.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    element.style.color = '#0f172a';
+    element.style.background = '#ffffff';
+    element.style.zIndex = '-99999';
+
+    // Header
+    let html = `
+      <div style="border-bottom: 2px solid #0d9488; padding-bottom: 18px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: flex-end;">
+        <div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 26px;">🌿</span>
+            <h1 style="margin: 0; color: #0d9488; font-size: 26px; font-weight: 800; letter-spacing: -0.02em;">aliviafin</h1>
+          </div>
+          <p style="margin: 4px 0 0; color: #64748b; font-size: 13px; font-weight: 600;">Reporte Financiero Ejecutivo Mensual</p>
         </div>
-      `;
-    } catch (e) {
-      console.warn("No se pudo capturar el gráfico para el PDF", e);
+        <div style="text-align: right;">
+          <h2 style="margin: 0; color: #0f172a; font-size: 19px; font-weight: 800;">${curM}</h2>
+          <p style="margin: 4px 0 0; color: #64748b; font-size: 11px;">Generado el ${new Date().toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
+        </div>
+      </div>
+    `;
+
+    // Stats
+    const txs = (appState.transactions && appState.transactions[curM]) || [];
+    const sueldo = Number((typeof getMonthTotalIncome === 'function' ? getMonthTotalIncome(curM) : 0) || 0);
+    const gastos = txs.filter(t => (t.status || 'Pagado') === 'Pagado').reduce((a, b) => a + Number(b.amount || 0), 0);
+    const saldo = Number((typeof getAccumulatedBalance === 'function' ? getAccumulatedBalance(curM) : 0) || 0);
+
+    html += `
+      <div style="display: flex; gap: 14px; margin-bottom: 26px;">
+        <div style="flex: 1; padding: 14px 16px; background: #f0fdf4; border-radius: 14px; border: 1.5px solid #bbf7d0;">
+          <p style="margin: 0 0 4px; font-size: 11px; font-weight: 800; color: #15803d; text-transform: uppercase; letter-spacing: 0.05em;">Ingresos Totales</p>
+          <p style="margin: 0; font-size: 22px; font-weight: 800; color: #166534;">${sym} ${sueldo.toFixed(2)}</p>
+        </div>
+        <div style="flex: 1; padding: 14px 16px; background: #fef2f2; border-radius: 14px; border: 1.5px solid #fecaca;">
+          <p style="margin: 0 0 4px; font-size: 11px; font-weight: 800; color: #b91c1c; text-transform: uppercase; letter-spacing: 0.05em;">Gastos Pagados</p>
+          <p style="margin: 0; font-size: 22px; font-weight: 800; color: #991b1b;">${sym} ${gastos.toFixed(2)}</p>
+        </div>
+        <div style="flex: 1; padding: 14px 16px; background: #f8fafc; border-radius: 14px; border: 1.5px solid #cbd5e1;">
+          <p style="margin: 0 0 4px; font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.05em;">Saldo Disponible</p>
+          <p style="margin: 0; font-size: 22px; font-weight: 800; color: ${saldo >= 0 ? '#0d9488' : '#dc2626'};">${sym} ${saldo.toFixed(2)}</p>
+        </div>
+      </div>
+    `;
+
+    // Gráfico de distribución si está en pantalla
+    const chartCanvas = document.getElementById('desktopCategoryChart') || document.getElementById('categoryChart');
+    if (chartCanvas && typeof chartCanvas.toDataURL === 'function') {
+      try {
+        const chartImg = chartCanvas.toDataURL('image/png');
+        if (chartImg && chartImg.length > 200) {
+          html += `
+            <div style="text-align: center; margin-bottom: 24px; background: #f8fafc; padding: 16px; border-radius: 14px; border: 1px solid #e2e8f0;">
+              <h3 style="margin: 0 0 10px; color: #0f172a; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">Distribución por Categorías</h3>
+              <img src="${chartImg}" style="max-width: 240px; height: auto; margin: 0 auto; display: block;" />
+            </div>
+          `;
+        }
+      } catch (e) {
+        console.warn("No se pudo capturar gráfico:", e);
+      }
     }
-  }
-  
-  // Lista de Gastos
-  if (txs.length > 0) {
-    const pagadas = txs.filter(t => (t.status || 'Pagado') === 'Pagado').sort((a, b) => getEffectiveDueDate(a) - getEffectiveDueDate(b));
-    const pendientes = txs.filter(t => (t.status || 'Pagado') === 'Pendiente').sort((a, b) => getEffectiveDueDate(a) - getEffectiveDueDate(b));
 
-    const renderTable = (list, title, color) => {
-      if (list.length === 0) return '';
-      let tHtml = `<h3 style="margin: 20px 0 10px; color: ${color}; font-size: 15px; border-bottom: 2px solid ${color}; padding-bottom: 4px;">${title}</h3>`;
-      tHtml += `<table style="width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 13px;">`;
-      tHtml += `
-        <thead>
-          <tr style="background: #f1f5f9; text-align: left;">
-            <th style="padding: 8px; border-bottom: 2px solid #cbd5e1; width: 60px;">Día</th>
-            <th style="padding: 8px; border-bottom: 2px solid #cbd5e1;">Categoría</th>
-            <th style="padding: 8px; border-bottom: 2px solid #cbd5e1;">Descripción</th>
-            <th style="padding: 8px; border-bottom: 2px solid #cbd5e1; text-align: right;">Monto</th>
-          </tr>
-        </thead>
-        <tbody>
-      `;
-      list.forEach((t, i) => {
-        const isAlt = i % 2 !== 0;
-        const bg = isAlt ? '#f8fafc' : '#ffffff';
+    // Listado de Gastos
+    const getDueSafe = (item) => {
+      try {
+        if (typeof getEffectiveDueDate === 'function') {
+          return parseInt(getEffectiveDueDate(item), 10) || 15;
+        }
+        return parseInt(item.dueDate || 15, 10);
+      } catch (e) {
+        return 15;
+      }
+    };
+
+    if (txs.length > 0) {
+      const pagadas = txs.filter(t => (t.status || 'Pagado') === 'Pagado').sort((a, b) => getDueSafe(a) - getDueSafe(b));
+      const pendientes = txs.filter(t => (t.status || 'Pagado') === 'Pendiente').sort((a, b) => getDueSafe(a) - getDueSafe(b));
+
+      const renderTable = (list, title, color) => {
+        if (!list || list.length === 0) return '';
+        let tHtml = `<h3 style="margin: 18px 0 8px; color: ${color}; font-size: 14px; font-weight: 800; border-bottom: 2px solid ${color}; padding-bottom: 4px;">${title} (${list.length})</h3>`;
+        tHtml += `<table style="width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 12px;">`;
         tHtml += `
-          <tr style="background: ${bg};">
-            <td style="padding: 8px; border-bottom: 1px solid #e2e8f0; font-weight: 700;">${getEffectiveDueDate(t)}</td>
-            <td style="padding: 8px; border-bottom: 1px solid #e2e8f0;"><span style="background: #e0e7ff; color: #4338ca; padding: 2px 6px; border-radius: 4px; font-weight: 600; font-size: 11px;">${t.category}</span></td>
-            <td style="padding: 8px; border-bottom: 1px solid #e2e8f0;">${t.name}</td>
-            <td style="padding: 8px; border-bottom: 1px solid #e2e8f0; text-align: right; font-weight: 700;">${sym} ${t.amount.toFixed(2)}</td>
-          </tr>
+          <thead>
+            <tr style="background: #f1f5f9; text-align: left;">
+              <th style="padding: 6px 8px; border-bottom: 2px solid #cbd5e1; width: 50px;">Día</th>
+              <th style="padding: 6px 8px; border-bottom: 2px solid #cbd5e1;">Categoría</th>
+              <th style="padding: 6px 8px; border-bottom: 2px solid #cbd5e1;">Descripción</th>
+              <th style="padding: 6px 8px; border-bottom: 2px solid #cbd5e1; text-align: right;">Monto</th>
+            </tr>
+          </thead>
+          <tbody>
         `;
-      });
-      tHtml += `</tbody></table>`;
-      return tHtml;
-    };
-
-    html += renderTable(pagadas, '✅ Gastos Pagados', '#10b981');
-    html += renderTable(pendientes, '⏳ Gastos Pendientes', '#f59e0b');
-  } else {
-    html += `<p style="color: #64748b; font-size: 14px; font-style: italic;">No hay gastos registrados en este mes.</p>`;
-  }
-  
-  html += `
-    <div style="margin-top: 40px; text-align: center; color: #94a3b8; font-size: 11px;">
-      Reporte confidencial generado por la plataforma AliviaFin.<br>
-      © ${new Date().getFullYear()} AliviaFin App
-    </div>
-  `;
-  
-  element.innerHTML = html;
-  
-  const opt = {
-    margin:       10,
-    filename:     `AliviaFin_Reporte_${curM}.pdf`,
-    image:        { type: 'jpeg', quality: 0.98 },
-    html2canvas:  { scale: 2 },
-    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-  };
-
-  showToast('Generando reporte PDF...', 'success');
-
-  // Carga bajo demanda de html2pdf para no sobrecargar el inicio de la app (~900 KB)
-  const renderPdfNow = () => {
-    html2pdf().set(opt).from(element).save().then(() => {
-      showToast('¡PDF descargado exitosamente!', 'success');
-    }).catch(err => {
-      console.error(err);
-      showToast('Error al generar el PDF. Inténtalo de nuevo.', 'error');
-    });
-  };
-
-  if (typeof html2pdf === 'undefined') {
-    showToast('Iniciando motor de exportación PDF...', 'info');
-    const script = document.createElement('script');
-    script.src = 'js/html2pdf.bundle.min.js?v=71.6';
-    script.onload = renderPdfNow;
-    script.onerror = () => {
-      // Fallback secundario a cdnjs si el local fallara
-      const fb = document.createElement('script');
-      fb.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
-      fb.onload = renderPdfNow;
-      fb.onerror = () => {
-        showToast('Error de red al cargar el generador PDF.', 'error');
+        list.forEach((t, i) => {
+          const bg = i % 2 !== 0 ? '#f8fafc' : '#ffffff';
+          const amt = Number(t.amount || 0).toFixed(2);
+          tHtml += `
+            <tr style="background: ${bg};">
+              <td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; font-weight: 700;">${getDueSafe(t)}</td>
+              <td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0;"><span style="background: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 10.5px;">${t.category || 'Varios'}</span></td>
+              <td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; font-weight: 600;">${t.name || 'Gasto'}</td>
+              <td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; text-align: right; font-weight: 800;">${sym} ${amt}</td>
+            </tr>
+          `;
+        });
+        tHtml += `</tbody></table>`;
+        return tHtml;
       };
-      document.head.appendChild(fb);
+
+      html += renderTable(pagadas, '✅ Gastos Pagados', '#10b981');
+      html += renderTable(pendientes, '⏳ Gastos Pendientes', '#f59e0b');
+    } else {
+      html += `<p style="color: #64748b; font-size: 13px; font-style: italic; margin: 20px 0;">No hay gastos registrados en este mes.</p>`;
+    }
+
+    html += `
+      <div style="margin-top: 32px; padding-top: 14px; border-top: 1px solid #e2e8f0; text-align: center; color: #94a3b8; font-size: 10.5px;">
+        Reporte confidencial generado por AliviaFin App · Paz mental para tu dinero.<br>
+        © ${new Date().getFullYear()} AliviaFin · aliviafin.com
+      </div>
+    `;
+
+    element.innerHTML = html;
+    document.body.appendChild(element);
+
+    const cleanup = () => {
+      const el = document.getElementById('aliviafinPdfReportContainer');
+      if (el && el.parentNode) {
+        el.parentNode.removeChild(el);
+      }
     };
-    document.head.appendChild(script);
-  } else {
-    renderPdfNow();
+
+    const opt = {
+      margin:       8,
+      filename:     `AliviaFin_Reporte_${curM.replace(/\s+/g, '_')}.pdf`,
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2, useCORS: true, logging: false },
+      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    const renderPdfNow = async () => {
+      try {
+        if (typeof showToast === 'function') showToast('📄 Generando reporte PDF...', 'info');
+        
+        const worker = html2pdf().set(opt).from(element);
+        const pdfBlob = await worker.outputPdf('blob');
+        cleanup();
+
+        const fileName = `AliviaFin_Reporte_${curM.replace(/\s+/g, '_')}.pdf`;
+        const pdfFile = new File([pdfBlob], fileName, { type: 'application/pdf' });
+
+        // En iOS Safari / PWA: usar Web Share API nativo si está disponible
+        if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+          try {
+            await navigator.share({
+              title: `AliviaFin — Reporte ${curM}`,
+              text: `Reporte financiero de ${curM}`,
+              files: [pdfFile]
+            });
+            if (typeof showToast === 'function') showToast('✅ Reporte PDF listo', 'success');
+            return;
+          } catch (shareErr) {
+            if (shareErr.name === 'AbortError') return;
+            console.warn('Share falló, usando descarga estándar:', shareErr);
+          }
+        }
+
+        // Descarga por enlace Blob universal
+        const blobUrl = URL.createObjectURL(pdfBlob);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = fileName;
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        setTimeout(() => {
+          if (link.parentNode) link.parentNode.removeChild(link);
+          URL.revokeObjectURL(blobUrl);
+        }, 5000);
+        if (typeof showToast === 'function') showToast('✅ ¡PDF descargado exitosamente!', 'success');
+      } catch (err) {
+        cleanup();
+        console.error('Error al generar PDF:', err);
+        if (typeof showToast === 'function') showToast('Error al generar el PDF. Inténtalo de nuevo.', 'error');
+      }
+    };
+
+    if (typeof html2pdf === 'undefined') {
+      if (typeof showToast === 'function') showToast('Iniciando generador PDF...', 'info');
+      const script = document.createElement('script');
+      script.src = 'js/html2pdf.bundle.min.js?v=78.4';
+      script.onload = renderPdfNow;
+      script.onerror = () => {
+        const fb = document.createElement('script');
+        fb.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+        fb.onload = renderPdfNow;
+        fb.onerror = () => {
+          cleanup();
+          if (typeof showToast === 'function') showToast('Error de red al cargar el generador PDF.', 'error');
+        };
+        document.head.appendChild(fb);
+      };
+      document.head.appendChild(script);
+    } else {
+      renderPdfNow();
+    }
+  } catch (outerErr) {
+    console.error('Fallo en generatePDFReport:', outerErr);
+    if (typeof showToast === 'function') showToast('Error inesperado al preparar el reporte PDF.', 'error');
   }
 };
-window.exportMonthlyReportPDF = window.generatePDFReport;
+window.exportMonthlyReportPDF = function(event) {
+  if (event && event.stopPropagation) event.stopPropagation();
+  window.generatePDFReport();
+};
 
 // Multi-Moneda Window Exports
 window.SUPPORTED_CURRENCIES = SUPPORTED_CURRENCIES;

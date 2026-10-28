@@ -396,7 +396,7 @@
           <span class="desk-nav-icon">❄️</span>
           <span>Bola de Nieve & Cuotas</span>
         </button>
-        <button class="desktop-nav-item" id="deskNavTabSimulador" onclick="openInstallmentsSimulatorModal()">
+        <button class="desktop-nav-item" id="deskNavTabSimulador" onclick="switchTab('simulador')">
           <span class="desk-nav-icon">💳</span>
           <span>Simulador de Cuotas</span>
         </button>
@@ -464,7 +464,7 @@
             <span id="travelModeFlag">🇵🇪</span> <span id="travelModeCode">PEN</span>
           </button>
           <button class="privacy-toggle-btn" id="privacyToggleBtn" onclick="togglePrivacyMode()" title="Ocultar o mostrar montos (Modo Privacidad)">👁️</button>
-          <button class="theme-toggle-btn desktop-only-header-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Cambiar a Modo Noche Suave">🌙</button>
+          <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Cambiar a Modo Noche Suave">🌙</button>
           <button id="btnFounderHeader" class="settings-popover-btn master-admin-only" onclick="switchTab('founder')" title="Hub de Fundador CEO (Métricas & Suscriptores)" style="display: none !important;">
             👑
             <span id="founderPendingAlertBadgeMob" style="display: none;"></span>
@@ -633,8 +633,9 @@
                   <span>Actividad Reciente</span>
                 </div>
                 <div style="display: flex; gap: 6px; align-items: center;">
-                  <button type="button" onclick="exportMonthlyReportPDF()" style="background: var(--bg-card); border: 1.5px solid var(--border); border-radius: 999px; font-size: 11px; font-weight: 700; color: var(--text-main); cursor: pointer; padding: 3px 9px; display: inline-flex; align-items: center; gap: 4px;" title="Descargar reporte mensual en PDF">
-                    <span>📄 PDF</span>
+                  <button type="button" class="btn-pdf-export" onclick="exportMonthlyReportPDF(event)" title="Descargar reporte mensual en PDF">
+                    <span>📄</span>
+                    <span>PDF</span>
                   </button>
                   <button type="button" onclick="switchTab('movimientos')" style="background: none; border: none; font-size: 11.5px; font-weight: 800; color: var(--primary); cursor: pointer; padding: 2px 4px; display: inline-flex; align-items: center; gap: 4px;">
                     <span>Ver todos (<span id="recentTxCountBadge">0</span>) ↗</span>
@@ -703,8 +704,9 @@
         <div class="card">
           <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
             <div class="card-title" style="margin: 0;">📋 Registro de Gastos</div>
-            <button type="button" class="btn btn-outline btn-sm" onclick="exportMonthlyReportPDF()" style="font-size: 11.5px; font-weight: 700; padding: 4px 10px; border-radius: 999px; border: 1.5px solid var(--border); background: var(--bg-card); display: inline-flex; align-items: center; gap: 4px; cursor: pointer; color: var(--text-main);" title="Descargar balance del mes en PDF">
-              <span>📄 Exportar PDF</span>
+            <button type="button" class="btn-pdf-export" onclick="exportMonthlyReportPDF(event)" title="Descargar balance del mes en PDF">
+              <span>📄</span>
+              <span>Exportar PDF</span>
             </button>
           </div>
 
@@ -789,8 +791,9 @@
             <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Distribución inteligente de tus ingresos de este mes</div>
           </div>
           <div style="display: flex; gap: 8px; align-items: center;">
-            <button type="button" class="btn btn-outline btn-sm" onclick="exportMonthlyReportPDF()" style="font-size: 11px; font-weight: 700; padding: 6px 10px; border-radius: 999px; border-color: var(--border); background: var(--bg-card); display: inline-flex; align-items: center; gap: 4px; cursor: pointer;" title="Descargar reporte mensual en PDF">
-              <span>📄 Reporte PDF</span>
+            <button type="button" class="btn-pdf-export" onclick="exportMonthlyReportPDF(event)" title="Descargar reporte mensual en PDF">
+              <span>📄</span>
+              <span>Reporte PDF</span>
             </button>
             <button type="button" id="btnToggleAllPlanCards" class="plan-toggle-all-btn" onclick="toggleAllPlanCards()" title="Alternar entre ver todo o contraer para una vista compacta">
               <span id="iconToggleAllPlanCards">↕️</span>
@@ -1331,6 +1334,142 @@
 
       </div>
 
+      <!-- TAB: SIMULADOR DE CUOTAS Y CRÉDITO A PANTALLA COMPLETA -->
+      <div id="tab-simulador" class="tab-content">
+        <div class="flex-between mb-2" style="margin-bottom: 12px; align-items: center; flex-wrap: wrap; gap: 8px;">
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <h2 style="font-size: 18px; font-weight: 800; letter-spacing: -0.01em; margin: 0;">💳 Simulador de Cuotas & Crédito</h2>
+              <span class="badge-pro-gold" style="font-size: 10px; padding: 2px 7px;">PRO</span>
+            </div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Proyecta compras a plazos y evalúa con exactitud el impacto en tu flujo de caja futuro</div>
+          </div>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="switchTab('plan')" style="border-radius: 999px; font-weight: 700; padding: 6px 12px; display: inline-flex; align-items: center; gap: 4px;">
+            <span>← Volver a Finanzas</span>
+          </button>
+        </div>
+
+        <div class="sim-grid-layout">
+          <!-- Columna 1: Configuración de la Compra -->
+          <div class="sim-panel-card">
+            <div class="sim-panel-title">
+              <span>🛍️ Parámetros de la Compra</span>
+            </div>
+
+            <div style="margin-bottom: 12px;">
+              <label style="display: block; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">Concepto de la Compra</label>
+              <input type="text" id="simConcept" class="form-control" placeholder="Ej: Laptop trabajo, Pasajes Cusco, TV 55'..." style="width: 100%; font-size: 13px; font-weight: 700;">
+              <div class="sim-quick-chips">
+                <span class="sim-quick-chip" onclick="setSimPreset('Laptop Trabajo', 3200, 12, true)">💻 Laptop S/ 3,200</span>
+                <span class="sim-quick-chip" onclick="setSimPreset('Pasajes Viaje', 1200, 6, true)">✈️ Pasajes S/ 1,200</span>
+                <span class="sim-quick-chip" onclick="setSimPreset('Celular Nuevo', 1800, 12, true)">📱 Celular S/ 1,800</span>
+                <span class="sim-quick-chip" onclick="setSimPreset('Muebles Sala', 2400, 18, true)">🛋️ Muebles S/ 2,400</span>
+              </div>
+            </div>
+
+            <div style="margin-bottom: 12px;">
+              <label style="display: block; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">Monto Total de la Compra (<span class="app-currency-symbol">S/</span>)</label>
+              <input type="number" id="simAmount" class="form-control" placeholder="3600" value="3600" oninput="updateSimulation()" style="width: 100%; font-size: 16px; font-weight: 800; color: #0284c7;">
+            </div>
+
+            <div style="margin-bottom: 12px;">
+              <label style="display: block; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">Categoría del Gasto</label>
+              <select id="simCategory" class="form-control" style="width: 100%; font-weight: 700; cursor: pointer;">
+                <!-- Dinámico -->
+              </select>
+            </div>
+
+            <div style="margin-bottom: 14px;">
+              <label style="display: block; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">Número de Cuotas Mensuales</label>
+              <div class="glass-pill-select" id="simCuotasPills" style="display: flex; gap: 6px; flex-wrap: wrap;">
+                <div class="glass-pill-opt" onclick="setSimCuotas(3, this)" style="cursor: pointer; padding: 6px 12px; border-radius: 10px; font-size: 12px; font-weight: 700; background: var(--border-light); border: 1px solid var(--border);">3 cuotas</div>
+                <div class="glass-pill-opt" onclick="setSimCuotas(6, this)" style="cursor: pointer; padding: 6px 12px; border-radius: 10px; font-size: 12px; font-weight: 700; background: var(--border-light); border: 1px solid var(--border);">6 cuotas</div>
+                <div class="glass-pill-opt active" onclick="setSimCuotas(12, this)" style="cursor: pointer; padding: 6px 12px; border-radius: 10px; font-size: 12px; font-weight: 700; background: #0284c7; color: white; border: 1px solid #0284c7;">12 cuotas</div>
+                <div class="glass-pill-opt" onclick="setSimCuotas(18, this)" style="cursor: pointer; padding: 6px 12px; border-radius: 10px; font-size: 12px; font-weight: 700; background: var(--border-light); border: 1px solid var(--border);">18 cuotas</div>
+                <div class="glass-pill-opt" onclick="setSimCuotas(24, this)" style="cursor: pointer; padding: 6px 12px; border-radius: 10px; font-size: 12px; font-weight: 700; background: var(--border-light); border: 1px solid var(--border);">24 cuotas</div>
+              </div>
+            </div>
+
+            <div style="margin-bottom: 14px; background: rgba(2, 132, 199, 0.05); border: 1.5px solid rgba(2, 132, 199, 0.2); border-radius: 14px; padding: 12px 14px;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <span style="font-size: 12.5px; font-weight: 800; color: var(--text-main);">Cuotas Sin Intereses (0% TEA)</span>
+                  <div style="font-size: 10.5px; color: var(--text-muted);">Típico de promociones BBVA, BCP o Diners</div>
+                </div>
+                <input type="checkbox" id="simZeroInterest" checked onchange="toggleSimZeroInterest()" style="width: 20px; height: 20px; accent-color: #0284c7; cursor: pointer;">
+              </div>
+              <div id="simTeaGroup" style="display: none; margin-top: 10px; padding-top: 10px; border-top: 1px dashed rgba(2, 132, 199, 0.2);">
+                <label style="display: block; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">Tasa de Interés Anual (TEA %)</label>
+                <input type="number" id="simTea" class="form-control" placeholder="18.5" value="0" step="0.1" oninput="updateSimulation()" style="width: 100%; font-size: 13px; font-weight: 700;">
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+              <div>
+                <label style="display: block; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">Mes de Inicio</label>
+                <select id="simStartMonth" class="form-control" onchange="updateSimulation()" style="width: 100%; font-weight: 700;">
+                  <!-- Dinámico -->
+                </select>
+              </div>
+              <div>
+                <label style="display: block; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">Día de Pago</label>
+                <select id="simDueDay" class="form-control" style="width: 100%; font-weight: 700;">
+                  <option value="15">Día 15</option>
+                  <option value="24" selected>Día 24</option>
+                  <option value="30">Día 30</option>
+                  <option value="5">Día 5</option>
+                  <option value="10">Día 10</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Columna 2: Proyección y Flujo de Caja -->
+          <div class="sim-panel-card" style="display: flex; flex-direction: column;">
+            <div class="sim-panel-title">
+              <span>📊 Impacto en tu Flujo de Caja Mensual</span>
+            </div>
+
+            <!-- KPIs -->
+            <div class="sim-kpi-grid">
+              <div class="sim-kpi-badge">
+                <div class="sim-kpi-label">Cuota Mensual</div>
+                <div id="simMonthlyQuotaDisplay" class="sim-kpi-val">S/ 300.00</div>
+              </div>
+              <div class="sim-kpi-badge">
+                <div class="sim-kpi-label">Total a Pagar</div>
+                <div id="simTotalToPayDisplay" class="sim-kpi-val" style="color: var(--text-main);">S/ 3,600.00</div>
+              </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(2, 132, 199, 0.08); border: 1px solid rgba(2, 132, 199, 0.25); border-radius: 12px; padding: 10px 14px; margin-bottom: 14px;">
+              <span style="font-size: 12px; font-weight: 700; color: var(--text-main);">Impacto en tu Presupuesto:</span>
+              <span id="simImpactDisplay" style="font-size: 12.5px; font-weight: 800; color: #0284c7;">-3.4% de tu ingreso</span>
+            </div>
+
+            <!-- Chart -->
+            <div style="flex: 1; min-height: 200px; position: relative; margin-bottom: 14px;">
+              <canvas id="simChartCanvas"></canvas>
+            </div>
+
+            <!-- Action Button -->
+            <button type="button" class="btn btn-primary" id="btnSimApplyPurchase" onclick="handleSimulatedPurchaseClick()" style="width: 100%; padding: 13px; font-size: 14px; font-weight: 800; border-radius: 14px; background: linear-gradient(135deg, #0284c7, #0369a1); display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);">
+              <span>✨ Proyectar y Agregar al Presupuesto Mensual</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Cronograma Desglosado de Cuotas -->
+        <div class="card" style="margin-top: 16px;">
+          <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <div class="card-title" style="margin: 0; font-size: 14px; font-weight: 800;">📅 Cronograma Detallado de Pagos Proyectados</div>
+          </div>
+          <div id="simScheduleTableContainer" style="overflow-x: auto;">
+            <!-- Renderizado dinámico vía updateSimulation() -->
+          </div>
+        </div>
+      </div>
+
       <div id="tab-auditoria" class="tab-content" style="display: none;"></div>
 
       <!-- TAB 6: HUB DE FUNDADOR CEO (MÓDULO COMPLETO FULL-SCREEN v69.0) -->
@@ -1720,17 +1859,21 @@
 
   </div>
 
-  <!-- MODAL: SETTINGS & OPTIONS POPOVER -->
+  <!-- MODAL: SETTINGS & OPTIONS POPOVER (REDISEÑO APPLE FINTECH) -->
   <div class="modal-backdrop" id="settingsModal" onclick="handleBackdropClick(event, 'settingsModal')">
-    <div class="modal">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #f1f5f9;">
-        <div class="modal-title" style="margin: 0; font-size: 16px;">⚙️ Ajustes de AliviaFin</div>
-        <button type="button" onclick="closeModal('settingsModal')" aria-label="Cerrar Ajustes" style="background: #f1f5f9; border: 1px solid #cbd5e1; width: 32px; height: 32px; border-radius: 50%; font-size: 16px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #475569; transition: all 0.15s ease;">✕</button>
+    <div class="modal" style="max-width: 440px; border-radius: 24px; padding: 22px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border);">
+        <div class="modal-title" style="margin: 0; font-size: 16px; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+          <span>⚙️</span>
+          <span>Ajustes & Cuenta</span>
+        </div>
+        <button type="button" onclick="closeModal('settingsModal')" aria-label="Cerrar Ajustes" style="background: var(--border-light); border: 1px solid var(--border); width: 32px; height: 32px; border-radius: 50%; font-size: 15px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-muted); transition: all 0.15s ease;">✕</button>
       </div>
-      <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px;">
+
+      <div style="display: flex; flex-direction: column; gap: 10px; max-height: calc(85vh - 80px); overflow-y: auto; padding-right: 2px;">
         
         <!-- Acceso Exclusivo al Panel Master (Solo para César) -->
-        <div id="settingsMasterAdminRow" style="display: none; margin-bottom: 6px;">
+        <div id="settingsMasterAdminRow" style="display: none;">
           <button type="button" class="btn" onclick="closeModal('settingsModal'); switchTab('founder');" style="width: 100%; padding: 12px 14px; background: linear-gradient(135deg, #0f172a, #1e293b); color: #fbbf24; border: 1.5px solid rgba(251, 191, 36, 0.45); border-radius: 14px; font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 16px rgba(0,0,0,0.18); cursor: pointer;">
             <span style="display: flex; align-items: center; gap: 8px;">
               <span style="font-size: 17px;">👑</span>
@@ -1740,117 +1883,136 @@
           </button>
         </div>
 
-        <div style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 2px;">Mi Perfil & App</div>
-
-        <!-- Controles Rápidos: Modo Privacidad & Modo Noche -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 6px;">
-          <button type="button" class="btn btn-secondary" id="settingsPrivacyBtn" onclick="togglePrivacyMode()" style="padding: 10px 8px; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 6px; border-radius: 10px;" title="Ocultar o mostrar saldos en la app">
-            <span id="settingsPrivacyIcon">👁️</span> <span id="settingsPrivacyLabel">Ocultar Saldos</span>
-          </button>
-          <button type="button" class="btn btn-secondary" id="settingsThemeBtn" onclick="toggleTheme()" style="padding: 10px 8px; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 6px; border-radius: 10px;" title="Cambiar a modo noche o día">
-            <span>🌙</span> <span>Modo Noche</span>
-          </button>
-        </div>
-
-        <!-- Nombre de Usuario / Apodo Personalizado -->
-        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 12px; margin-bottom: 4px;">
-          <label for="settingsUserNameInput" style="display: block; font-size: 11px; font-weight: 700; color: var(--text-secondary); margin-bottom: 6px;">👤 Nombre o Apodo en la App:</label>
-          <div style="display: flex; gap: 8px;">
-            <input type="text" id="settingsUserNameInput" placeholder="Ej: makiados" style="flex: 1; padding: 8px 10px; font-size: 13px; font-weight: 700; border: 1.5px solid #cbd5e1; border-radius: 8px; color: #0f172a; background: #ffffff;">
-            <button type="button" onclick="saveCustomUserName()" class="btn btn-primary" style="padding: 8px 14px; font-size: 12px; font-weight: 800; border-radius: 8px; white-space: nowrap;">Guardar</button>
+        <!-- TARJETA DE PERFIL (FOTO, NOMBRE, CORREO, SUSCRIPCIÓN) -->
+        <div class="settings-profile-card">
+          <div class="settings-avatar-wrap">
+            <div id="settingsAvatarDisplay" class="settings-avatar-img">👤</div>
+            <label for="settingsAvatarFileInput" class="settings-avatar-edit-badge" title="Cambiar foto de perfil">📷</label>
+            <input type="file" id="settingsAvatarFileInput" accept="image/*" style="display: none;" onchange="handleUserAvatarUpload(event)">
+          </div>
+          <div class="settings-profile-info">
+            <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+              <span id="settingsProfileNameText" class="settings-profile-name">Usuario</span>
+              <span id="settingsPlanBadge" class="badge-pro-gold" style="font-size: 9.5px; padding: 1px 6px;">Plan Free</span>
+              <button type="button" id="settingsRenewBtn" onclick="closeModal('settingsModal'); openFinZenProModal('Renovación Mensual', 'pro_monthly');" style="display: none; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.25); color: #7c3aed; font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 6px; cursor: pointer;">Renovar ⚡</button>
+            </div>
+            <div id="settingsUserEmail" class="settings-profile-email">usuario@correo.com</div>
+            <div id="settingsRenewalRow" style="display: none; font-size: 10px; color: var(--text-muted); margin-top: 2px;">
+              <span>Vencimiento: </span><span id="settingsRenewalDateText" style="font-weight: 700;">—</span>
+            </div>
           </div>
         </div>
 
-        <!-- Selector Multi-Moneda Oficial (PEN y USD) -->
-        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 12px; margin-bottom: 6px;">
-          <label for="settingCurrencySelect" style="display: block; font-size: 11px; font-weight: 700; color: var(--text-secondary); margin-bottom: 6px;">💵 Moneda Principal de la Cuenta:</label>
-          <select id="settingCurrencySelect" onchange="changeCurrency(this.value)" class="form-control" style="width: 100%; padding: 8px 10px; font-size: 13px; font-weight: 700; border: 1.5px solid #cbd5e1; border-radius: 8px; color: #0f172a; background: #ffffff; cursor: pointer;">
-            <option value="PEN">🇵🇪 Soles (S/ - PEN)</option>
-            <option value="USD">🇺🇸 Dólares ($ - USD)</option>
-          </select>
+        <!-- SELECTOR DE AVATAR RÁPIDO O SUBIR FOTO -->
+        <div class="settings-avatar-presets">
+          <span style="font-size: 11px; font-weight: 800; color: var(--text-muted); margin-right: 4px;">Avatar:</span>
+          <button type="button" class="settings-emoji-btn" onclick="setUserAvatarEmoji('👤')">👤</button>
+          <button type="button" class="settings-emoji-btn" onclick="setUserAvatarEmoji('💼')">💼</button>
+          <button type="button" class="settings-emoji-btn" onclick="setUserAvatarEmoji('🚀')">🚀</button>
+          <button type="button" class="settings-emoji-btn" onclick="setUserAvatarEmoji('👑')">👑</button>
+          <button type="button" class="settings-emoji-btn" onclick="setUserAvatarEmoji('🦁')">🦁</button>
+          <button type="button" class="settings-emoji-btn" onclick="setUserAvatarEmoji('⚡')">⚡</button>
+          <button type="button" class="settings-avatar-upload-btn" onclick="document.getElementById('settingsAvatarFileInput').click()">📷 Subir Foto</button>
+          <button type="button" class="settings-avatar-remove-btn" onclick="removeUserAvatar()" title="Quitar foto">✕</button>
         </div>
 
-        <div style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-top: 6px; margin-bottom: 2px;">Herramientas & Configuración</div>
-        <button type="button" class="btn btn-secondary" onclick="closeModal('settingsModal'); switchTab('prestamos');" style="width: 100%; text-align: left; padding: 10px; font-weight: 700; display: flex; justify-content: space-between; align-items: center;">
-          <span>🤝 Cuentas Claras: Préstamos & Cobros</span>
-          <span style="font-size: 11px; font-weight: 700; color: #059669; background: rgba(5,150,105,0.1); padding: 2px 7px; border-radius: 6px;">Dashboard</span>
-        </button>
-        <button type="button" class="btn btn-secondary" onclick="closeModal('settingsModal'); openEditSalaryModal();" style="width: 100%; text-align: left; padding: 10px; font-weight: 700;">💵 Modificar Sueldo / Ingreso Mensual</button>
-        <button type="button" class="btn btn-secondary" onclick="openCategoryManagerModal();" style="width: 100%; text-align: left; padding: 10px;">⚙️ Gestor de Categorías</button>
-        <button type="button" class="btn btn-secondary" onclick="closeModal('settingsModal'); openInstallmentsSimulatorModal();" style="width: 100%; text-align: left; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
-          <span>💳 Simulador de Cuotas y Crédito</span>
-          <span class="badge-pro-gold" style="font-size: 10px; padding: 2px 6px;">PRO 👑</span>
-        </button>
-        <button type="button" class="btn btn-secondary" onclick="closeModal('settingsModal'); startInteractiveTour();" style="width: 100%; text-align: left; padding: 10px;">🧭 Ver Tour Guiado</button>
-        <button type="button" class="btn btn-secondary" onclick="closeModal('settingsModal'); openInstallTutorialModal();" style="width: 100%; text-align: left; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
-          <span>📲 Cómo Instalar la App en iPhone y Android</span>
-          <span style="font-size: 10px; font-weight: 700; color: #0284c7; background: rgba(2,132,199,0.1); padding: 2px 6px; border-radius: 6px;">Guía</span>
-        </button>
+        <!-- GRUPO 1: TU IDENTIDAD & MONEDA -->
+        <div class="settings-group-card">
+          <div class="settings-group-title">👤 Identidad & Moneda</div>
+          
+          <div style="margin-bottom: 10px;">
+            <label for="settingsUserNameInput" style="display: block; font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 4px;">Nombre o Apodo en la App:</label>
+            <div style="display: flex; gap: 8px;">
+              <input type="text" id="settingsUserNameInput" placeholder="Ej: makiados" class="form-control" style="flex: 1; padding: 7px 10px; font-size: 12.5px; font-weight: 700;">
+              <button type="button" onclick="saveCustomUserName()" class="btn btn-primary btn-sm" style="font-weight: 800; padding: 6px 12px; border-radius: 8px;">Guardar</button>
+            </div>
+          </div>
 
-        <div style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-top: 6px; margin-bottom: 2px;">Exportación & Reportes</div>
-        <button type="button" class="btn btn-secondary" onclick="exportMonthlyReportPDF(); closeModal('settingsModal');" style="width: 100%; text-align: left; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
-          <span>📄 Descargar Reporte Mensual (PDF)</span>
-          <span style="font-size: 10px; font-weight: 700; color: #10b981; background: rgba(16,185,129,0.1); padding: 2px 6px; border-radius: 6px;">Gratis</span>
-        </button>
-        <button type="button" class="btn btn-secondary" onclick="closeModal('settingsModal'); handleExportExcelCSVClick();" style="width: 100%; text-align: left; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
-          <span>📊 Exportar Historial a Excel / CSV</span>
-          <span class="badge-pro-gold" style="font-size: 10px; padding: 2px 6px;">PRO 👑</span>
-        </button>
-
-        <div style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-top: 6px; margin-bottom: 2px;">Soporte & Legal</div>
-        <button type="button" class="btn btn-secondary" id="settingsWhatsNewBtn" onclick="openWhatsNewModal();" style="width: 100%; text-align: left; padding: 10px;">🚀 Novedades</button>
-        <button type="button" class="btn btn-secondary" onclick="openLegalModal('terms');" style="width: 100%; text-align: left; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; border-radius: 12px; margin-bottom: 6px;" title="Términos, Privacidad y Garantía de 7 días">
           <div>
-            <div style="font-size: 12.5px; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 6px;">
-              <span>⚖️ Términos, Privacidad & Garantía</span>
-              <span style="font-size: 9.5px; font-weight: 800; background: rgba(16,185,129,0.1); color: #059669; padding: 1px 6px; border-radius: 6px;">Garantía 7 Días</span>
-            </div>
-            <div style="font-size: 10.5px; color: var(--text-muted); margin-top: 2px;">Términos de Uso · Privacidad Zero-Knowledge · Garantía 100% · Soporte</div>
-          </div>
-          <span style="font-size: 16px; color: var(--text-muted);">›</span>
-        </button>
-        <button type="button" class="btn btn-secondary" onclick="openDeleteAccountModal();" style="width: 100%; text-align: left; padding: 10px; color: #ef4444; display: flex; justify-content: space-between; align-items: center;" title="Derecho al Olvido y Supresión (Ley N° 29733 / GDPR)">
-          <span>🗑️ Eliminar Mi Cuenta y Datos (Ley 29733)</span>
-          <span style="font-size: 10px; font-weight: 800; background: rgba(239,68,68,0.1); color: #ef4444; padding: 2px 6px; border-radius: 6px;">ARCO</span>
-        </button>
-        
-        <!-- Info de cuenta, titular y versión -->
-        <div style="border-top: 1px solid #f3f4f6; padding-top: 12px; margin-top: 4px;">
-          <div style="background: #f8fafc; border-radius: 12px; padding: 12px 14px; border: 1px solid #e5e7eb;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <span style="font-size: 11px; font-weight: 700; color: #374151;">👤 Cuenta</span>
-              <span id="settingsUserEmail" style="font-size: 11px; color: #6b7280; font-weight: 600;"></span>
-            </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <span style="font-size: 11px; font-weight: 700; color: #374151;">👑 Suscripción</span>
-              <div style="display: flex; align-items: center; gap: 6px;">
-                <span id="settingsPlanBadge" style="font-size: 11px; font-weight: 800; color: #475569;">Plan Free</span>
-                <button type="button" id="settingsRenewBtn" onclick="closeModal('settingsModal'); openFinZenProModal('Renovación Mensual', 'pro_monthly');" style="display: none; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.25); color: #7c3aed; font-size: 10.5px; font-weight: 800; padding: 2px 8px; border-radius: 6px; cursor: pointer;">Renovar ⚡</button>
-              </div>
-            </div>
-            <div id="settingsRenewalRow" style="display: none; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <span style="font-size: 10.5px; font-weight: 700; color: #64748b;">📅 Próximo vencimiento</span>
-              <span id="settingsRenewalDateText" style="font-size: 10.5px; color: #334155; font-weight: 700;">—</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <span style="font-size: 11px; font-weight: 700; color: #374151;">📱 Versión</span>
-              <div style="display: flex; align-items: center; gap: 6px;">
-                <span style="font-size: 11px; color: #0d9488; font-weight: 800;" id="settingsVersion">v71.8</span>
-                <button type="button" onclick="forceAppRefresh()" style="font-size: 10px; font-weight: 800; background: rgba(16, 185, 129, 0.12); color: #059669; border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 6px; padding: 2px 7px; cursor: pointer;" title="Forzar actualización inmediata">🔄 Actualizar</button>
-              </div>
-            </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 5px; border-top: 1px dashed #e2e8f0;">
-              <span style="font-size: 10.5px; font-weight: 700; color: #64748b;">🏢 Plataforma</span>
-              <span style="font-size: 10.5px; color: #334155; font-weight: 700;">AliviaFin · Lima, Perú</span>
-            </div>
+            <label for="settingCurrencySelect" style="display: block; font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 4px;">Moneda Principal:</label>
+            <select id="settingCurrencySelect" onchange="changeCurrency(this.value)" class="form-control" style="width: 100%; padding: 7px 10px; font-size: 12.5px; font-weight: 700; cursor: pointer;">
+              <option value="PEN">🇵🇪 Soles (S/ - PEN)</option>
+              <option value="USD">🇺🇸 Dólares ($ - USD)</option>
+            </select>
           </div>
         </div>
 
-        <button type="button" class="btn btn-pill danger" onclick="handleLogout()" style="width: 100%; padding: 10px; font-size: 12px;">🔒 Cerrar Sesión</button>
+        <!-- GRUPO 2: HERRAMIENTAS & MÓDULOS -->
+        <div class="settings-group-card">
+          <div class="settings-group-title">🛠️ Herramientas Financieras</div>
+          <button type="button" class="settings-nav-btn" onclick="closeModal('settingsModal'); switchTab('simulador');">
+            <span>💳 Simulador de Cuotas & Crédito</span>
+            <span class="badge-pro-gold" style="font-size: 9.5px; padding: 2px 6px;">PRO 👑</span>
+          </button>
+          <button type="button" class="settings-nav-btn" onclick="closeModal('settingsModal'); switchTab('prestamos');">
+            <span>🤝 Cuentas Claras: Préstamos & Cobros</span>
+            <span style="font-size: 10.5px; font-weight: 700; color: #059669; background: rgba(5,150,105,0.1); padding: 2px 7px; border-radius: 6px;">Dashboard</span>
+          </button>
+          <button type="button" class="settings-nav-btn" onclick="closeModal('settingsModal'); openEditSalaryModal();">
+            <span>💵 Modificar Sueldo / Ingreso Mensual</span>
+            <span style="font-size: 11px; color: var(--text-muted);">✏️</span>
+          </button>
+          <button type="button" class="settings-nav-btn" onclick="openCategoryManagerModal();">
+            <span>⚙️ Gestor de Categorías</span>
+            <span style="font-size: 11px; color: var(--text-muted);">›</span>
+          </button>
+          <button type="button" class="settings-nav-btn" onclick="closeModal('settingsModal'); startInteractiveTour();">
+            <span>🧭 Ver Tour Guiado</span>
+            <span style="font-size: 11px; color: var(--text-muted);">›</span>
+          </button>
+          <button type="button" class="settings-nav-btn" onclick="closeModal('settingsModal'); openInstallTutorialModal();">
+            <span>📲 Cómo Instalar en iPhone y Android</span>
+            <span style="font-size: 10px; font-weight: 700; color: #0284c7; background: rgba(2,132,199,0.1); padding: 2px 6px; border-radius: 6px;">Guía</span>
+          </button>
+        </div>
+
+        <!-- GRUPO 3: EXPORTACIÓN & SEGURIDAD DE DATOS -->
+        <div class="settings-group-card">
+          <div class="settings-group-title">📄 Exportación & Respaldo</div>
+          <button type="button" class="settings-nav-btn" onclick="exportMonthlyReportPDF(event); closeModal('settingsModal');">
+            <span>📄 Descargar Reporte Mensual (PDF)</span>
+            <span style="font-size: 10px; font-weight: 700; color: #10b981; background: rgba(16,185,129,0.1); padding: 2px 6px; border-radius: 6px;">Offline Gratis</span>
+          </button>
+          <button type="button" class="settings-nav-btn" onclick="closeModal('settingsModal'); handleExportExcelCSVClick();">
+            <span>📊 Exportar Historial a Excel / CSV</span>
+            <span class="badge-pro-gold" style="font-size: 9.5px; padding: 2px 6px;">PRO 👑</span>
+          </button>
+          <button type="button" class="settings-nav-btn" onclick="exportCompleteDatabaseJSON();">
+            <span>🛡️ Descargar Respaldo JSON Completo</span>
+            <span style="font-size: 10px; font-weight: 700; color: #6366f1; background: rgba(99,102,241,0.1); padding: 2px 6px; border-radius: 6px;">100% Datos</span>
+          </button>
+        </div>
+
+        <!-- GRUPO 4: SOPORTE & LEGAL -->
+        <div class="settings-group-card">
+          <div class="settings-group-title">⚖️ Soporte & Legal</div>
+          <button type="button" class="settings-nav-btn" id="settingsWhatsNewBtn" onclick="openWhatsNewModal();">
+            <span>🚀 Novedades de la Versión</span>
+            <span style="font-size: 11px; color: var(--text-muted);">›</span>
+          </button>
+          <button type="button" class="settings-nav-btn" onclick="openLegalModal('terms');">
+            <span>⚖️ Términos, Privacidad & Garantía</span>
+            <span style="font-size: 9.5px; font-weight: 800; background: rgba(16,185,129,0.1); color: #059669; padding: 1px 6px; border-radius: 6px;">7 Días</span>
+          </button>
+          <button type="button" class="settings-nav-btn" onclick="openDeleteAccountModal();" style="color: #ef4444;">
+            <span>🗑️ Eliminar Mi Cuenta y Datos (Ley 29733)</span>
+            <span style="font-size: 9.5px; font-weight: 800; background: rgba(239,68,68,0.1); color: #ef4444; padding: 1px 6px; border-radius: 6px;">ARCO</span>
+          </button>
+        </div>
+
+        <!-- Info de Versión y Plataforma -->
+        <div style="padding: 10px 14px; background: rgba(0,0,0,0.02); border-radius: 12px; display: flex; justify-content: space-between; align-items: center; font-size: 11px;">
+          <div>
+            <span style="color: var(--text-muted);">AliviaFin</span> <span id="settingsVersion" style="color: #0d9488; font-weight: 800;">v78.4</span>
+            <div style="font-size: 10px; color: var(--text-muted);">Lima, Perú</div>
+          </div>
+          <button type="button" onclick="forceAppRefresh()" style="font-size: 10.5px; font-weight: 800; background: rgba(16, 185, 129, 0.12); color: #059669; border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 4px 10px; cursor: pointer;">🔄 Actualizar</button>
+        </div>
+
+        <button type="button" class="btn btn-pill danger" onclick="handleLogout()" style="width: 100%; padding: 12px; font-size: 13px; font-weight: 800; border-radius: 12px; margin-top: 4px;">🔒 Cerrar Sesión</button>
       </div>
-      <div class="modal-actions" style="margin-top: 14px;">
-        <button type="button" class="btn btn-secondary" onclick="closeModal('settingsModal')" style="width: 100%; font-weight: 800; padding: 10px;">✕ Cerrar Ajustes [ESC]</button>
-      </div>
+    </div>
+  </div>
     </div>
   </div>
 

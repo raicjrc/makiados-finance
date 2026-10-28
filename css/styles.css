@@ -10186,4 +10186,335 @@ body.theme-twilight .plan-card-mini-summary {
   }
 }
 
+/* ================================================================
+   BOTÓN EXPORTAR REPORTE PDF (ALTO CONTRASTE & APPLE FINTECH)
+   ================================================================ */
+.btn-pdf-export {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  font-size: 11.5px;
+  font-weight: 800;
+  border-radius: 999px;
+  background: rgba(13, 148, 136, 0.12);
+  border: 1.5px solid #0d9488;
+  color: #0f766e;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(13, 148, 136, 0.15);
+  white-space: nowrap;
+  min-height: 30px;
+}
+.btn-pdf-export:hover {
+  background: #0d9488;
+  color: #ffffff;
+  border-color: #0d9488;
+  box-shadow: 0 3px 10px rgba(13, 148, 136, 0.35);
+}
+.btn-pdf-export:active {
+  transform: scale(0.96);
+}
+[data-theme="dark"] .btn-pdf-export,
+body.theme-twilight .btn-pdf-export {
+  background: rgba(20, 184, 166, 0.22);
+  border: 1.5px solid #14b8a6;
+  color: #2dd4bf;
+  box-shadow: 0 1px 4px rgba(20, 184, 166, 0.25);
+}
+[data-theme="dark"] .btn-pdf-export:hover,
+body.theme-twilight .btn-pdf-export:hover {
+  background: #14b8a6;
+  color: #0f172a;
+}
+
+/* ================================================================
+   TOP NAVBAR COMPACTACION & MODO OSCURO MÓVIL
+   ================================================================ */
+@media (max-width: 768px) {
+  .month-selector select {
+    max-width: 112px !important;
+    min-width: 90px !important;
+    padding: 4px 6px !important;
+    font-size: 12px !important;
+    font-weight: 800 !important;
+    border-radius: 10px !important;
+    min-height: 32px !important;
+  }
+  .header-right-group {
+    gap: 4px !important;
+  }
+  .theme-toggle-btn {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 10px !important;
+    font-size: 14px !important;
+    flex-shrink: 0;
+  }
+  .privacy-toggle-btn {
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 10px !important;
+    font-size: 14px !important;
+    flex-shrink: 0;
+  }
+}
+
+/* ================================================================
+   AJUSTES MODAL REDISEÑO APPLE FINTECH
+   ================================================================ */
+.settings-profile-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: var(--bg-card, #ffffff);
+  border: 1.5px solid var(--border, #e2e8f0);
+  border-radius: 18px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+}
+.settings-avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+.settings-avatar-img {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(13, 148, 136, 0.15), rgba(59, 130, 246, 0.15));
+  border: 2px solid var(--primary, #0d9488);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+.settings-avatar-edit-badge {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 22px;
+  height: 22px;
+  background: #0d9488;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  cursor: pointer;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+  transition: transform 0.15s ease;
+}
+.settings-avatar-edit-badge:hover {
+  transform: scale(1.1);
+}
+.settings-profile-info {
+  flex: 1;
+  min-width: 0;
+}
+.settings-profile-name {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text-main, #0f172a);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.settings-profile-email {
+  font-size: 11.5px;
+  color: var(--text-muted, #64748b);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.settings-avatar-presets {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: rgba(0,0,0,0.02);
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+.settings-emoji-btn {
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border, #cbd5e1);
+  border-radius: 8px;
+  width: 28px;
+  height: 28px;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease;
+}
+.settings-emoji-btn:hover {
+  transform: scale(1.15);
+  border-color: #0d9488;
+}
+.settings-avatar-upload-btn {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: 1px solid #0d9488;
+  background: rgba(13, 148, 136, 0.08);
+  color: #0d9488;
+  cursor: pointer;
+}
+.settings-avatar-remove-btn {
+  background: none;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  color: #94a3b8;
+  font-size: 10px;
+  width: 22px;
+  height: 22px;
+  cursor: pointer;
+}
+.settings-group-card {
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 16px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+}
+.settings-group-title {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted, #94a3b8);
+  margin-bottom: 8px;
+  padding-left: 2px;
+}
+.settings-nav-btn {
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  font-size: 12.5px;
+  font-weight: 700;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: var(--text-main, #0f172a);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.settings-nav-btn:hover {
+  background: var(--border-light, #f1f5f9);
+}
+
+/* ================================================================
+   PANTALLA COMPLETA: SIMULADOR DE CUOTAS & CRÉDITO (tab-simulador)
+   ================================================================ */
+.sim-grid-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 14px;
+}
+@media (max-width: 900px) {
+  .sim-grid-layout {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+}
+.sim-panel-card {
+  background: var(--bg-card, #ffffff);
+  border: 1.5px solid var(--border, #e2e8f0);
+  border-radius: 20px;
+  padding: 18px 20px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.03);
+}
+.sim-panel-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text-main, #0f172a);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sim-quick-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+  margin-bottom: 12px;
+}
+.sim-quick-chip {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 9px;
+  border-radius: 8px;
+  background: var(--border-light, #f1f5f9);
+  border: 1px solid var(--border, #e2e8f0);
+  color: var(--text-secondary, #475569);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.sim-quick-chip:hover {
+  border-color: #0284c7;
+  color: #0284c7;
+  background: #e0f2fe;
+}
+.sim-kpi-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.sim-kpi-badge {
+  background: var(--border-light, #f8fafc);
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+.sim-kpi-label {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted, #64748b);
+}
+.sim-kpi-val {
+  font-size: 20px;
+  font-weight: 800;
+  color: #0284c7;
+  margin-top: 3px;
+}
+.sim-schedule-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  margin-top: 10px;
+}
+.sim-schedule-table th {
+  background: var(--border-light, #f1f5f9);
+  padding: 8px 10px;
+  font-weight: 800;
+  color: var(--text-secondary, #475569);
+  text-align: left;
+  border-bottom: 1.5px solid var(--border, #e2e8f0);
+}
+.sim-schedule-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border, #e2e8f0);
+  color: var(--text-main, #0f172a);
+}
+
 
