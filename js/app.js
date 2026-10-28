@@ -1117,19 +1117,29 @@
 
       // 4. Badge en la tarjeta inferior de usuario del sidebar (#deskSidebarUserSubBadge)
       const sideUserBadge = document.getElementById('deskSidebarUserSubBadge');
+      const sideUserRole = document.getElementById('deskSidebarRoleText');
       if (sideUserBadge) {
-        if (isExpired) {
+        if (isAdminCesar()) {
+          sideUserBadge.style.display = 'inline-block';
+          sideUserBadge.style.background = 'rgba(245, 158, 11, 0.18)';
+          sideUserBadge.style.color = '#d97706';
+          sideUserBadge.textContent = '👑 CEO';
+          if (sideUserRole) sideUserRole.textContent = '👑 Fundador Vitalicio';
+        } else if (isExpired) {
           sideUserBadge.style.display = 'inline-block';
           sideUserBadge.style.background = 'rgba(239, 68, 68, 0.15)';
           sideUserBadge.style.color = '#dc2626';
           sideUserBadge.textContent = '🔴 Vencido';
+          if (sideUserRole) sideUserRole.textContent = 'Plan Vencido';
         } else if (isPro) {
           sideUserBadge.style.display = 'inline-block';
           sideUserBadge.style.background = 'rgba(245, 158, 11, 0.18)';
           sideUserBadge.style.color = '#d97706';
           sideUserBadge.textContent = '👑 PRO';
+          if (sideUserRole) sideUserRole.textContent = 'Suscripción Activa';
         } else {
           sideUserBadge.style.display = 'none';
+          if (sideUserRole) sideUserRole.textContent = 'Plan Free';
         }
       }
 
@@ -1844,27 +1854,70 @@
 
     function initUserAvatar() {
       const userKey = (currentUser && currentUser.id) ? currentUser.id : 'default';
-      const savedAvatar = localStorage.getItem('aliviafin_user_avatar_' + userKey) || localStorage.getItem('aliviafin_user_avatar');
-      applyUserAvatar(savedAvatar || '👤');
+      let avatar = localStorage.getItem('aliviafin_user_avatar_' + userKey) || localStorage.getItem('aliviafin_user_avatar');
+
+      // 1. Si appState ya tiene avatar de la nube (ej: en celular), sincronizar a localStorage
+      if (appState && appState.userAvatar) {
+        avatar = appState.userAvatar;
+        localStorage.setItem('aliviafin_user_avatar_' + userKey, avatar);
+        localStorage.setItem('aliviafin_user_avatar', avatar);
+      } else if (avatar && avatar !== '👤') {
+        // 2. Si la PC ya tenía el avatar guardado en localStorage (la foto actual),
+        // subirlo a appState y sincronizar a Supabase para que viaje de inmediato al celular
+        if (appState) {
+          appState.userAvatar = avatar;
+          if (typeof syncStateToServer === 'function') {
+            syncStateToServer();
+          }
+        }
+      }
+
+      applyUserAvatar(avatar || '👤');
+      if (typeof renderHomeGreeting === 'function') renderHomeGreeting();
     }
 
     function applyUserAvatar(avatar) {
-      const settingsDisplay = document.getElementById('settingsAvatarDisplay');
-      const deskAvatar = document.getElementById('deskSidebarAvatar');
       const isImg = avatar && (avatar.startsWith('data:image') || avatar.startsWith('http') || avatar.startsWith('/'));
 
+      // 1. Modal de Ajustes
+      const settingsDisplay = document.getElementById('settingsAvatarDisplay');
       if (settingsDisplay) {
         if (isImg) {
-          settingsDisplay.innerHTML = `<img src="${avatar}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" alt="Foto">`;
+          settingsDisplay.innerHTML = `<img src="${avatar}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block;" alt="Foto">`;
         } else {
-          settingsDisplay.innerHTML = `<span style="font-size: 26px;">${avatar || '👤'}</span>`;
+          settingsDisplay.innerHTML = `<span style="font-size: 28px;">${avatar || '👤'}</span>`;
         }
       }
+
+      // 2. Sidebar Desktop (Abajo a la izquierda, 38px)
+      const deskAvatar = document.getElementById('deskSidebarAvatar');
       if (deskAvatar) {
         if (isImg) {
-          deskAvatar.innerHTML = `<img src="${avatar}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" alt="Foto">`;
+          deskAvatar.innerHTML = `<img src="${avatar}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block;" alt="Foto">`;
         } else {
-          deskAvatar.innerHTML = `<span style="font-size: 15px;">${avatar || '👤'}</span>`;
+          deskAvatar.innerHTML = `<span style="font-size: 19px;">${avatar || '👤'}</span>`;
+        }
+      }
+
+      // 3. Barra de navegación inferior móvil (Icono de Ajustes dinámico)
+      const mobileNavAvatar = document.getElementById('mobileNavAvatarWrap');
+      if (mobileNavAvatar) {
+        if (isImg) {
+          mobileNavAvatar.innerHTML = `<img src="${avatar}" style="width: 22px; height: 22px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--border);" alt="Perfil">`;
+        } else if (avatar && avatar !== '👤' && avatar !== '⚙️') {
+          mobileNavAvatar.innerHTML = `<span style="font-size: 17px; line-height: 1;">${avatar}</span>`;
+        } else {
+          mobileNavAvatar.innerHTML = `<span class="nav-icon" style="font-size: 18px;">⚙️</span>`;
+        }
+      }
+
+      // 4. Banner Ejecutivo de Bienvenida en Pantalla Principal (Inicio)
+      const homeGreetingAvatar = document.getElementById('homeGreetingAvatar');
+      if (homeGreetingAvatar) {
+        if (isImg) {
+          homeGreetingAvatar.innerHTML = `<img src="${avatar}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block;" alt="Foto">`;
+        } else {
+          homeGreetingAvatar.innerHTML = `<span style="font-size: 22px;">${avatar || '👤'}</span>`;
         }
       }
     }
@@ -1882,20 +1935,30 @@
         const img = new Image();
         img.onload = function() {
           const canvas = document.createElement('canvas');
-          canvas.width = 180;
-          canvas.height = 180;
+          canvas.width = 140;
+          canvas.height = 140;
           const ctx = canvas.getContext('2d');
           const minDim = Math.min(img.width, img.height);
           const sx = (img.width - minDim) / 2;
           const sy = (img.height - minDim) / 2;
-          ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, 180, 180);
-          const optimizedData = canvas.toDataURL('image/jpeg', 0.85);
+          ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, 140, 140);
+          const optimizedData = canvas.toDataURL('image/jpeg', 0.78);
 
           const userKey = (currentUser && currentUser.id) ? currentUser.id : 'default';
           localStorage.setItem('aliviafin_user_avatar_' + userKey, optimizedData);
           localStorage.setItem('aliviafin_user_avatar', optimizedData);
+
+          // Guardar en el estado global para sincronización automática en Supabase
+          if (appState) {
+            appState.userAvatar = optimizedData;
+            saveLocalState();
+            if (typeof syncStateToServer === 'function') {
+              syncStateToServer();
+            }
+          }
+
           applyUserAvatar(optimizedData);
-          showToast('✅ Foto de perfil actualizada', 'success');
+          showToast('✅ Foto de perfil guardada y sincronizada en la nube', 'success');
         };
         img.src = rawData;
       };
@@ -1906,6 +1969,15 @@
       const userKey = (currentUser && currentUser.id) ? currentUser.id : 'default';
       localStorage.setItem('aliviafin_user_avatar_' + userKey, emoji);
       localStorage.setItem('aliviafin_user_avatar', emoji);
+
+      if (appState) {
+        appState.userAvatar = emoji;
+        saveLocalState();
+        if (typeof syncStateToServer === 'function') {
+          syncStateToServer();
+        }
+      }
+
       applyUserAvatar(emoji);
       showToast(`✅ Avatar actualizado a ${emoji}`, 'success');
     }
@@ -1914,8 +1986,52 @@
       const userKey = (currentUser && currentUser.id) ? currentUser.id : 'default';
       localStorage.removeItem('aliviafin_user_avatar_' + userKey);
       localStorage.removeItem('aliviafin_user_avatar');
+
+      if (appState) {
+        appState.userAvatar = null;
+        saveLocalState();
+        if (typeof syncStateToServer === 'function') {
+          syncStateToServer();
+        }
+      }
+
       applyUserAvatar('👤');
       showToast('Avatar restablecido a predeterminado', 'info');
+    }
+
+    function renderHomeGreeting() {
+      const greetingTimeEl = document.getElementById('homeGreetingTimeText');
+      const greetingNameEl = document.getElementById('homeGreetingUserName');
+      const greetingBadgeEl = document.getElementById('homeGreetingBadge');
+
+      const hour = new Date().getHours();
+      let saludo = 'Hola de nuevo';
+      if (hour >= 5 && hour < 12) saludo = 'Buenos días';
+      else if (hour >= 12 && hour < 19) saludo = 'Buenas tardes';
+      else saludo = 'Buenas noches';
+
+      if (greetingTimeEl) greetingTimeEl.textContent = `${saludo} 👋`;
+
+      const displayName = (currentUser && currentUser.name)
+        ? currentUser.name
+        : (localStorage.getItem('aliviafin_custom_display_name') || 'Usuario');
+      if (greetingNameEl) greetingNameEl.textContent = displayName;
+
+      if (greetingBadgeEl) {
+        if (isAdminCesar()) {
+          greetingBadgeEl.className = 'badge-pro-gold';
+          greetingBadgeEl.style.display = 'inline-flex';
+          greetingBadgeEl.textContent = '👑 Fundador CEO';
+        } else if (currentUserSubscription && (currentUserSubscription.status === 'pro_monthly' || currentUserSubscription.status === 'pro_annual' || currentUserSubscription.status === 'trial')) {
+          greetingBadgeEl.className = 'badge-pro-gold';
+          greetingBadgeEl.style.display = 'inline-flex';
+          greetingBadgeEl.textContent = '👑 PRO';
+        } else {
+          greetingBadgeEl.className = 'badge-plan-free';
+          greetingBadgeEl.style.display = 'inline-flex';
+          greetingBadgeEl.textContent = 'Plan Free';
+        }
+      }
     }
 
     function exportCompleteDatabaseJSON() {
@@ -1937,6 +2053,7 @@
     window.handleUserAvatarUpload = handleUserAvatarUpload;
     window.setUserAvatarEmoji = setUserAvatarEmoji;
     window.removeUserAvatar = removeUserAvatar;
+    window.renderHomeGreeting = renderHomeGreeting;
     window.exportCompleteDatabaseJSON = exportCompleteDatabaseJSON;
 
     async function saveCustomUserName() {
@@ -1959,6 +2076,14 @@
         if (deskUser) deskUser.textContent = newName;
         const profileNameText = document.getElementById('settingsProfileNameText');
         if (profileNameText) profileNameText.textContent = newName;
+        const homeGreetingName = document.getElementById('homeGreetingUserName');
+        if (homeGreetingName) homeGreetingName.textContent = newName;
+
+        if (appState) {
+          appState.customUserName = newName;
+          saveLocalState();
+          if (typeof syncStateToServer === 'function') syncStateToServer();
+        }
 
         try {
           await supabaseClient.auth.updateUser({
@@ -2023,9 +2148,9 @@
         let isRefreshing = false;
         // Solo recargar ante una ACTUALIZACIÓN (ya había un SW controlando); en la 1ª visita no
         const hadController = !!navigator.serviceWorker.controller;
-        navigator.serviceWorker.register('./sw.js?v=77.7')
+        navigator.serviceWorker.register('./sw.js?v=78.6')
           .then(reg => {
-            console.log('SW v77.7 registrado:', reg.scope);
+            console.log('SW v78.6 registrado:', reg.scope);
             // Forzar actualización inmediata del SW en todos los dispositivos
             reg.update();
             if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
@@ -2262,6 +2387,19 @@
         // Si el asistente estaba abierto y llegan datos reales, cerrarlo para no pisarlos
         const wz = document.getElementById('onboardingWizardModal');
         if (wz && wz.classList.contains('active')) closeModal('onboardingWizardModal');
+      }
+
+      if (remoteData.userAvatar) {
+        const uKey = currentUser ? currentUser.id : 'default';
+        localStorage.setItem('aliviafin_user_avatar_' + uKey, remoteData.userAvatar);
+        localStorage.setItem('aliviafin_user_avatar', remoteData.userAvatar);
+        applyUserAvatar(remoteData.userAvatar);
+      }
+      if (remoteData.customUserName) {
+        const uKey = currentUser ? currentUser.id : 'default';
+        localStorage.setItem('aliviafin_custom_display_name_' + uKey, remoteData.customUserName);
+        localStorage.setItem('aliviafin_custom_display_name', remoteData.customUserName);
+        if (currentUser) currentUser.name = remoteData.customUserName;
       }
 
       saveLocalState();
@@ -4927,6 +5065,8 @@
         }
       };
 
+      safe('initUserAvatar', () => initUserAvatar());
+      safe('renderHomeGreeting', () => renderHomeGreeting());
       safe('updateDynamicCategories', () => updateDynamicCategories());
       safe('populateMonthDropdown', () => populateMonthDropdown());
       safe('ensureMonthTransactions', () => ensureMonthTransactions(appState.currentMonth));
@@ -12146,6 +12286,8 @@ function syncAdminUI() {
   if (settMasterRow) settMasterRow.style.display = isCesar ? 'block' : 'none';
   const btnFounderHeader = document.getElementById('btnFounderHeader');
   if (btnFounderHeader) btnFounderHeader.style.display = 'none'; // Despejar cabecera: acceso en Ajustes y Sidebar
+  const jsonBackupBtn = document.getElementById('settingsJsonBackupBtn');
+  if (jsonBackupBtn) jsonBackupBtn.style.display = isCesar ? 'flex' : 'none';
 }
 
 // Compatibilidad: antes abría un modal; ahora abre el módulo de pantalla completa.

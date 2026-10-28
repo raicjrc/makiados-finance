@@ -6426,16 +6426,83 @@
       .desktop-sidebar-user-card {
         display: flex;
         align-items: center;
-        gap: 8px;
-        padding: 8px 10px;
-        border-radius: 10px;
-        background: var(--bg-main);
+        gap: 10px;
+        padding: 9px 12px;
+        border-radius: 14px;
+        background: var(--card-bg, #ffffff);
         border: 1px solid var(--border);
         cursor: pointer;
-        transition: background 0.15s;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        margin-top: 4px;
       }
       .desktop-sidebar-user-card:hover {
-        background: var(--card-hover-bg);
+        background: var(--card-hover-bg, rgba(2, 132, 199, 0.05));
+        border-color: rgba(2, 132, 199, 0.35);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(2, 132, 199, 0.1);
+      }
+      .desk-sidebar-avatar-wrap {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        overflow: hidden;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(2, 132, 199, 0.1);
+        border: 2px solid rgba(2, 132, 199, 0.25);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+        font-size: 18px;
+      }
+      .desk-sidebar-avatar-wrap img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 50%;
+        display: block;
+      }
+      .desk-sidebar-user-info {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+      }
+      .desk-sidebar-user-name {
+        font-size: 12px;
+        font-weight: 800;
+        color: var(--text-main);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        letter-spacing: -0.01em;
+      }
+      .desk-sidebar-user-role {
+        font-size: 10px;
+        font-weight: 600;
+        color: var(--text-muted);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-top: 1px;
+      }
+      .desk-sidebar-logout-btn {
+        background: none;
+        border: none;
+        font-size: 14px;
+        padding: 4px 6px;
+        border-radius: 6px;
+        cursor: pointer;
+        opacity: 0.55;
+        transition: all 0.15s;
+        line-height: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .desk-sidebar-logout-btn:hover {
+        opacity: 1;
+        background: rgba(239, 68, 68, 0.15);
       }
       .desktop-main-pane {
         flex: 1;
@@ -10515,6 +10582,119 @@ body.theme-twilight .btn-pdf-export:hover {
   padding: 8px 10px;
   border-bottom: 1px solid var(--border, #e2e8f0);
   color: var(--text-main, #0f172a);
+}
+
+/* ================================================================
+   APPLE FINTECH: GREETING BANNER & AVATAR EN HOME & MOBILE NAV
+   ================================================================ */
+.home-user-greeting-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--card-bg, #ffffff);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  margin-bottom: 14px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+.home-user-greeting-banner:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.1);
+  border-color: rgba(2, 132, 199, 0.35);
+}
+.home-greeting-avatar-wrap {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(2, 132, 199, 0.08);
+  border: 2px solid rgba(2, 132, 199, 0.2);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  font-size: 20px;
+}
+.home-greeting-avatar-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
+.home-greeting-text-wrap {
+  flex: 1;
+  min-width: 0;
+}
+.home-greeting-saludo {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+.home-greeting-name {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.home-greeting-badge-wrap {
+  flex-shrink: 0;
+}
+.badge-plan-free {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 100px;
+  background: var(--border-light, #f1f5f9);
+  color: var(--text-muted, #64748b);
+  border: 1px solid var(--border, #e2e8f0);
+}
+
+/* Avatar en Bottom Nav Móvil */
+.nav-avatar-icon-wrap {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transition: transform 0.15s ease;
+}
+.nav-avatar-icon-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
+.nav-item.active .nav-avatar-icon-wrap {
+  transform: scale(1.08);
+  box-shadow: 0 0 0 2px #0284c7;
+}
+
+[data-theme="dark"] .home-user-greeting-banner,
+body.theme-twilight .home-user-greeting-banner {
+  background: var(--card-bg, #1e293b);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+[data-theme="dark"] .desktop-sidebar-user-card,
+body.theme-twilight .desktop-sidebar-user-card {
+  background: var(--card-bg, #1e293b);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+[data-theme="dark"] .badge-plan-free,
+body.theme-twilight .badge-plan-free {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #94a3b8;
 }
 
 

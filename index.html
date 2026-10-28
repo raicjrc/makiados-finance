@@ -416,13 +416,20 @@
           <span style="flex: 1; text-align: left;">Hub Fundador CEO</span>
           <span id="founderPendingAlertBadgeDesk" class="badge-pill-alert" style="display: none; margin-left: 6px; background: #ef4444; color: white; border-radius: 10px; font-size: 10px; font-weight: 800; padding: 1px 7px;">0</span>
         </button>
-        <div class="desktop-sidebar-user-card" onclick="handleLogout()" title="Cerrar sesión">
-          <span style="font-size: 15px;">👤</span>
-          <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1;">
-            <div id="deskSidebarUser" style="font-size: 11px; font-weight: 800; color: var(--text-main);">Usuario</div>
-            <div style="font-size: 9.5px; color: var(--text-muted);">Cerrar sesión</div>
+        <div class="desktop-sidebar-user-card" onclick="openSettingsModal()" title="Mi Cuenta & Ajustes">
+          <div class="desk-sidebar-avatar-wrap" id="deskSidebarAvatar">
+            <span>👤</span>
           </div>
-          <span id="deskSidebarUserSubBadge" style="display: none; font-size: 9.5px; font-weight: 800; padding: 2px 6px; border-radius: 10px; margin-left: 6px;"></span>
+          <div class="desk-sidebar-user-info">
+            <div style="display: flex; align-items: center; gap: 4px;">
+              <div id="deskSidebarUser" class="desk-sidebar-user-name">Usuario</div>
+              <span id="deskSidebarUserSubBadge" style="display: none; font-size: 9px; font-weight: 800; padding: 1px 5px; border-radius: 6px;"></span>
+            </div>
+            <div class="desk-sidebar-user-role" id="deskSidebarRoleText">⚙️ Mi Cuenta</div>
+          </div>
+          <button type="button" class="desk-sidebar-logout-btn" onclick="event.stopPropagation(); handleLogout();" title="Cerrar sesión">
+            🚪
+          </button>
         </div>
       </div>
     </aside>
@@ -507,6 +514,20 @@
           <button type="button" class="offline-banner-retry-btn" onclick="retrySyncNow()" title="Intentar reconectar con la nube">
             🔄 Reintentar
           </button>
+        </div>
+
+        <!-- BANNER DE BIENVENIDA & PERFIL EJECUTIVO CON AVATAR (APPLE FINTECH) -->
+        <div class="home-user-greeting-banner" onclick="openSettingsModal()" title="Toca para ver tu perfil y ajustes">
+          <div class="home-greeting-avatar-wrap" id="homeGreetingAvatar">
+            <span>👤</span>
+          </div>
+          <div class="home-greeting-text-wrap">
+            <div class="home-greeting-saludo" id="homeGreetingTimeText">Hola de nuevo 👋</div>
+            <div class="home-greeting-name" id="homeGreetingUserName">Usuario</div>
+          </div>
+          <div class="home-greeting-badge-wrap">
+            <span id="homeGreetingBadge" class="badge-pro-gold" style="font-size: 10px; padding: 2px 7px;">Plan Free</span>
+          </div>
         </div>
 
         <div class="desktop-home-grid">
@@ -1852,7 +1873,7 @@
         <span>Finanzas</span>
       </button>
       <button id="navTabAjustes" class="nav-item" onclick="openSettingsModal()" title="Ajustes">
-        <span class="nav-icon">⚙️</span>
+        <span class="nav-avatar-icon-wrap" id="mobileNavAvatarWrap"><span class="nav-icon" id="mobileNavAvatarIcon">⚙️</span></span>
         <span>Ajustes</span>
       </button>
     </div>
@@ -1977,7 +1998,7 @@
             <span>📊 Exportar Historial a Excel / CSV</span>
             <span class="badge-pro-gold" style="font-size: 9.5px; padding: 2px 6px;">PRO 👑</span>
           </button>
-          <button type="button" class="settings-nav-btn" onclick="exportCompleteDatabaseJSON();">
+          <button type="button" id="settingsJsonBackupBtn" class="settings-nav-btn master-admin-only" style="display: none;" onclick="exportCompleteDatabaseJSON();">
             <span>🛡️ Descargar Respaldo JSON Completo</span>
             <span style="font-size: 10px; font-weight: 700; color: #6366f1; background: rgba(99,102,241,0.1); padding: 2px 6px; border-radius: 6px;">100% Datos</span>
           </button>
