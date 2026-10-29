@@ -549,22 +549,24 @@
       const isCesar = isAdminCesar(user);
 
       // Obtener nombre del usuario:
-      // 1. Preferencia personalizada guardada en localStorage
-      // 2. Si es César, mantener por defecto 'makiados'
-      // 3. Metadata de Supabase (full_name)
-      // 4. Prefijo del correo
-      let customName = localStorage.getItem('aliviafin_custom_display_name_' + userKey)
-                    || localStorage.getItem('aliviafin_custom_display_name');
+      // 1. Metadata oficial guardada en la nube de Supabase (user_metadata.full_name)
+      // 2. Preferencia personalizada guardada en localStorage
+      // 3. Fallback: si es César por defecto 'makiados', si no prefijo de correo
+      const cloudName = (user.user_metadata && user.user_metadata.full_name) ? user.user_metadata.full_name.trim() : null;
+      let localName = localStorage.getItem('aliviafin_custom_display_name_' + userKey)
+                   || localStorage.getItem('aliviafin_custom_display_name');
 
-      if (!customName && isCesar) {
-        customName = 'makiados';
-        localStorage.setItem('aliviafin_custom_display_name_' + userKey, 'makiados');
-        localStorage.setItem('aliviafin_custom_display_name', 'makiados');
+      // Si cloudName existe y localName es el fallback viejo 'makiados', priorizar cloudName
+      let displayName = cloudName || localName;
+      if (!displayName && isCesar) {
+        displayName = 'makiados';
+      }
+      if (!displayName) {
+        displayName = user.email ? user.email.split('@')[0] : 'Usuario';
       }
 
-      const displayName = customName
-        || (user.user_metadata && user.user_metadata.full_name)
-        || user.email.split('@')[0];
+      localStorage.setItem('aliviafin_custom_display_name_' + userKey, displayName);
+      localStorage.setItem('aliviafin_custom_display_name', displayName);
 
       currentUser = {
         id: user.id,
@@ -2166,9 +2168,9 @@
         let isRefreshing = false;
         // Solo recargar ante una ACTUALIZACIÓN (ya había un SW controlando); en la 1ª visita no
         const hadController = !!navigator.serviceWorker.controller;
-        navigator.serviceWorker.register('./sw.js?v=78.9')
+        navigator.serviceWorker.register('./sw.js?v=79.0')
           .then(reg => {
-            console.log('SW v78.9 registrado:', reg.scope);
+            console.log('SW v79.0 registrado:', reg.scope);
             // Forzar actualización inmediata del SW en todos los dispositivos
             reg.update();
             if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
@@ -2370,6 +2372,8 @@
 
       const newHash = String(remoteData._lastSaved || 0) +
                       String(remoteData.initialBalance || 0) +
+                      String(remoteData.customUserName || '') +
+                      String(remoteData.userAvatar || '') +
                       JSON.stringify(remoteData.transactions) +
                       JSON.stringify(remoteData.savingsGoals) +
                       JSON.stringify(remoteData.extraIncomes) +
@@ -2427,6 +2431,8 @@
         if (profileNameText) profileNameText.textContent = remoteData.customUserName;
         const homeGreetingName = document.getElementById('homeGreetingUserName');
         if (homeGreetingName) homeGreetingName.textContent = remoteData.customUserName;
+        const nameInput = document.getElementById('settingsUserNameInput');
+        if (nameInput) nameInput.value = remoteData.customUserName;
       }
 
       saveLocalState();
@@ -2704,7 +2710,11 @@
             lastAckedWriteTs = Math.max(lastAckedWriteTs, sentTs);
             syncRetryCount = 0;
             lastSuccessfulSyncTime = Date.now();
-            lastKnownServerDataHash = JSON.stringify(appState.transactions) +
+            lastKnownServerDataHash = String(appState._lastSaved || 0) +
+                                      String(appState.initialBalance || 0) +
+                                      String(appState.customUserName || '') +
+                                      String(appState.userAvatar || '') +
+                                      JSON.stringify(appState.transactions) +
                                       JSON.stringify(appState.savingsGoals) +
                                       JSON.stringify(appState.extraIncomes) +
                                       JSON.stringify(appState.incomes) +
