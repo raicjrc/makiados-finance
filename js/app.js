@@ -2166,9 +2166,9 @@
         let isRefreshing = false;
         // Solo recargar ante una ACTUALIZACIÓN (ya había un SW controlando); en la 1ª visita no
         const hadController = !!navigator.serviceWorker.controller;
-        navigator.serviceWorker.register('./sw.js?v=78.8')
+        navigator.serviceWorker.register('./sw.js?v=78.9')
           .then(reg => {
-            console.log('SW v78.8 registrado:', reg.scope);
+            console.log('SW v78.9 registrado:', reg.scope);
             // Forzar actualización inmediata del SW en todos los dispositivos
             reg.update();
             if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
@@ -2418,6 +2418,15 @@
         localStorage.setItem('aliviafin_custom_display_name_' + uKey, remoteData.customUserName);
         localStorage.setItem('aliviafin_custom_display_name', remoteData.customUserName);
         if (currentUser) currentUser.name = remoteData.customUserName;
+
+        const badge = document.getElementById('userBadgeText');
+        if (badge) badge.textContent = remoteData.customUserName;
+        const deskUser = document.getElementById('deskSidebarUser');
+        if (deskUser) deskUser.textContent = remoteData.customUserName;
+        const profileNameText = document.getElementById('settingsProfileNameText');
+        if (profileNameText) profileNameText.textContent = remoteData.customUserName;
+        const homeGreetingName = document.getElementById('homeGreetingUserName');
+        if (homeGreetingName) homeGreetingName.textContent = remoteData.customUserName;
       }
 
       saveLocalState();
