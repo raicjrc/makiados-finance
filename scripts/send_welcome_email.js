@@ -43,8 +43,9 @@ if (!apiKey) {
   process.exit(0);
 }
 
+const fromAddress = process.env.RESEND_FROM || 'AliviaFin <onboarding@resend.dev>';
 const payload = JSON.stringify({
-  from: 'AliviaFin <bienvenida@aliviafin.com>',
+  from: fromAddress,
   to: [emailTo],
   subject: '🌿 ¡Bienvenido a AliviaFin! Tus primeros pasos hacia la tranquilidad financiera',
   html: htmlContent

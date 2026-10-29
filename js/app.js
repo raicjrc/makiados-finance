@@ -1505,16 +1505,27 @@
         if (error) {
           errEl.textContent = '🚨 ' + error.message;
           errEl.style.display = 'block';
-        } else if (data.user && data.session) {
-          // Login automático exitoso (sin confirmación de correo)
-          okEl.textContent = '✅ ¡Cuenta creada! Iniciando tu espacio...';
-          okEl.style.display = 'block';
-          recordUserHeartbeat(data.user, true);
-          setTimeout(async () => { await onLoginSuccess(data.user); }, 800);
-        } else if (data.user && !data.session) {
-          // Confirmación requerida activada por César en Supabase
-          okEl.textContent = '📧 ¡Casi listo! Revisa tu bandeja de entrada o SPAM. Te hemos enviado un link para activar tu cuenta de AliviaFin.';
-          okEl.style.display = 'block';
+        } else if (data.user) {
+          // Disparar correo transaccional de bienvenida en segundo plano
+          try {
+            fetch('/api/send-welcome', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email, name })
+            }).catch(e => console.warn('Aviso envío bienvenida:', e));
+          } catch (e) {}
+
+          if (data.session) {
+            // Login automático exitoso (sin confirmación de correo)
+            okEl.textContent = '✅ ¡Cuenta creada! Iniciando tu espacio...';
+            okEl.style.display = 'block';
+            recordUserHeartbeat(data.user, true);
+            setTimeout(async () => { await onLoginSuccess(data.user); }, 800);
+          } else {
+            // Confirmación requerida en Supabase
+            okEl.textContent = '📧 ¡Casi listo! Revisa tu bandeja de entrada o SPAM. Te hemos enviado un link para activar tu cuenta de AliviaFin.';
+            okEl.style.display = 'block';
+          }
         }
       } catch (err) {
         console.error('Error durante el registro:', err);

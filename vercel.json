@@ -7,6 +7,7 @@
     { "source": "/reclamaciones", "destination": "/reclamaciones.html" },
     { "source": "/terminos.html", "destination": "/terminos.html" },
     { "source": "/reclamaciones.html", "destination": "/reclamaciones.html" },
+    { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
