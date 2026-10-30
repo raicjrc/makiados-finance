@@ -438,7 +438,7 @@
   </footer>
 
   <script>
-    function handleReclamacionSubmit(e) {
+    async function handleReclamacionSubmit(e) {
       e.preventDefault();
       const btn = document.getElementById('btnSubmit');
       btn.disabled = true;
@@ -449,8 +449,9 @@
       const numDoc = document.getElementById('numDoc').value.trim();
       const telefono = document.getElementById('telefono').value.trim();
       const email = document.getElementById('email').value.trim();
+      const domicilio = (document.getElementById('domicilio')?.value || '').trim();
       const plan = document.getElementById('planContratado').value;
-      const monto = document.getElementById('montoReclamado').value || '0.00';
+      const monto = parseFloat(document.getElementById('montoReclamado').value) || 0;
       const tipoReq = document.querySelector('input[name="tipoRequerimiento"]:checked').value;
       const detalle = document.getElementById('detalle').value.trim();
       const pedido = document.getElementById('pedido').value.trim();
@@ -459,34 +460,58 @@
       const randomSuffix = Math.floor(1000 + Math.random() * 9000);
       const year = new Date().getFullYear();
       const codigo = `ALV-REC-${year}-${randomSuffix}`;
+      const nowIso = new Date().toISOString();
 
-      // Almacenamiento local de constancia para el usuario
-      const reclamoData = {
+      const supabaseRow = {
         codigo,
-        fecha: new Date().toISOString(),
-        nombre,
-        tipoDoc,
-        numDoc,
-        telefono,
-        email,
-        plan,
-        monto,
-        tipoReq,
+        consumidor_nombre: nombre,
+        consumidor_tipo_doc: tipoDoc,
+        consumidor_num_doc: numDoc,
+        consumidor_email: email,
+        consumidor_telefono: telefono,
+        consumidor_domicilio: domicilio,
+        tipo_servicio: plan,
+        monto_reclamado: monto,
+        tipo: tipoReq,
         detalle,
-        pedido
+        pedido,
+        estado: 'pendiente',
+        created_at: nowIso
       };
+
+      // 1. Enviar en vivo a Supabase (tabla oficial app_reclamaciones)
       try {
+        const SUPABASE_URL = 'https://swwvbfemxookbqoqotre.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_CZUC5ueCxjSDFeA3idgVZg_DaEoIJxf';
+        await fetch(`${SUPABASE_URL}/rest/v1/app_reclamaciones`, {
+          method: 'POST',
+          headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify(supabaseRow)
+        });
+      } catch (netErr) {
+        console.warn('Guardado local de respaldo activado:', netErr);
+      }
+
+      // 2. Almacenamiento local de constancia y respaldo sincronizado con Founder Hub
+      try {
+        const backupList = JSON.parse(localStorage.getItem('finanzas_reclamaciones_backup') || '[]');
+        backupList.unshift(supabaseRow);
+        localStorage.setItem('finanzas_reclamaciones_backup', JSON.stringify(backupList));
+
         const history = JSON.parse(localStorage.getItem('aliviafin_reclamaciones_usuario') || '[]');
-        history.push(reclamoData);
+        history.push(supabaseRow);
         localStorage.setItem('aliviafin_reclamaciones_usuario', JSON.stringify(history));
       } catch (err) {}
 
-      setTimeout(() => {
-        document.getElementById('reclamacionForm').style.display = 'none';
-        document.getElementById('codigoReclamo').textContent = codigo;
-        document.getElementById('confirmationBox').style.display = 'block';
-        window.scrollTo({ top: 100, behavior: 'smooth' });
-      }, 700);
+      document.getElementById('reclamacionForm').style.display = 'none';
+      document.getElementById('codigoReclamo').textContent = codigo;
+      document.getElementById('confirmationBox').style.display = 'block';
+      window.scrollTo({ top: 100, behavior: 'smooth' });
     }
   </script>
 

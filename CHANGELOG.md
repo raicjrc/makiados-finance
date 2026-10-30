@@ -3,6 +3,21 @@
 Todas las versiones notables de esta aplicación están documentadas aquí.
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
+## [v79.1] — 2026-10-30 — Auditoría Profunda: Blindaje de Seguridad, Privacidad Multi-Cuenta, Corrección de Ajustes y Simulador
+
+### 🛡️ Correcciones Críticas de Bugs y Seguridad
+- **Apertura de Ajustes y Saludo de Inicio para Clientes (`renderHomeGreeting` / `openSettingsModal`)**: eliminado el `ReferenceError: currentUserSubscription is not defined` que bloqueaba la apertura del modal de Ajustes (`⚙️`) en cuentas de clientes no administradores; ahora usa `getSubscriptionDetails()` con protección `try/catch`.
+- **Aislamiento de Privilegios de Administrador (`isAdminCesar`)**: restringida estrictamente la validación a `cesar.risso.f@gmail.com`, evitando que usuarios externos cuyo correo contenga `"cesar"` o `"gaby"` reciban categorías personales del fundador, acceso al Hub CEO o membresía PRO Vitalicia gratuita.
+- **Bloqueo de Parámetros de Demo en Producción (`?demo=1` / `?preview=1`)**: restringido el inicio automático de sesión de prueba exclusivamente a `localhost` y `127.0.0.1`.
+- **Limpieza Total en Logout y Aislamiento Multi-Cuenta (`handleLogout` / `initDebtCommandCenterState`)**: al cerrar sesión ahora se elimina primero `finanzas_v50_<userId>` antes de limpiar `currentUser`, se desconecta el canal Realtime de Supabase y se aísla `aliviafin_debt_snowball_<userId>` por usuario para impedir contaminación de datos en dispositivos compartidos.
+- **Hardening del Endpoint `/api/send-welcome` (`api/send-welcome.js`)**: sanitización HTML (`escapeHtml`), validación de token/sesión de Supabase (`Authorization: Bearer` / `userId`), rate-limiting por destinatario y restricción de orígenes CORS.
+- **Permiso de Micrófono en Producción (`vercel.json`)**: actualizado `Permissions-Policy` a `microphone=(self)` para habilitar el dictado por voz de gastos en producción.
+- **Eliminación de 14 IDs Duplicados y Píldoras del Simulador (`index.html`)**: retirado el modal obsoleto `#installmentsSimulatorModal` que duplicaba los IDs del Simulador a pantalla completa y corregidos los estilos inline de `#simCuotasPills` para que las opciones de 3, 6, 12, 18 y 24 cuotas marquen su estado activo correctamente.
+- **Cobertura 100% de Modo Privacidad y Sanitización XSS**: añadido `.sensitive-amount` y `escapeHtml()` en Bóvedas de Ahorro, Centro de Deudas, Cuentas Claras, Radar de Servicios, Tracker de Cuotas, Historial de Auditoría y Reporte PDF.
+- **Conexión en Vivo del Libro de Reclamaciones (`reclamaciones.html`)**: el formulario público `/reclamaciones` ahora inserta directamente en la tabla `app_reclamaciones` de Supabase para visualización inmediata en el Hub Fundador CEO.
+
+---
+
 ## [v76.6] — 2026-10-12 — Auditoría Integral: Correcciones Críticas, Experiencia Minimalista y Sincronización Resiliente
 
 ### 🛡️ Correcciones de Bugs Críticos

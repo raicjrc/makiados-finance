@@ -36,3 +36,8 @@ node_modules/
 test-results/
 tests/audit_screenshots/
 tests/*.png
+tests/*_report.json
+brag-output/
+"Capturas de la plataforma clever/"
+Finanzas_Backup_PreModularizacion/
+Finanzas_Backup_PreModularizacion.zip

@@ -210,6 +210,7 @@ CREATE OR REPLACE FUNCTION public.delete_user_by_admin(target_user_id text, targ
 RETURNS boolean
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public, auth
 AS $$
 BEGIN
   IF auth.email() != 'cesar.risso.f@gmail.com' THEN

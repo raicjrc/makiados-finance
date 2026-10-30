@@ -56,7 +56,7 @@ function fetchTable(table) {
   console.log(`⏰ Fecha: ${new Date().toLocaleString('es-PE', { timeZone: 'America/Lima' })}`);
   console.log('====================================================');
 
-  const tables = ['finanzas_state', 'user_subscriptions', 'app_feedback'];
+  const tables = ['finanzas_state', 'user_subscriptions', 'subscription_payments', 'app_feedback', 'app_reclamaciones'];
   const backupData = {
     metadata: {
       generated_at: new Date().toISOString(),

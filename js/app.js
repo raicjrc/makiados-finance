@@ -50,13 +50,13 @@
     }
     window.escapeHtml = escapeHtml;
 
-    // Helper: identifica si el usuario es el administrador César o Gaby (cuenta familiar compartida)
+    // Helper: identifica si el usuario es el administrador fundador César
     function isAdminCesar(userOrEmail) {
       const u = userOrEmail || currentUser;
       if (!u) return false;
       const email = typeof u === 'string' ? u : (u.email || '');
       const e = email.trim().toLowerCase();
-      return e === 'cesar.risso.f@gmail.com' || e.includes('gaby') || e.includes('cesar');
+      return e === 'cesar.risso.f@gmail.com';
     }
 
     // Helper: devuelve las categorías correctas según el usuario actual
@@ -88,9 +88,9 @@
     let CATEGORIES = { ...GENERIC_CATEGORIES };
 
     // ================================================================
-    // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v76.6)
+    // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v79.1)
     // ================================================================
-    const APP_VERSION = 'v78.2';
+    const APP_VERSION = 'v79.1';
 
     // ================================================================
     // CONFIGURACIÓN DE SUPABASE Y CLIENTE DE AUTENTICACIÓN
@@ -523,7 +523,8 @@
         return;
       }
 
-      if (window.location.search.includes('debug_tour=1') || window.location.search.includes('demo=1') || window.location.search.includes('preview=1')) {
+      const isLocalDev = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+      if (isLocalDev && (window.location.search.includes('debug_tour=1') || window.location.search.includes('demo=1') || window.location.search.includes('preview=1'))) {
         await onLoginSuccess({ id: 'test_user_tour', email: 'cesar.risso.f@gmail.com', user_metadata: { full_name: 'makiados' } });
         if (window.location.search.includes('debug_tour=1')) {
           setTimeout(() => startInteractiveTour(), 500);
@@ -548,16 +549,14 @@
       const userKey = user.id;
       const isCesar = isAdminCesar(user);
 
-      // Obtener nombre del usuario:
+      // Obtener nombre del usuario (aislado por userKey para no contaminar entre cuentas distintas):
       // 1. Metadata oficial guardada en la nube de Supabase (user_metadata.full_name)
-      // 2. Preferencia personalizada guardada en localStorage
+      // 2. Preferencia personalizada guardada en localStorage para este usuario
       // 3. Fallback: si es César por defecto 'makiados', si no prefijo de correo
       const cloudName = (user.user_metadata && user.user_metadata.full_name) ? user.user_metadata.full_name.trim() : null;
-      let localName = localStorage.getItem('aliviafin_custom_display_name_' + userKey)
-                   || localStorage.getItem('aliviafin_custom_display_name');
+      let localName = localStorage.getItem('aliviafin_custom_display_name_' + userKey);
 
-      // Si cloudName existe y localName es el fallback viejo 'makiados', priorizar cloudName
-      let displayName = cloudName || localName;
+      let displayName = (localName && localName !== 'makiados') ? localName : (cloudName || localName);
       if (!displayName && isCesar) {
         displayName = 'makiados';
       }
@@ -581,6 +580,12 @@
       if (badge) badge.textContent = displayName;
       const deskUser = document.getElementById('deskSidebarUser');
       if (deskUser) deskUser.textContent = displayName;
+      const profileNameText = document.getElementById('settingsProfileNameText');
+      if (profileNameText) profileNameText.textContent = displayName;
+      const homeGreetingName = document.getElementById('homeGreetingUserName');
+      if (homeGreetingName) homeGreetingName.textContent = displayName;
+      const nameInput = document.getElementById('settingsUserNameInput');
+      if (nameInput) nameInput.value = displayName;
 
       // Ocultar pantalla de login de forma definitiva
       hideLoginScreen();
@@ -1508,12 +1513,16 @@
           errEl.textContent = '🚨 ' + error.message;
           errEl.style.display = 'block';
         } else if (data.user) {
-          // Disparar correo transaccional de bienvenida en segundo plano
+          // Disparar correo transaccional de bienvenida en segundo plano (con token de sesión y userId)
           try {
+            const welcomeHeaders = { 'Content-Type': 'application/json' };
+            if (data.session && data.session.access_token) {
+              welcomeHeaders['Authorization'] = `Bearer ${data.session.access_token}`;
+            }
             fetch('/api/send-welcome', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ email, name })
+              headers: welcomeHeaders,
+              body: JSON.stringify({ email, name, userId: data.user.id })
             }).catch(e => console.warn('Aviso envío bienvenida:', e));
           } catch (e) {}
 
@@ -1734,6 +1743,8 @@
     // LOGOUT
     async function handleLogout() {
       if (!await uiConfirm('¿Deseas cerrar tu sesión?')) return;
+      const keyToRemove = getStorageKey();
+      const uidToRemove = currentUser ? currentUser.id : null;
       // Seguridad: asegurar que cualquier cambio reciente (conciliación, gastos, etc.) se guarde en la nube antes de salir
       if (currentUser && typeof flushSyncToServer === 'function') {
         try {
@@ -1745,22 +1756,39 @@
       }
       try { sessionStorage.clear(); } catch(e) {}
       try {
+        if (realtimeChannel && supabaseClient) {
+          supabaseClient.removeChannel(realtimeChannel);
+          realtimeChannel = null;
+        }
+      } catch(e) {}
+      try {
         const client = getSupabaseClient();
         if (client) await client.auth.signOut();
+      } catch(e) {}
+      // Limpiar datos locales de este usuario ANTES de resetear currentUser (evita fuga de privacidad en equipos compartidos)
+      try {
+        localStorage.removeItem(keyToRemove);
+        localStorage.removeItem('aliviafin_custom_display_name');
+        localStorage.removeItem('aliviafin_user_avatar');
+        localStorage.removeItem('aliviafin_debt_snowball');
+        localStorage.removeItem('finanzas_setup_completed');
+        localStorage.removeItem('aliviafin_cached_master_subs');
+        if (uidToRemove) {
+          localStorage.removeItem('aliviafin_debt_snowball_' + uidToRemove);
+        }
       } catch(e) {}
       currentUser = null;
       window.currentUser = null;
       window._serverStateLoaded = false;
       window._currentUserSubscriptionStatus = 'free';
       window._currentUserSubscriptionExpiresAt = null;
+      currentSnowballDebts = [];
       updateAllProBadgesAndBanners();
       appState = getCleanUserState();
       syncAdminUI();
       closeModal('onboardingWizardModal');
       showLoginScreen();
       document.getElementById('appMainWrapper').style.display = 'none';
-      // Limpiar datos locales de este usuario
-      try { localStorage.removeItem(getStorageKey()); } catch(e) {}
     }
 
 
@@ -1866,7 +1894,7 @@
       if (profileNameText) {
         profileNameText.textContent = (currentUser && currentUser.name) ? currentUser.name : 'Usuario';
       }
-      initUserAvatar();
+      try { initUserAvatar(); } catch (e) { console.warn('initUserAvatar err:', e); }
 
       if (typeof syncVersionUI === 'function') syncVersionUI();
       openModalById('settingsModal');
@@ -1874,7 +1902,7 @@
 
     function initUserAvatar() {
       const userKey = (currentUser && currentUser.id) ? currentUser.id : 'default';
-      let avatar = localStorage.getItem('aliviafin_user_avatar_' + userKey) || localStorage.getItem('aliviafin_user_avatar');
+      let avatar = localStorage.getItem('aliviafin_user_avatar_' + userKey);
 
       // 1. Si appState ya tiene avatar de la nube (ej: en celular), sincronizar a localStorage
       if (appState && appState.userAvatar) {
@@ -1882,7 +1910,7 @@
         localStorage.setItem('aliviafin_user_avatar_' + userKey, avatar);
         localStorage.setItem('aliviafin_user_avatar', avatar);
       } else if (avatar && avatar !== '👤') {
-        // 2. Si la PC ya tenía el avatar guardado en localStorage (la foto actual),
+        // 2. Si la PC ya tenía el avatar guardado en localStorage para este usuario,
         // subirlo a appState y sincronizar a Supabase para que viaje de inmediato al celular
         if (appState) {
           appState.userAvatar = avatar;
@@ -1893,19 +1921,23 @@
       }
 
       applyUserAvatar(avatar || '👤');
-      if (typeof renderHomeGreeting === 'function') renderHomeGreeting();
+      if (typeof renderHomeGreeting === 'function') {
+        try { renderHomeGreeting(); } catch (e) {}
+      }
     }
 
     function applyUserAvatar(avatar) {
-      const isImg = avatar && (avatar.startsWith('data:image') || avatar.startsWith('http') || avatar.startsWith('/'));
+      const isImg = avatar && (avatar.startsWith('data:image/') || avatar.startsWith('https://') || avatar.startsWith('/'));
+      const safeSrc = isImg ? escapeHtml(avatar) : '';
+      const safeEmoji = escapeHtml(avatar || '👤');
 
       // 1. Modal de Ajustes
       const settingsDisplay = document.getElementById('settingsAvatarDisplay');
       if (settingsDisplay) {
         if (isImg) {
-          settingsDisplay.innerHTML = `<img src="${avatar}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block;" alt="Foto">`;
+          settingsDisplay.innerHTML = `<img src="${safeSrc}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block;" alt="Foto">`;
         } else {
-          settingsDisplay.innerHTML = `<span style="font-size: 28px;">${avatar || '👤'}</span>`;
+          settingsDisplay.innerHTML = `<span style="font-size: 28px;">${safeEmoji}</span>`;
         }
       }
 
@@ -1913,9 +1945,9 @@
       const deskAvatar = document.getElementById('deskSidebarAvatar');
       if (deskAvatar) {
         if (isImg) {
-          deskAvatar.innerHTML = `<img src="${avatar}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block;" alt="Foto">`;
+          deskAvatar.innerHTML = `<img src="${safeSrc}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block;" alt="Foto">`;
         } else {
-          deskAvatar.innerHTML = `<span style="font-size: 19px;">${avatar || '👤'}</span>`;
+          deskAvatar.innerHTML = `<span style="font-size: 19px;">${safeEmoji}</span>`;
         }
       }
 
@@ -1923,9 +1955,9 @@
       const mobileNavAvatar = document.getElementById('mobileNavAvatarWrap');
       if (mobileNavAvatar) {
         if (isImg) {
-          mobileNavAvatar.innerHTML = `<img src="${avatar}" style="width: 22px; height: 22px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--border);" alt="Perfil">`;
+          mobileNavAvatar.innerHTML = `<img src="${safeSrc}" style="width: 22px; height: 22px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--border);" alt="Perfil">`;
         } else if (avatar && avatar !== '👤' && avatar !== '⚙️') {
-          mobileNavAvatar.innerHTML = `<span style="font-size: 17px; line-height: 1;">${avatar}</span>`;
+          mobileNavAvatar.innerHTML = `<span style="font-size: 17px; line-height: 1;">${safeEmoji}</span>`;
         } else {
           mobileNavAvatar.innerHTML = `<span class="nav-icon" style="font-size: 18px;">⚙️</span>`;
         }
@@ -1935,9 +1967,9 @@
       const homeGreetingAvatar = document.getElementById('homeGreetingAvatar');
       if (homeGreetingAvatar) {
         if (isImg) {
-          homeGreetingAvatar.innerHTML = `<img src="${avatar}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block;" alt="Foto">`;
+          homeGreetingAvatar.innerHTML = `<img src="${safeSrc}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block;" alt="Foto">`;
         } else {
-          homeGreetingAvatar.innerHTML = `<span style="font-size: 22px;">${avatar || '👤'}</span>`;
+          homeGreetingAvatar.innerHTML = `<span style="font-size: 22px;">${safeEmoji}</span>`;
         }
       }
     }
@@ -2038,14 +2070,19 @@
       if (greetingNameEl) greetingNameEl.textContent = displayName;
 
       if (greetingBadgeEl) {
+        const subDetails = (typeof getSubscriptionDetails === 'function') ? getSubscriptionDetails() : { isPro: false, status: 'free' };
         if (isAdminCesar()) {
           greetingBadgeEl.className = 'badge-pro-gold';
           greetingBadgeEl.style.display = 'inline-flex';
           greetingBadgeEl.textContent = '👑 Fundador CEO';
-        } else if (currentUserSubscription && (currentUserSubscription.status === 'pro_monthly' || currentUserSubscription.status === 'pro_annual' || currentUserSubscription.status === 'trial')) {
+        } else if (subDetails.isPro) {
           greetingBadgeEl.className = 'badge-pro-gold';
           greetingBadgeEl.style.display = 'inline-flex';
           greetingBadgeEl.textContent = '👑 PRO';
+        } else if (subDetails.status === 'expired') {
+          greetingBadgeEl.className = 'badge-plan-free';
+          greetingBadgeEl.style.display = 'inline-flex';
+          greetingBadgeEl.textContent = '🔴 PRO Vencido';
         } else {
           greetingBadgeEl.className = 'badge-plan-free';
           greetingBadgeEl.style.display = 'inline-flex';
@@ -2055,6 +2092,10 @@
     }
 
     function exportCompleteDatabaseJSON() {
+      if (!isAdminCesar()) {
+        showToast('Acceso restringido al administrador', 'error');
+        return;
+      }
       try {
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appState, null, 2));
         const downloadAnchor = document.createElement('a');
@@ -3220,8 +3261,8 @@
 
       updateThemeButtons(currentTheme);
       showToast(isDark ? '🌙 Modo Noche Suave activado' : '✨ Modo Claro Cristal activado', 'info');
-      if (typeof updateSimulatedCalculations === 'function' && document.getElementById('installmentsSimulatorModal')?.classList.contains('active')) {
-        updateSimulatedCalculations();
+      if (typeof updateSimulation === 'function' && document.getElementById('simulador')?.classList.contains('active')) {
+        updateSimulation();
       }
       if (typeof renderDesktopExecutiveCharts === 'function') {
         renderDesktopExecutiveCharts();
@@ -5679,8 +5720,8 @@
           html += `
             <div class="cuota-row" style="background: #fdf4ff; border-color: #f5d0fe; transition: transform 0.2s; cursor: pointer;" onclick="switchAdvisorView('deudas')" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='none'">
               <div>
-                <div class="cuota-title" style="color: #86198f;">💳 ${ci.name}</div>
-                <div class="cuota-sub">${getCurrencySymbol()} ${ci.amount.toFixed(2)} / mes</div>
+                <div class="cuota-title" style="color: #86198f;">💳 ${escapeHtml(ci.name)}</div>
+                <div class="cuota-sub sensitive-amount">${getCurrencySymbol()} ${ci.amount.toFixed(2)} / mes</div>
               </div>
               <div class="cuota-badge" style="background: linear-gradient(135deg, #fdf4ff, #fae8ff); color: #86198f; border: 1px solid #f0abfc; box-shadow: 0 1px 2px rgba(0,0,0,0.05); font-weight: 800; font-size: 11px; white-space: nowrap;">Cuota ${ci.installmentsCurrent || 1} de ${ci.installmentsTotal || 1}${ci.remainingInstallments ? ` (${ci.remainingInstallments} pendientes)` : ''}</div>
             </div>
@@ -5781,10 +5822,10 @@
         const icon = isRecibido ? '✅' : '⏳';
 
         return `
-          <div style="background: white; padding: 6px 10px; border-radius: 6px; border: 1px solid ${border}; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: all 0.2s ease;" onclick="toggleIncomeStatus('${i.id}')" onmouseover="this.style.filter='brightness(0.95)'" onmouseout="this.style.filter='none'">
+          <div style="background: white; padding: 6px 10px; border-radius: 6px; border: 1px solid ${border}; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: all 0.2s ease;" onclick="toggleIncomeStatus('${escapeHtml(i.id)}')" onmouseover="this.style.filter='brightness(0.95)'" onmouseout="this.style.filter='none'">
             <div>
-              <div style="font-size: 11px; font-weight: 800; color: #1f2937;">${i.name}</div>
-              <div style="font-size: 10px; color: var(--text-muted);">${getCurrencySymbol()} ${i.amount.toLocaleString(getActiveCurrency().locale, {minimumFractionDigits: 2})} • <span onclick="editIncomeDate('${i.id}', event)" style="cursor: pointer; text-decoration: underline; color: #0284c7;" onmouseover="this.style.color='#0369a1'" onmouseout="this.style.color='#0284c7'">Día ${i.date} ✎</span></div>
+              <div style="font-size: 11px; font-weight: 800; color: #1f2937;">${escapeHtml(i.name)}</div>
+              <div style="font-size: 10px; color: var(--text-muted);"><span class="sensitive-amount">${getCurrencySymbol()} ${i.amount.toLocaleString(getActiveCurrency().locale, {minimumFractionDigits: 2})}</span> • <span onclick="editIncomeDate('${escapeHtml(i.id)}', event)" style="cursor: pointer; text-decoration: underline; color: #0284c7;" onmouseover="this.style.color='#0369a1'" onmouseout="this.style.color='#0284c7'">Día ${escapeHtml(i.date)} ✎</span></div>
             </div>
             <span style="background: ${bg}; color: ${color}; font-size: 9px; font-weight: 800; padding: 3px 8px; border-radius: 12px; white-space: nowrap; user-select: none;">
               ${icon} ${i.status}
@@ -7264,10 +7305,10 @@
         const historyItems = (g.history || []).slice(0, 5);
         const historyHtml = historyItems.length > 0
           ? historyItems.map(h => `
-              <div class="goal-history-item ${h.type || 'deposit'}">
+              <div class="goal-history-item ${escapeHtml(h.type || 'deposit')}">
                 <div>
-                  <strong>${h.type === 'withdraw' ? '💸 Retiro' : '💰 Aporte'}:</strong> ${h.note || 'Movimiento'}
-                  <div style="font-size: 10px; color: var(--text-muted);">${h.date || ''}</div>
+                  <strong>${h.type === 'withdraw' ? '💸 Retiro' : '💰 Aporte'}:</strong> ${escapeHtml(h.note || 'Movimiento')}
+                  <div style="font-size: 10px; color: var(--text-muted);">${escapeHtml(h.date || '')}</div>
                 </div>
                 <div class="history-amt">${h.type === 'withdraw' ? '-' : '+'}${sym} ${(h.amount || 0).toLocaleString(loc, { minimumFractionDigits: 2 })}</div>
               </div>
@@ -7275,12 +7316,12 @@
           : '<div class="goal-history-item" style="color: var(--text-muted); justify-content: center; font-size: 11px;">Sin movimientos registrados aún</div>';
 
         return `
-          <div class="luxury-goal-card ${isCompleted ? 'completed' : ''}" id="card_goal_${g.id}">
+          <div class="luxury-goal-card ${isCompleted ? 'completed' : ''}" id="card_goal_${escapeHtml(g.id)}">
             <div class="goal-top-row">
               <div class="goal-icon-title">
-                <div class="goal-emoji-bubble">${g.icon || '🎯'}</div>
+                <div class="goal-emoji-bubble">${escapeHtml(g.icon || '🎯')}</div>
                 <div>
-                  <div class="goal-name-text">${g.name}</div>
+                  <div class="goal-name-text">${escapeHtml(g.name)}</div>
                   <div class="goal-status-badge ${isCompleted ? 'completed' : 'active'}">
                     ${isCompleted ? '🎉 Cumplida 100%' : '🟢 En Curso'}
                   </div>
@@ -7473,9 +7514,9 @@
       if (targetInfo) {
         targetInfo.innerHTML = `
           <div>
-            <div style="font-size: 14.5px; font-weight: 800; color: var(--text-main);">${g.icon || '🎯'} ${g.name}</div>
+            <div style="font-size: 14.5px; font-weight: 800; color: var(--text-main);">${escapeHtml(g.icon || '🎯')} ${escapeHtml(g.name)}</div>
             <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
-              Ahorrado: <strong>${sym} ${(g.current || 0).toLocaleString(loc, { minimumFractionDigits: 2 })}</strong> / Meta: ${sym} ${(g.target || 0).toLocaleString(loc, { minimumFractionDigits: 0 })}
+              Ahorrado: <strong class="sensitive-amount">${sym} ${(g.current || 0).toLocaleString(loc, { minimumFractionDigits: 2 })}</strong> / Meta: <span class="sensitive-amount">${sym} ${(g.target || 0).toLocaleString(loc, { minimumFractionDigits: 0 })}</span>
             </div>
           </div>
           <span style="font-size: 13px; font-weight: 800; color: #059669; background: rgba(16, 185, 129, 0.12); padding: 4px 10px; border-radius: 999px;">
@@ -7557,9 +7598,9 @@
       if (targetInfo) {
         targetInfo.innerHTML = `
           <div>
-            <div style="font-size: 14.5px; font-weight: 800; color: var(--text-main);">${g.icon || '🎯'} ${g.name}</div>
+            <div style="font-size: 14.5px; font-weight: 800; color: var(--text-main);">${escapeHtml(g.icon || '🎯')} ${escapeHtml(g.name)}</div>
             <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
-              Disponible en esta bóveda: <strong style="color: #e11d48;">${sym} ${(g.current || 0).toLocaleString(loc, { minimumFractionDigits: 2 })}</strong>
+              Disponible en esta bóveda: <strong class="sensitive-amount" style="color: #e11d48;">${sym} ${(g.current || 0).toLocaleString(loc, { minimumFractionDigits: 2 })}</strong>
             </div>
           </div>
         `;
@@ -7778,8 +7819,8 @@
                 </div>
               </div>
               <div class="radar-sub-right">
-                <div class="radar-sub-monthly">${getCurrencySymbol()} ${item.monthly.toFixed(2)}/mes</div>
-                <div class="radar-sub-annual" title="Equivalente en 12 meses">${getCurrencySymbol()} ${item.annual.toFixed(2)} al año</div>
+                <div class="radar-sub-monthly sensitive-amount">${getCurrencySymbol()} ${item.monthly.toFixed(2)}/mes</div>
+                <div class="radar-sub-annual sensitive-amount" title="Equivalente en 12 meses">${getCurrencySymbol()} ${item.annual.toFixed(2)} al año</div>
               </div>
             </div>
           `).join('') : `
@@ -7792,7 +7833,7 @@
         <!-- Costo Anual Proyectado con Explicación Transparente -->
         <div class="radar-cost-banner" style="margin-top: 12px;">
           <div class="radar-cost-banner-title">Impacto Anual Proyectado en Servicios Fijos</div>
-          <div class="radar-cost-banner-val">${getCurrencySymbol()} ${servicesAnnualTotal.toLocaleString(getActiveCurrency().locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} al año</div>
+          <div class="radar-cost-banner-val sensitive-amount">${getCurrencySymbol()} ${servicesAnnualTotal.toLocaleString(getActiveCurrency().locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} al año</div>
           <div style="font-size: 10.5px; opacity: 0.85; margin-top: 3px;">
             Suma de tus servicios fijos (S/ ${servicesMonthlyTotal.toFixed(2)}/mes) multiplicados por 12 meses para planificar tu costo de vida anual.
           </div>
@@ -7954,10 +7995,10 @@
 
       container.innerHTML = log.map(entry => `
         <tr>
-          <td style="font-size: 10px; font-weight: 700; color: var(--text-muted);">${entry.timestamp}</td>
-          <td><span class="badge badge-casa">${entry.month}</span></td>
-          <td style="font-weight: 800;">${entry.action}</td>
-          <td style="font-size: 11px;">${entry.details}</td>
+          <td style="font-size: 10px; font-weight: 700; color: var(--text-muted);">${escapeHtml(entry.timestamp)}</td>
+          <td><span class="badge badge-casa">${escapeHtml(entry.month)}</span></td>
+          <td style="font-weight: 800;">${escapeHtml(entry.action)}</td>
+          <td style="font-size: 11px;">${escapeHtml(entry.details)}</td>
         </tr>
       `).join('');
     }
@@ -9644,7 +9685,7 @@
               <!-- Monto -->
               <div style="display: flex; align-items: baseline; justify-content: space-between; margin: 12px 0 8px;">
                 <div style="font-size: 10.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Monto:</div>
-                <div style="font-size: 22px; font-weight: 900; color: ${isRec ? '#059669' : '#dc2626'}; font-family: 'JetBrains Mono', monospace;">
+                <div class="sensitive-amount" style="font-size: 22px; font-weight: 900; color: ${isRec ? '#059669' : '#dc2626'}; font-family: 'JetBrains Mono', monospace;">
                   ${isRec ? '+' : '-'}${sym} ${Number(l.amount).toFixed(2)}
                 </div>
               </div>
@@ -10329,7 +10370,8 @@ Plazo de respuesta: Máximo 24 a 48 horas hábiles directas a tu correo.`;
     window.extractDebtMetricsFromTx = extractDebtMetricsFromTx;
 
     function initDebtCommandCenterState() {
-      if (appState && appState.debtSnowball && Array.isArray(appState.debtSnowball.debts) && appState.debtSnowball.debts.length > 0) {
+      const uKey = currentUser ? currentUser.id : 'guest';
+      if (appState && appState.debtSnowball && Array.isArray(appState.debtSnowball.debts)) {
         currentSnowballDebts = JSON.parse(JSON.stringify(appState.debtSnowball.debts));
         if (appState.debtSnowball.extraPayment !== undefined && appState.debtSnowball.extraPayment !== null) {
           currentDebtExtraPayment = Math.max(0, parseFloat(appState.debtSnowball.extraPayment) || 0);
@@ -10338,7 +10380,7 @@ Plazo de respuesta: Máximo 24 a 48 horas hábiles directas a tu correo.`;
           currentDebtStrategy = appState.debtSnowball.strategy;
         }
       } else {
-        const saved = localStorage.getItem('aliviafin_debt_snowball') || localStorage.getItem('finzen_debt_snowball');
+        const saved = localStorage.getItem('aliviafin_debt_snowball_' + uKey);
         if (saved) {
           try {
             const p = JSON.parse(saved);
@@ -10348,6 +10390,8 @@ Plazo de respuesta: Máximo 24 a 48 horas hábiles directas a tu correo.`;
             }
             if (p.strategy) currentDebtStrategy = p.strategy;
           } catch(e) {}
+        } else {
+          currentSnowballDebts = [];
         }
       }
 
@@ -10887,11 +10931,11 @@ Plazo de respuesta: Máximo 24 a 48 horas hábiles directas a tu correo.`;
               <div class="debt-card-stats-grid">
                 <div class="debt-card-stat-item">
                   <span class="debt-card-stat-label">Saldo Pendiente</span>
-                  <span class="debt-card-stat-val" style="color: var(--text-main);">${getCurrencySymbol()} ${d.balance.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  <span class="debt-card-stat-val sensitive-amount" style="color: var(--text-main);">${getCurrencySymbol()} ${d.balance.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                 </div>
                 <div class="debt-card-stat-item">
                   <span class="debt-card-stat-label">Cuota al Mes</span>
-                  <span class="debt-card-stat-val" style="color: var(--primary);">${getCurrencySymbol()} ${d.minPayment.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  <span class="debt-card-stat-val sensitive-amount" style="color: var(--primary);">${getCurrencySymbol()} ${d.minPayment.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                 </div>
                 <div class="debt-card-stat-item">
                   <span class="debt-card-stat-label">¿Intereses?</span>
@@ -11692,6 +11736,7 @@ Plazo de respuesta: Máximo 24 a 48 horas hábiles directas a tu correo.`;
     window.removeSnowballDebtRow = removeSnowballDebtRow;
 
     function saveDebtSnowballPlanQuiet() {
+      const uKey = currentUser ? currentUser.id : 'guest';
       appState.debtSnowball = {
         debts: currentSnowballDebts,
         extraPayment: currentDebtExtraPayment,
@@ -11699,7 +11744,7 @@ Plazo de respuesta: Máximo 24 a 48 horas hábiles directas a tu correo.`;
         updatedAt: new Date().toISOString()
       };
       try {
-        localStorage.setItem('aliviafin_debt_snowball', JSON.stringify(appState.debtSnowball));
+        localStorage.setItem('aliviafin_debt_snowball_' + uKey, JSON.stringify(appState.debtSnowball));
       } catch(e) {}
       syncStateToServer();
     }
@@ -11951,9 +11996,9 @@ window.generatePDFReport = function() {
 
     // Stats
     const txs = (appState.transactions && appState.transactions[curM]) || [];
-    const sueldo = Number((typeof getMonthTotalIncome === 'function' ? getMonthTotalIncome(curM) : 0) || 0);
-    const gastos = txs.filter(t => (t.status || 'Pagado') === 'Pagado').reduce((a, b) => a + Number(b.amount || 0), 0);
-    const saldo = Number((typeof getAccumulatedBalance === 'function' ? getAccumulatedBalance(curM) : 0) || 0);
+    const sueldo = roundCurrency(Number((typeof getMonthTotalIncome === 'function' ? getMonthTotalIncome(curM) : 0) || 0));
+    const gastos = roundCurrency(txs.filter(t => (t.status || 'Pagado') === 'Pagado').reduce((a, b) => roundCurrency(a + Number(b.amount || 0)), 0));
+    const saldo = roundCurrency(Number((typeof getAccumulatedBalance === 'function' ? getAccumulatedBalance(curM) : 0) || 0));
 
     html += `
       <div style="display: flex; gap: 14px; margin-bottom: 26px;">
@@ -12027,8 +12072,8 @@ window.generatePDFReport = function() {
           tHtml += `
             <tr style="background: ${bg};">
               <td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; font-weight: 700;">${getDueSafe(t)}</td>
-              <td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0;"><span style="background: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 10.5px;">${t.category || 'Varios'}</span></td>
-              <td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; font-weight: 600;">${t.name || 'Gasto'}</td>
+              <td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0;"><span style="background: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 10.5px;">${escapeHtml(t.category || 'Varios')}</span></td>
+              <td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; font-weight: 600;">${escapeHtml(t.name || 'Gasto')}</td>
               <td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; text-align: right; font-weight: 800;">${sym} ${amt}</td>
             </tr>
           `;

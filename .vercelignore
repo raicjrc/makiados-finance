@@ -1,7 +1,9 @@
 .git
 .github
+.agents
 *.backup*
 *backup*
+*Backup*
 *.bak*
 *.md
 .DS_Store
@@ -9,4 +11,18 @@ database*.json
 parsed_data.json
 scratch.js
 tests/
+test-results/
 node_modules/
+brag-output/
+_archive/
+scripts/
+backups/
+backups_pre_phase3/
+backups_pre_compliance/
+Finanzas_Backup_PreModularizacion/
+Finanzas_Backup_PreModularizacion.zip
+Capturas de la plataforma clever/
+prototype_*.html
+mockup*.html
+*.sql
+.env*

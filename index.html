@@ -19,7 +19,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="js/chart.min.js?v=72.0"></script>
   <script src="js/supabase.min.js?v=72.0"></script>
-  <link rel="stylesheet" href="css/styles.css?v=78.3">
+  <link rel="stylesheet" href="css/styles.css?v=79.1">
 
   <style>
     /* Estilos Críticos Inmediatos: Paleta Unificada AliviaFin Light & Emerald */
@@ -1403,11 +1403,11 @@
             <div style="margin-bottom: 14px;">
               <label style="display: block; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">Número de Cuotas Mensuales</label>
               <div class="glass-pill-select" id="simCuotasPills" style="display: flex; gap: 6px; flex-wrap: wrap;">
-                <div class="glass-pill-opt" onclick="setSimCuotas(3, this)" style="cursor: pointer; padding: 6px 12px; border-radius: 10px; font-size: 12px; font-weight: 700; background: var(--border-light); border: 1px solid var(--border);">3 cuotas</div>
-                <div class="glass-pill-opt" onclick="setSimCuotas(6, this)" style="cursor: pointer; padding: 6px 12px; border-radius: 10px; font-size: 12px; font-weight: 700; background: var(--border-light); border: 1px solid var(--border);">6 cuotas</div>
-                <div class="glass-pill-opt active" onclick="setSimCuotas(12, this)" style="cursor: pointer; padding: 6px 12px; border-radius: 10px; font-size: 12px; font-weight: 700; background: #0284c7; color: white; border: 1px solid #0284c7;">12 cuotas</div>
-                <div class="glass-pill-opt" onclick="setSimCuotas(18, this)" style="cursor: pointer; padding: 6px 12px; border-radius: 10px; font-size: 12px; font-weight: 700; background: var(--border-light); border: 1px solid var(--border);">18 cuotas</div>
-                <div class="glass-pill-opt" onclick="setSimCuotas(24, this)" style="cursor: pointer; padding: 6px 12px; border-radius: 10px; font-size: 12px; font-weight: 700; background: var(--border-light); border: 1px solid var(--border);">24 cuotas</div>
+                <div class="glass-pill-opt" onclick="setSimCuotas(3, this)" style="cursor: pointer; padding: 6px 12px; border-radius: 10px; font-size: 12px; font-weight: 700;">3 cuotas</div>
+                <div class="glass-pill-opt" onclick="setSimCuotas(6, this)" style="cursor: pointer; padding: 6px 12px; border-radius: 10px; font-size: 12px; font-weight: 700;">6 cuotas</div>
+                <div class="glass-pill-opt active" onclick="setSimCuotas(12, this)" style="cursor: pointer; padding: 6px 12px; border-radius: 10px; font-size: 12px; font-weight: 700;">12 cuotas</div>
+                <div class="glass-pill-opt" onclick="setSimCuotas(18, this)" style="cursor: pointer; padding: 6px 12px; border-radius: 10px; font-size: 12px; font-weight: 700;">18 cuotas</div>
+                <div class="glass-pill-opt" onclick="setSimCuotas(24, this)" style="cursor: pointer; padding: 6px 12px; border-radius: 10px; font-size: 12px; font-weight: 700;">24 cuotas</div>
               </div>
             </div>
 
@@ -2322,122 +2322,8 @@
     </div>
   </div>
 
-  <!-- MODAL: SIMULADOR DE CUOTAS Y CRÉDITO (GLASSMORPHISM) -->
-  <div class="glass-backdrop" id="installmentsSimulatorModal" onclick="if(event.target === this) closeGlassModal('installmentsSimulatorModal')">
-    <div class="glass-modal" style="max-width: 900px;">
-      <div class="glass-modal-header">
-        <div class="glass-modal-title">
-          <span style="font-size: 24px;">💳</span>
-          <div>
-            <div>Simulador de Cuotas & Crédito</div>
-            <div style="font-size: 11px; font-weight: 600; color: #38bdf8;">Proyecta el impacto en tu flujo de caja futuro</div>
-          </div>
-        </div>
-        <button class="glass-close-btn" onclick="closeGlassModal('installmentsSimulatorModal')">✕</button>
-      </div>
-
-      <div class="glass-grid-2col">
-        <!-- Columna Izquierda: Calculadora -->
-        <div class="glass-card-subpanel">
-          <div class="glass-subpanel-title">Parámetros de la Compra</div>
-
-          <div style="margin-bottom: 12px;">
-            <label class="glass-label">Concepto de la Compra</label>
-            <input type="text" id="simConcept" class="glass-input" placeholder="Ej: Laptop trabajo, Pasajes Cusco, TV...">
-          </div>
-
-          <div style="margin-bottom: 12px;">
-            <label class="glass-label">Monto Total de la Compra (<span class="app-currency-symbol">S/</span>)</label>
-            <input type="number" id="simAmount" class="glass-input" placeholder="3600" value="3600" oninput="updateSimulation()">
-          </div>
-
-          <div style="margin-bottom: 12px;">
-            <label class="glass-label">Categoría</label>
-            <select id="simCategory" class="glass-input" style="background: #1e293b; color: white;">
-              <!-- Llenado dinámico -->
-            </select>
-          </div>
-
-          <div style="margin-bottom: 12px;">
-            <label class="glass-label">Número de Cuotas</label>
-            <div class="glass-pill-select" id="simCuotasPills">
-              <div class="glass-pill-opt" onclick="setSimCuotas(3, this)">3 cuotas</div>
-              <div class="glass-pill-opt" onclick="setSimCuotas(6, this)">6 cuotas</div>
-              <div class="glass-pill-opt active" onclick="setSimCuotas(12, this)">12 cuotas</div>
-              <div class="glass-pill-opt" onclick="setSimCuotas(18, this)">18 cuotas</div>
-              <div class="glass-pill-opt" onclick="setSimCuotas(24, this)">24 cuotas</div>
-            </div>
-          </div>
-
-          <div style="margin-bottom: 12px; background: rgba(15, 23, 42, 0.6); padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <span style="font-size: 12px; font-weight: 700; color: #f8fafc;">Cuotas Sin Intereses (0% TEA)</span>
-              <input type="checkbox" id="simZeroInterest" checked onchange="toggleSimZeroInterest()" style="width: 18px; height: 18px; accent-color: #38bdf8; cursor: pointer;">
-            </div>
-            <div id="simTeaGroup" style="display: none; margin-top: 8px;">
-              <label class="glass-label">Tasa de Interés Anual (TEA %)</label>
-              <input type="number" id="simTea" class="glass-input" placeholder="18.5" value="0" step="0.1" oninput="updateSimulation()">
-            </div>
-          </div>
-
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
-            <div>
-              <label class="glass-label">Mes de Inicio</label>
-              <select id="simStartMonth" class="glass-input" style="background: #1e293b; color: white;" onchange="updateSimulation()">
-                <!-- Llenado dinámico -->
-              </select>
-            </div>
-            <div>
-              <label class="glass-label">Día de Pago</label>
-              <select id="simDueDay" class="glass-input" style="background: #1e293b; color: white;">
-                <option value="15">Día 15</option>
-                <option value="24" selected>Día 24</option>
-                <option value="30">Día 30</option>
-                <option value="5">Día 5</option>
-                <option value="10">Día 10</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <!-- Columna Derecha: Proyección y Flujo de Caja -->
-        <div class="glass-card-subpanel" style="display: flex; flex-direction: column;">
-          <div class="glass-subpanel-title">
-            <span>Impacto en Flujo de Caja Mensual</span>
-            <span style="font-size: 10px; color: #94a3b8;">Próximos 6 meses</span>
-          </div>
-
-          <!-- KPI Summary Badges -->
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
-            <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px 12px;">
-              <div style="font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase;">Cuota Mensual</div>
-              <div id="simMonthlyQuotaDisplay" style="font-size: 19px; font-weight: 800; color: #38bdf8; margin-top: 2px;">S/ 300.00</div>
-            </div>
-            <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px 12px;">
-              <div style="font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase;">Total a Pagar</div>
-              <div id="simTotalToPayDisplay" style="font-size: 19px; font-weight: 800; color: #ffffff; margin-top: 2px;">S/ 3,600.00</div>
-            </div>
-          </div>
-
-          <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 10px; padding: 8px 12px; margin-bottom: 14px; font-size: 11px;">
-            <span style="color: #cbd5e1; font-weight: 600;">Impacto en tu Bolsa Mensual:</span>
-            <span id="simImpactDisplay" style="color: #38bdf8; font-weight: 800;">-3.4% de tu ingreso</span>
-          </div>
-
-          <!-- Chart Area -->
-          <div style="flex: 1; min-height: 180px; position: relative; margin-bottom: 16px;">
-            <canvas id="simChartCanvas"></canvas>
-          </div>
-
-          <!-- Action Button -->
-          <button type="button" class="glass-btn-primary" id="btnSimApplyPurchase" onclick="handleSimulatedPurchaseClick()" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
-            <span>✨ Aplicar Cuotas a Meses Futuros</span>
-            <span class="badge-pro-gold">PRO</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
+  <!-- COMPATIBILIDAD MODAL SIMULADOR: Ahora reemplazado por el Módulo Full-Screen #simulador -->
+  <div id="installmentsSimulatorModal" style="display: none;"></div>
 
   <!-- MODAL: ASESOR DE DEUDAS - MÉTODO BOLA DE NIEVE (ALIVIAFIN PRO) -->
   <div class="glass-backdrop" id="debtSnowballModal" onclick="if(event.target === this) closeGlassModal('debtSnowballModal')">
@@ -3561,7 +3447,7 @@
         </div>
 
         <!-- Botón de Notificación Directa a WhatsApp -->
-        <a id="proModalWaLink" href="https://wa.me/51914688135?text=Hola%20C%C3%A9sar,%20acabo%20de%20pagar%20mi%20suscripci%C3%B3n%20AliviaFin%20PRO%20(S/%204.90%20mes)" target="_blank" class="btn-whatsapp-confirm">
+        <a id="proModalWaLink" href="https://wa.me/51914688135?text=Hola%20C%C3%A9sar,%20acabo%20de%20pagar%20mi%20suscripci%C3%B3n%20AliviaFin%20PRO%20(S/%204.90%20mes)" target="_blank" rel="noopener noreferrer" class="btn-whatsapp-confirm">
           <span>📲 Notificar Pago por WhatsApp</span>
         </a>
 
@@ -4282,6 +4168,6 @@
     </div>
   </div>
 
-  <script src="js/app.js?v=78.3"></script>
+  <script src="js/app.js?v=79.1"></script>
 </body>
 </html>

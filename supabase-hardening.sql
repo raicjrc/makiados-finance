@@ -254,12 +254,10 @@ CREATE POLICY "Usuario solo ve sus propios datos" ON public.finanzas_state
   USING (
     id = concat('state_', auth.uid()::text)
     OR id LIKE concat('backup_', left(auth.uid()::text, 8), '%')
-    OR public.is_admin()
   )
   WITH CHECK (
     id = concat('state_', auth.uid()::text)
     OR id LIKE concat('backup_', left(auth.uid()::text, 8), '%')
-    OR public.is_admin()
   );
 
 COMMIT;
