@@ -28,6 +28,7 @@ La aplicación se utiliza principalmente en **iPhone (César y Gaby)** en modo P
 1. **Mantener el Stack Puro:** La aplicación está construida sobre HTML5 semántico, CSS Vanilla modular y JavaScript ES6+ nativo. **No agregar frameworks pesados (React, Vue, Tailwind, etc.)** a menos que el usuario lo solicite explícitamente.
 2. **Rendimiento Instantáneo:** El inicio debe ser inmediato (< 100ms). Evitar librerías externas de gran tamaño. Si se requiere una utilidad (ej. formateo de moneda, debounce, cálculo de fechas), preferir funciones nativas de JavaScript.
 3. **Compatibilidad Offline:** Los cambios en `sw.js` deben probarse con extrema precaución para no bloquear el acceso de los usuarios a la app si se quedan sin red.
+4. **Despliegue Directo a Producción (Vercel):** Cada vez que se haga `git push origin main`, ejecutar siempre `npx --yes vercel --prod --yes` para publicar inmediatamente en `https://aliviafin.vercel.app`.
 
 ---
 

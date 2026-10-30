@@ -88,9 +88,9 @@
     let CATEGORIES = { ...GENERIC_CATEGORIES };
 
     // ================================================================
-    // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v79.2)
+    // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v79.3)
     // ================================================================
-    const APP_VERSION = 'v79.2';
+    const APP_VERSION = 'v79.3';
 
     // ================================================================
     // CONFIGURACIÓN DE SUPABASE Y CLIENTE DE AUTENTICACIÓN
@@ -1765,17 +1765,14 @@
         const client = getSupabaseClient();
         if (client) await client.auth.signOut();
       } catch(e) {}
-      // Limpiar datos locales de este usuario ANTES de resetear currentUser (evita fuga de privacidad en equipos compartidos)
+      // Limpiar punteros globales de sesión al salir, pero CONSERVAR finanzas_v50_<uid> (aislado por UUID)
+      // como respaldo local seguro para evitar arrancar con estado vacío al volver a iniciar sesión
       try {
-        localStorage.removeItem(keyToRemove);
         localStorage.removeItem('aliviafin_custom_display_name');
         localStorage.removeItem('aliviafin_user_avatar');
         localStorage.removeItem('aliviafin_debt_snowball');
         localStorage.removeItem('finanzas_setup_completed');
         localStorage.removeItem('aliviafin_cached_master_subs');
-        if (uidToRemove) {
-          localStorage.removeItem('aliviafin_debt_snowball_' + uidToRemove);
-        }
       } catch(e) {}
       currentUser = null;
       window.currentUser = null;
@@ -1911,10 +1908,10 @@
         localStorage.setItem('aliviafin_user_avatar', avatar);
       } else if (avatar && avatar !== '👤') {
         // 2. Si la PC ya tenía el avatar guardado en localStorage para este usuario,
-        // subirlo a appState y sincronizar a Supabase para que viaje de inmediato al celular
+        // subirlo a appState SOLO cuando ya cargó el estado real del servidor (nunca antes para no estampar _lastSaved en un estado vacío)
         if (appState) {
           appState.userAvatar = avatar;
-          if (typeof syncStateToServer === 'function') {
+          if (window._serverStateLoaded === true && typeof syncStateToServer === 'function') {
             syncStateToServer();
           }
         }
@@ -2414,40 +2411,60 @@
       }
     }
 
-    function applyRemoteState(remoteData) {
+    function countTotalTransactions(state) {
+      if (!state || !state.transactions || typeof state.transactions !== 'object') return 0;
+      return Object.values(state.transactions).reduce((sum, list) => sum + (Array.isArray(list) ? list.length : 0), 0);
+    }
+
+    function applyRemoteState(remoteData, forceRestore = false) {
       if (!remoteData || !remoteData.transactions) return;
 
       const remoteTs = remoteData._lastSaved || 0;
       const localTs  = appState._lastSaved  || 0;
+      const remoteTxCount = countTotalTransactions(remoteData);
+      const localTxCount  = countTotalTransactions(appState);
 
-      // Eco de nuestra propia escritura: el estado local ya lo contiene
-      if (remoteTs && myWrittenTimestamps.has(remoteTs)) {
-        updateSyncIndicator('synced', '🟢 En Vivo');
-        return;
+      if (remoteTxCount > 0) {
+        window._knownServerTxCount = Math.max(window._knownServerTxCount || 0, remoteTxCount);
       }
 
-      // PROTECCIÓN: el servidor SIEMPRE tiene prioridad si tiene datos de incomes reales.
-      // Esto evita que un dispositivo nuevo que inicializó incomes por defecto
-      // sobreescriba los ingresos reales guardados en Supabase.
-      const remoteHasIncomes = remoteData.incomes &&
-        Object.values(remoteData.incomes).some(m => m && m.length > 0);
-      const localIsDefaultOnly = !appState._lastSaved || appState._lastSaved === 0;
+      // Si el estado local está vacío (0 transacciones) y el remoto sí tiene historial,
+      // o si es una restauración forzada desde respaldo, APLICAR SIEMPRE sin importar _lastSaved
+      const mustApplyRemote = forceRestore ||
+                              (localTxCount === 0 && remoteTxCount > 0) ||
+                              (isAdminCesar() && localTxCount < 50 && remoteTxCount >= 50);
 
-      // Solo ignorar datos remotos si: el local es más reciente Y el local NO es datos por defecto
-      if (remoteTs <= localTs && !localIsDefaultOnly && !remoteHasIncomes) {
-        pushLocalIfUnsynced(localTs, remoteTs);
-        return;
-      }
-      // Si el remoto tiene datos de incomes reales, siempre aplicar si es más reciente O si el local es default
-      if (remoteTs <= localTs && !localIsDefaultOnly && remoteHasIncomes) {
-        // Comparar cantidad de incomes: si el remoto tiene más entradas, aplicar igualmente
-        const remoteIncomesCount = Object.values(remoteData.incomes).reduce((s, m) => s + (m ? m.length : 0), 0);
-        const localIncomesCount  = appState.incomes
-          ? Object.values(appState.incomes).reduce((s, m) => s + (m ? m.length : 0), 0)
-          : 0;
-        if (remoteTs <= localTs && remoteIncomesCount <= localIncomesCount) {
+      if (!mustApplyRemote) {
+        // Eco de nuestra propia escritura: el estado local ya lo contiene
+        if (remoteTs && myWrittenTimestamps.has(remoteTs)) {
+          updateSyncIndicator('synced', '🟢 En Vivo');
+          return;
+        }
+
+        // PROTECCIÓN: jamas permitir que un estado remoto vacío pise un estado local con transacciones reales
+        if (remoteTxCount === 0 && localTxCount > 0) {
           pushLocalIfUnsynced(localTs, remoteTs);
           return;
+        }
+
+        const remoteHasIncomes = remoteData.incomes &&
+          Object.values(remoteData.incomes).some(m => m && m.length > 0);
+        const localIsDefaultOnly = !appState._lastSaved || appState._lastSaved === 0;
+
+        // Solo ignorar datos remotos si: el local es más reciente Y el local NO es datos por defecto
+        if (remoteTs <= localTs && !localIsDefaultOnly && !remoteHasIncomes) {
+          pushLocalIfUnsynced(localTs, remoteTs);
+          return;
+        }
+        if (remoteTs <= localTs && !localIsDefaultOnly && remoteHasIncomes) {
+          const remoteIncomesCount = Object.values(remoteData.incomes).reduce((s, m) => s + (m ? m.length : 0), 0);
+          const localIncomesCount  = appState.incomes
+            ? Object.values(appState.incomes).reduce((s, m) => s + (m ? m.length : 0), 0)
+            : 0;
+          if (remoteTs <= localTs && remoteIncomesCount <= localIncomesCount && remoteTxCount <= localTxCount) {
+            pushLocalIfUnsynced(localTs, remoteTs);
+            return;
+          }
         }
       }
 
@@ -2462,7 +2479,7 @@
                       remoteData.salary +
                       JSON.stringify(remoteData.recurringDueDates);
 
-      if (newHash === lastKnownServerDataHash) {
+      if (!mustApplyRemote && newHash === lastKnownServerDataHash) {
         updateSyncIndicator('synced', '🟢 En Vivo');
         return;
       }
@@ -2521,9 +2538,9 @@
       updateSyncIndicator('synced', '🟢 En Vivo');
       renderAll();
 
-      // RESPALDO AUTOMÁTICO DIARIO: Si es el primer acceso del día, guardar una foto exacta en Supabase
+      // RESPALDO AUTOMÁTICO DIARIO: Solo guardar si el estado remoto tiene transacciones reales (nunca pisar un respaldo con estado vacío)
       const todayStr = new Date().toISOString().split('T')[0];
-      if (localStorage.getItem('last_cloud_backup_date') !== todayStr) {
+      if (remoteTxCount > 0 && localStorage.getItem('last_cloud_backup_date') !== todayStr) {
         createCloudBackupAuto(remoteData, todayStr);
       }
     }
@@ -2533,7 +2550,7 @@
     // Se aplica automáticamente cuando se carga el estado desde Supabase
     // ================================================================
     function applyDataMigrations(state) {
-      if (!state || !state.transactions) return state;
+      if (!state || !state.transactions || countTotalTransactions(state) === 0) return state;
 
       const MIGRATION_KEY = 'migration_v3_fix_diners';
       if (state[MIGRATION_KEY]) return state; // Ya aplicada
@@ -2598,7 +2615,7 @@
       return state;
     }
 
-    // Carga inicial desde Supabase
+    // Carga inicial desde Supabase (con auto-recuperación desde respaldos si se detecta pérdida de transacciones)
     async function loadStateFromServer(retries = 3) {
       if (!currentUser) {
         window._serverStateLoaded = true;
@@ -2625,7 +2642,93 @@
             setTimeout(() => openOnboardingWizard(false), 500);
             return;
           }
-          applyRemoteState(data.data);
+
+          let serverData = data.data;
+          let serverTxCount = countTotalTransactions(serverData);
+          const localTxCount = countTotalTransactions(appState);
+          let restoredFromBackup = false;
+
+          // ESCUDO DE AUTO-RECUPERACIÓN:
+          // Si la fila principal en Supabase quedó en 0 transacciones (o incompleta en la cuenta del fundador),
+          // verificar inmediatamente: 1) caché local con datos, 2) respaldos diarios backup_<id8>_% en Supabase, y 3) respaldo maestro del fundador
+          if (serverTxCount === 0 || (isCesar && serverTxCount < 100)) {
+            if (localTxCount > serverTxCount && (isCesar || !isLegacyClonedState(appState))) {
+              console.warn('♻️ El estado local tiene más historial que la fila del servidor; conservando local.');
+              serverData = { ...serverData, ...appState };
+              serverTxCount = localTxCount;
+              restoredFromBackup = true;
+            }
+
+            try {
+              const id8 = currentUser.id.slice(0, 8);
+              const { data: bks } = await supabaseClient
+                .from('finanzas_state')
+                .select('id,data')
+                .like('id', `backup_${id8}_%`)
+                .order('id', { ascending: false })
+                .limit(25);
+              if (Array.isArray(bks) && bks.length > 0) {
+                const validBks = bks
+                  .filter(b => b && b.data && countTotalTransactions(b.data) > serverTxCount && (isCesar || !isLegacyClonedState(b.data)))
+                  .sort((a, b) => {
+                    const txDiff = countTotalTransactions(b.data) - countTotalTransactions(a.data);
+                    const tsDiff = ((b.data && b.data._lastSaved) || 0) - ((a.data && a.data._lastSaved) || 0);
+                    return tsDiff !== 0 ? tsDiff : txDiff;
+                  });
+                if (validBks.length > 0) {
+                  const bestBk = validBks[0];
+                  console.warn('♻️ Restaurando historial automáticamente desde respaldo en la nube:', bestBk.id);
+                  serverData = {
+                    ...bestBk.data,
+                    userAvatar: serverData.userAvatar || bestBk.data.userAvatar,
+                    customUserName: serverData.customUserName || bestBk.data.customUserName
+                  };
+                  serverTxCount = countTotalTransactions(serverData);
+                  restoredFromBackup = true;
+                }
+              }
+            } catch (bkErr) {
+              console.warn('Nota al consultar respaldos en la nube:', bkErr);
+            }
+
+            // Respaldo maestro adicional exclusivo para la cuenta fundadora si faltasen meses históricos
+            if (isCesar && serverTxCount < 100) {
+              try {
+                const { data: { session: curSess } } = await supabaseClient.auth.getSession();
+                const token = curSess && curSess.access_token ? curSess.access_token : '';
+                if (token) {
+                  const fbRes = await fetch('/api/founder-backup?_t=' + Date.now(), {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                  });
+                  if (fbRes.ok) {
+                    const fbJson = await fbRes.json();
+                    if (fbJson && fbJson.data && countTotalTransactions(fbJson.data) > serverTxCount) {
+                      console.warn('♻️ Restaurando historial completo del fundador desde /api/founder-backup');
+                      const base = fbJson.data;
+                      serverData = {
+                        ...base,
+                        ...serverData,
+                        transactions: { ...(base.transactions || {}), ...(serverTxCount > 0 ? serverData.transactions : {}) },
+                        incomes: { ...(base.incomes || {}), ...(serverData.incomes || {}) },
+                        savingsGoals: (serverData.savingsGoals && serverData.savingsGoals.length > 0) ? serverData.savingsGoals : (base.savingsGoals || []),
+                        loans: (serverData.loans && serverData.loans.length > 0) ? serverData.loans : (base.loans || []),
+                        recurringDueDates: { ...(base.recurringDueDates || {}), ...(serverData.recurringDueDates || {}) },
+                        categoryBudgets: { ...(base.categoryBudgets || {}), ...(serverData.categoryBudgets || {}) },
+                        userAvatar: serverData.userAvatar || base.userAvatar,
+                        customUserName: serverData.customUserName || base.customUserName
+                      };
+                      serverTxCount = countTotalTransactions(serverData);
+                      restoredFromBackup = true;
+                    }
+                  }
+                }
+              } catch (fbErr) {
+                console.warn('Nota founder-backup:', fbErr);
+              }
+            }
+          }
+
+          applyRemoteState(serverData, restoredFromBackup);
           window._serverStateLoaded = true;
           if (userHasExistingFinancialData(appState)) {
             appState.onboardingCompleted = true;
@@ -2635,7 +2738,11 @@
           }
           lastSuccessfulSyncTime = Date.now();
           updateSyncIndicator('synced', '🟢 En Vivo');
-          if (syncPending) {
+          if (restoredFromBackup) {
+            syncPending = false;
+            await syncStateToServer();
+            showToast('♻️ Historial completo restaurado y blindado en la nube', 'success');
+          } else if (syncPending) {
             syncPending = false;
             syncStateToServer();
           }
@@ -2712,6 +2819,9 @@
     // SISTEMA DE RESPALDOS EN LA NUBE (BACKUPS)
     // ================================================================
     async function createCloudBackupAuto(dataToBackup, todayStr) {
+      if (!dataToBackup || (!String(todayStr).startsWith('legacy_') && countTotalTransactions(dataToBackup) === 0)) {
+        return; // Nunca sobrescribir un respaldo diario con un estado sin transacciones
+      }
       const userId = currentUser ? currentUser.id.slice(0, 8) : 'guest';
       localStorage.setItem('last_cloud_backup_date', todayStr);
       try {
@@ -2748,6 +2858,28 @@
     let currentSyncPromise = null;
 
     async function syncStateToServer() {
+      if (!currentUser) {
+        updateSyncIndicator('synced', '📱 Modo Local');
+        return;
+      }
+
+      // SEGURIDAD CRÍTICA DE RAÍZ: jamás estampar _lastSaved ni escribir al servidor antes de haber
+      // confirmado la carga de los datos reales de la nube.
+      if (window._serverStateLoaded !== true) {
+        syncPending = true;
+        console.warn('🛡️ Sync bloqueado: esperando carga confirmada del servidor');
+        updateSyncIndicator('syncing', '⏳ Esperando datos de la nube...');
+        return;
+      }
+
+      // ESCUDO ANTI-BORRADO ACCIDENTAL: si el usuario ya tenía transacciones reales en su historial
+      // (o es la cuenta fundadora) y por cualquier motivo appState tiene 0 transacciones, bloquear subida.
+      const currentTxCount = countTotalTransactions(appState);
+      if (currentTxCount === 0 && ((window._knownServerTxCount || 0) > 0 || isAdminCesar())) {
+        console.warn('🛡️ Bloqueado intento de subir estado con 0 transacciones sobre una cuenta con historial.');
+        return;
+      }
+
       if (isSyncing) {
         syncPending = true;
         return currentSyncPromise;
@@ -2763,22 +2895,6 @@
         const sentTs = appState._lastSaved;
         rememberOwnWrite(sentTs);
         saveLocalState();
-
-        if (!currentUser) {
-          isSyncing = false;
-          updateSyncIndicator('synced', '📱 Modo Local');
-          return;
-        }
-
-        // SEGURIDAD CRÍTICA: jamás escribir al servidor antes de haber confirmado la carga de los datos
-        // reales (un dispositivo nuevo arranca con estado vacío y lo subiría encima del existente).
-        if (window._serverStateLoaded !== true) {
-          isSyncing = false;
-          syncPending = true;
-          console.warn('🛡️ Sync bloqueado: esperando carga confirmada del servidor');
-          updateSyncIndicator('syncing', '⏳ Esperando datos de la nube...');
-          return;
-        }
 
         updateSyncIndicator('syncing', '⏳ Guardando...');
 
