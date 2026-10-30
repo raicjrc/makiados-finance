@@ -1,6 +1,6 @@
-// Service Worker v79.1 - NETWORK FIRST para sincronización en tiempo real
+// Service Worker v79.2 - NETWORK FIRST para sincronización en tiempo real
 // Este SW NUNCA sirve datos de caché - siempre va a la red primero
-const CACHE_NAME = 'aliviafin-v191';
+const CACHE_NAME = 'aliviafin-v192';
 
 // Solo cachear assets estáticos (fonts, chart.js, supabase, html2pdf, xlsx)
 const STATIC_ASSETS = [
@@ -80,9 +80,9 @@ self.addEventListener('fetch', event => {
   // Solo se cachean respuestas GET exitosas del mismo origen
   if (event.request.method !== 'GET') return;
 
-  // Para todo lo demás: NETWORK FIRST (intentar la red, guardar en caché, si falla usar caché)
+  // Para todo lo demás: NETWORK FIRST (validar siempre con red sin caché intermedia de Safari; si está offline usar caché)
   event.respondWith(
-    fetch(event.request)
+    fetch(event.request, { cache: 'no-cache' })
       .then(response => {
         if (response && response.ok && (response.type === 'basic' || response.type === 'cors')) {
           const clone = response.clone();
@@ -90,7 +90,7 @@ self.addEventListener('fetch', event => {
         }
         return response;
       })
-      .catch(() => caches.match(event.request))
+      .catch(() => caches.match(event.request, { ignoreSearch: true }))
   );
 });
 

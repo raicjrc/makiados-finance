@@ -47,3 +47,14 @@ Para evitar el agotamiento prematuro de tokens y límites de tasa en modelos ava
 3. **Salidas de Terminal Limpias:** Limitar la salida de comandos de consola (`head`, `tail`, `git log -n 5`) para no saturar el historial con texto basura.
 4. **Respuestas Concisas:** Explicaciones directas y al grano sin verborrea innecesaria.
 
+---
+
+## 6. 🎬 Estándar de Videos para TikTok e Instagram Reels (Zona Segura Universal)
+
+Para que **un único archivo de video (`1080 × 1920 px`, `9:16`)** funcione sin recortes tanto en **TikTok** como en **Instagram Reels** y en la vista previa **`4:5` (`1080 × 1350 px`) del Feed de Instagram**:
+
+1. **Lienzo Completo (`9:16`):** Mantener siempre resolución `1080 × 1920 px` con el fondo animado cubriendo el 100% de la pantalla.
+2. **Zona Segura Universal (`y = 290px` a `y = 1620px`):** Todos los titulares, etiquetas (`.kinetic-overlay`), stickers flotantes, mockups de dispositivos (`#phone-wrapper`, `#macbook-wrapper`) y botones CTA deben ubicarse estrictamente entre **`y = 290px`** (margen superior ≥ `285px`) e **`y = 1620px`** (margen inferior ≥ `300px`), y horizontalmente entre `x = 60px` y `x = 1020px`.
+3. **Cero Superposición con UI de Redes:** Esto garantiza que ni el recorte `4:5` del Feed de Instagram ni la botonera/descripción de TikTok e Instagram Reels tapen o corten jamás el encabezado o la barra inferior del teléfono.
+
+

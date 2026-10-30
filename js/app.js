@@ -88,9 +88,9 @@
     let CATEGORIES = { ...GENERIC_CATEGORIES };
 
     // ================================================================
-    // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v79.1)
+    // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v79.2)
     // ================================================================
-    const APP_VERSION = 'v79.1';
+    const APP_VERSION = 'v79.2';
 
     // ================================================================
     // CONFIGURACIÓN DE SUPABASE Y CLIENTE DE AUTENTICACIÓN
@@ -2203,16 +2203,48 @@
     }
     window.syncAdvisorSegmentedNav = syncAdvisorSegmentedNav;
 
-    // Registrar Service Worker v71.8 (Network-First, sin caché de datos)
+    // Registrar Service Worker (Network-First, con auto-detección de nueva versión en vivo)
+    function showUpdateAvailableBanner(remoteVer) {
+      if (document.getElementById('aliviafinLiveUpdateBanner')) return;
+      const loginModal = document.getElementById('loginModalScreen');
+      const isAtLogin = loginModal && loginModal.style.display !== 'none';
+      if (isAtLogin) {
+        // Si el usuario está en la pantalla de login, actualizar silenciosamente de inmediato
+        forceAppRefresh();
+        return;
+      }
+      const banner = document.createElement('div');
+      banner.id = 'aliviafinLiveUpdateBanner';
+      banner.style.cssText = 'position:fixed;top:calc(env(safe-area-inset-top, 12px) + 12px);left:50%;transform:translateX(-50%);z-index:99999;background:rgba(15,23,42,0.95);color:#fff;padding:10px 16px;border-radius:999px;box-shadow:0 12px 32px rgba(0,0,0,0.28),0 0 0 1px rgba(16,185,129,0.45);backdrop-filter:blur(16px);display:flex;align-items:center;gap:12px;font-size:12.5px;font-weight:700;max-width:92vw;white-space:nowrap;';
+      banner.innerHTML = '<span>✨ Nueva versión <b>' + (remoteVer || APP_VERSION) + '</b> lista</span>' +
+        '<button type="button" onclick="forceAppRefresh()" style="background:#10b981;color:#fff;border:none;border-radius:999px;padding:6px 14px;font-size:12px;font-weight:800;cursor:pointer;min-height:32px;">Actualizar ahora</button>' +
+        '<button type="button" onclick="this.parentElement.remove()" aria-label="Cerrar" style="background:transparent;color:#94a3b8;border:none;font-size:15px;cursor:pointer;padding:0 4px;">✕</button>';
+      document.body.appendChild(banner);
+    }
+
+    async function checkLiveAppVersion() {
+      try {
+        if (!navigator.onLine) return;
+        const res = await fetch('./sw.js?_t=' + Date.now() + '&_r=' + Math.random().toString(36).substring(2, 7), {
+          cache: 'no-store',
+          headers: { 'Cache-Control': 'no-cache, no-store' }
+        });
+        if (!res.ok) return;
+        const text = await res.text();
+        const m = text.match(/Service Worker\s+(v\d+\.\d+)/i);
+        if (m && m[1] && m[1] !== APP_VERSION) {
+          showUpdateAvailableBanner(m[1]);
+        }
+      } catch (_) {}
+    }
+
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         let isRefreshing = false;
-        // Solo recargar ante una ACTUALIZACIÓN (ya había un SW controlando); en la 1ª visita no
         const hadController = !!navigator.serviceWorker.controller;
-        navigator.serviceWorker.register('./sw.js?v=79.0')
+        navigator.serviceWorker.register('./sw.js?v=' + APP_VERSION)
           .then(reg => {
-            console.log('SW v79.0 registrado:', reg.scope);
-            // Forzar actualización inmediata del SW en todos los dispositivos
+            console.log('SW ' + APP_VERSION + ' registrado:', reg.scope);
             reg.update();
             if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
             reg.addEventListener('updatefound', () => {
@@ -2227,14 +2259,22 @@
             });
           })
           .catch(err => console.log('SW error:', err));
-        
-        // Cuando el SW se actualiza, recargar automáticamente una sola vez para que Safari / PWA aplique la versión fresca
+
         navigator.serviceWorker.addEventListener('controllerchange', () => {
           if (!isRefreshing && hadController) {
             isRefreshing = true;
             window.location.reload();
           }
         });
+
+        setTimeout(checkLiveAppVersion, 2500);
+      });
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          navigator.serviceWorker.getRegistration().then(reg => { if (reg) reg.update(); }).catch(() => {});
+          checkLiveAppVersion();
+        }
       });
     }
 
@@ -9412,6 +9452,9 @@
       document.querySelectorAll('.login-version-tag').forEach(el => {
         el.textContent = 'AliviaFin ' + APP_VERSION + ' · Paz mental para tu dinero';
       });
+
+      const deskVer = document.getElementById('loginFooterVersionDesk');
+      if (deskVer) deskVer.textContent = 'AliviaFin ' + APP_VERSION;
 
       const settVer = document.getElementById('settingsVersion');
       if (settVer) settVer.textContent = APP_VERSION;
