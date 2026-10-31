@@ -88,9 +88,10 @@
     let CATEGORIES = { ...GENERIC_CATEGORIES };
 
     // ================================================================
-    // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v79.5)
+    // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v79.6)
     // ================================================================
-    const APP_VERSION = 'v79.5';
+    const APP_VERSION = 'v79.6';
+    const APP_VERSION_EPOCH = 796;
 
     // ================================================================
     // CONFIGURACIÓN DE SUPABASE Y CLIENTE DE AUTENTICACIÓN
@@ -2442,20 +2443,41 @@
       }
     }
 
+    function recordDeletedIds(ids) {
+      if (!appState) return;
+      if (!Array.isArray(appState._deletedIds)) appState._deletedIds = [];
+      const list = Array.isArray(ids) ? ids : [ids];
+      list.forEach(id => {
+        if (id && !appState._deletedIds.includes(id)) {
+          appState._deletedIds.push(id);
+        }
+      });
+      if (appState._deletedIds.length > 300) {
+        appState._deletedIds = appState._deletedIds.slice(-300);
+      }
+    }
+
     // Fusión no destructiva cuando un dispositivo hizo cambios genuinamente offline
-    // mientras otro dispositivo también guardó en la nube.
+    // mientras otro dispositivo también guardó en la nube (respeta _deletedIds para jamás revivir borrados).
     function mergeOfflineWithRemoteState(localState, remoteState) {
       if (!localState || !remoteState) return remoteState || localState;
       const merged = JSON.parse(JSON.stringify(remoteState));
+      const deletedSet = new Set([
+        ...(Array.isArray(localState._deletedIds) ? localState._deletedIds : []),
+        ...(Array.isArray(remoteState._deletedIds) ? remoteState._deletedIds : [])
+      ]);
+      merged._deletedIds = Array.from(deletedSet).slice(-300);
+
       if (!merged.transactions) merged.transactions = {};
       if (localState.transactions && typeof localState.transactions === 'object') {
         Object.keys(localState.transactions).forEach(month => {
           const localList = Array.isArray(localState.transactions[month]) ? localState.transactions[month] : [];
           if (!Array.isArray(merged.transactions[month])) merged.transactions[month] = [];
+          merged.transactions[month] = merged.transactions[month].filter(rtx => rtx && (!rtx.id || !deletedSet.has(rtx.id)));
           const remoteList = merged.transactions[month];
           const remoteIds = new Set(remoteList.map(t => t && t.id).filter(Boolean));
           localList.forEach(ltx => {
-            if (!ltx) return;
+            if (!ltx || (ltx.id && deletedSet.has(ltx.id))) return;
             if (ltx.id && !remoteIds.has(ltx.id)) {
               const dup = remoteList.some(rtx =>
                 rtx &&
@@ -2467,9 +2489,6 @@
                 remoteList.push(ltx);
                 remoteIds.add(ltx.id);
               }
-            } else if (ltx.id && remoteIds.has(ltx.id) && (localState._lastSaved || 0) > (remoteState._lastSaved || 0)) {
-              const rIdx = remoteList.findIndex(rtx => rtx && rtx.id === ltx.id);
-              if (rIdx !== -1) remoteList[rIdx] = ltx;
             }
           });
         });
@@ -2479,27 +2498,41 @@
         Object.keys(localState.incomes).forEach(month => {
           const localInc = Array.isArray(localState.incomes[month]) ? localState.incomes[month] : [];
           if (!Array.isArray(merged.incomes[month])) merged.incomes[month] = [];
+          merged.incomes[month] = merged.incomes[month].filter(r => r && (!r.id || !deletedSet.has(r.id)));
           const remoteInc = merged.incomes[month];
           const remoteIncIds = new Set(remoteInc.map(i => i && i.id).filter(Boolean));
           localInc.forEach(linc => {
-            if (!linc) return;
+            if (!linc || (linc.id && deletedSet.has(linc.id))) return;
             if (linc.id && !remoteIncIds.has(linc.id)) {
               remoteInc.push(linc);
               remoteIncIds.add(linc.id);
-            } else if (linc.id && remoteIncIds.has(linc.id) && (localState._lastSaved || 0) > (remoteState._lastSaved || 0)) {
-              const rIdx = remoteInc.findIndex(r => r && r.id === linc.id);
-              if (rIdx !== -1) remoteInc[rIdx] = linc;
             }
           });
         });
+      }
+      if (Array.isArray(merged.loans)) {
+        merged.loans = merged.loans.filter(l => l && (!l.id || !deletedSet.has(l.id)));
       }
       if (Array.isArray(localState.loans) && localState.loans.length > 0) {
         if (!Array.isArray(merged.loans)) merged.loans = [];
         const rLoanIds = new Set(merged.loans.map(l => l && l.id).filter(Boolean));
         localState.loans.forEach(ll => {
-          if (ll && ll.id && !rLoanIds.has(ll.id)) {
+          if (ll && ll.id && !deletedSet.has(ll.id) && !rLoanIds.has(ll.id)) {
             merged.loans.push(ll);
             rLoanIds.add(ll.id);
+          }
+        });
+      }
+      if (Array.isArray(merged.savingsGoals)) {
+        merged.savingsGoals = merged.savingsGoals.filter(g => g && (!g.id || !deletedSet.has(g.id)));
+      }
+      if (Array.isArray(localState.savingsGoals) && localState.savingsGoals.length > 0) {
+        if (!Array.isArray(merged.savingsGoals)) merged.savingsGoals = [];
+        const rGoalIds = new Set(merged.savingsGoals.map(g => g && g.id).filter(Boolean));
+        localState.savingsGoals.forEach(lg => {
+          if (lg && lg.id && !deletedSet.has(lg.id) && !rGoalIds.has(lg.id)) {
+            merged.savingsGoals.push(lg);
+            rGoalIds.add(lg.id);
           }
         });
       }
@@ -2521,6 +2554,17 @@
       return Object.values(state.transactions).reduce((sum, list) => sum + (Array.isArray(list) ? list.length : 0), 0);
     }
 
+    function countUserFinancialRecords(state) {
+      if (!state || typeof state !== 'object') return 0;
+      let total = countTotalTransactions(state);
+      if (Array.isArray(state.savingsGoals)) total += state.savingsGoals.length;
+      if (Array.isArray(state.loans)) total += state.loans.length;
+      if (state.incomes && typeof state.incomes === 'object') {
+        total += Object.values(state.incomes).reduce((s, list) => s + (Array.isArray(list) ? list.length : 0), 0);
+      }
+      return total;
+    }
+
     function applyRemoteState(remoteData, forceRestore = false) {
       if (!remoteData || !remoteData.transactions) return;
 
@@ -2531,6 +2575,10 @@
 
       if (remoteTxCount > 0) {
         window._knownServerTxCount = Math.max(window._knownServerTxCount || 0, remoteTxCount);
+      }
+      if (remoteData._versionEpoch && remoteData._versionEpoch > APP_VERSION_EPOCH) {
+        window._remoteHasNewerVersionEpoch = true;
+        checkLiveAppVersion();
       }
 
       // REGLA DE ORO MULTI-DISPOSITIVO (iPhone, Android, Mac, Windows):
@@ -3012,8 +3060,8 @@
     // ================================================================
     let _lastCloudBackupWriteTs = 0;
     async function createCloudBackupAuto(dataToBackup, todayStr, forceNow = false) {
-      if (!dataToBackup || (!String(todayStr).startsWith('legacy_') && countTotalTransactions(dataToBackup) === 0)) {
-        return; // Nunca sobrescribir un respaldo diario con un estado sin transacciones
+      if (!dataToBackup || (!String(todayStr).startsWith('legacy_') && countUserFinancialRecords(dataToBackup) === 0)) {
+        return; // Nunca sobrescribir un respaldo diario con un estado sin registros financieros
       }
       const now = Date.now();
       if (!forceNow && now - _lastCloudBackupWriteTs < 12000 && localStorage.getItem('last_cloud_backup_date') === todayStr) {
@@ -3074,11 +3122,23 @@
         return;
       }
 
-      // ESCUDO ANTI-BORRADO ACCIDENTAL: si el usuario ya tenía transacciones reales en su historial
-      // (o es la cuenta fundadora) y por cualquier motivo appState tiene 0 transacciones, bloquear subida.
+      // ESCUDO ANTI-BORRADO ACCIDENTAL Y ANTI-CAÍDA ABRUPTA (SUDDEN-DROP SHIELD):
+      // 1) Si la cuenta ya tenía historial y appState tiene 0 transacciones, bloquear subida.
+      // 2) Si el conteo de transacciones cae abruptamente (> 3 menos que _knownServerTxCount) sin borrado explícito del usuario, bloquear subida.
       const currentTxCount = countTotalTransactions(appState);
-      if (currentTxCount === 0 && ((window._knownServerTxCount || 0) > 0 || isAdminCesar())) {
+      const knownTx = window._knownServerTxCount || 0;
+      const allowedDrop = (window._authorizedDeleteAllowance || 0) + 3;
+      if (currentTxCount === 0 && (knownTx > 0 || isAdminCesar())) {
         console.warn('🛡️ Bloqueado intento de subir estado con 0 transacciones sobre una cuenta con historial.');
+        return;
+      }
+      if (knownTx >= 5 && currentTxCount < (knownTx - allowedDrop)) {
+        console.warn('🛡️ Sudden-Drop Shield activado: bloqueada subida con caída abrupta de transacciones (' + currentTxCount + ' vs ' + knownTx + ').');
+        loadStateFromServer(2);
+        return;
+      }
+      if (window._remoteHasNewerVersionEpoch === true) {
+        console.warn('🛡️ Version Epoch Shield: la nube fue actualizada por una versión más nueva; bloqueando escritura desde cliente antiguo.');
         return;
       }
 
@@ -3093,6 +3153,8 @@
         appState.activeCategoryChip  = currentCategoryFilter;
         appState.activeStatusFilter  = currentStatusFilter;
         appState.historyPeriodFilter = currentHistoryPeriodFilter;
+        appState._versionEpoch = APP_VERSION_EPOCH;
+        appState._clientVersion = APP_VERSION;
         appState._lastSaved = Date.now();
         const sentTs = appState._lastSaved;
         rememberOwnWrite(sentTs);
@@ -3124,7 +3186,7 @@
             if (currentUser) {
               recordUserHeartbeat(currentUser);
               // Mantener también el respaldo diario en la nube actualizado en tiempo real en cada guardado válido
-              if (currentTxCount > 0) {
+              if (countUserFinancialRecords(appState) > 0) {
                 const todayStr = new Date().toISOString().split('T')[0];
                 createCloudBackupAuto(appState, todayStr);
               }
@@ -3279,9 +3341,9 @@
       const serialized = JSON.stringify(appState);
       try {
         localStorage.setItem(key, serialized);
-        // BÓVEDA LOCAL INMUTABLE: si el estado tiene transacciones reales, guardar copia espejo instantánea
+        // BÓVEDA LOCAL INMUTABLE: si el estado tiene registros financieros reales, guardar copia espejo instantánea
         // que jamás puede ser sobrescrita por un estado vacío ante ningún evento.
-        if (countTotalTransactions(appState) > 0) {
+        if (countUserFinancialRecords(appState) > 0) {
           localStorage.setItem(key + '_vault', serialized);
         }
       } catch(e) {
@@ -6831,6 +6893,7 @@
       
       const propagate = await uiConfirm(`¿Deseas eliminar "${tx.name}" también para TODOS los meses posteriores a este?`);
       
+      const deletedIds = [id];
       if (propagate) {
         const allMonthsOrder = getSortedMonths();
         const selectedIndex = allMonthsOrder.indexOf(appState.currentMonth);
@@ -6838,14 +6901,20 @@
           const futureMonths = allMonthsOrder.slice(selectedIndex + 1);
           futureMonths.forEach(m => {
             if (appState.transactions[m]) {
+              appState.transactions[m].forEach(t => {
+                if (t && getNormalizedNameKey(t.name) === normKey && t.id) deletedIds.push(t.id);
+              });
               appState.transactions[m] = appState.transactions[m].filter(t => getNormalizedNameKey(t.name) !== normKey);
             }
           });
         }
       }
 
+      window._authorizedDeleteAllowance = (window._authorizedDeleteAllowance || 0) + deletedIds.length;
+      recordDeletedIds(deletedIds);
       addAuditLog('🗑️ Eliminar Gasto', `Eliminado: ${tx.name}${propagate ? ' (y meses futuros)' : ''}`);
       appState.transactions[appState.currentMonth] = txs.filter(t => t.id !== id);
+      window._knownServerTxCount = countTotalTransactions(appState);
       saveState();
       renderAll();
     }
@@ -7853,6 +7922,7 @@
       const g = (appState.savingsGoals || []).find(item => item.id === id);
       if (!g) return;
       if (!await uiConfirm(`¿Eliminar la bóveda "${g.name}"?\n(El saldo acumulado actual de S/ ${g.current.toFixed(2)} dejará de contabilizarse en metas).`)) return;
+      recordDeletedIds(id);
       addAuditLog('🗑️ Eliminar Bóveda', `Eliminada: ${g.name}`);
       appState.savingsGoals = appState.savingsGoals.filter(item => item.id !== id);
       saveState();
@@ -10242,6 +10312,7 @@
       const loans = getLoansList();
       const idx = loans.findIndex(l => l.id === loanId);
       if (idx !== -1) {
+        recordDeletedIds(loanId);
         loans.splice(idx, 1);
         markLocalMutationDirty();
         saveLocalState();
