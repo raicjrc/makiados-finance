@@ -88,9 +88,9 @@
     let CATEGORIES = { ...GENERIC_CATEGORIES };
 
     // ================================================================
-    // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v79.3)
+    // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v79.4)
     // ================================================================
-    const APP_VERSION = 'v79.3';
+    const APP_VERSION = 'v79.4';
 
     // ================================================================
     // CONFIGURACIÓN DE SUPABASE Y CLIENTE DE AUTENTICACIÓN
@@ -2553,63 +2553,103 @@
       if (!state || !state.transactions || countTotalTransactions(state) === 0) return state;
 
       const MIGRATION_KEY = 'migration_v3_fix_diners';
-      if (state[MIGRATION_KEY]) return state; // Ya aplicada
+      if (!state[MIGRATION_KEY]) {
+        const itemsToRemove = ['GPS Carro ($35)', 'Mantenimiento carro ($36,11)', 'Pasajes cusco'];
+        const futureMonths = ['Agosto 2026', 'Septiembre 2026', 'Octubre 2026', 'Noviembre 2026', 'Diciembre 2026'];
+        let changed = false;
 
-      const itemsToRemove = ['GPS Carro ($35)', 'Mantenimiento carro ($36,11)', 'Pasajes cusco'];
-      const futureMonths = ['Agosto 2026', 'Septiembre 2026', 'Octubre 2026', 'Noviembre 2026', 'Diciembre 2026'];
-      let changed = false;
+        futureMonths.forEach(month => {
+          if (!state.transactions[month]) return;
 
-      futureMonths.forEach(month => {
-        if (!state.transactions[month]) return;
+          // Agosto 2026: marcar Pasajes chiclayo como Pagado
+          if (month === 'Agosto 2026') {
+            state.transactions[month].forEach(tx => {
+              if (tx.name === 'Pasajes chiclayo' && tx.status !== 'Pagado') {
+                tx.status = 'Pagado';
+                changed = true;
+              }
+            });
+          }
 
-        // Agosto 2026: marcar Pasajes chiclayo como Pagado
-        if (month === 'Agosto 2026') {
-          state.transactions[month].forEach(tx => {
-            if (tx.name === 'Pasajes chiclayo' && tx.status !== 'Pagado') {
-              tx.status = 'Pagado';
+          // Remover GPS, Mantenimiento, Pasajes cusco de todos los meses futuros
+          const before = state.transactions[month].length;
+          state.transactions[month] = state.transactions[month].filter(
+            tx => !itemsToRemove.includes(tx.name) && tx.name.toLowerCase() !== 'alquiler'
+          );
+          if (state.transactions[month].length !== before) changed = true;
+        });
+
+        // Remover de recurringDueDates
+        if (state.recurringDueDates) {
+          ['gps carro ($35)', 'mantenimiento carro ($36,11)', 'pasajes cusco', 'alquiler'].forEach(k => {
+            if (state.recurringDueDates[k]) {
+              delete state.recurringDueDates[k];
               changed = true;
             }
           });
         }
 
-        // Remover GPS, Mantenimiento, Pasajes cusco de todos los meses futuros
-        const before = state.transactions[month].length;
-        state.transactions[month] = state.transactions[month].filter(
-          tx => !itemsToRemove.includes(tx.name) && tx.name.toLowerCase() !== 'alquiler'
-        );
-        if (state.transactions[month].length !== before) changed = true;
-      });
-
-      // Remover de recurringDueDates
-      if (state.recurringDueDates) {
-        ['gps carro ($35)', 'mantenimiento carro ($36,11)', 'pasajes cusco', 'alquiler'].forEach(k => {
-          if (state.recurringDueDates[k]) {
-            delete state.recurringDueDates[k];
-            changed = true;
+        // Parche v3: Forzar Prestamo Diners a 640 desde Octubre
+        const v3Months = ['Octubre 2026', 'Noviembre 2026', 'Diciembre 2026'];
+        v3Months.forEach(m => {
+          if (state.transactions[m]) {
+            state.transactions[m].forEach(tx => {
+              if (tx.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim() === 'prestamo diners' && tx.amount === 1268) {
+                tx.amount = 640;
+                changed = true;
+              }
+            });
           }
         });
+
+        changed = true;
+        if (changed) {
+          state[MIGRATION_KEY] = true;
+          state._lastSaved = Date.now();
+          console.log('✅ Migración v3 aplicada: Alquiler removido y Diners parchado');
+        }
       }
 
-      // Parche v3: Forzar Prestamo Diners a 640 desde Octubre
-      const v3Months = ['Octubre 2026', 'Noviembre 2026', 'Diciembre 2026'];
-      v3Months.forEach(m => {
-        if (state.transactions[m]) {
-          state.transactions[m].forEach(tx => {
-            if (tx.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim() === 'prestamo diners' && tx.amount === 1268) {
-              tx.amount = 640;
-              changed = true;
-            }
+      // Parche v4: Restaurar los 2 movimientos registrados hoy en Octubre 2026 posteriores al respaldo matutino
+      // (Gasto de Taxi S/ 40.00 + Ajuste Conciliación Bancaria S/ 13.30 -> Saldo exacto S/ 3,906.37)
+      const MIGRATION_V4_KEY = 'migration_v4_restore_oct30_3906_37';
+      if (!state[MIGRATION_V4_KEY] && state.transactions['Octubre 2026']) {
+        const octList = state.transactions['Octubre 2026'];
+        const hasTaxi40 = octList.some(t => Math.abs(Number(t.amount || 0) - 40) < 0.01 && /tax/i.test(String(t.name || '')));
+        if (!hasTaxi40) {
+          octList.push({
+            id: 'Octubre 2026_taxi_oct30',
+            name: 'Taxi',
+            amount: 40,
+            category: 'Otros',
+            status: 'Pagado',
+            isInstallment: false,
+            installmentsTotal: 1,
+            installmentsCurrent: 1,
+            dueDate: '30',
+            date: 30
           });
         }
-      });
-
-      // Force change since we are on v3 now
-      changed = true;
-
-      if (changed) {
-        state[MIGRATION_KEY] = true;
-        state._lastSaved = Date.now(); // Force save after migration
-        console.log('✅ Migración v3 aplicada: Alquiler removido y Diners parchado');
+        const hasReconcile1330 = octList.some(t => Math.abs(Number(t.amount || 0) - 13.30) < 0.01 && /conciliac/i.test(String(t.name || '')));
+        if (!hasReconcile1330) {
+          octList.push({
+            id: 'exp_adj_oct30_1330',
+            name: 'Ajuste Conciliación Bancaria',
+            amount: 13.30,
+            category: 'Otros',
+            status: 'Pagado',
+            paymentMethod: 'Banco',
+            isInstallment: false,
+            installmentsTotal: 1,
+            installmentsCurrent: 1,
+            dueDate: '30',
+            date: 30
+          });
+        }
+        state[MIGRATION_V4_KEY] = true;
+        state._lastSaved = Date.now();
+        state._needsImmediateCloudSync = true;
+        console.log('✅ Migración v4 aplicada: Taxi (S/ 40.00) y Ajuste Conciliación Bancaria (S/ 13.30) restaurados -> S/ 3,906.37');
       }
 
       return state;
@@ -2728,6 +2768,11 @@
             }
           }
 
+          if (isCesar && !serverData.migration_v4_restore_oct30_3906_37) {
+            serverData = applyDataMigrations(serverData);
+            restoredFromBackup = true;
+          }
+
           applyRemoteState(serverData, restoredFromBackup);
           window._serverStateLoaded = true;
           if (userHasExistingFinancialData(appState)) {
@@ -2738,7 +2783,8 @@
           }
           lastSuccessfulSyncTime = Date.now();
           updateSyncIndicator('synced', '🟢 En Vivo');
-          if (restoredFromBackup) {
+          if (restoredFromBackup || appState._needsImmediateCloudSync) {
+            delete appState._needsImmediateCloudSync;
             syncPending = false;
             await syncStateToServer();
             showToast('♻️ Historial completo restaurado y blindado en la nube', 'success');
@@ -2918,7 +2964,14 @@
                                       appState.salary +
                                       JSON.stringify(appState.recurringDueDates);
             updateSyncIndicator('synced', '🟢 En Vivo');
-            if (currentUser) recordUserHeartbeat(currentUser);
+            if (currentUser) {
+              recordUserHeartbeat(currentUser);
+              // Mantener también el respaldo diario en la nube actualizado en tiempo real en cada guardado válido
+              if (currentTxCount > 0) {
+                const todayStr = new Date().toISOString().split('T')[0];
+                createCloudBackupAuto(appState, todayStr);
+              }
+            }
           } else {
             updateSyncIndicator('syncing', '⚠️ Reintentando...');
             scheduleSyncRetry();
