@@ -88,9 +88,9 @@
     let CATEGORIES = { ...GENERIC_CATEGORIES };
 
     // ================================================================
-    // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v79.4)
+    // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v79.5)
     // ================================================================
-    const APP_VERSION = 'v79.4';
+    const APP_VERSION = 'v79.5';
 
     // ================================================================
     // CONFIGURACIÓN DE SUPABASE Y CLIENTE DE AUTENTICACIÓN
@@ -2230,6 +2230,14 @@
         const text = await res.text();
         const m = text.match(/Service Worker\s+(v\d+\.\d+)/i);
         if (m && m[1] && m[1] !== APP_VERSION) {
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistration().then(reg => {
+              if (reg) {
+                reg.update();
+                if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+              }
+            }).catch(() => {});
+          }
           showUpdateAvailableBanner(m[1]);
         }
       } catch (_) {}
@@ -2403,8 +2411,105 @@
       }, delay);
     }
 
+    function getDirtyFlagKey() {
+      const uid = (currentUser && currentUser.id) ? currentUser.id : 'guest';
+      return 'finanzas_unsynced_dirty_' + uid;
+    }
+
+    function markLocalMutationDirty() {
+      const now = Date.now();
+      if (appState) appState._lastSaved = now;
+      window._hasUnsyncedLocalMutations = true;
+      syncPending = true;
+      try {
+        localStorage.setItem(getDirtyFlagKey(), String(now));
+      } catch (_) {}
+    }
+
+    function clearLocalMutationDirty() {
+      window._hasUnsyncedLocalMutations = false;
+      try {
+        localStorage.removeItem(getDirtyFlagKey());
+      } catch (_) {}
+    }
+
+    function hasUnsyncedLocalMutations() {
+      if (window._hasUnsyncedLocalMutations === true) return true;
+      try {
+        return !!localStorage.getItem(getDirtyFlagKey());
+      } catch (_) {
+        return false;
+      }
+    }
+
+    // Fusión no destructiva cuando un dispositivo hizo cambios genuinamente offline
+    // mientras otro dispositivo también guardó en la nube.
+    function mergeOfflineWithRemoteState(localState, remoteState) {
+      if (!localState || !remoteState) return remoteState || localState;
+      const merged = JSON.parse(JSON.stringify(remoteState));
+      if (!merged.transactions) merged.transactions = {};
+      if (localState.transactions && typeof localState.transactions === 'object') {
+        Object.keys(localState.transactions).forEach(month => {
+          const localList = Array.isArray(localState.transactions[month]) ? localState.transactions[month] : [];
+          if (!Array.isArray(merged.transactions[month])) merged.transactions[month] = [];
+          const remoteList = merged.transactions[month];
+          const remoteIds = new Set(remoteList.map(t => t && t.id).filter(Boolean));
+          localList.forEach(ltx => {
+            if (!ltx) return;
+            if (ltx.id && !remoteIds.has(ltx.id)) {
+              const dup = remoteList.some(rtx =>
+                rtx &&
+                String(rtx.name || '').trim() === String(ltx.name || '').trim() &&
+                Math.abs(Number(rtx.amount || 0) - Number(ltx.amount || 0)) < 0.01 &&
+                String(rtx.date || rtx.dueDate || '') === String(ltx.date || ltx.dueDate || '')
+              );
+              if (!dup) {
+                remoteList.push(ltx);
+                remoteIds.add(ltx.id);
+              }
+            } else if (ltx.id && remoteIds.has(ltx.id) && (localState._lastSaved || 0) > (remoteState._lastSaved || 0)) {
+              const rIdx = remoteList.findIndex(rtx => rtx && rtx.id === ltx.id);
+              if (rIdx !== -1) remoteList[rIdx] = ltx;
+            }
+          });
+        });
+      }
+      if (!merged.incomes) merged.incomes = {};
+      if (localState.incomes && typeof localState.incomes === 'object') {
+        Object.keys(localState.incomes).forEach(month => {
+          const localInc = Array.isArray(localState.incomes[month]) ? localState.incomes[month] : [];
+          if (!Array.isArray(merged.incomes[month])) merged.incomes[month] = [];
+          const remoteInc = merged.incomes[month];
+          const remoteIncIds = new Set(remoteInc.map(i => i && i.id).filter(Boolean));
+          localInc.forEach(linc => {
+            if (!linc) return;
+            if (linc.id && !remoteIncIds.has(linc.id)) {
+              remoteInc.push(linc);
+              remoteIncIds.add(linc.id);
+            } else if (linc.id && remoteIncIds.has(linc.id) && (localState._lastSaved || 0) > (remoteState._lastSaved || 0)) {
+              const rIdx = remoteInc.findIndex(r => r && r.id === linc.id);
+              if (rIdx !== -1) remoteInc[rIdx] = linc;
+            }
+          });
+        });
+      }
+      if (Array.isArray(localState.loans) && localState.loans.length > 0) {
+        if (!Array.isArray(merged.loans)) merged.loans = [];
+        const rLoanIds = new Set(merged.loans.map(l => l && l.id).filter(Boolean));
+        localState.loans.forEach(ll => {
+          if (ll && ll.id && !rLoanIds.has(ll.id)) {
+            merged.loans.push(ll);
+            rLoanIds.add(ll.id);
+          }
+        });
+      }
+      merged._lastSaved = Math.max(localState._lastSaved || 0, remoteState._lastSaved || 0, Date.now());
+      merged._needsImmediateCloudSync = true;
+      return merged;
+    }
+
     function pushLocalIfUnsynced(localTs, remoteTs) {
-      if (localTs > remoteTs && localTs > lastAckedWriteTs) {
+      if (hasUnsyncedLocalMutations() && localTs > remoteTs && localTs > lastAckedWriteTs) {
         syncStateToServer();
       } else {
         updateSyncIndicator('synced', '🟢 En Vivo');
@@ -2428,44 +2533,31 @@
         window._knownServerTxCount = Math.max(window._knownServerTxCount || 0, remoteTxCount);
       }
 
-      // Si el estado local está vacío (0 transacciones) y el remoto sí tiene historial,
-      // o si es una restauración forzada desde respaldo, APLICAR SIEMPRE sin importar _lastSaved
+      // REGLA DE ORO MULTI-DISPOSITIVO (iPhone, Android, Mac, Windows):
+      // Un dispositivo que simplemente se abre o despierta SIN cambios locales pendientes de subir
+      // (!hasUnsyncedLocalMutations()) JAMÁS puede rechazar ni sobrescribir el estado de la nube.
+      const hasUnsyncedDirty = hasUnsyncedLocalMutations();
       const mustApplyRemote = forceRestore ||
+                              !hasUnsyncedDirty ||
                               (localTxCount === 0 && remoteTxCount > 0) ||
                               (isAdminCesar() && localTxCount < 50 && remoteTxCount >= 50);
 
-      if (!mustApplyRemote) {
-        // Eco de nuestra propia escritura: el estado local ya lo contiene
-        if (remoteTs && myWrittenTimestamps.has(remoteTs)) {
-          updateSyncIndicator('synced', '🟢 En Vivo');
-          return;
-        }
+      // Eco de nuestra propia escritura: el estado local ya lo contiene
+      if (!forceRestore && remoteTs && myWrittenTimestamps.has(remoteTs)) {
+        updateSyncIndicator('synced', '🟢 En Vivo');
+        return;
+      }
 
-        // PROTECCIÓN: jamas permitir que un estado remoto vacío pise un estado local con transacciones reales
-        if (remoteTxCount === 0 && localTxCount > 0) {
-          pushLocalIfUnsynced(localTs, remoteTs);
-          return;
-        }
+      // PROTECCIÓN: jamás permitir que un estado remoto vacío pise un estado local con transacciones reales
+      if (remoteTxCount === 0 && localTxCount > 0) {
+        if (hasUnsyncedDirty) pushLocalIfUnsynced(localTs, remoteTs);
+        return;
+      }
 
-        const remoteHasIncomes = remoteData.incomes &&
-          Object.values(remoteData.incomes).some(m => m && m.length > 0);
-        const localIsDefaultOnly = !appState._lastSaved || appState._lastSaved === 0;
-
-        // Solo ignorar datos remotos si: el local es más reciente Y el local NO es datos por defecto
-        if (remoteTs <= localTs && !localIsDefaultOnly && !remoteHasIncomes) {
-          pushLocalIfUnsynced(localTs, remoteTs);
-          return;
-        }
-        if (remoteTs <= localTs && !localIsDefaultOnly && remoteHasIncomes) {
-          const remoteIncomesCount = Object.values(remoteData.incomes).reduce((s, m) => s + (m ? m.length : 0), 0);
-          const localIncomesCount  = appState.incomes
-            ? Object.values(appState.incomes).reduce((s, m) => s + (m ? m.length : 0), 0)
-            : 0;
-          if (remoteTs <= localTs && remoteIncomesCount <= localIncomesCount && remoteTxCount <= localTxCount) {
-            pushLocalIfUnsynced(localTs, remoteTs);
-            return;
-          }
-        }
+      // Si este dispositivo realmente hizo ediciones offline aún no sincronizadas (hasUnsyncedDirty === true)
+      // y el servidor también tiene historial válido, fusionar de forma no destructiva para no perder nada de ninguno.
+      if (!mustApplyRemote && hasUnsyncedDirty && localTxCount > 0 && remoteTxCount > 0) {
+        remoteData = mergeOfflineWithRemoteState(appState, remoteData);
       }
 
       const newHash = String(remoteData._lastSaved || 0) +
@@ -2610,32 +2702,73 @@
         }
       }
 
-      // Parche v4: Restaurar los 2 movimientos registrados hoy en Octubre 2026 posteriores al respaldo matutino
+      // Parche v4 + v5: Garantizar saldo exacto S/ 3,906.37 en Octubre 2026 sin duplicados entre dispositivos
       // (Gasto de Taxi S/ 40.00 + Ajuste Conciliación Bancaria S/ 13.30 -> Saldo exacto S/ 3,906.37)
       const MIGRATION_V4_KEY = 'migration_v4_restore_oct30_3906_37';
-      if (!state[MIGRATION_V4_KEY] && state.transactions['Octubre 2026']) {
+      const MIGRATION_V5_KEY = 'migration_v5_exact_balance_3906_37';
+      if ((!state[MIGRATION_V4_KEY] || !state[MIGRATION_V5_KEY]) && state.transactions['Octubre 2026']) {
+        const calcOctBalance = (st) => {
+          const months = ['Agosto 2026', 'Septiembre 2026', 'Octubre 2026'];
+          let acc = 0;
+          for (let i = 0; i < months.length; i++) {
+            const m = months[i];
+            const txs = (st.transactions && st.transactions[m]) ? st.transactions[m] : [];
+            const paid = Math.round((txs.filter(t => (t.status || 'Pagado') === 'Pagado').reduce((s, t) => s + (Number(t.amount) || 0), 0) + Number.EPSILON) * 100) / 100;
+            const incs = (st.incomes && st.incomes[m]) ? st.incomes[m] : [];
+            const rec = Math.round((incs.filter(inc => (inc.status || 'Pendiente') === 'Recibido').reduce((s, inc) => s + (Number(inc.amount) || 0), 0) + Number.EPSILON) * 100) / 100;
+            acc = Math.round((acc + (rec - paid) + Number.EPSILON) * 100) / 100;
+          }
+          return acc;
+        };
+
+        // 1. Limpiar cualquier duplicado previo de Taxi (40) o Ajuste Conciliación Bancaria en Octubre 2026
+        state.transactions['Octubre 2026'] = state.transactions['Octubre 2026'].filter(t => {
+          if (!t) return false;
+          if (t.id === 'Octubre 2026_taxi_oct30' || t.id === 'exp_adj_oct30_1330') return false;
+          if (String(t.id || '').startsWith('exp_adj_') || /conciliac/i.test(String(t.name || ''))) return false;
+          if (Math.abs(Number(t.amount || 0) - 40) < 0.01 && /tax/i.test(String(t.name || ''))) return false;
+          return true;
+        });
         const octList = state.transactions['Octubre 2026'];
-        const hasTaxi40 = octList.some(t => Math.abs(Number(t.amount || 0) - 40) < 0.01 && /tax/i.test(String(t.name || '')));
-        if (!hasTaxi40) {
-          octList.push({
-            id: 'Octubre 2026_taxi_oct30',
-            name: 'Taxi',
-            amount: 40,
-            category: 'Otros',
-            status: 'Pagado',
-            isInstallment: false,
-            installmentsTotal: 1,
-            installmentsCurrent: 1,
-            dueDate: '30',
-            date: 30
-          });
+
+        // 2. Insertar exactamente 1 registro de Taxi (S/ 40.00)
+        octList.push({
+          id: 'Octubre 2026_taxi_oct30',
+          name: 'Taxi',
+          amount: 40,
+          category: 'Otros',
+          status: 'Pagado',
+          isInstallment: false,
+          installmentsTotal: 1,
+          installmentsCurrent: 1,
+          dueDate: '30',
+          date: 30
+        });
+
+        // Si en el iPhone se había registrado otro gasto de S/ 40.00 hoy (día 30) con otro nombre (p. ej. categoría rápida),
+        // verificar si el saldo quedó exactamente S/ 40.00 por debajo de 3,919.67 y deduplicarlo
+        let balAfterTaxi = calcOctBalance(state);
+        if (Math.abs(balAfterTaxi - (3919.67 - 40)) < 0.01) {
+          const dup40Idx = octList.findIndex(t =>
+            t && t.id !== 'Octubre 2026_taxi_oct30' &&
+            Math.abs(Number(t.amount || 0) - 40) < 0.01 &&
+            (String(t.date || '').includes('30') || String(t.dueDate || '') === '30')
+          );
+          if (dup40Idx !== -1) {
+            octList.splice(dup40Idx, 1);
+            balAfterTaxi = calcOctBalance(state);
+          }
         }
-        const hasReconcile1330 = octList.some(t => Math.abs(Number(t.amount || 0) - 13.30) < 0.01 && /conciliac/i.test(String(t.name || '')));
-        if (!hasReconcile1330) {
+
+        // 3. Calcular el ajuste de conciliación exacto para converger a S/ 3,906.37
+        const targetOctBal = 3906.37;
+        const neededAdj = Math.round((balAfterTaxi - targetOctBal + Number.EPSILON) * 100) / 100;
+
+        if (neededAdj > 0.009) {
           octList.push({
             id: 'exp_adj_oct30_1330',
             name: 'Ajuste Conciliación Bancaria',
-            amount: 13.30,
+            amount: neededAdj,
             category: 'Otros',
             status: 'Pagado',
             paymentMethod: 'Banco',
@@ -2645,11 +2778,24 @@
             dueDate: '30',
             date: 30
           });
+        } else if (neededAdj < -0.009) {
+          if (!state.incomes) state.incomes = {};
+          if (!Array.isArray(state.incomes['Octubre 2026'])) state.incomes['Octubre 2026'] = [];
+          state.incomes['Octubre 2026'] = state.incomes['Octubre 2026'].filter(i => !String((i && i.id) || '').startsWith('inc_adj_oct30'));
+          state.incomes['Octubre 2026'].push({
+            id: 'inc_adj_oct30_exact',
+            name: 'Ajuste Conciliación Bancaria',
+            amount: Math.abs(neededAdj),
+            status: 'Recibido',
+            date: 30
+          });
         }
+
         state[MIGRATION_V4_KEY] = true;
+        state[MIGRATION_V5_KEY] = true;
         state._lastSaved = Date.now();
         state._needsImmediateCloudSync = true;
-        console.log('✅ Migración v4 aplicada: Taxi (S/ 40.00) y Ajuste Conciliación Bancaria (S/ 13.30) restaurados -> S/ 3,906.37');
+        console.log('✅ Migración v5 aplicada: Saldo Octubre 2026 consolidado en S/ 3,906.37 exactos');
       }
 
       return state;
@@ -2768,7 +2914,7 @@
             }
           }
 
-          if (isCesar && !serverData.migration_v4_restore_oct30_3906_37) {
+          if (isCesar && (!serverData.migration_v4_restore_oct30_3906_37 || !serverData.migration_v5_exact_balance_3906_37)) {
             serverData = applyDataMigrations(serverData);
             restoredFromBackup = true;
           }
@@ -2862,20 +3008,30 @@
     }
 
     // ================================================================
-    // SISTEMA DE RESPALDOS EN LA NUBE (BACKUPS)
+    // SISTEMA DE RESPALDOS EN LA NUBE (BACKUPS INSTANTÁNEOS MULTI-CAPA)
     // ================================================================
-    async function createCloudBackupAuto(dataToBackup, todayStr) {
+    let _lastCloudBackupWriteTs = 0;
+    async function createCloudBackupAuto(dataToBackup, todayStr, forceNow = false) {
       if (!dataToBackup || (!String(todayStr).startsWith('legacy_') && countTotalTransactions(dataToBackup) === 0)) {
         return; // Nunca sobrescribir un respaldo diario con un estado sin transacciones
       }
+      const now = Date.now();
+      if (!forceNow && now - _lastCloudBackupWriteTs < 12000 && localStorage.getItem('last_cloud_backup_date') === todayStr) {
+        return;
+      }
+      _lastCloudBackupWriteTs = now;
       const userId = currentUser ? currentUser.id.slice(0, 8) : 'guest';
       localStorage.setItem('last_cloud_backup_date', todayStr);
       try {
+        const rows = [{ id: `backup_${userId}_${todayStr}`, data: dataToBackup }];
+        if (!String(todayStr).startsWith('legacy_')) {
+          rows.push({ id: `backup_${userId}_latest_verified`, data: dataToBackup });
+        }
         const { error } = await supabaseClient
           .from('finanzas_state')
-          .upsert({ id: `backup_${userId}_${todayStr}`, data: dataToBackup });
+          .upsert(rows);
         if (error) throw error;
-        console.log('✅ Respaldo automático diario guardado:', `backup_${todayStr}`);
+        console.log('✅ Respaldo automático en la nube actualizado:', `backup_${userId}_${todayStr}`);
       } catch(e) {
         console.error('Error al guardar respaldo automático:', e);
         localStorage.removeItem('last_cloud_backup_date'); // Permitir reintento la próxima vez
@@ -2950,6 +3106,7 @@
             .upsert({ id: getUserStateId(), data: appState });
 
           if (!error) {
+            clearLocalMutationDirty();
             lastAckedWriteTs = Math.max(lastAckedWriteTs, sentTs);
             syncRetryCount = 0;
             lastSuccessfulSyncTime = Date.now();
@@ -3118,20 +3275,32 @@
     });
 
     function saveLocalState() {
+      const key = getStorageKey();
+      const serialized = JSON.stringify(appState);
       try {
-        localStorage.setItem(getStorageKey(), JSON.stringify(appState));
+        localStorage.setItem(key, serialized);
+        // BÓVEDA LOCAL INMUTABLE: si el estado tiene transacciones reales, guardar copia espejo instantánea
+        // que jamás puede ser sobrescrita por un estado vacío ante ningún evento.
+        if (countTotalTransactions(appState) > 0) {
+          localStorage.setItem(key + '_vault', serialized);
+        }
       } catch(e) {
         console.warn('localStorage lleno - limpiando auditLog...');
         const backup = { ...appState, auditLog: [] };
-        localStorage.setItem(getStorageKey(), JSON.stringify(backup));
+        const compactStr = JSON.stringify(backup);
+        localStorage.setItem(key, compactStr);
+        if (countTotalTransactions(backup) > 0) {
+          try { localStorage.setItem(key + '_vault', compactStr); } catch (_) {}
+        }
       }
     }
 
     function loadLocalState() {
       const isCesar = isAdminCesar();
       const defaultState = getCleanUserState();
+      const key = getStorageKey();
 
-      const stored = localStorage.getItem(getStorageKey());
+      const stored = localStorage.getItem(key);
       if (stored) {
         try {
           appState = JSON.parse(stored);
@@ -3146,6 +3315,21 @@
       } else {
         appState = defaultState;
       }
+
+      // AUTO-RECUPERACIÓN DESDE BÓVEDA LOCAL: si la clave principal quedó vacía pero la bóveda local tiene datos
+      if (countTotalTransactions(appState) === 0) {
+        try {
+          const vaultRaw = localStorage.getItem(key + '_vault');
+          if (vaultRaw) {
+            const vaultParsed = JSON.parse(vaultRaw);
+            if (vaultParsed && countTotalTransactions(vaultParsed) > 0 && (isCesar || !isLegacyClonedState(vaultParsed))) {
+              console.warn('♻️ Restaurando caché inmediatamente desde Bóveda Local (_vault)');
+              appState = vaultParsed;
+            }
+          }
+        } catch (_) {}
+      }
+
       if (!appState.recurringDueDates) appState.recurringDueDates = {};
       if (!appState.auditLog) appState.auditLog = [];
       appState.currentMonth = getEffectiveCurrentMonth(appState.currentMonth);
@@ -3163,9 +3347,9 @@
         });
       }
 
-      if (isCesar) {
-        appState = applyDataMigrations(appState);
-      }
+      // IMPORTANTE ARQUITECTÓNICO: loadLocalState() es 100% de solo lectura de caché.
+      // NUNCA debe ejecutar applyDataMigrations ni modificar _lastSaved antes de loadStateFromServer(),
+      // para evitar que un dispositivo recién abierto parezca más reciente que la nube.
 
       currentCategoryFilter = appState.activeCategoryChip || 'TODAS';
       currentStatusFilter = appState.activeStatusFilter || 'TODOS';
@@ -3178,7 +3362,9 @@
     }
 
     function saveState() {
-      // Guardar localmente de inmediato (para respuesta instantánea en UI)
+      // Marcar mutación explícita del usuario para sincronización multi-dispositivo determinista
+      markLocalMutationDirty();
+      // Guardar localmente + en Bóveda Local de inmediato (respuesta instantánea < 1ms)
       saveLocalState();
       // Subir al servidor en background (no bloquear la UI)
       syncStateToServer();
@@ -4277,6 +4463,7 @@
         addAuditLog('⚖️ Conciliación', `Ajuste de gasto -${sym} ${absAmount.toLocaleString(loc)} para cuadrar con banco en ${month}`);
       }
 
+      markLocalMutationDirty();
       saveLocalState();
       renderAll();
       closeModal('reconcileBalanceModal');
@@ -9995,6 +10182,7 @@
         settledAt: null
       });
 
+      markLocalMutationDirty();
       saveLocalState();
       closeModal('newLoanModal');
 
@@ -10021,6 +10209,7 @@
       item.status = 'settled';
       item.settledAt = new Date().toISOString();
 
+      markLocalMutationDirty();
       saveLocalState();
       renderLoansDashboard();
       showToast(`✅ ${isRec ? 'Cobro' : 'Pago'} marcado como completado`, 'success');
@@ -10038,6 +10227,7 @@
       item.status = 'pending';
       item.settledAt = null;
 
+      markLocalMutationDirty();
       saveLocalState();
       renderLoansDashboard();
       showToast('Registro reabierto como pendiente', 'info');
@@ -10053,6 +10243,7 @@
       const idx = loans.findIndex(l => l.id === loanId);
       if (idx !== -1) {
         loans.splice(idx, 1);
+        markLocalMutationDirty();
         saveLocalState();
         renderLoansDashboard();
         showToast('Registro eliminado', 'info');

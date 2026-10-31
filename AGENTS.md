@@ -9,6 +9,15 @@ Este documento establece las reglas y principios obligatorios que el asistente d
 1. **Nunca destruir datos sin respaldo:** Antes de ejecutar o proponer cambios en la estructura de `database.json`, esquemas de Supabase o scripts de migración, verificar que exista un respaldo previo (`database_user_immutable_backup.json` o un backup versionado).
 2. **Operaciones atómicas e idempotentes:** Toda mutación o sincronización de datos debe ser segura contra fallos de red a medio camino. Si una operación falla, el estado local debe mantenerse consistente.
 3. **Aritmética monetaria precisa:** En JavaScript nunca comparar números de coma flotante directamente ni acumular decimales sin redondear (`Math.round((num + Number.EPSILON) * 100) / 100` o cálculo en centavos enteros) para evitar desfaces de céntimos en saldos de cuentas.
+4. **Sincronización Multi-Dispositivo Cloud-First (Prohibición Absoluta de Sobrescritura Local):**
+   - `loadLocalState()` es **100% de solo lectura de caché**. Está terminantemente prohibido ejecutar `applyDataMigrations()` o modificar `appState._lastSaved` dentro de `loadLocalState()` o antes de que `window._serverStateLoaded === true`.
+   - Toda mutación real del usuario (`saveState`, `applyReconciliationAdjustment`, `Cuentas Claras`, etc.) debe llamar obligatoriamente a `markLocalMutationDirty()`, que registra `finanzas_unsynced_dirty_<uid>` en `localStorage` y se limpia en `clearLocalMutationDirty()` únicamente cuando Supabase confirma el `upsert`.
+   - En `applyRemoteState(remoteData)`, si un dispositivo (iPhone, Android, Mac, Windows) se abre o despierta **sin** mutaciones locales pendientes (`!hasUnsyncedLocalMutations()`), **la nube (`remoteData`) gana el 100% de las veces** sin importar `remoteTs <= localTs`. Si `hasUnsyncedLocalMutations() === true`, se ejecuta `mergeOfflineWithRemoteState(appState, remoteData)` para fusionar movimientos por `id` sin perder cambios de ningún dispositivo.
+5. **Bóveda Instantánea Multi-Capa ante Todo Evento (4 Capas):**
+   - **Capa 1 (`localStorage` Primario):** `finanzas_v50_<uid>` en cada acción (`< 1ms`).
+   - **Capa 2 (Bóveda Local Inmutable):** `finanzas_v50_<uid>_vault` se actualiza automáticamente en `saveLocalState()` solo cuando `countTotalTransactions(appState) > 0` (jamás puede ser pisada por un estado vacío).
+   - **Capa 3 (Doble Respaldo Automático en Supabase):** Cada guardado válido en la nube actualiza `backup_<id8>_YYYY-MM-DD` y `backup_<id8>_latest_verified`.
+   - **Capa 4 (Respaldo Maestro del Fundador):** Endpoint `/api/founder-backup` protegido por JWT + `database_user_immutable_backup.json`.
 
 ---
 

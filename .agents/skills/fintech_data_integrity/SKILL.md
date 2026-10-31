@@ -52,10 +52,13 @@ When editing or updating `database.json` or user state snapshots:
 
 ---
 
-## 3. Atomic State Updates
+## 3. Atomic State Updates & Multi-Device Sync Invariants
 
-Never overwrite the user's active state partially. When writing to remote storage (Supabase or Vercel API):
-- Create a deep copy of the next state: `const nextState = JSON.parse(JSON.stringify(currentState));`
-- Apply mutations to `nextState`.
-- Perform schema validation on `nextState`.
-- Save locally first, then dispatch network update.
+Never overwrite the user's active state partially, and never allow a newly opened device to overwrite newer cloud state:
+1. **`loadLocalState()` Read-Only Invariant:** `loadLocalState()` must NEVER call `applyDataMigrations()` or set `state._lastSaved = Date.now()`. Migrations run exclusively on authoritative cloud data inside `loadStateFromServer()` and `applyRemoteState()`.
+2. **Explicit Dirty Tracking (`markLocalMutationDirty`):** Every user-initiated mutation (`saveState()`, `applyReconciliationAdjustment()`, `saveNewLoan()`, `markLoanSettled()`, `reopenLoan()`, `deleteLoan()`) MUST call `markLocalMutationDirty()` before `saveLocalState()` / `flushSyncToServer()`. Calling `saveLocalState()` + `flushSyncToServer()` without `markLocalMutationDirty()` is a critical bug because `flushSyncToServer()` checks `syncPending` and `_lastSaved > lastAckedWriteTs`.
+3. **4-Layer Instant Backup Vault:**
+   - Primary local cache: `finanzas_v50_<uid>`
+   - Immutable local vault (only written when `countTotalTransactions(state) > 0`): `finanzas_v50_<uid>_vault`
+   - Cloud daily + rolling verified snapshots in `finanzas_state`: `backup_<id8>_YYYY-MM-DD` and `backup_<id8>_latest_verified`
+   - JWT-protected founder backup endpoint: `/api/founder-backup`

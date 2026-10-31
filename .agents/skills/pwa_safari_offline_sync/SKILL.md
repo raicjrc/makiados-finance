@@ -51,11 +51,12 @@ For financial data, **stale data is unacceptable**. The Service Worker (`sw.js`)
 
 ---
 
-## 3. Offline Resilience Pattern
+## 3. Multi-Device Cloud-First & Offline Merge Pattern
 
-1. **Local-First Writes:**
-   Mutations are instantly committed to `localStorage` or `IndexedDB`, rendering immediately to the UI with zero latency.
-2. **Pending Queue:**
-   If offline, queue the payload in `offline_pending_mutations`.
-3. **Automatic Flush:**
-   Listen to `window.addEventListener('online', flushPendingMutations)` and drain the queue sequentially once connectivity is restored.
+1. **Cloud-First on Clean Wakeup (`!hasUnsyncedLocalMutations()`):**
+   - When any device (iPhone PWA, Android Chrome, Mac Safari/Chrome, Windows) opens or wakes up (`visibilitychange`, `pageshow`, `focus`, `online`) and `hasUnsyncedLocalMutations()` is `false`, `applyRemoteState(remoteData)` MUST apply `remoteData` unconditionally (whenever `countTotalTransactions(remoteData) > 0`).
+   - Stale `localStorage` on a woken device must NEVER reject cloud data or trigger `pushLocalIfUnsynced()`.
+2. **Non-Destructive Offline Merge (`mergeOfflineWithRemoteState`):**
+   - When `hasUnsyncedLocalMutations()` is `true` (the user genuinely added/edited items while offline), `applyRemoteState()` merges offline `transactions`, `incomes`, and `loans` by `id` into `remoteData` and syncs the unified state back to Supabase.
+3. **Guaranteed Flush on All Lifecycle Events:**
+   - Flush pending mutations on `visibilitychange` (hidden), `pagehide`, `beforeunload`, and `online`.
