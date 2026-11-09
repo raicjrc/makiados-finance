@@ -90,8 +90,8 @@
     // ================================================================
     // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v79.8)
     // ================================================================
-    const APP_VERSION = 'v79.8';
-    const APP_VERSION_EPOCH = 798;
+    const APP_VERSION = 'v79.9';
+    const APP_VERSION_EPOCH = 799;
     try {
       if (typeof window !== 'undefined' && window.location && /[?&]v=\d+/.test(window.location.search)) {
         const cleanUrl = new URL(window.location.href);
@@ -1613,6 +1613,73 @@
         btn.textContent = '🚀 Crear Mi Cuenta';
 
         if (error) {
+          // Si el usuario fue eliminado desde el Hub CEO (se borró de user_subscriptions, pero su correo seguía en auth.users),
+          // permitir recrear la cuenta desde cero automáticamente al registrarse:
+          if (/already registered/i.test(error.message || '')) {
+            const signInRes = await client.auth.signInWithPassword({ email, password: pass });
+            if (signInRes && !signInRes.error && signInRes.data && signInRes.data.user) {
+              const rUser = signInRes.data.user;
+              const uid = rUser.id;
+              let wasDeletedFromHub = false;
+              try {
+                const { data: subRows } = await client
+                  .from('user_subscriptions')
+                  .select('user_id,status')
+                  .eq('user_id', uid);
+                wasDeletedFromHub = !Array.isArray(subRows) || subRows.length === 0;
+              } catch (e) {
+                wasDeletedFromHub = true;
+              }
+
+              if (wasDeletedFromHub) {
+                // Limpiar estado financiero anterior en la nube y en caché local para iniciar 100% como usuario nuevo
+                try {
+                  await client.from('finanzas_state').delete().eq('id', 'state_' + uid);
+                  await client.from('finanzas_state').delete().like('id', 'backup_' + uid.slice(0, 8) + '%');
+                } catch (e) {}
+                try {
+                  localStorage.removeItem('finanzas_v50_' + uid);
+                  localStorage.removeItem('finanzas_v50_' + uid + '_vault');
+                  localStorage.removeItem('finanzas_setup_completed_' + uid);
+                  localStorage.removeItem('finanzas_setup_completed');
+                  localStorage.removeItem('finanzas_onboarding_done_' + uid);
+                  localStorage.removeItem('finanzas_unsynced_dirty_' + uid);
+                  localStorage.removeItem('aliviafin_custom_display_name_' + uid);
+                } catch (e) {}
+                try {
+                  await client.auth.updateUser({ data: { full_name: name } });
+                } catch (e) {}
+
+                const freshUserObj = { ...rUser, user_metadata: { ...(rUser.user_metadata || {}), full_name: name } };
+                recordUserHeartbeat(freshUserObj, true);
+                try {
+                  await client.from('user_subscriptions').upsert([{
+                    user_id: uid,
+                    email: email.toLowerCase().trim(),
+                    status: 'free',
+                    plan_type: 'free',
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                  }], { onConflict: 'user_id' });
+                } catch (e) {}
+
+                appState = getCleanUserState();
+                okEl.textContent = '✅ ¡Cuenta creada! Iniciando tu espacio...';
+                okEl.style.display = 'block';
+                setTimeout(async () => { await onLoginSuccess(freshUserObj); }, 600);
+                return;
+              } else {
+                // El usuario ya tenía una cuenta activa y puso su contraseña correcta
+                okEl.textContent = '✅ Cuenta verificada. Iniciando tu espacio...';
+                okEl.style.display = 'block';
+                setTimeout(async () => { await onLoginSuccess(rUser); }, 600);
+                return;
+              }
+            }
+            errEl.textContent = '🚨 Este correo aún figura en Supabase Auth con otra contraseña. Si lo eliminaste del Hub, usa la misma contraseña anterior para recrearlo de cero, o activa el SQL del Hub en Supabase.';
+            errEl.style.display = 'block';
+            return;
+          }
           errEl.textContent = '🚨 ' + error.message;
           errEl.style.display = 'block';
         } else if (data.user) {
@@ -10187,7 +10254,7 @@
       const setupDone = (appState && (appState.onboardingCompleted === true || appState.onboardingSkipped === true))
                      || localStorage.getItem('finanzas_setup_completed_' + userKey) === 'true'
                      || localStorage.getItem('finanzas_setup_completed_' + userKey) === 'skipped'
-                     || localStorage.getItem('finanzas_setup_completed') === 'true';
+                     || (userKey === 'guest' && localStorage.getItem('finanzas_setup_completed') === 'true');
 
       const hasData = userHasExistingFinancialData(appState);
 
@@ -13014,7 +13081,8 @@ BEGIN
   END IF;
   IF coalesce(target_email, '') <> '' THEN
     DELETE FROM public.user_subscriptions WHERE lower(email) = lower(target_email);
-    DELETE FROM public.app_feedback WHERE lower(user_email) = lower(target_email) AND type <> 'user_deleted';
+    DELETE FROM public.app_feedback WHERE lower(user_email) = lower(target_email);
+    DELETE FROM auth.users WHERE lower(email) = lower(target_email);
   END IF;
   IF target_user_id ~ '^[0-9a-fA-F-]{36}$' THEN
     DELETE FROM auth.users WHERE id = target_user_id::uuid;
@@ -13043,8 +13111,18 @@ BEGIN
 END;
 $$;
 
--- 6) (Opcional) Limpieza de pings antiguos (+60 días). Ejecútalo cuando quieras:
--- DELETE FROM public.app_feedback WHERE type = 'heartbeat' AND created_at < now() - interval '60 days';
+-- 6) Purgar de auth.users cualquier correo ya eliminado desde el Hub (como reich-reifer@hotmail.com)
+DELETE FROM auth.users u
+WHERE lower(u.email) <> 'cesar.risso.f@gmail.com'
+  AND (
+    lower(u.email) = 'reich-reifer@hotmail.com'
+    OR EXISTS (
+      SELECT 1 FROM public.app_feedback f
+      WHERE f.type = 'user_deleted'
+        AND (lower(f.user_email) = lower(u.email) OR f.user_id = u.id::text)
+    )
+  );
+DELETE FROM public.app_feedback WHERE lower(user_email) = 'reich-reifer@hotmail.com';
 `;
 
 // ----------------------------------------------------------------
