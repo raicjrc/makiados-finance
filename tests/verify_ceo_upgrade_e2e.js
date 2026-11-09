@@ -140,8 +140,55 @@ const { openApp } = require('./audit_helpers');
   assert.strictEqual(founderCheck.onbPct, '100%', 'Debe calcular 100% de activación');
   assert.strictEqual(founderCheck.feedHtml, true, 'El feed en vivo debe mostrar la insignia de TikTok');
 
+  console.log('5️⃣ Verificando Paridad de Versión (sw.js vs APP_VERSION), Caja Segmentada Cero Deudas y Directorio Free...');
+  const hotfixCheck = await page.evaluate(async () => {
+    const swRes = await fetch('./sw.js', { cache: 'no-store' });
+    const swText = await swRes.text();
+    const swMatch = swText.match(/Service Worker (v[\d.]+)/i);
+    const swVersion = swMatch ? swMatch[1] : null;
+
+    // Verificar encaje visual del botón Simulador dentro de .advisor-segmented-nav en #tab-deudas
+    switchTab('deudas');
+    const deudasTab = document.getElementById('tab-deudas');
+    const navEl = deudasTab.querySelector('.advisor-segmented-nav');
+    const btns = navEl.querySelectorAll('.advisor-subtab-pill');
+    const navRect = navEl.getBoundingClientRect();
+    const btn2Rect = btns[1].getBoundingClientRect();
+    const buttonFitsInsideContainer = (btn2Rect.right <= navRect.right + 1.5) && (btn2Rect.left >= navRect.left - 1.5);
+
+    // Verificar que enrichMasterSubscribers incluye usuarios Free de masterHeartbeats aunque masterRpcAvailable sea true
+    masterRpcAvailable = true;
+    masterSubscribersData = [
+      { user_id: 'pro_1', email: 'clientepro@aliviafin.com', status: 'active', plan_type: 'monthly', updated_at: new Date().toISOString() }
+    ];
+    masterHeartbeats = [
+      {
+        user_id: 'free_rai_1',
+        user_email: 'raicesar@gmail.com',
+        created_at: new Date().toISOString(),
+        message: JSON.stringify({ name: 'Rai Nuevo', version: APP_VERSION, status: 'free', device: 'iPhone', source: 'tiktok' })
+      }
+    ];
+    enrichMasterSubscribers();
+    const raiFound = masterSubscribersData.some(u => u.email === 'raicesar@gmail.com' && u.status === 'free');
+
+    return {
+      appVersion: APP_VERSION,
+      swVersion,
+      buttonFitsInsideContainer,
+      navWidth: Math.round(navRect.width),
+      btn2RightDelta: Math.round(navRect.right - btn2Rect.right),
+      raiFound
+    };
+  });
+  console.log('Resultado Hotfix 5 puntos:', hotfixCheck);
+  assert.strictEqual(hotfixCheck.appVersion, hotfixCheck.swVersion, 'APP_VERSION y sw.js deben coincidir exactamente para evitar bucle de actualización');
+  assert.strictEqual(hotfixCheck.buttonFitsInsideContainer, true, 'El botón Simulador debe caber 100% dentro del recuadro gris .advisor-segmented-nav');
+  assert.strictEqual(hotfixCheck.raiFound, true, 'Los nuevos usuarios Free deben aparecer siempre en el Directorio de Usuarios del Hub CEO');
+
   assert.strictEqual(errors.length, 0, 'No debe haber errores de consola/página');
   console.log('✅ TODAS LAS PRUEBAS E2E DE AUDITORÍA PASARON AL 100% SIN ERRORES');
   await app.close();
   process.exit(0);
 })();
+

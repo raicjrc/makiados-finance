@@ -19,7 +19,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="js/chart.min.js?v=72.0"></script>
   <script src="js/supabase.min.js?v=72.0"></script>
-  <link rel="stylesheet" href="css/styles.css?v=79.4">
+  <link rel="stylesheet" href="css/styles.css?v=79.8">
 
   <style>
     /* Estilos Críticos Inmediatos: Paleta Unificada AliviaFin Light & Emerald */
@@ -280,7 +280,7 @@
           <a href="javascript:void(0)" onclick="openLegalModal('terms')" class="login-unified-legal-link">
             <span>⚖️ Términos, Privacidad & Reclamaciones</span>
           </a>
-          <span id="loginFooterVersionDesk" style="font-size: 11.5px; color: #94a3b8; font-weight: 600;">AliviaFin v79.6</span>
+          <span id="loginFooterVersionDesk" style="font-size: 11.5px; color: #94a3b8; font-weight: 600;">AliviaFin v79.8</span>
         </div>
 
         <!-- Footer mobile limpio con botón legal discreto -->
@@ -1603,56 +1603,56 @@
             </div>
           </div>
 
-          <!-- RADAR DE ADQUISICIÓN & REDES SOCIALES (TIKTOK / INSTAGRAM EN VIVO) -->
-          <div id="fhSocialRadarSection" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-radius: 22px; padding: 20px 22px; margin-bottom: 18px; border: 1.5px solid rgba(16, 185, 129, 0.35); color: #ffffff;">
+          <!-- RADAR DE ADQUISICIÓN & REDES SOCIALES (MODO CLARO EJECUTIVO ACORDE AL HUB) -->
+          <div id="fhSocialRadarSection" class="fh-chart-card" style="padding: 20px 22px; margin-bottom: 18px;">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 16px;">
               <div>
-                <div style="font-size: 11px; font-weight: 800; color: #34d399; text-transform: uppercase; letter-spacing: 0.06em;">📈 Radar de Adquisición & Redes Sociales (En Vivo)</div>
-                <div style="font-size: 17px; font-weight: 900; margin-top: 2px;">Efecto de Videos TikTok & Instagram Reels</div>
-                <div style="font-size: 11.5px; color: #94a3b8; margin-top: 2px;">Tip: Usa <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 6px; color: #34d399;">?ref=tiktok</code> o <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 6px; color: #f472b6;">?ref=ig</code> en tu bio (además detectamos el navegador interno automáticamente)</div>
+                <div style="font-size: 11px; font-weight: 800; color: #059669; text-transform: uppercase; letter-spacing: 0.06em;">📈 Radar de Adquisición & Redes Sociales (En Vivo)</div>
+                <div style="font-size: 17px; font-weight: 900; color: var(--text-main, #0f172a); margin-top: 2px;">Efecto de Videos TikTok & Instagram Reels</div>
+                <div style="font-size: 11.5px; color: var(--text-muted, #64748b); margin-top: 2px;">Tip: Usa <code style="background: rgba(16,185,129,0.1); padding: 2px 6px; border-radius: 6px; color: #059669; font-weight: 700;">?ref=tiktok</code> o <code style="background: rgba(236,72,153,0.1); padding: 2px 6px; border-radius: 6px; color: #db2777; font-weight: 700;">?ref=ig</code> en tu bio (además detectamos el navegador interno automáticamente)</div>
               </div>
-              <span style="background: rgba(16, 185, 129, 0.16); border: 1px solid rgba(16, 185, 129, 0.4); color: #34d399; padding: 5px 12px; border-radius: 999px; font-size: 11px; font-weight: 800;" id="fhSocialLivePulseBadge">🟢 Telemetría Supabase Activa</span>
+              <span style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); color: #059669; padding: 5px 12px; border-radius: 999px; font-size: 11px; font-weight: 800;" id="fhSocialLivePulseBadge">🟢 Telemetría Supabase Activa</span>
             </div>
 
             <!-- 4 KPIs de Tráfico Social -->
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(195px, 1fr)); gap: 12px; margin-bottom: 16px;">
-              <div style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; padding: 14px;">
-                <div style="font-size: 10.5px; font-weight: 800; color: #94a3b8; text-transform: uppercase;">👁️ Visitas al Link Hoy (24h)</div>
-                <div style="font-size: 26px; font-weight: 900; color: #ffffff; margin: 4px 0;" id="fhSocialVisitsTodayVal">0</div>
-                <div style="font-size: 11px; font-weight: 700; color: #34d399;" id="fhSocialVisitsBreakdownSub">🎵 0 TikTok · 📸 0 IG · 🌐 0 Web</div>
+              <div style="background: var(--bg-secondary, #f8fafc); border: 1px solid var(--border, #e2e8f0); border-radius: 16px; padding: 14px;">
+                <div style="font-size: 10.5px; font-weight: 800; color: var(--text-muted, #64748b); text-transform: uppercase;">👁️ Visitas al Link Hoy (24h)</div>
+                <div style="font-size: 26px; font-weight: 900; color: var(--text-main, #0f172a); margin: 4px 0;" id="fhSocialVisitsTodayVal">0</div>
+                <div style="font-size: 11px; font-weight: 700; color: #059669;" id="fhSocialVisitsBreakdownSub">🎵 0 TikTok · 📸 0 IG · 🌐 0 Web</div>
               </div>
-              <div style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; padding: 14px;">
-                <div style="font-size: 10.5px; font-weight: 800; color: #94a3b8; text-transform: uppercase;">🚀 Nuevos Registros HOY</div>
-                <div style="font-size: 26px; font-weight: 900; color: #34d399; margin: 4px 0;" id="fhSocialSignupsTodayVal">+0</div>
-                <div style="font-size: 11px; font-weight: 700; color: #cbd5e1;" id="fhSocialSignups7dSub">Últimos 7 días: 0 nuevos</div>
+              <div style="background: var(--bg-secondary, #f8fafc); border: 1px solid var(--border, #e2e8f0); border-radius: 16px; padding: 14px;">
+                <div style="font-size: 10.5px; font-weight: 800; color: var(--text-muted, #64748b); text-transform: uppercase;">🚀 Nuevos Registros HOY</div>
+                <div style="font-size: 26px; font-weight: 900; color: #059669; margin: 4px 0;" id="fhSocialSignupsTodayVal">+0</div>
+                <div style="font-size: 11px; font-weight: 700; color: var(--text-muted, #64748b);" id="fhSocialSignups7dSub">Últimos 7 días: 0 nuevos</div>
               </div>
-              <div style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; padding: 14px;">
-                <div style="font-size: 10.5px; font-weight: 800; color: #94a3b8; text-transform: uppercase;">✅ Activación Onboarding</div>
-                <div style="font-size: 26px; font-weight: 900; color: #38bdf8; margin: 4px 0;" id="fhSocialOnboardingPctVal">0%</div>
-                <div style="font-size: 11px; font-weight: 700; color: #cbd5e1;" id="fhSocialOnboardingSub">0 de 0 configuraron su sueldo</div>
+              <div style="background: var(--bg-secondary, #f8fafc); border: 1px solid var(--border, #e2e8f0); border-radius: 16px; padding: 14px;">
+                <div style="font-size: 10.5px; font-weight: 800; color: var(--text-muted, #64748b); text-transform: uppercase;">✅ Activación Onboarding</div>
+                <div style="font-size: 26px; font-weight: 900; color: #0284c7; margin: 4px 0;" id="fhSocialOnboardingPctVal">0%</div>
+                <div style="font-size: 11px; font-weight: 700; color: var(--text-muted, #64748b);" id="fhSocialOnboardingSub">0 de 0 configuraron su sueldo</div>
               </div>
-              <div style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; padding: 14px;">
-                <div style="font-size: 10.5px; font-weight: 800; color: #94a3b8; text-transform: uppercase;">📱 Dispositivos Detectados</div>
-                <div style="font-size: 26px; font-weight: 900; color: #fbbf24; margin: 4px 0;" id="fhSocialMobilePctVal">0% Móvil</div>
-                <div style="font-size: 11px; font-weight: 700; color: #cbd5e1;" id="fhSocialDeviceBreakdownSub">📱 0 Celular · 💻 0 PC/Mac</div>
+              <div style="background: var(--bg-secondary, #f8fafc); border: 1px solid var(--border, #e2e8f0); border-radius: 16px; padding: 14px;">
+                <div style="font-size: 10.5px; font-weight: 800; color: var(--text-muted, #64748b); text-transform: uppercase;">📱 Dispositivos Detectados</div>
+                <div style="font-size: 26px; font-weight: 900; color: #d97706; margin: 4px 0;" id="fhSocialMobilePctVal">0% Móvil</div>
+                <div style="font-size: 11px; font-weight: 700; color: var(--text-muted, #64748b);" id="fhSocialDeviceBreakdownSub">📱 0 Celular · 💻 0 PC/Mac</div>
               </div>
             </div>
 
             <!-- Embudo + Feed en Tiempo Real -->
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 14px;">
               <!-- Embudo de Conversión -->
-              <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 14px 16px;">
-                <div style="font-size: 12.5px; font-weight: 800; color: #f8fafc; margin-bottom: 10px;">🎯 Embudo Real de Conversión (Bio ➔ App Activa)</div>
+              <div style="background: var(--bg-secondary, #f8fafc); border: 1px solid var(--border, #e2e8f0); border-radius: 16px; padding: 14px 16px;">
+                <div style="font-size: 12.5px; font-weight: 800; color: var(--text-main, #0f172a); margin-bottom: 10px;">🎯 Embudo Real de Conversión (Bio ➔ App Activa)</div>
                 <div id="fhSocialFunnelContainer" style="display: flex; flex-direction: column; gap: 8px;">
                   <!-- Se llena en vivo desde renderFounderSocialRadar() -->
                 </div>
               </div>
 
               <!-- Feed en Vivo de Últimos Usuarios Registrados -->
-              <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 14px 16px;">
+              <div style="background: var(--bg-secondary, #f8fafc); border: 1px solid var(--border, #e2e8f0); border-radius: 16px; padding: 14px 16px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                  <div style="font-size: 12.5px; font-weight: 800; color: #f8fafc;">⚡ Últimos Usuarios Registrados (En Vivo)</div>
-                  <span style="font-size: 10.5px; color: #34d399; font-weight: 800;">Tiempo real</span>
+                  <div style="font-size: 12.5px; font-weight: 800; color: var(--text-main, #0f172a);">⚡ Últimos Usuarios Registrados (En Vivo)</div>
+                  <span style="font-size: 10.5px; color: #059669; font-weight: 800;">Tiempo real</span>
                 </div>
                 <div id="fhLiveNewUsersFeed" style="display: flex; flex-direction: column; gap: 8px; max-height: 230px; overflow-y: auto;">
                   <!-- Se llena en vivo desde renderFounderSocialRadar() -->
@@ -2096,7 +2096,7 @@
         <!-- Info de Versión y Plataforma -->
         <div style="padding: 10px 14px; background: rgba(0,0,0,0.02); border-radius: 12px; display: flex; justify-content: space-between; align-items: center; font-size: 11px;">
           <div>
-            <span style="color: var(--text-muted);">AliviaFin</span> <span id="settingsVersion" style="color: #0d9488; font-weight: 800;">v79.6</span>
+            <span style="color: var(--text-muted);">AliviaFin</span> <span id="settingsVersion" style="color: #0d9488; font-weight: 800;">v79.8</span>
             <div style="font-size: 10px; color: var(--text-muted);">Lima, Perú</div>
           </div>
           <button type="button" onclick="forceAppRefresh()" style="font-size: 10.5px; font-weight: 800; background: rgba(16, 185, 129, 0.12); color: #059669; border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 4px 10px; cursor: pointer;">🔄 Actualizar</button>
@@ -4270,6 +4270,6 @@
     </div>
   </div>
 
-  <script src="js/app.js?v=79.4"></script>
+  <script src="js/app.js?v=79.8"></script>
 </body>
 </html>

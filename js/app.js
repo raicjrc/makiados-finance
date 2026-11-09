@@ -88,10 +88,17 @@
     let CATEGORIES = { ...GENERIC_CATEGORIES };
 
     // ================================================================
-    // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v79.6)
+    // VERSIÓN DE LA APP & MOTOR MULTI-MONEDA INTERNACIONAL (v79.8)
     // ================================================================
-    const APP_VERSION = 'v79.6';
-    const APP_VERSION_EPOCH = 796;
+    const APP_VERSION = 'v79.8';
+    const APP_VERSION_EPOCH = 798;
+    try {
+      if (typeof window !== 'undefined' && window.location && /[?&]v=\d+/.test(window.location.search)) {
+        const cleanUrl = new URL(window.location.href);
+        cleanUrl.searchParams.delete('v');
+        window.history.replaceState({}, document.title, cleanUrl.pathname + (cleanUrl.search || '') + (cleanUrl.hash || ''));
+      }
+    } catch (e) {}
 
     // ================================================================
     // CONFIGURACIÓN DE SUPABASE Y CLIENTE DE AUTENTICACIÓN
@@ -1609,6 +1616,16 @@
           errEl.textContent = '🚨 ' + error.message;
           errEl.style.display = 'block';
         } else if (data.user) {
+          // Registrar inmediatamente al nuevo usuario en la telemetría de Supabase y en user_subscriptions (para que aparezca al instante en el Hub Fundador CEO)
+          recordUserHeartbeat({ id: data.user.id, email: email, user_metadata: { full_name: name } }, true);
+          try {
+            client.from('user_subscriptions').insert([{
+              user_id: data.user.id,
+              email: email.toLowerCase().trim(),
+              status: 'free'
+            }]).then(() => {}, () => {});
+          } catch (e) {}
+
           // Disparar correo transaccional de bienvenida en segundo plano (con token de sesión y userId)
           try {
             const welcomeHeaders = { 'Content-Type': 'application/json' };
@@ -1626,7 +1643,6 @@
             // Login automático exitoso (sin confirmación de correo)
             okEl.textContent = '✅ ¡Cuenta creada! Iniciando tu espacio...';
             okEl.style.display = 'block';
-            recordUserHeartbeat(data.user, true);
             setTimeout(async () => { await onLoginSuccess(data.user); }, 800);
           } else {
             // Confirmación requerida en Supabase
@@ -2317,22 +2333,35 @@
     }
     window.syncAdvisorSegmentedNav = syncAdvisorSegmentedNav;
 
-    // Registrar Service Worker (Network-First, con auto-detección de nueva versión en vivo)
+    // Registrar Service Worker (Network-First, con auto-detección de nueva versión en vivo sin bucles)
+    function dismissLiveUpdateBanner(verKey) {
+      try {
+        if (verKey) sessionStorage.setItem('aliviafin_update_handled_' + verKey, '1');
+      } catch (e) {}
+      const b = document.getElementById('aliviafinLiveUpdateBanner');
+      if (b) b.remove();
+    }
+    window.dismissLiveUpdateBanner = dismissLiveUpdateBanner;
+
     function showUpdateAvailableBanner(remoteVer) {
       if (document.getElementById('aliviafinLiveUpdateBanner')) return;
+      const verKey = remoteVer || APP_VERSION;
+      try {
+        if (sessionStorage.getItem('aliviafin_update_handled_' + verKey) === '1') return;
+      } catch (e) {}
+
       const loginModal = document.getElementById('loginModalScreen');
-      const isAtLogin = loginModal && loginModal.style.display !== 'none';
+      const isAtLogin = loginModal && loginModal.style.display !== 'none' && !loginModal.classList.contains('hidden');
       if (isAtLogin) {
-        // Si el usuario está en la pantalla de login, actualizar silenciosamente de inmediato
-        forceAppRefresh();
+        // Jamás interrumpir ni recargar en bucle cuando un usuario está iniciando sesión o creando su cuenta
         return;
       }
       const banner = document.createElement('div');
       banner.id = 'aliviafinLiveUpdateBanner';
-      banner.style.cssText = 'position:fixed;top:calc(env(safe-area-inset-top, 12px) + 12px);left:50%;transform:translateX(-50%);z-index:99999;background:rgba(15,23,42,0.95);color:#fff;padding:10px 16px;border-radius:999px;box-shadow:0 12px 32px rgba(0,0,0,0.28),0 0 0 1px rgba(16,185,129,0.45);backdrop-filter:blur(16px);display:flex;align-items:center;gap:12px;font-size:12.5px;font-weight:700;max-width:92vw;white-space:nowrap;';
-      banner.innerHTML = '<span>✨ Nueva versión <b>' + (remoteVer || APP_VERSION) + '</b> lista</span>' +
-        '<button type="button" onclick="forceAppRefresh()" style="background:#10b981;color:#fff;border:none;border-radius:999px;padding:6px 14px;font-size:12px;font-weight:800;cursor:pointer;min-height:32px;">Actualizar ahora</button>' +
-        '<button type="button" onclick="this.parentElement.remove()" aria-label="Cerrar" style="background:transparent;color:#94a3b8;border:none;font-size:15px;cursor:pointer;padding:0 4px;">✕</button>';
+      banner.style.cssText = 'position:fixed;top:calc(env(safe-area-inset-top, 12px) + 12px);left:50%;transform:translateX(-50%);z-index:99999;background:rgba(15,23,42,0.96);color:#fff;padding:8px 10px 8px 16px;border-radius:999px;box-shadow:0 12px 32px rgba(0,0,0,0.28),0 0 0 1px rgba(16,185,129,0.45);backdrop-filter:blur(16px);display:flex;align-items:center;gap:10px;font-size:12px;font-weight:700;max-width:calc(100vw - 20px);white-space:nowrap;';
+      banner.innerHTML = '<span style="overflow:hidden;text-overflow:ellipsis;">✨ Nueva versión <b>' + verKey + '</b></span>' +
+        '<button type="button" onclick="dismissLiveUpdateBanner(\'' + verKey + '\'); forceAppRefresh();" style="background:#10b981;color:#fff;border:none;border-radius:999px;padding:6px 12px;font-size:11.5px;font-weight:800;cursor:pointer;min-height:30px;flex-shrink:0;">Actualizar</button>' +
+        '<button type="button" onclick="dismissLiveUpdateBanner(\'' + verKey + '\')" aria-label="Cerrar" style="background:rgba(255,255,255,0.16);color:#ffffff;border:none;width:28px;height:28px;border-radius:50%;font-size:13px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">✕</button>';
       document.body.appendChild(banner);
     }
 
@@ -10105,6 +10134,9 @@
 
     function forceAppRefresh() {
       showToast('🔄 Actualizando a la última versión...', 'info');
+      try {
+        sessionStorage.setItem('aliviafin_update_handled_' + APP_VERSION, '1');
+      } catch (e) {}
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.getRegistrations().then(regs => {
           for (let reg of regs) {
@@ -10116,7 +10148,7 @@
       if ('caches' in window) {
         caches.keys().then(names => Promise.all(names.map(n => caches.delete(n)))).then(() => {
           setTimeout(() => {
-            window.location.href = window.location.origin + window.location.pathname + '?v=' + Date.now();
+            window.location.href = window.location.origin + window.location.pathname;
           }, 350);
         });
       } else {
@@ -13269,6 +13301,9 @@ async function loadMasterDashboardData(force = false) {
     }
 
     enrichMasterSubscribers(stateActivityRows);
+    try {
+      localStorage.setItem('aliviafin_cached_master_subs', JSON.stringify(masterSubscribersData));
+    } catch (e) {}
     masterLastLoadedAt = Date.now();
     renderFounderModule();
     if (force) showToast('⚡ Datos de fundador actualizados en vivo', 'success');
@@ -13380,29 +13415,27 @@ function enrichMasterSubscribers(stateActivityRows = []) {
     };
   });
 
-  // D) Sin la RPC, incorpora a quien se conectó pero aún no figura en user_subscriptions
-  if (!masterRpcAvailable) {
-    const known = new Set(masterSubscribersData.map(s => (s.email || '').toLowerCase().trim()));
-    lastSeen.forEach((ts, key) => {
-      if (!key.includes('@') || known.has(key)) return;
-      known.add(key);
-      const tel = telemetryByKey.get(key) || null;
-      masterSubscribersData.push({
-        user_id: ids.get(key) || null,
-        email: key,
-        user_name: names.get(key) || formatCleanNameFromEmail(key),
-        status: 'free',
-        created_at: firstSeen.get(key) || ts,
-        last_active_at: ts,
-        _telemetry: {
-          source: (tel && tel.source) ? tel.source : 'direct',
-          device: (tel && tel.device) ? tel.device : 'Web',
-          onboardingDone: (tel && typeof tel.onboardingDone === 'boolean') ? tel.onboardingDone : false,
-          txCount: (tel && typeof tel.txCount === 'number') ? tel.txCount : 0
-        }
-      });
+  // D) Siempre incorporar a cualquier usuario registrado o activo en heartbeats que aún no figure en user_subscriptions
+  const known = new Set(masterSubscribersData.map(s => (s.email || '').toLowerCase().trim()));
+  lastSeen.forEach((ts, key) => {
+    if (!key.includes('@') || known.has(key)) return;
+    known.add(key);
+    const tel = telemetryByKey.get(key) || null;
+    masterSubscribersData.push({
+      user_id: ids.get(key) || null,
+      email: key,
+      user_name: names.get(key) || formatCleanNameFromEmail(key),
+      status: 'free',
+      created_at: firstSeen.get(key) || ts,
+      last_active_at: ts,
+      _telemetry: {
+        source: (tel && tel.source) ? tel.source : 'direct',
+        device: (tel && tel.device) ? tel.device : 'Web',
+        onboardingDone: (tel && typeof tel.onboardingDone === 'boolean') ? tel.onboardingDone : false,
+        txCount: (tel && typeof tel.txCount === 'number') ? tel.txCount : 0
+      }
     });
-  }
+  });
 }
 
 // ----------------------------------------------------------------
@@ -13728,25 +13761,25 @@ function renderFounderSocialRadar(customersList) {
   masterSetText('fhSocialMobilePctVal', `${mobPct}% Móvil`);
   masterSetText('fhSocialDeviceBreakdownSub', `📱 ${mobileCount} Celular · 💻 ${desktopCount} PC/Mac`);
 
-  // 3) Embudo de Conversión en Vivo
+  // 3) Embudo de Conversión en Vivo (Estilo Claro Ejecutivo acorde al Hub)
   const funnelEl = document.getElementById('fhSocialFunnelContainer');
   if (funnelEl) {
     const topBase = Math.max(visits.length, totalCust, 1);
     const steps = [
-      { label: '1. Visitas registradas al Link', count: Math.max(visits.length, totalCust), color: '#38bdf8' },
-      { label: '2. Cuentas Creadas (Registrados)', count: totalCust, color: '#10b981' },
-      { label: '3. Onboarding / Sueldo Configurado', count: onboardingDoneCount, color: '#a855f7' },
-      { label: '4. Con Movimientos Financieros', count: withTxCount, color: '#fbbf24' }
+      { label: '1. Visitas registradas al Link', count: Math.max(visits.length, totalCust), color: '#0284c7' },
+      { label: '2. Cuentas Creadas (Registrados)', count: totalCust, color: '#059669' },
+      { label: '3. Onboarding / Sueldo Configurado', count: onboardingDoneCount, color: '#7c3aed' },
+      { label: '4. Con Movimientos Financieros', count: withTxCount, color: '#d97706' }
     ];
     funnelEl.innerHTML = steps.map(st => {
       const pct = Math.min(100, Math.round((st.count / topBase) * 100));
       return `
-        <div style="background: rgba(255,255,255,0.05); border-radius: 10px; padding: 8px 12px;">
-          <div style="display: flex; justify-content: space-between; font-size: 11.5px; font-weight: 700; color: #e2e8f0; margin-bottom: 4px;">
+        <div style="background: var(--card-bg, #ffffff); border: 1px solid var(--border, #e2e8f0); border-radius: 10px; padding: 9px 12px;">
+          <div style="display: flex; justify-content: space-between; font-size: 11.5px; font-weight: 700; color: var(--text-main, #0f172a); margin-bottom: 5px;">
             <span>${st.label}</span>
             <span style="color: ${st.color}; font-weight: 800;">${st.count} (${pct}%)</span>
           </div>
-          <div style="height: 6px; background: rgba(255,255,255,0.1); border-radius: 999px; overflow: hidden;">
+          <div style="height: 6px; background: rgba(148, 163, 184, 0.2); border-radius: 999px; overflow: hidden;">
             <div style="width: ${pct}%; height: 100%; background: ${st.color}; border-radius: 999px;"></div>
           </div>
         </div>
@@ -13754,28 +13787,28 @@ function renderFounderSocialRadar(customersList) {
     }).join('');
   }
 
-  // 4) Feed en Tiempo Real de Últimos Usuarios Registrados
+  // 4) Feed en Tiempo Real de Últimos Usuarios Registrados (Estilo Claro Ejecutivo)
   const feedEl = document.getElementById('fhLiveNewUsersFeed');
   if (feedEl) {
     const sortedNewest = [...customers].sort((a, b) => (Date.parse(b.created_at) || 0) - (Date.parse(a.created_at) || 0)).slice(0, 8);
     if (sortedNewest.length === 0) {
-      feedEl.innerHTML = `<div style="font-size: 12px; color: #94a3b8; padding: 12px; text-align: center;">Aún no hay usuarios registrados fuera de la cuenta fundador.</div>`;
+      feedEl.innerHTML = `<div style="font-size: 12px; color: var(--text-muted, #64748b); padding: 12px; text-align: center;">Aún no hay usuarios registrados fuera de la cuenta fundador.</div>`;
     } else {
       feedEl.innerHTML = sortedNewest.map(u => {
         const email = u.email || 'usuario';
         const name = getDisplayNameForEmail(email, { name: u.full_name || u.user_name });
         const tel = u._telemetry || {};
         const src = (tel.source || 'direct').toLowerCase();
-        let srcBadge = `<span style="background: rgba(59,130,246,0.2); color: #93c5fd; border: 1px solid rgba(59,130,246,0.35); padding: 2px 8px; border-radius: 999px; font-size: 10.5px; font-weight: 800;">🌐 Directo/Web</span>`;
+        let srcBadge = `<span style="background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; padding: 2px 8px; border-radius: 999px; font-size: 10.5px; font-weight: 800;">🌐 Directo/Web</span>`;
         if (src === 'tiktok') {
-          srcBadge = `<span style="background: #000000; color: #25f4ee; border: 1px solid #fe2c55; padding: 2px 8px; border-radius: 999px; font-size: 10.5px; font-weight: 800;">🎵 TikTok</span>`;
+          srcBadge = `<span style="background: #0f172a; color: #25f4ee; border: 1px solid #fe2c55; padding: 2px 8px; border-radius: 999px; font-size: 10.5px; font-weight: 800;">🎵 TikTok</span>`;
         } else if (src === 'instagram') {
           srcBadge = `<span style="background: linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045); color: #ffffff; padding: 2px 8px; border-radius: 999px; font-size: 10.5px; font-weight: 800;">📸 Instagram</span>`;
         }
         const dev = tel.device || 'Web';
         const devIcon = (dev.includes('iPhone') || dev.includes('Android') || dev.includes('iPad')) ? '📱' : '💻';
         const onbText = tel.onboardingDone ? '✅ Onboarding listo' : '⏳ Registrado';
-        const onbColor = tel.onboardingDone ? '#34d399' : '#fbbf24';
+        const onbColor = tel.onboardingDone ? '#059669' : '#d97706';
 
         const regMs = Date.parse(u.created_at) || Date.parse(u.last_active_at) || 0;
         let agoText = 'Reciente';
@@ -13787,10 +13820,10 @@ function renderFounderSocialRadar(customersList) {
         }
 
         return `
-          <div style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 9px 12px; display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+          <div style="background: var(--card-bg, #ffffff); border: 1px solid var(--border, #e2e8f0); border-radius: 12px; padding: 9px 12px; display: flex; justify-content: space-between; align-items: center; gap: 8px;">
             <div style="min-width: 0;">
-              <div style="font-size: 12.5px; font-weight: 800; color: #f8fafc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                ${escapeHtml(name)} <span style="font-weight: 600; color: #94a3b8; font-size: 11px;">(${escapeHtml(email)})</span>
+              <div style="font-size: 12.5px; font-weight: 800; color: var(--text-main, #0f172a); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                ${escapeHtml(name)} <span style="font-weight: 600; color: var(--text-muted, #64748b); font-size: 11px;">(${escapeHtml(email)})</span>
               </div>
               <div style="font-size: 10.5px; color: ${onbColor}; font-weight: 700; margin-top: 2px;">
                 ${onbText} · ${devIcon} ${escapeHtml(dev)}
@@ -13798,7 +13831,7 @@ function renderFounderSocialRadar(customersList) {
             </div>
             <div style="text-align: right; flex-shrink: 0;">
               ${srcBadge}
-              <div style="font-size: 10px; color: #cbd5e1; font-weight: 700; margin-top: 3px;">${agoText}</div>
+              <div style="font-size: 10px; color: var(--text-muted, #64748b); font-weight: 700; margin-top: 3px;">${agoText}</div>
             </div>
           </div>
         `;
