@@ -538,8 +538,11 @@
         recordUserHeartbeat(session.user, true);
         await onLoginSuccess(session.user);
       } else {
+        if (typeof recordLandingOrAppVisit === 'function') recordLandingOrAppVisit();
         showLoginScreen();
-        if (window.location.search.includes('mode=register') || window.location.search.includes('register=1')) {
+        const isSocialInApp = (typeof getSocialInAppBrowserInfo === 'function') && getSocialInAppBrowserInfo().isInApp;
+        const hasLoggedBefore = localStorage.getItem('aliviafin_has_logged_in_before') === 'true';
+        if (window.location.search.includes('mode=register') || window.location.search.includes('register=1') || (isSocialInApp && !hasLoggedBefore)) {
           switchAuthTab('register');
         }
       }
@@ -549,6 +552,7 @@
     async function onLoginSuccess(user) {
       const userKey = user.id;
       const isCesar = isAdminCesar(user);
+      try { localStorage.setItem('aliviafin_has_logged_in_before', 'true'); } catch (e) {}
 
       // Obtener nombre del usuario (aislado por userKey para no contaminar entre cuentas distintas):
       // 1. Metadata oficial guardada en la nube de Supabase (user_metadata.full_name)
@@ -979,6 +983,87 @@
       openModalById('finzenProModal');
     }
 
+    // ================================================================
+    // TELEMETRÍA DE ORIGEN SOCIAL (TIKTOK / INSTAGRAM / WEB) & DISPOSITIVO
+    // ================================================================
+    function getSocialInAppBrowserInfo() {
+      const ua = (typeof navigator !== 'undefined' && navigator.userAgent) ? navigator.userAgent : '';
+      if (/BytedanceWebview|musical_ly|TikTok/i.test(ua)) return { isInApp: true, app: 'TikTok' };
+      if (/Instagram/i.test(ua)) return { isInApp: true, app: 'Instagram' };
+      if (/FBAN|FBAV/i.test(ua)) return { isInApp: true, app: 'Facebook' };
+      return { isInApp: false, app: null };
+    }
+    window.getSocialInAppBrowserInfo = getSocialInAppBrowserInfo;
+
+    function getTrafficSourceAttribution() {
+      try {
+        const params = new URLSearchParams(window.location.search || '');
+        const rawParam = (params.get('ref') || params.get('utm_source') || params.get('source') || '').toLowerCase();
+        const ua = (navigator.userAgent || '').toLowerCase();
+        const ref = (document.referrer || '').toLowerCase();
+
+        let detected = null;
+        if (rawParam.includes('tiktok') || rawParam === 'tt' || /bytedancewebview|musical_ly|tiktok/i.test(ua) || ref.includes('tiktok.com')) {
+          detected = 'tiktok';
+        } else if (rawParam.includes('ig') || rawParam.includes('instagram') || /instagram/i.test(ua) || ref.includes('instagram.com')) {
+          detected = 'instagram';
+        } else if (rawParam.includes('fb') || rawParam.includes('facebook') || /fban|fbav/i.test(ua) || ref.includes('facebook.com')) {
+          detected = 'facebook';
+        }
+
+        if (detected) {
+          localStorage.setItem('aliviafin_traffic_source', detected);
+          return detected;
+        }
+        const saved = localStorage.getItem('aliviafin_traffic_source');
+        return saved || 'direct';
+      } catch (e) {
+        return 'direct';
+      }
+    }
+    window.getTrafficSourceAttribution = getTrafficSourceAttribution;
+
+    function getClientDeviceLabel() {
+      try {
+        const ua = navigator.userAgent || '';
+        if (/iPhone/i.test(ua)) return 'iPhone';
+        if (/iPad/i.test(ua)) return 'iPad';
+        if (/Android/i.test(ua)) return 'Android';
+        if (/Macintosh|Mac OS X/i.test(ua)) return 'Mac';
+        if (/Windows/i.test(ua)) return 'Windows PC';
+        return 'Web';
+      } catch (e) {
+        return 'Web';
+      }
+    }
+    window.getClientDeviceLabel = getClientDeviceLabel;
+
+    function recordLandingOrAppVisit() {
+      try {
+        const source = getTrafficSourceAttribution();
+        if (sessionStorage.getItem('aliviafin_visit_logged_v1')) return;
+        sessionStorage.setItem('aliviafin_visit_logged_v1', '1');
+        const client = getSupabaseClient();
+        if (!client) return;
+        const payload = JSON.stringify({
+          source: source,
+          device: getClientDeviceLabel(),
+          path: window.location.pathname || '/'
+        });
+        client
+          .from('app_feedback')
+          .insert([{
+            user_id: null,
+            user_email: 'visit@aliviafin.app',
+            type: 'landing_visit',
+            message: payload,
+            app_version: APP_VERSION
+          }])
+          .then(() => {}, () => {});
+      } catch (e) {}
+    }
+    window.recordLandingOrAppVisit = recordLandingOrAppVisit;
+
     async function recordUserHeartbeat(user, force = false) {
       if (!user || (!user.id && !user.email)) return;
       try {
@@ -1013,6 +1098,14 @@
         }
         try { sessionStorage.setItem(throttleKey, nowMs.toString()); } catch(e) {}
 
+        const hbMetaPayload = JSON.stringify({
+          name: displayName,
+          source: getTrafficSourceAttribution(),
+          device: getClientDeviceLabel(),
+          onboardingDone: Boolean(appState && appState.onboardingCompleted),
+          txCount: (typeof countTotalTransactions === 'function' && appState) ? countTotalTransactions(appState) : 0
+        });
+
         // 1) Telemetría a app_feedback (RLS público para INSERT con WITH CHECK (true))
         supabaseClient
           .from('app_feedback')
@@ -1020,7 +1113,7 @@
             user_id: user.id || null,
             user_email: userEmail,
             type: 'heartbeat',
-            message: displayName,
+            message: hbMetaPayload,
             app_version: APP_VERSION
           }])
           .then(() => console.log('⚡ Heartbeat de conexión registrado en Supabase:', userEmail))
@@ -1328,9 +1421,11 @@
         btn.textContent = '🔓 Iniciar Sesión';
 
         if (error) {
-          errEl.textContent = '🚨 ' + (error.message === 'Invalid login credentials'
-            ? 'Correo o contraseña incorrectos.'
-            : error.message);
+          if (error.message === 'Invalid login credentials') {
+            errEl.innerHTML = '🚨 Correo o contraseña incorrectos.<div style="margin-top: 8px;"><button type="button" onclick="prefillRegisterFromLogin()" style="background: #059669; color: #ffffff; border: none; border-radius: 8px; padding: 6px 12px; font-size: 11.5px; font-weight: 800; cursor: pointer;">🚀 ¿Eres nuevo? Crear tu cuenta ahora con este correo →</button></div>';
+          } else {
+            errEl.textContent = '🚨 ' + error.message;
+          }
           errEl.style.display = 'block';
         } else {
           errEl.style.display = 'none';
@@ -1714,9 +1809,30 @@
       }
     }
 
-    // AUTH SOCIAL (GOOGLE / MICROSOFT)
+    function prefillRegisterFromLogin() {
+      const loginEm = document.getElementById('loginEmail')?.value || '';
+      const loginPw = document.getElementById('loginPassword')?.value || '';
+      switchAuthTab('register');
+      const regEm = document.getElementById('registerEmail');
+      const regPw = document.getElementById('registerPassword');
+      const regNm = document.getElementById('registerName');
+      if (regEm && loginEm) regEm.value = loginEm;
+      if (regPw && loginPw) regPw.value = loginPw;
+      if (regNm) regNm.focus();
+    }
+    window.prefillRegisterFromLogin = prefillRegisterFromLogin;
+
+    // AUTH SOCIAL (GOOGLE / MICROSOFT) CON PROTECCIÓN ANTI-BLOQUEO WEBVIEW TIKTOK/INSTAGRAM
     async function handleOAuthLogin(provider) {
       try {
+        const inApp = getSocialInAppBrowserInfo();
+        if (inApp && inApp.isInApp) {
+          switchAuthTab('register');
+          const regName = document.getElementById('registerName');
+          if (regName) setTimeout(() => regName.focus(), 120);
+          await uiAlert(`📱 Estás dentro de la app de ${inApp.app}, donde Google bloquea su botón por seguridad.\n\nTienes 2 opciones inmediatas:\n1️⃣ Crea tu cuenta aquí mismo en 3 segundos ingresando tu nombre, correo y clave.\n2️⃣ O toca los tres puntos (⋯) arriba a la derecha y elige "Abrir en el navegador" (Safari / Chrome) para usar Google.`);
+          return;
+        }
         const client = getSupabaseClient();
         if (!client) {
           uiAlert('🚨 El motor de autenticación se está conectando. Por favor reintenta en un momento.');
@@ -5206,15 +5322,15 @@
         if (btn) btn.classList.add('active');
       }
 
-      // Sincronizar items de la barra lateral de escritorio
+      // Sincronizar items de la barra lateral de escritorio (con módulos fusionados)
       const deskNavMap = {
         'inicio': 'deskNavTabInicio',
         'movimientos': 'deskNavTabMovimientos',
         'plan': 'deskNavTabPlan',
         'metas': 'deskNavTabMetas',
-        'consejos': 'deskNavTabConsejos',
+        'consejos': 'deskNavTabPlan',
         'deudas': 'deskNavTabDeudas',
-        'simulador': 'deskNavTabSimulador',
+        'simulador': 'deskNavTabDeudas',
         'prestamos': 'deskNavTabLoans',
         'founder': 'deskNavMasterBtn'
       };
@@ -9309,10 +9425,65 @@
       }
 
       updateWizardExpenseCount();
+      if (typeof updateWizardStep1Preview === 'function') updateWizardStep1Preview();
 
       closeModal('settingsModal');
       openModalById('onboardingWizardModal');
     }
+
+    function setWizardSalaryPaidMode(mode) {
+      const hiddenEl = document.getElementById('wSalaryAlreadyPaid');
+      if (hiddenEl) hiddenEl.value = mode;
+      const cardYes = document.getElementById('wCardPaidYes');
+      const cardNo = document.getElementById('wCardPaidNo');
+      if (cardYes) {
+        cardYes.style.borderColor = (mode === 'yes') ? '#059669' : '#cbd5e1';
+        cardYes.style.background = (mode === 'yes') ? '#ecfdf5' : 'rgba(255,255,255,0.85)';
+      }
+      if (cardNo) {
+        cardNo.style.borderColor = (mode === 'no') ? '#059669' : '#cbd5e1';
+        cardNo.style.background = (mode === 'no') ? '#ecfdf5' : 'rgba(255,255,255,0.85)';
+      }
+      // SIEMPRE VISIBLE: "¿Cuánto dinero tienes disponible HOY en tu banco/billetera?"
+      const bankBox = document.getElementById('wCurrentBankBox');
+      if (bankBox) bankBox.style.display = 'block';
+      updateWizardStep1Preview();
+    }
+    window.setWizardSalaryPaidMode = setWizardSalaryPaidMode;
+
+    function updateWizardStep1Preview() {
+      const sym = (document.getElementById('wCurrencySelect')?.value || getCurrencySymbol() || 'S/').split(' ')[0];
+      const salaryVal = parseFloat(document.getElementById('wSalaryInput')?.value) || 0;
+      const rawBank = document.getElementById('wCurrentBankInput')?.value;
+      const hasBankTyped = rawBank !== undefined && rawBank !== null && String(rawBank).trim() !== '';
+      const bankVal = hasBankTyped ? (parseFloat(rawBank) || 0) : (document.getElementById('wSalaryAlreadyPaid')?.value === 'yes' ? salaryVal : 0);
+      const mode = document.getElementById('wSalaryAlreadyPaid')?.value || 'no';
+      const payDay = document.getElementById('wPayDaySelect')?.value || '28';
+
+      const noteEl = document.getElementById('wCurrentBankHelperNote');
+      if (noteEl) {
+        if (mode === 'yes') {
+          noteEl.innerHTML = `✨ Tu cuenta iniciará con tu saldo real hoy (<strong>${sym} ${bankVal.toFixed(2)}</strong>) y tu sueldo mensual quedará marcado como <strong>ya cobrado</strong> este mes.`;
+        } else {
+          noteEl.innerHTML = `✨ Tu cuenta iniciará con tu saldo real hoy (<strong>${sym} ${bankVal.toFixed(2)}</strong>) y tu sueldo de <strong>${sym} ${salaryVal.toFixed(0)}</strong> quedará programado para el día ${payDay}.`;
+        }
+      }
+
+      const now = new Date();
+      const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+      const daysRemaining = Math.max(1, (daysInMonth - now.getDate()) + 1);
+      const dailySafe = bankVal > 0 ? roundCurrency(bankVal / daysRemaining) : 0;
+
+      const valEl = document.getElementById('wLiveSafeDailyVal');
+      const subEl = document.getElementById('wLiveSafeDailySub');
+      if (valEl) valEl.textContent = `${sym} ${dailySafe.toFixed(2)} / día`;
+      if (subEl) {
+        subEl.textContent = bankVal > 0
+          ? `Con tus ${sym} ${bankVal.toFixed(0)} disponibles hoy entre los ${daysRemaining} días restantes del mes`
+          : 'Ingresa cuánto tienes hoy en banco para calcular tu día a día';
+      }
+    }
+    window.updateWizardStep1Preview = updateWizardStep1Preview;
 
     function goToWizardStep(step) {
       if (step < 1 || step > 3) return;
@@ -9422,14 +9593,14 @@
       });
 
       row.innerHTML = `
-        <input type="text" class="form-control w-exp-name" placeholder="Concepto (ej. Luz)" value="${escapeHtml(name)}" style="font-size: 11px; padding: 6px 8px;" required>
-        <select class="form-control w-exp-cat" style="font-size: 11px; padding: 6px 4px;">
+        <input type="text" class="form-control w-exp-name" placeholder="Concepto (ej. Luz)" value="${escapeHtml(name)}" style="font-size: 16px; padding: 6px 8px;" required>
+        <select class="form-control w-exp-cat" style="font-size: 16px; padding: 6px 4px;">
           ${catOptions}
         </select>
-        <input type="number" class="form-control w-exp-amount" placeholder="Monto S/" value="${amount}" step="any" style="font-size: 11px; padding: 6px 8px; font-weight: 700;">
+        <input type="number" class="form-control w-exp-amount" placeholder="Monto S/" value="${amount}" step="any" style="font-size: 16px; padding: 6px 8px; font-weight: 700;">
         <div class="w-exp-due-wrap" style="display: flex; align-items: center; gap: 4px;">
           <span style="font-size: 10px; color: var(--text-muted); font-weight: 600;">Día:</span>
-          <input type="number" class="form-control w-exp-due" min="1" max="31" placeholder="15" value="${dueDate}" style="width: 48px; font-size: 11px; padding: 6px 4px; text-align: center;" required title="Día de vencimiento del mes">
+          <input type="number" class="form-control w-exp-due" min="1" max="31" placeholder="15" value="${dueDate}" style="width: 48px; font-size: 16px; padding: 6px 4px; text-align: center;" required title="Día de vencimiento del mes">
         </div>
         <button type="button" class="w-exp-del" onclick="document.getElementById('${rowId}').remove(); updateWizardExpenseCount();" style="background: none; border: none; color: #ef4444; font-size: 16px; cursor: pointer; padding: 2px 6px;" title="Eliminar fila">✕</button>
       `;
@@ -9711,26 +9882,30 @@
     }
 
     function completeOnboardingWizard() {
-      // 1. Guardar Ingresos
+      // 1. Guardar Ingresos y Estado de Cobro Actual
       const salaryVal = parseFloat(document.getElementById('wSalaryInput')?.value);
       const payDay = document.getElementById('wPayDaySelect')?.value || '28';
       const payDayNum = parseInt(payDay) || 28;
+      const salaryPaidMode = document.getElementById('wSalaryAlreadyPaid')?.value || 'no';
+      const salaryInitialStatus = (salaryPaidMode === 'yes') ? 'Recibido' : 'Pendiente';
+
+      const curM = appState.currentMonth || getCurrentCalendarMonthName();
+      if (!appState.incomes) appState.incomes = {};
+      if (!appState.incomes[curM]) appState.incomes[curM] = [];
 
       if (!isNaN(salaryVal) && salaryVal > 0) {
         appState.salary = salaryVal;
-        if (!appState.incomes) appState.incomes = {};
-        const curM = appState.currentMonth || getCurrentCalendarMonthName();
-        if (!appState.incomes[curM]) appState.incomes[curM] = [];
         const existingSalary = appState.incomes[curM].find(i => i.id.startsWith('inc_sueldo_') || i.name.toLowerCase().includes('sueldo'));
         if (existingSalary) {
           existingSalary.amount = salaryVal;
           existingSalary.date = payDayNum;
+          existingSalary.status = salaryInitialStatus;
         } else {
           appState.incomes[curM].unshift({
             id: 'inc_sueldo_' + curM,
             name: 'Sueldo Mensual',
             amount: salaryVal,
-            status: 'Pendiente',
+            status: salaryInitialStatus,
             date: payDayNum
           });
         }
@@ -9804,6 +9979,36 @@
         }
       }
 
+      // 2.5 Conciliar con el Saldo Real Disponible HOY en Banco / Billetera (#wCurrentBankInput)
+      const rawBankStr = document.getElementById('wCurrentBankInput')?.value;
+      const hasBankInput = rawBankStr !== undefined && rawBankStr !== null && String(rawBankStr).trim() !== '';
+      const currentBankVal = hasBankInput ? parseFloat(String(rawBankStr).replace(',', '.')) : NaN;
+      if (hasBankInput && !isNaN(currentBankVal) && currentBankVal >= 0) {
+        appState.incomes[curMonth] = (appState.incomes[curMonth] || []).filter(i => !String(i.id || '').startsWith('inc_saldo_inicial_'));
+        appState.transactions[curMonth] = (appState.transactions[curMonth] || []).filter(t => !String(t.id || '').startsWith('exp_gastos_previos_'));
+        const calcBal = getAccumulatedBalance(curMonth);
+        const diffBal = roundCurrency(currentBankVal - calcBal);
+        if (diffBal > 0.01) {
+          appState.incomes[curMonth].push({
+            id: 'inc_saldo_inicial_' + curMonth,
+            name: 'Saldo Disponible Inicial en Banco',
+            amount: diffBal,
+            status: 'Recibido',
+            date: new Date().getDate()
+          });
+        } else if (diffBal < -0.01) {
+          appState.transactions[curMonth].push({
+            id: 'exp_gastos_previos_' + curMonth,
+            name: 'Gastos previos del mes (antes de registrarme)',
+            amount: roundCurrency(Math.abs(diffBal)),
+            category: 'Varios',
+            status: 'Pagado',
+            paymentMethod: 'Banco',
+            date: new Date().getDate()
+          });
+        }
+      }
+
       // 3. Guardar Meta Inicial
       const goalName = document.getElementById('wGoalName')?.value.trim();
       const goalTarget = parseFloat(document.getElementById('wGoalTarget')?.value);
@@ -9835,6 +10040,9 @@
       // Guardar y refrescar
       addAuditLog('🧭 Onboarding', 'Configuración inicial completada mediante asistente');
       saveState();
+      if (currentUser && typeof recordUserHeartbeat === 'function') {
+        recordUserHeartbeat(currentUser, true);
+      }
       renderAll();
 
       // Cerrar wizard
@@ -12977,12 +13185,13 @@ async function loadMasterDashboardData(force = false) {
     let fbData = [];
     if (fbRes.status === 'fulfilled' && !fbRes.value.error && Array.isArray(fbRes.value.data)) {
       fbData = fbRes.value.data;
+      window.masterLandingVisits = fbData.filter(i => i.type === 'landing_visit');
       masterDeletedMarkers = new Map();
       fbData.filter(i => i.type === 'user_deleted').forEach(m => {
         const k = (m.user_email || '').toLowerCase().trim();
         if (k && !masterDeletedMarkers.has(k)) masterDeletedMarkers.set(k, m.created_at);
       });
-      masterFeedbackData = fbData.filter(i => i.type !== 'user_deleted' && i.type !== 'libro_reclamaciones' && i.type !== 'solicitud_reembolso' && i.type !== 'account_deletion_churn');
+      masterFeedbackData = fbData.filter(i => i.type !== 'user_deleted' && i.type !== 'libro_reclamaciones' && i.type !== 'solicitud_reembolso' && i.type !== 'account_deletion_churn' && i.type !== 'landing_visit');
     }
 
     // 5) Reclamaciones
@@ -13106,21 +13315,36 @@ function enrichMasterSubscribers(stateActivityRows = []) {
     });
   }
 
-  // B) Mapear actividad desde app_feedback (heartbeats)
+  // B) Mapear actividad y telemetría social desde app_feedback (heartbeats)
+  const firstSeen = new Map();
+  const telemetryByKey = new Map();
   masterHeartbeats.forEach(h => {
     const email = (h.user_email || '').toLowerCase().trim();
     [email, h.user_id].filter(Boolean).forEach(key => {
       if (!lastSeen.has(key)) lastSeen.set(key, h.created_at);
+      firstSeen.set(key, h.created_at); // como viene ordenado desc, el último procesado es el más antiguo (primer registro)
     });
     if (email && h.user_id && !ids.has(email)) ids.set(email, h.user_id);
     if (h.message && h.message !== 'heartbeat') {
+      let cleanName = h.message;
+      let parsedMeta = null;
+      if (typeof h.message === 'string' && h.message.trim().startsWith('{')) {
+        try {
+          parsedMeta = JSON.parse(h.message);
+          if (parsedMeta && parsedMeta.name) cleanName = parsedMeta.name;
+        } catch (e) {}
+      }
       [email, h.user_id].filter(Boolean).forEach(key => {
-        if (!names.has(key)) names.set(key, h.message);
+        if (cleanName && !names.has(key)) names.set(key, cleanName);
+        if (parsedMeta && !telemetryByKey.has(key)) {
+          telemetryByKey.set(key, parsedMeta);
+        }
       });
     }
   });
+  window.masterUserTelemetryMap = telemetryByKey;
 
-  // C) Asignar la mayor marca de tiempo a cada suscriptor registrado
+  // C) Asignar la mayor marca de tiempo y telemetría social a cada suscriptor registrado
   masterSubscribersData.forEach(sub => {
     const email = (sub.email || '').toLowerCase().trim();
     const shortId = (sub.user_id && sub.user_id.length >= 8) ? sub.user_id.substring(0, 8) : null;
@@ -13139,8 +13363,21 @@ function enrichMasterSubscribers(stateActivityRows = []) {
       sub.last_active_at = candidates[0];
     }
 
+    if (!sub.created_at) {
+      sub.created_at = firstSeen.get(email) || firstSeen.get(sub.user_id) || sub.last_active_at;
+    }
+
     const hbName = names.get(email) || names.get(sub.user_id);
     if (hbName && !sub.full_name && !sub.user_name) sub.user_name = hbName;
+
+    const tel = telemetryByKey.get(email) || telemetryByKey.get(sub.user_id) || null;
+    const hasCloudState = Boolean((sub.user_id && stateActivity.get(sub.user_id)) || (shortId && stateActivity.get(shortId)));
+    sub._telemetry = {
+      source: (tel && tel.source) ? tel.source : 'direct',
+      device: (tel && tel.device) ? tel.device : 'Web',
+      onboardingDone: (tel && typeof tel.onboardingDone === 'boolean') ? tel.onboardingDone : hasCloudState,
+      txCount: (tel && typeof tel.txCount === 'number') ? tel.txCount : (hasCloudState ? 1 : 0)
+    };
   });
 
   // D) Sin la RPC, incorpora a quien se conectó pero aún no figura en user_subscriptions
@@ -13149,13 +13386,20 @@ function enrichMasterSubscribers(stateActivityRows = []) {
     lastSeen.forEach((ts, key) => {
       if (!key.includes('@') || known.has(key)) return;
       known.add(key);
+      const tel = telemetryByKey.get(key) || null;
       masterSubscribersData.push({
         user_id: ids.get(key) || null,
         email: key,
         user_name: names.get(key) || formatCleanNameFromEmail(key),
         status: 'free',
-        created_at: ts,
-        last_active_at: ts
+        created_at: firstSeen.get(key) || ts,
+        last_active_at: ts,
+        _telemetry: {
+          source: (tel && tel.source) ? tel.source : 'direct',
+          device: (tel && tel.device) ? tel.device : 'Web',
+          onboardingDone: (tel && typeof tel.onboardingDone === 'boolean') ? tel.onboardingDone : false,
+          txCount: (tel && typeof tel.txCount === 'number') ? tel.txCount : 0
+        }
       });
     });
   }
@@ -13276,6 +13520,7 @@ function getDeduplicatedSubscribers(rawList) {
     }
     if (item.user_name && !existing.user_name) existing.user_name = item.user_name;
     if (item.full_name && !existing.full_name) existing.full_name = item.full_name;
+    if (item._telemetry && !existing._telemetry) existing._telemetry = item._telemetry;
   });
 
   return Array.from(map.values());
@@ -13419,6 +13664,147 @@ function calculateMasterKPIs() {
   masterSetText('countMExpiring', expiring);
   masterSetText('countMExpired', expired);
   masterSetText('countMInactive', risk);
+
+  if (typeof renderFounderSocialRadar === 'function') {
+    renderFounderSocialRadar(customers);
+  }
+}
+
+// ----------------------------------------------------------------
+// Radar de Adquisición & Redes Sociales (TikTok / Instagram / Web)
+// ----------------------------------------------------------------
+function renderFounderSocialRadar(customersList) {
+  const customers = Array.isArray(customersList) ? customersList : getMasterCustomers();
+  const visits = Array.isArray(window.masterLandingVisits) ? window.masterLandingVisits : [];
+  const now = Date.now();
+  const dayMs = 86400000;
+
+  // 1) Visitas al Link Hoy (24h) y Total
+  const visitsToday = visits.filter(v => v.created_at && (now - Date.parse(v.created_at) <= dayMs));
+  let ttVisits = 0, igVisits = 0, webVisits = 0;
+  visitsToday.forEach(v => {
+    let src = 'direct';
+    if (v.message && typeof v.message === 'string' && v.message.trim().startsWith('{')) {
+      try { src = JSON.parse(v.message).source || 'direct'; } catch (e) {}
+    }
+    if (src === 'tiktok') ttVisits++;
+    else if (src === 'instagram') igVisits++;
+    else webVisits++;
+  });
+
+  // 2) Nuevos Registros Hoy (24h) y 7 Días
+  let signupsToday = 0, signups7d = 0;
+  let onboardingDoneCount = 0, withTxCount = 0;
+  let mobileCount = 0, desktopCount = 0;
+
+  customers.forEach(c => {
+    const regMs = Date.parse(c.created_at) || 0;
+    if (regMs && (now - regMs <= dayMs)) signupsToday++;
+    if (regMs && (now - regMs <= 7 * dayMs)) signups7d++;
+
+    const tel = c._telemetry || {};
+    if (tel.onboardingDone) onboardingDoneCount++;
+    if ((tel.txCount || 0) > 0 || tel.onboardingDone) withTxCount++;
+
+    const dev = (tel.device || 'Web').toLowerCase();
+    if (dev.includes('iphone') || dev.includes('ipad') || dev.includes('android')) {
+      mobileCount++;
+    } else {
+      desktopCount++;
+    }
+  });
+
+  const totalCust = customers.length;
+  const onbPct = totalCust > 0 ? Math.round((onboardingDoneCount / totalCust) * 100) : 0;
+  const totalDev = mobileCount + desktopCount;
+  const mobPct = totalDev > 0 ? Math.round((mobileCount / totalDev) * 100) : 0;
+
+  masterSetText('fhSocialVisitsTodayVal', String(visitsToday.length));
+  masterSetText('fhSocialVisitsBreakdownSub', `🎵 ${ttVisits} TikTok · 📸 ${igVisits} IG · 🌐 ${webVisits} Web`);
+  masterSetText('fhSocialSignupsTodayVal', `+${signupsToday}`);
+  masterSetText('fhSocialSignups7dSub', `Últimos 7 días: +${signups7d} nuevos`);
+  masterSetText('fhSocialOnboardingPctVal', `${onbPct}%`);
+  masterSetText('fhSocialOnboardingSub', `${onboardingDoneCount} de ${totalCust} configuraron su cuenta`);
+  masterSetText('fhSocialMobilePctVal', `${mobPct}% Móvil`);
+  masterSetText('fhSocialDeviceBreakdownSub', `📱 ${mobileCount} Celular · 💻 ${desktopCount} PC/Mac`);
+
+  // 3) Embudo de Conversión en Vivo
+  const funnelEl = document.getElementById('fhSocialFunnelContainer');
+  if (funnelEl) {
+    const topBase = Math.max(visits.length, totalCust, 1);
+    const steps = [
+      { label: '1. Visitas registradas al Link', count: Math.max(visits.length, totalCust), color: '#38bdf8' },
+      { label: '2. Cuentas Creadas (Registrados)', count: totalCust, color: '#10b981' },
+      { label: '3. Onboarding / Sueldo Configurado', count: onboardingDoneCount, color: '#a855f7' },
+      { label: '4. Con Movimientos Financieros', count: withTxCount, color: '#fbbf24' }
+    ];
+    funnelEl.innerHTML = steps.map(st => {
+      const pct = Math.min(100, Math.round((st.count / topBase) * 100));
+      return `
+        <div style="background: rgba(255,255,255,0.05); border-radius: 10px; padding: 8px 12px;">
+          <div style="display: flex; justify-content: space-between; font-size: 11.5px; font-weight: 700; color: #e2e8f0; margin-bottom: 4px;">
+            <span>${st.label}</span>
+            <span style="color: ${st.color}; font-weight: 800;">${st.count} (${pct}%)</span>
+          </div>
+          <div style="height: 6px; background: rgba(255,255,255,0.1); border-radius: 999px; overflow: hidden;">
+            <div style="width: ${pct}%; height: 100%; background: ${st.color}; border-radius: 999px;"></div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // 4) Feed en Tiempo Real de Últimos Usuarios Registrados
+  const feedEl = document.getElementById('fhLiveNewUsersFeed');
+  if (feedEl) {
+    const sortedNewest = [...customers].sort((a, b) => (Date.parse(b.created_at) || 0) - (Date.parse(a.created_at) || 0)).slice(0, 8);
+    if (sortedNewest.length === 0) {
+      feedEl.innerHTML = `<div style="font-size: 12px; color: #94a3b8; padding: 12px; text-align: center;">Aún no hay usuarios registrados fuera de la cuenta fundador.</div>`;
+    } else {
+      feedEl.innerHTML = sortedNewest.map(u => {
+        const email = u.email || 'usuario';
+        const name = getDisplayNameForEmail(email, { name: u.full_name || u.user_name });
+        const tel = u._telemetry || {};
+        const src = (tel.source || 'direct').toLowerCase();
+        let srcBadge = `<span style="background: rgba(59,130,246,0.2); color: #93c5fd; border: 1px solid rgba(59,130,246,0.35); padding: 2px 8px; border-radius: 999px; font-size: 10.5px; font-weight: 800;">🌐 Directo/Web</span>`;
+        if (src === 'tiktok') {
+          srcBadge = `<span style="background: #000000; color: #25f4ee; border: 1px solid #fe2c55; padding: 2px 8px; border-radius: 999px; font-size: 10.5px; font-weight: 800;">🎵 TikTok</span>`;
+        } else if (src === 'instagram') {
+          srcBadge = `<span style="background: linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045); color: #ffffff; padding: 2px 8px; border-radius: 999px; font-size: 10.5px; font-weight: 800;">📸 Instagram</span>`;
+        }
+        const dev = tel.device || 'Web';
+        const devIcon = (dev.includes('iPhone') || dev.includes('Android') || dev.includes('iPad')) ? '📱' : '💻';
+        const onbText = tel.onboardingDone ? '✅ Onboarding listo' : '⏳ Registrado';
+        const onbColor = tel.onboardingDone ? '#34d399' : '#fbbf24';
+
+        const regMs = Date.parse(u.created_at) || Date.parse(u.last_active_at) || 0;
+        let agoText = 'Reciente';
+        if (regMs) {
+          const diffMin = Math.max(1, Math.floor((now - regMs) / 60000));
+          if (diffMin < 60) agoText = `Hace ${diffMin} min`;
+          else if (diffMin < 1440) agoText = `Hace ${Math.floor(diffMin / 60)} h`;
+          else agoText = `Hace ${Math.floor(diffMin / 1440)} d`;
+        }
+
+        return `
+          <div style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 9px 12px; display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+            <div style="min-width: 0;">
+              <div style="font-size: 12.5px; font-weight: 800; color: #f8fafc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                ${escapeHtml(name)} <span style="font-weight: 600; color: #94a3b8; font-size: 11px;">(${escapeHtml(email)})</span>
+              </div>
+              <div style="font-size: 10.5px; color: ${onbColor}; font-weight: 700; margin-top: 2px;">
+                ${onbText} · ${devIcon} ${escapeHtml(dev)}
+              </div>
+            </div>
+            <div style="text-align: right; flex-shrink: 0;">
+              ${srcBadge}
+              <div style="font-size: 10px; color: #cbd5e1; font-weight: 700; margin-top: 3px;">${agoText}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+  }
 }
 
 // ----------------------------------------------------------------

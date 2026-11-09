@@ -382,21 +382,21 @@
         </button>
         <button class="desktop-nav-item" id="deskNavTabPlan" onclick="switchTab('plan')">
           <span class="desk-nav-icon">📊</span>
-          <span>Plan 50/30/20</span>
+          <span>Plan 50/30/20 & Asesor</span>
         </button>
         <button class="desktop-nav-item" id="deskNavTabMetas" onclick="switchTab('metas')">
           <span class="desk-nav-icon">🎯</span>
           <span>Metas de Ahorro</span>
         </button>
-        <button class="desktop-nav-item" id="deskNavTabConsejos" onclick="switchTab('consejos')">
+        <button class="desktop-nav-item" id="deskNavTabConsejos" onclick="switchTab('consejos')" style="display: none;">
           <span class="desk-nav-icon">💡</span>
           <span>Asesor Financiero</span>
         </button>
         <button class="desktop-nav-item" id="deskNavTabDeudas" onclick="switchTab('deudas')">
           <span class="desk-nav-icon">❄️</span>
-          <span>Bola de Nieve & Cuotas</span>
+          <span>Cero Deudas & Simulador</span>
         </button>
-        <button class="desktop-nav-item" id="deskNavTabSimulador" onclick="switchTab('simulador')">
+        <button class="desktop-nav-item" id="deskNavTabSimulador" onclick="switchTab('simulador')" style="display: none;">
           <span class="desk-nav-icon">💳</span>
           <span>Simulador de Cuotas</span>
         </button>
@@ -411,7 +411,7 @@
           <span class="desk-nav-icon">⚙️</span>
           <span>Ajustes</span>
         </button>
-        <button class="desktop-nav-item master-admin-only" id="deskNavMasterBtn" onclick="switchTab('founder')" style="display: none; background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(217, 119, 6, 0.16)); border: 1.5px solid rgba(245, 158, 11, 0.4); color: #d97706; font-weight: 800; margin-bottom: 6px; display: flex; align-items: center;" title="Hub de Fundador CEO (Métricas SaaS & Suscriptores)">
+        <button class="desktop-nav-item master-admin-only" id="deskNavMasterBtn" onclick="switchTab('founder')" style="display: none; background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(217, 119, 6, 0.16)); border: 1.5px solid rgba(245, 158, 11, 0.4); color: #d97706; font-weight: 800; margin-bottom: 6px; align-items: center;" title="Hub de Fundador CEO (Métricas SaaS & Suscriptores)">
           <span class="desk-nav-icon">👑</span>
           <span style="flex: 1; text-align: left;">Hub Fundador CEO</span>
           <span id="founderPendingAlertBadgeDesk" class="badge-pill-alert" style="display: none; margin-left: 6px; background: #ef4444; color: white; border-radius: 10px; font-size: 10px; font-weight: 800; padding: 1px 7px;">0</span>
@@ -553,7 +553,7 @@
                     <span id="metricSavings" style="display: none;">S/ 0.00</span>
                   </div>
                   <!-- Widget Apple Liquid Glass: Límite Sugerido de Hoy -->
-                  <div class="exec-daily-limit-badge is-positive" id="execDailyLimitBadge" title="Toca para ver el desglose matemático y ajustar tu ciclo" onclick="openDailyLimitModal()" style="cursor: pointer;">
+                  <div class="exec-daily-limit-badge is-positive" id="execDailyLimitBadge" title="Toca para ver el desglose matemático y ajustar tu ciclo" onclick="event.stopPropagation(); openDailyLimitModal();" style="cursor: pointer;">
                     <span class="exec-daily-limit-icon">✨</span>
                     <span id="execDailyLimitText">Límite sugerido de hoy: S/ 0.00</span>
                     <span style="font-size: 10px; opacity: 0.7; margin-left: 4px;">ℹ️</span>
@@ -803,8 +803,13 @@
         </div>
 
       </div>
-      <!-- TAB 2: PLAN DE ACCIÓN -->
+      <!-- TAB 2: PLAN DE ACCIÓN (FUSIONADO CON ASESOR FINANCIERO) -->
       <div id="tab-plan" class="tab-content">
+        <!-- Segmented Tab Switcher (Apple HIG Style: Plan 50/30/20 + Asesor) -->
+        <div class="advisor-segmented-nav" style="margin-bottom: 14px;">
+          <button type="button" class="advisor-subtab-pill active" onclick="switchTab('plan')">📊 Distribución 50/30/20</button>
+          <button type="button" class="advisor-subtab-pill" onclick="switchTab('consejos')">💡 Diagnóstico & Plan de Rescate</button>
+        </div>
         
         <div class="flex-between mb-2" style="margin-bottom: 12px; align-items: center; flex-wrap: wrap; gap: 8px;">
           <div>
@@ -984,12 +989,12 @@
         <div id="goalsContainer" class="luxury-goals-grid"></div>
       </div>
 
-      <!-- TAB 4: ASESOR FINANCIERO & COBERTURA DE LIQUIDEZ (MÓDULO 1) -->
+      <!-- TAB 4: ASESOR FINANCIERO & COBERTURA DE LIQUIDEZ (FUSIONADO CON PLAN 50/30/20) -->
       <div id="tab-consejos" class="tab-content">
-        <!-- Segmented Tab Switcher para Móvil y Desktop (Apple HIG Style) -->
-        <div class="advisor-segmented-nav">
-          <button type="button" class="advisor-subtab-pill advisor-subtab-pill-asesor active" onclick="switchAdvisorView('asesor')">💡 Asesor & Rescate</button>
-          <button type="button" class="advisor-subtab-pill advisor-subtab-pill-deudas" onclick="switchAdvisorView('deudas')">❄️ Bola de Nieve & Cuotas</button>
+        <!-- Segmented Tab Switcher (Apple HIG Style: Plan 50/30/20 + Asesor) -->
+        <div class="advisor-segmented-nav" style="margin-bottom: 14px;">
+          <button type="button" class="advisor-subtab-pill" onclick="switchTab('plan')">📊 Distribución 50/30/20</button>
+          <button type="button" class="advisor-subtab-pill active" onclick="switchTab('consejos')">💡 Diagnóstico & Plan de Rescate</button>
         </div>
 
         <!-- HEADER MINIMALISTA ASESOR FINANCIERO -->
@@ -1038,12 +1043,12 @@
             Enviar Mensaje ✍️
           </button>
         </div>
-        <!-- Card: Histórico de Cambios & Auditoría (Integrado y Colapsable) -->
-        <div class="card" id="auditCardSection" style="margin-top: 14px;">
+        <!-- Card: Histórico de Cambios & Auditoría (Solo visible para el Fundador CEO) -->
+        <div class="card master-admin-only" id="auditCardSection" style="margin-top: 14px; display: none;">
           <div class="card-header" style="cursor: pointer;" onclick="toggleCollapseCard('auditTableContainerCollapse', 'collapseBtnAudit')">
             <div class="card-title" style="display: flex; align-items: center; gap: 6px; font-size: 13px;">
               <span>📜</span>
-              <span>Historial de Cambios & Auditoría</span>
+              <span>Historial de Cambios & Auditoría (Vista Fundador)</span>
             </div>
             <div style="display: flex; gap: 6px; align-items: center; margin-left: auto;">
               <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); handleExportExcelCSVClick();" style="font-size: 11px; padding: 3px 8px; display: flex; align-items: center; gap: 4px; background: linear-gradient(135deg, #059669, #10b981); border: none;">
@@ -1075,12 +1080,12 @@
 
       </div>
 
-      <!-- TAB 5: PLAN ESTRATÉGICO BOLA DE NIEVE & CUOTAS (MÓDULO 2) -->
+      <!-- TAB 5: PLAN ESTRATÉGICO BOLA DE NIEVE & SIMULADOR DE CUOTAS (FUSIONADO) -->
       <div id="tab-deudas" class="tab-content">
-        <!-- Segmented Tab Switcher para Móvil y Desktop (Apple HIG Style) -->
-        <div class="advisor-segmented-nav">
-          <button type="button" class="advisor-subtab-pill advisor-subtab-pill-asesor" onclick="switchAdvisorView('asesor')">💡 Asesor & Rescate</button>
-          <button type="button" class="advisor-subtab-pill advisor-subtab-pill-deudas active" onclick="switchAdvisorView('deudas')">❄️ Bola de Nieve & Cuotas</button>
+        <!-- Segmented Tab Switcher (Apple HIG Style: Bola de Nieve + Simulador de Cuotas) -->
+        <div class="advisor-segmented-nav" style="margin-bottom: 14px;">
+          <button type="button" class="advisor-subtab-pill active" onclick="switchTab('deudas')">❄️ Mi Plan Bola de Nieve</button>
+          <button type="button" class="advisor-subtab-pill" onclick="switchTab('simulador')">🧮 Simulador de Nueva Compra en Cuotas</button>
         </div>
 
         <!-- HEADER ESTRATÉGICO EJECUTIVO (Fase 6: Liquid Glass & Lenguaje Amigable) -->
@@ -1355,18 +1360,24 @@
 
       </div>
 
-      <!-- TAB: SIMULADOR DE CUOTAS Y CRÉDITO A PANTALLA COMPLETA -->
+      <!-- TAB: SIMULADOR DE CUOTAS Y CRÉDITO (FUSIONADO CON PLAN CERO DEUDAS) -->
       <div id="tab-simulador" class="tab-content">
+        <!-- Segmented Tab Switcher (Apple HIG Style: Bola de Nieve + Simulador de Cuotas) -->
+        <div class="advisor-segmented-nav" style="margin-bottom: 14px;">
+          <button type="button" class="advisor-subtab-pill" onclick="switchTab('deudas')">❄️ Mi Plan Bola de Nieve</button>
+          <button type="button" class="advisor-subtab-pill active" onclick="switchTab('simulador')">🧮 Simulador de Nueva Compra en Cuotas</button>
+        </div>
+
         <div class="flex-between mb-2" style="margin-bottom: 12px; align-items: center; flex-wrap: wrap; gap: 8px;">
           <div>
             <div style="display: flex; align-items: center; gap: 8px;">
               <h2 style="font-size: 18px; font-weight: 800; letter-spacing: -0.01em; margin: 0;">💳 Simulador de Cuotas & Crédito</h2>
               <span class="badge-pro-gold" style="font-size: 10px; padding: 2px 7px;">PRO</span>
             </div>
-            <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Proyecta compras a plazos y evalúa con exactitud el impacto en tu flujo de caja futuro</div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Proyecta compras a plazos y evalúa con exactitud el impacto en tu flujo de caja y Plan Cero Deudas</div>
           </div>
-          <button type="button" class="btn btn-secondary btn-sm" onclick="switchTab('plan')" style="border-radius: 999px; font-weight: 700; padding: 6px 12px; display: inline-flex; align-items: center; gap: 4px;">
-            <span>← Volver a Finanzas</span>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="switchTab('deudas')" style="border-radius: 999px; font-weight: 700; padding: 6px 12px; display: inline-flex; align-items: center; gap: 4px;">
+            <span>← Volver a Bola de Nieve</span>
           </button>
         </div>
 
@@ -1589,6 +1600,64 @@
               </div>
               <div class="master-kpi-val" id="masterConversionVal" style="color: #d97706;">0%</div>
               <div class="master-kpi-sub" id="masterConversionSub">Efectividad de cierre en ventas</div>
+            </div>
+          </div>
+
+          <!-- RADAR DE ADQUISICIÓN & REDES SOCIALES (TIKTOK / INSTAGRAM EN VIVO) -->
+          <div id="fhSocialRadarSection" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-radius: 22px; padding: 20px 22px; margin-bottom: 18px; border: 1.5px solid rgba(16, 185, 129, 0.35); color: #ffffff;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 16px;">
+              <div>
+                <div style="font-size: 11px; font-weight: 800; color: #34d399; text-transform: uppercase; letter-spacing: 0.06em;">📈 Radar de Adquisición & Redes Sociales (En Vivo)</div>
+                <div style="font-size: 17px; font-weight: 900; margin-top: 2px;">Efecto de Videos TikTok & Instagram Reels</div>
+                <div style="font-size: 11.5px; color: #94a3b8; margin-top: 2px;">Tip: Usa <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 6px; color: #34d399;">?ref=tiktok</code> o <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 6px; color: #f472b6;">?ref=ig</code> en tu bio (además detectamos el navegador interno automáticamente)</div>
+              </div>
+              <span style="background: rgba(16, 185, 129, 0.16); border: 1px solid rgba(16, 185, 129, 0.4); color: #34d399; padding: 5px 12px; border-radius: 999px; font-size: 11px; font-weight: 800;" id="fhSocialLivePulseBadge">🟢 Telemetría Supabase Activa</span>
+            </div>
+
+            <!-- 4 KPIs de Tráfico Social -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(195px, 1fr)); gap: 12px; margin-bottom: 16px;">
+              <div style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; padding: 14px;">
+                <div style="font-size: 10.5px; font-weight: 800; color: #94a3b8; text-transform: uppercase;">👁️ Visitas al Link Hoy (24h)</div>
+                <div style="font-size: 26px; font-weight: 900; color: #ffffff; margin: 4px 0;" id="fhSocialVisitsTodayVal">0</div>
+                <div style="font-size: 11px; font-weight: 700; color: #34d399;" id="fhSocialVisitsBreakdownSub">🎵 0 TikTok · 📸 0 IG · 🌐 0 Web</div>
+              </div>
+              <div style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; padding: 14px;">
+                <div style="font-size: 10.5px; font-weight: 800; color: #94a3b8; text-transform: uppercase;">🚀 Nuevos Registros HOY</div>
+                <div style="font-size: 26px; font-weight: 900; color: #34d399; margin: 4px 0;" id="fhSocialSignupsTodayVal">+0</div>
+                <div style="font-size: 11px; font-weight: 700; color: #cbd5e1;" id="fhSocialSignups7dSub">Últimos 7 días: 0 nuevos</div>
+              </div>
+              <div style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; padding: 14px;">
+                <div style="font-size: 10.5px; font-weight: 800; color: #94a3b8; text-transform: uppercase;">✅ Activación Onboarding</div>
+                <div style="font-size: 26px; font-weight: 900; color: #38bdf8; margin: 4px 0;" id="fhSocialOnboardingPctVal">0%</div>
+                <div style="font-size: 11px; font-weight: 700; color: #cbd5e1;" id="fhSocialOnboardingSub">0 de 0 configuraron su sueldo</div>
+              </div>
+              <div style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; padding: 14px;">
+                <div style="font-size: 10.5px; font-weight: 800; color: #94a3b8; text-transform: uppercase;">📱 Dispositivos Detectados</div>
+                <div style="font-size: 26px; font-weight: 900; color: #fbbf24; margin: 4px 0;" id="fhSocialMobilePctVal">0% Móvil</div>
+                <div style="font-size: 11px; font-weight: 700; color: #cbd5e1;" id="fhSocialDeviceBreakdownSub">📱 0 Celular · 💻 0 PC/Mac</div>
+              </div>
+            </div>
+
+            <!-- Embudo + Feed en Tiempo Real -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 14px;">
+              <!-- Embudo de Conversión -->
+              <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 14px 16px;">
+                <div style="font-size: 12.5px; font-weight: 800; color: #f8fafc; margin-bottom: 10px;">🎯 Embudo Real de Conversión (Bio ➔ App Activa)</div>
+                <div id="fhSocialFunnelContainer" style="display: flex; flex-direction: column; gap: 8px;">
+                  <!-- Se llena en vivo desde renderFounderSocialRadar() -->
+                </div>
+              </div>
+
+              <!-- Feed en Vivo de Últimos Usuarios Registrados -->
+              <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 14px 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                  <div style="font-size: 12.5px; font-weight: 800; color: #f8fafc;">⚡ Últimos Usuarios Registrados (En Vivo)</div>
+                  <span style="font-size: 10.5px; color: #34d399; font-weight: 800;">Tiempo real</span>
+                </div>
+                <div id="fhLiveNewUsersFeed" style="display: flex; flex-direction: column; gap: 8px; max-height: 230px; overflow-y: auto;">
+                  <!-- Se llena en vivo desde renderFounderSocialRadar() -->
+                </div>
+              </div>
             </div>
           </div>
 
@@ -1964,8 +2033,12 @@
         <!-- GRUPO 2: HERRAMIENTAS & MÓDULOS -->
         <div class="settings-group-card">
           <div class="settings-group-title">🛠️ Herramientas Financieras</div>
-          <button type="button" class="settings-nav-btn" onclick="closeModal('settingsModal'); switchTab('simulador');">
-            <span>💳 Simulador de Cuotas & Crédito</span>
+          <button type="button" class="settings-nav-btn" onclick="closeModal('settingsModal'); switchTab('metas');">
+            <span>🎯 Metas & Bóvedas de Ahorro</span>
+            <span style="font-size: 10.5px; font-weight: 700; color: #059669; background: rgba(5,150,105,0.1); padding: 2px 7px; border-radius: 6px;">Abrir →</span>
+          </button>
+          <button type="button" class="settings-nav-btn" onclick="closeModal('settingsModal'); switchTab('deudas');">
+            <span>❄️ Plan Cero Deudas & Simulador de Cuotas</span>
             <span class="badge-pro-gold" style="font-size: 9.5px; padding: 2px 6px;">PRO 👑</span>
           </button>
           <button type="button" class="settings-nav-btn" onclick="closeModal('settingsModal'); switchTab('prestamos');">
@@ -3059,29 +3132,55 @@
 
       <!-- SCROLLABLE BODY -->
       <div class="wizard-modal-body">
-        <!-- PASO 1: INGRESOS Y DÍA DE COBRO -->
+        <!-- PASO 1: INGRESOS, DÍA DE COBRO Y SALDO ACTUAL EN BANCO -->
         <div class="wizard-slide active" id="wSlide1">
           <div style="background: rgba(255,255,255,0.45); border-radius: 12px; padding: 14px; border: 1px solid var(--glass-border); margin-bottom: 12px;">
-            <h4 style="font-size: 13px; font-weight: 800; color: var(--text-main); margin: 0 0 8px 0;">💰 Tus Ingresos Mensuales</h4>
+            <h4 style="font-size: 13px; font-weight: 800; color: var(--text-main); margin: 0 0 8px 0;">💰 1. Tus Ingresos Mensuales</h4>
             <div class="form-group" style="margin-bottom: 10px;">
               <label style="font-size: 11px; font-weight: 700;">Sueldo / Ingreso Mensual Neto Estimado</label>
               <div style="display: flex; gap: 8px;">
-                <select id="wCurrencySelect" class="form-control" style="width: 90px; font-weight: 700;">
+                <select id="wCurrencySelect" class="form-control" style="width: 90px; font-weight: 700; font-size: 16px;">
                   <option value="S/">S/ (PEN)</option>
                   <option value="$">$ (USD)</option>
                 </select>
-                <input type="number" id="wSalaryInput" class="form-control" placeholder="Ej: 3500" step="any" style="font-weight: 700; font-size: 14px;">
+                <input type="number" id="wSalaryInput" class="form-control" placeholder="Ej: 3500" step="any" oninput="if(typeof updateWizardStep1Preview==='function') updateWizardStep1Preview()" style="font-weight: 700; font-size: 16px;">
               </div>
             </div>
-            <div class="form-group" style="margin-bottom: 10px;">
+            <div class="form-group" style="margin-bottom: 12px;">
               <label style="font-size: 11px; font-weight: 700;">Día recurrente de cobro del mes</label>
-              <select id="wPayDaySelect" class="form-control">
+              <select id="wPayDaySelect" class="form-control" onchange="if(typeof updateWizardStep1Preview==='function') updateWizardStep1Preview()" style="font-size: 16px;">
                 <option value="28">Día 28 de cada mes (Típico fin de mes)</option>
                 <option value="30">Día 30 de cada mes</option>
                 <option value="15">Día 15 de cada mes (Quincena)</option>
                 <option value="1">Día 1 de cada mes (Inicio de mes)</option>
               </select>
             </div>
+
+            <!-- Pregunta 2: ¿Ya recibiste tu sueldo de este mes? -->
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label style="font-size: 11px; font-weight: 800; color: var(--text-main);">2. ¿Ya recibiste tu sueldo de este mes?</label>
+              <input type="hidden" id="wSalaryAlreadyPaid" value="no">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 6px;">
+                <div id="wCardPaidYes" onclick="setWizardSalaryPaidMode('yes')" style="border: 2px solid #cbd5e1; border-radius: 12px; padding: 10px 12px; cursor: pointer; background: rgba(255,255,255,0.85); transition: all 0.2s;">
+                  <div style="font-size: 12.5px; font-weight: 800; color: #0f172a;">✅ Sí, ya lo cobré</div>
+                  <div style="font-size: 10.5px; color: #64748b; margin-top: 2px; line-height: 1.3;">Ya recibí mi sueldo (aunque ya haya gastado parte).</div>
+                </div>
+                <div id="wCardPaidNo" onclick="setWizardSalaryPaidMode('no')" style="border: 2px solid #059669; border-radius: 12px; padding: 10px 12px; cursor: pointer; background: #ecfdf5; transition: all 0.2s;">
+                  <div style="font-size: 12.5px; font-weight: 800; color: #0f172a;">⏳ Aún no lo cobro</div>
+                  <div style="font-size: 10.5px; color: #64748b; margin-top: 2px; line-height: 1.3;">Recién cobraré en mi día de pago.</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Pregunta 3 (SIEMPRE VISIBLE): ¿Cuánto dinero tienes disponible HOY en tu banco / billetera? -->
+            <div id="wCurrentBankBox" style="background: #ecfdf5; border: 1.5px solid #6ee7b7; border-radius: 12px; padding: 12px 14px; margin-bottom: 12px;">
+              <label for="wCurrentBankInput" style="display: block; font-size: 11px; font-weight: 800; color: #065f46; text-transform: uppercase; margin-bottom: 5px;">🏦 3. ¿Cuánto dinero tienes disponible HOY en tu banco / billetera?</label>
+              <input type="number" id="wCurrentBankInput" class="form-control" placeholder="Ej: 1250 (tu saldo real hoy)" step="any" oninput="if(typeof updateWizardStep1Preview==='function') updateWizardStep1Preview()" style="font-weight: 800; font-size: 16px; border: 1.5px solid #10b981; color: #065f46; background: #ffffff;">
+              <div id="wCurrentBankHelperNote" style="font-size: 10.5px; color: #047857; font-weight: 600; margin-top: 5px; line-height: 1.35;">
+                ✨ Usaremos este monto exacto como tu saldo real hoy en banco para calcular tu Límite Diario Seguro sin desfaces.
+              </div>
+            </div>
+
             <div class="form-group" style="margin-bottom: 0;">
               <label style="font-size: 11px; font-weight: 700;">Meta de Ahorro Recomendada sobre tus Ingresos</label>
               <div style="display: flex; align-items: center; gap: 10px;">
@@ -3090,9 +3189,12 @@
               </div>
             </div>
           </div>
-          <div class="wizard-tip-box">
-            <span>💡</span>
-            <div>AliviaFin proyecta tu saldo y flujo de caja diario usando tu fecha de sueldo para garantizar que no te quedes en cero.</div>
+          <div class="wizard-tip-box" id="wLiveSafeDailyPreviewBox" style="background: linear-gradient(135deg, #0f172a, #1e293b); color: #ffffff; border: 1px solid rgba(16,185,129,0.35); border-radius: 14px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+            <div>
+              <div style="font-size: 10px; font-weight: 800; color: #34d399; text-transform: uppercase; letter-spacing: 0.05em;">✨ Vista Previa de tu Límite Seguro Hoy</div>
+              <div id="wLiveSafeDailySub" style="font-size: 11px; color: #cbd5e1; margin-top: 2px;">Ingresa cuánto tienes hoy en banco para calcular tu día a día</div>
+            </div>
+            <div id="wLiveSafeDailyVal" style="font-size: 17px; font-weight: 900; color: #34d399; white-space: nowrap;">S/ 0.00 / día</div>
           </div>
         </div>
 
@@ -3139,21 +3241,21 @@
 
             <div class="form-group" style="margin-bottom: 10px;">
               <label style="font-size: 11px; font-weight: 700;">Nombre de la Meta</label>
-              <input type="text" id="wGoalName" class="form-control" placeholder="Ej: Fondo de Emergencia" value="Fondo de Emergencia" required>
+              <input type="text" id="wGoalName" class="form-control" placeholder="Ej: Fondo de Emergencia" value="Fondo de Emergencia" style="font-size: 16px;" required>
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
               <div class="form-group" style="margin: 0;">
                 <label style="font-size: 11px; font-weight: 700;">Monto Objetivo (<span class="app-currency-symbol">S/</span>)</label>
-                <input type="number" id="wGoalTarget" class="form-control" placeholder="3000" value="2000" step="any" required>
+                <input type="number" id="wGoalTarget" class="form-control" placeholder="3000" value="2000" step="any" style="font-size: 16px;" required>
               </div>
               <div class="form-group" style="margin: 0;">
                 <label style="font-size: 11px; font-weight: 700;">Aporte Mensual (<span class="app-currency-symbol">S/</span>)</label>
-                <input type="number" id="wGoalMonthly" class="form-control" placeholder="200" value="250" step="any" required>
+                <input type="number" id="wGoalMonthly" class="form-control" placeholder="200" value="250" step="any" style="font-size: 16px;" required>
               </div>
             </div>
             <div class="form-group" style="margin: 0;">
               <label style="font-size: 11px; font-weight: 700;">Ícono Representativo</label>
-              <select id="wGoalIcon" class="form-control">
+              <select id="wGoalIcon" class="form-control" style="font-size: 16px;">
                 <option value="🛡️">🛡️ Protección / Emergencia</option>
                 <option value="✈️">✈️ Vacaciones / Viajes</option>
                 <option value="🚗">🚗 Vehículo / Moto</option>

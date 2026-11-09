@@ -3138,5 +3138,52 @@
       <a href="https://mail.google.com/mail/?view=cm&fs=1&to=aliviafin@gmail.com" target="_blank" rel="noopener" class="contact-toast-btn">Abrir Gmail ↗</a>
     </div>
   </div>
+  <script>
+    (function trackAliviaFinLandingVisit() {
+      try {
+        var params = new URLSearchParams(window.location.search || '');
+        var rawParam = (params.get('ref') || params.get('utm_source') || params.get('source') || '').toLowerCase();
+        var ua = (navigator.userAgent || '');
+        var ref = (document.referrer || '').toLowerCase();
+        var source = null;
+        if (rawParam.indexOf('tiktok') !== -1 || rawParam === 'tt' || /BytedanceWebview|musical_ly|TikTok/i.test(ua) || ref.indexOf('tiktok.com') !== -1) {
+          source = 'tiktok';
+        } else if (rawParam.indexOf('ig') !== -1 || rawParam.indexOf('instagram') !== -1 || /Instagram/i.test(ua) || ref.indexOf('instagram.com') !== -1) {
+          source = 'instagram';
+        } else if (rawParam.indexOf('fb') !== -1 || rawParam.indexOf('facebook') !== -1 || /FBAN|FBAV/i.test(ua) || ref.indexOf('facebook.com') !== -1) {
+          source = 'facebook';
+        }
+        if (source) {
+          localStorage.setItem('aliviafin_traffic_source', source);
+        } else {
+          source = localStorage.getItem('aliviafin_traffic_source') || 'direct';
+        }
+        if (sessionStorage.getItem('aliviafin_visit_logged_v1')) return;
+        sessionStorage.setItem('aliviafin_visit_logged_v1', '1');
+        var device = 'Web';
+        if (/iPhone/i.test(ua)) device = 'iPhone';
+        else if (/iPad/i.test(ua)) device = 'iPad';
+        else if (/Android/i.test(ua)) device = 'Android';
+        else if (/Macintosh|Mac OS X/i.test(ua)) device = 'Mac';
+        else if (/Windows/i.test(ua)) device = 'Windows PC';
+
+        fetch('https://swwvbfemxookbqoqotre.supabase.co/rest/v1/app_feedback', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': 'sb_publishable_CZUC5ueCxjSDFeA3idgVZg_DaEoIJxf',
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify({
+            user_id: null,
+            user_email: 'visit@aliviafin.app',
+            type: 'landing_visit',
+            message: JSON.stringify({ source: source, device: device, path: '/landing' }),
+            app_version: 'v78.6'
+          })
+        }).catch(function(){});
+      } catch (e) {}
+    })();
+  </script>
 </body>
 </html>
