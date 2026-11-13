@@ -48,8 +48,9 @@ const server = http.createServer((req, res) => {
       if (typeof updateThemeButtons === 'function') updateThemeButtons('crystal');
 
       // 2. CONFIGURACIÓN 100% PERSONAL (Cuentas individuales para personas de a pie)
-      const curM = 'Octubre 2026';
+      const curM = typeof getRealWorldCurrentMonth === 'function' ? getRealWorldCurrentMonth() : 'Noviembre 2026';
       appState.currentMonth = curM;
+      currentSelectedMonth = curM;
       appState.salary = 3500;
       appState.currency = 'PEN';
       appState.onboardingCompleted = true;
@@ -57,11 +58,16 @@ const server = http.createServer((req, res) => {
       appState.activeStatusFilter = 'TODOS';
       appState.currentUser = 'César';
       appState.users = ['César'];
+      if (typeof currentUser === 'object' && currentUser) {
+        currentUser.name = 'César';
+      }
+      window._currentUserSubscriptionStatus = 'pro_lifetime';
+      if (typeof updateProGatesUI === 'function') updateProGatesUI();
 
       appState.incomes = {
         [curM]: [
-          { id: 'inc_1', name: 'Sueldo Quincenal (Ingreso Principal)', amount: 3200, category: 'Sueldo', date: 15, user: 'César' },
-          { id: 'inc_2', name: 'Ingreso Extra / Freelance', amount: 800, category: 'Freelance', date: 20, user: 'César' }
+          { id: 'inc_1', name: 'Sueldo Quincenal (Ingreso Principal)', amount: 3200, category: 'Sueldo', status: 'Recibido', date: 15, user: 'César' },
+          { id: 'inc_2', name: 'Ingreso Extra / Freelance', amount: 800, category: 'Freelance', status: 'Recibido', date: 20, user: 'César' }
         ]
       };
 

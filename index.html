@@ -19,7 +19,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="js/chart.min.js?v=72.0"></script>
   <script src="js/supabase.min.js?v=72.0"></script>
-  <link rel="stylesheet" href="css/styles.css?v=79.9">
+  <link rel="stylesheet" href="css/styles.css?v=80.0">
+  <link rel="stylesheet" href="css/dashboard-layout.css?v=80.0">
+  <link rel="stylesheet" href="css/modules-hub.css?v=80.0">
 
   <style>
     /* Estilos Críticos Inmediatos: Paleta Unificada AliviaFin Light & Emerald */
@@ -388,17 +390,9 @@
           <span class="desk-nav-icon">🎯</span>
           <span>Metas de Ahorro</span>
         </button>
-        <button class="desktop-nav-item" id="deskNavTabConsejos" onclick="switchTab('consejos')" style="display: none;">
-          <span class="desk-nav-icon">💡</span>
-          <span>Asesor Financiero</span>
-        </button>
         <button class="desktop-nav-item" id="deskNavTabDeudas" onclick="switchTab('deudas')">
           <span class="desk-nav-icon">❄️</span>
           <span>Cero Deudas & Simulador</span>
-        </button>
-        <button class="desktop-nav-item" id="deskNavTabSimulador" onclick="switchTab('simulador')" style="display: none;">
-          <span class="desk-nav-icon">💳</span>
-          <span>Simulador de Cuotas</span>
         </button>
         <button class="desktop-nav-item" id="deskNavTabLoans" onclick="switchTab('prestamos')">
           <span class="desk-nav-icon">🤝</span>
@@ -2035,7 +2029,7 @@
           <div style="margin-bottom: 10px;">
             <label for="settingsUserNameInput" style="display: block; font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 4px;">Nombre o Apodo en la App:</label>
             <div style="display: flex; gap: 8px;">
-              <input type="text" id="settingsUserNameInput" placeholder="Ej: makiados" class="form-control" style="flex: 1; padding: 7px 10px; font-size: 12.5px; font-weight: 700;">
+              <input type="text" id="settingsUserNameInput" placeholder="Ej: César Risso" class="form-control" style="flex: 1; padding: 7px 10px; font-size: 12.5px; font-weight: 700;">
               <button type="button" onclick="saveCustomUserName()" class="btn btn-primary btn-sm" style="font-weight: 800; padding: 6px 12px; border-radius: 8px;">Guardar</button>
             </div>
           </div>
@@ -4289,6 +4283,11 @@
     </div>
   </div>
 
-  <script src="js/app.js?v=79.9"></script>
+  <script src="js/auth-sync.js?v=80.0"></script>
+  <script src="js/app.js?v=80.0"></script>
+  <script src="js/onboarding-import.js?v=80.0"></script>
+  <script src="js/loans.js?v=80.0"></script>
+  <script src="js/snowball-debts.js?v=80.0"></script>
+  <script src="js/founder-hub.js?v=80.0"></script>
 </body>
 </html>

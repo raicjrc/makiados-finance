@@ -27,7 +27,7 @@ module.exports = async (req, res) => {
     'http://localhost:8080',
     'http://127.0.0.1:8080'
   ];
-  if (allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
+  if (allowedOrigins.includes(origin) || /^https:\/\/aliviafin(-[a-z0-9-]+)?\.vercel\.app$/.test(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
   } else {
     res.setHeader('Access-Control-Allow-Origin', 'https://aliviafin.vercel.app');
@@ -85,7 +85,10 @@ module.exports = async (req, res) => {
         uReq.on('error', () => resolve(null));
         uReq.end();
       });
-      if (verifiedEmail && verifiedEmail !== cleanEmail) {
+      if (!verifiedEmail) {
+        return res.status(401).json({ error: 'Sesión de autenticación inválida o expirada.' });
+      }
+      if (verifiedEmail !== cleanEmail) {
         return res.status(403).json({ error: 'El correo solicitado no coincide con la sesión autenticada.' });
       }
     }
